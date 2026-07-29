@@ -1,0 +1,292 @@
+-- [[ HJ1JK v1: RUNNABLE SPEED & AIMBOT SCRIPT ]] --
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
+local Camera = Workspace.CurrentCamera
+
+-- ลบ UI เก่ากันบั๊กทับซ้อน
+if PlayerGui:FindFirstChild("HJ1JK_Mini") then pcall(function() PlayerGui["HJ1JK_Mini"]:Destroy() end) end
+if PlayerGui:FindFirstChild("HJ1JK_LoadingUI") then pcall(function() PlayerGui["HJ1JK_LoadingUI"]:Destroy() end) end
+
+-- สถานะฟังก์ชัน
+local AIMBOT_ENABLED = false
+local SPEED_ENABLED = false
+local WALK_SPEED_VALUE = 16
+local TARGET_PART = "Head"
+local FOV_RADIUS = 150
+local LOCK_SPEED = 0.3
+local DiscordLink = "https://discord.gg/bvZ3aGHcW"
+
+-- ฟังก์ชันคัดลอกลิงก์รองรับทุก Executor
+local function copyToClipboard(text)
+    if setclipboard then
+        setclipboard(text)
+    elseif toclipboard then
+        toclipboard(text)
+    end
+end
+
+-- =============================================================================
+-- [ โครงสร้าง UI หลัก (พื้นหลังสีแดงเลือดหมู) ]
+-- =============================================================================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "HJ1JK_Mini"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 180, 0, 190)
+MainFrame.Position = UDim2.new(0.5, -90, 0.4, -95)
+MainFrame.BackgroundColor3 = Color3.fromRGB(80, 10, 15) -- สีแดงเลือดหมู
+MainFrame.BorderSizePixel = 0
+MainFrame.BackgroundTransparency = 1 
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 6)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(200, 50, 50)
+MainStroke.Thickness = 1.5
+MainStroke.Transparency = 1 
+MainStroke.Parent = MainFrame
+
+-- ส่วนประกอบด้านในเมนูหลัก
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(60, 5, 10)
+Title.BackgroundTransparency = 1
+Title.Text = "  HJ1JK Mini v1"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.TextTransparency = 1
+Title.Font = Enum.Font.SourceSansBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 6)
+TitleCorner.Parent = Title
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -30, 0, 0)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+CloseBtn.TextSize = 14
+CloseBtn.TextTransparency = 1
+CloseBtn.Font = Enum.Font.SourceSansBold
+CloseBtn.Parent = MainFrame
+CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+
+local AimBtn = Instance.new("TextButton")
+AimBtn.Size = UDim2.new(0, 150, 0, 35)
+AimBtn.Position = UDim2.new(0, 15, 0, 45)
+AimBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+AimBtn.BackgroundTransparency = 1
+AimBtn.Text = "Aimbot: ปิด"
+AimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AimBtn.TextSize = 15
+AimBtn.TextTransparency = 1
+AimBtn.Font = Enum.Font.SourceSansBold
+AimBtn.Parent = MainFrame
+AimBtn.MouseButton1Click:Connect(function()
+    AIMBOT_ENABLED = not AIMBOT_ENABLED
+    AimBtn.Text = AIMBOT_ENABLED and "Aimbot: เปิด" or "Aimbot: ปิด"
+    AimBtn.BackgroundColor3 = AIMBOT_ENABLED and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(150, 30, 30)
+end)
+
+local AimCorner = Instance.new("UICorner")
+AimCorner.CornerRadius = UDim.new(0, 4)
+AimCorner.Parent = AimBtn
+
+local SpeedBtn = Instance.new("TextButton")
+SpeedBtn.Size = UDim2.new(0, 150, 0, 35)
+SpeedBtn.Position = UDim2.new(0, 15, 0, 90)
+SpeedBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+SpeedBtn.BackgroundTransparency = 1
+SpeedBtn.Text = "Speed Hack: ปิด"
+SpeedBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedBtn.TextSize = 15
+SpeedBtn.TextTransparency = 1
+SpeedBtn.Font = Enum.Font.SourceSansBold
+SpeedBtn.Parent = MainFrame
+SpeedBtn.MouseButton1Click:Connect(function()
+    SPEED_ENABLED = not SPEED_ENABLED
+    SpeedBtn.Text = SPEED_ENABLED and "Speed Hack: เปิด" or "Speed Hack: ปิด"
+    SpeedBtn.BackgroundColor3 = SPEED_ENABLED and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(150, 30, 30)
+    if not SPEED_ENABLED then
+        pcall(function() if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.WalkSpeed = 16 end end)
+    end
+end)
+
+local SpeedCorner = Instance.new("UICorner")
+SpeedCorner.CornerRadius = UDim.new(0, 4)
+SpeedCorner.Parent = SpeedBtn
+
+local SpeedInput = Instance.new("TextBox")
+SpeedInput.Size = UDim2.new(0, 150, 0, 35)
+SpeedInput.Position = UDim2.new(0, 15, 0, 135)
+SpeedInput.BackgroundColor3 = Color3.fromRGB(50, 10, 15)
+SpeedInput.BackgroundTransparency = 1
+SpeedInput.Text = "16"
+SpeedInput.PlaceholderText = "ใส่ความเร็ว (เช่น 60)"
+SpeedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedInput.TextSize = 14
+SpeedInput.TextTransparency = 1
+SpeedInput.Font = Enum.Font.SourceSans
+SpeedInput.Parent = MainFrame
+SpeedInput.FocusLost:Connect(function()
+    local num = tonumber(SpeedInput.Text)
+    if num then WALK_SPEED_VALUE = num else SpeedInput.Text = tostring(WALK_SPEED_VALUE) end
+end)
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 4)
+InputCorner.Parent = SpeedInput
+
+local InputStroke = Instance.new("UIStroke")
+InputStroke.Color = Color3.fromRGB(120, 30, 30)
+InputStroke.Thickness = 1
+InputStroke.Transparency = 1
+InputStroke.Parent = SpeedInput
+
+-- =============================================================================
+-- [ ระบบหน้าจอ LOADING SCREEN ANIMATION ]
+-- =============================================================================
+local LoadingGui = Instance.new("ScreenGui")
+LoadingGui.Name = "HJ1JK_LoadingUI"
+LoadingGui.ResetOnSpawn = false
+LoadingGui.Parent = PlayerGui
+
+local LoadFrame = Instance.new("Frame")
+LoadFrame.Size = UDim2.new(0, 260, 0, 60)
+LoadFrame.Position = UDim2.new(0.5, -130, 1, 10) 
+LoadFrame.BackgroundColor3 = Color3.fromRGB(80, 10, 15)
+LoadFrame.BorderSizePixel = 0
+LoadFrame.Parent = LoadingGui
+
+local LoadCorner = Instance.new("UICorner")
+LoadCorner.CornerRadius = UDim.new(0, 8)
+LoadCorner.Parent = LoadFrame
+
+local LoadStroke = Instance.new("UIStroke")
+LoadStroke.Color = Color3.fromRGB(200, 50, 50)
+LoadStroke.Thickness = 1.5
+LoadStroke.Parent = LoadFrame
+
+local LoadText = Instance.new("TextLabel")
+LoadText.Size = UDim2.new(1, 0, 1, 0)
+LoadText.BackgroundTransparency = 1
+LoadText.Text = "กำลังโหลด..."
+LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoadText.TextSize = 16
+LoadText.Font = Enum.Font.SourceSansBold
+LoadText.Parent = LoadFrame
+
+task.spawn(function()
+    local tweenUp = TweenService:Create(LoadFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, -130, 0.5, -30)
+    })
+    tweenUp:Play()
+    tweenUp.Completed:Wait()
+
+    task.wait(2)
+    LoadText.Text = "โหลดสคริปต์เสร็จแล้ว!"
+    LoadText.TextColor3 = Color3.fromRGB(100, 255, 100)
+
+    task.wait(1)
+    copyToClipboard(DiscordLink)
+    LoadText.Text = "คัดลอกลิงก์ดิสคอร์ดสำเร็จ!"
+    LoadText.TextColor3 = Color3.fromRGB(100, 180, 255)
+
+    task.wait(1)
+    local fadeOut = TweenService:Create(LoadFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 1
+    })
+    TweenService:Create(LoadStroke, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 1}):Play()
+    TweenService:Create(LoadText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+    fadeOut:Play()
+    fadeOut.Completed:Wait()
+    LoadingGui:Destroy()
+
+    MainFrame.Visible = true
+    TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+    TweenService:Create(MainStroke, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 0}):Play()
+    TweenService:Create(Title, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+    TweenService:Create(CloseBtn, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+    TweenService:Create(AimBtn, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+    TweenService:Create(SpeedBtn, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+    TweenService:Create(SpeedInput, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+    TweenService:Create(InputStroke, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 0}):Play()
+end)
+
+-- =============================================================================
+-- [ ระบบลากเมนู & ฟังก์ชันโกงหลัก (CORE LOGIC) ]
+-- =============================================================================
+local dragging, dragStart, startPos
+Title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true; dragStart = input.Position; startPos = MainFrame.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        pcall(function()
+            local delta = input.Position - dragStart
+            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end)
+    end
+end)
+
+local function getClosestPlayer()
+    local closestPlayer = nil; local shortestDistance = math.huge
+    local localCharacter = LocalPlayer.Character
+    if not localCharacter or not localCharacter:FindFirstChild("HumanoidRootPart") then return nil end
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(TARGET_PART) and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            local partPos, onScreen = Camera:WorldToViewportPoint(player.Character[TARGET_PART].Position)
+            if onScreen then
+                local mouseDistance = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
+                if mouseDistance <= FOV_RADIUS then
+                    local actualDistance = (player.Character.HumanoidRootPart.Position - localCharacter.HumanoidRootPart.Position).Magnitude
+                    if actualDistance < shortestDistance then shortestDistance = actualDistance; closestPlayer = player end
+                end
+            end
+        end
+    end
+    return closestPlayer
+end
+
+RunService.RenderStepped:Connect(function()
+    if AIMBOT_ENABLED then
+        pcall(function()
+            local targetPlayer = getClosestPlayer()
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild(TARGET_PART) then
+                local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPlayer.Character[TARGET_PART].Position)
+                Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, LOCK_SPEED)
+            end
+        end)
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if SPEED_ENABLED then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("Humanoid") then char.Humanoid.WalkSpeed = WALK_SPEED_VALUE end
+        end)
+    end
+end)
