@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ร้านขายไอดีเกมสุดเท่</title>
+    <style>
+        body { background-color: #0d1117; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin: 15px auto; max-width: 300px; }
+        .btn { background: #238636; color: white; padding: 12px 24px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🎮 ร้านขายไอดีเกม</h1>
+    <p>เว็บนี้สร้างบนมือถือ!</p>
+    
+    <div class="card">
+        <h3>🔥 ไอดี RoV ระดับ VIP</h3>
+        <p style="color: #2ea043; font-size: 20px; font-weight: bold;">500 บาท</p>
+        <button class="btn" onclick="alert('ระบบพร้อมใช้งาน!')">สั่งซื้อไอดีนี้</button>
+    </div>
+</body>
+</html>
