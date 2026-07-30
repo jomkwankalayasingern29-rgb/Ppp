@@ -88,26 +88,23 @@
             gap: 6px;
         }
 
-        /* Banner หมวดหมู่ */
+        /* Banner หมวดหมู่ - อัปเดตใส่รูปภาพของคุณ */
         .category-banner {
             width: 100%;
-            height: 110px;
-            background: linear-gradient(135deg, #a8e6cf 0%, #dbede3 100%);
+            height: auto;
             border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             margin-bottom: 24px;
-            position: relative;
-            overflow: hidden;
             border: 2px solid #ffffff;
+            overflow: hidden;
+            display: flex;
         }
 
-        .category-banner h3 {
-            font-size: 1.3rem;
-            color: #2d5a27;
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        .category-banner img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            display: block;
         }
 
         /* Grid สินค้า 2 คอลัมน์ */
@@ -211,64 +208,8 @@
     <div class="navbar">
         <div class="brand-box">
             <img src="https://via.placeholder.com/40" class="avatar" alt="Logo">
-            <span class="shop-name">Mushroom Shop</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <div class="user-balance">🪙 2</div>
-            <span style="font-size: 1.2rem; cursor: pointer;">🔍</span>
-        </div>
-    </div>
+            <span class="shop-name">Mushroom Shop### วิธีนำไปใช้:
 
-    <div class="content">
-        <!-- หมวดหมู่ -->
-        <div class="section-title">
-            <span>田</span> หมวดหมู่
-        </div>
-        <div class="category-banner">
-            <h3>🍄 ไก่แมพปลูกเห็ด</h3>
-        </div>
-
-        <!-- รายการสินค้า -->
-        <div class="section-title">
-            <span>📦</span> สินค้า
-        </div>
-
-        <div class="product-grid">
-            <!-- การ์ดสินค้า 1 (สินค้าตามที่คุณระบุ) -->
-            <div class="product-card">
-                <div>
-                    <div class="product-img-box">
-                        <span class="badge-qty">x10</span>
-                        <!-- ใส่รูปเห็ดหรือไอคอนตรงนี้ -->
-                        <span style="font-size: 3rem;">🍄</span>
-                    </div>
-                    <div class="product-title">ID ไก่เมล็ดเห็ดวิเศษ 10 ต้น</div>
-                </div>
-                <div>
-                    <div class="product-price">10 เครดิต</div>
-                    <div class="product-stock">เหลือ 5 ชิ้น</div>
-                    <button class="btn-buy">🛒 ซื้อสินค้า</button>
-                </div>
-            </div>
-
-            <!-- การ์ดสินค้า 2 (ตัวอย่างกรณีสินค้าหมด) -->
-            <div class="product-card">
-                <div>
-                    <div class="product-img-box">
-                        <span class="badge-qty">x100</span>
-                        <span style="font-size: 3rem;">🌱</span>
-                    </div>
-                    <div class="product-title">ID ไก่เมล็ดเห็ดธรรมดา</div>
-                </div>
-                <div>
-                    <div class="product-price">5 เครดิต</div>
-                    <div class="product-stock">เหลือ 0 ชิ้น</div>
-                    <button class="btn-buy btn-out" disabled>📦 สินค้าหมด</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-</body>
-</html>
+1. ก๊อปปี้โค้ดด้านบนทั้งหมดไปวางในโปรแกรมเขียนโค้ด (เช่น Notepad, VS Code) และเซฟเป็นไฟล์ชื่อ `index.html`
+2. **สำคัญ:** ตรวจสอบให้แน่ใจว่าไฟล์รูปภาพ `image_5.png` ของคุณอยู่ในโฟลเดอร์เดียวกับไฟล์ `index.html` ที่คุณเซฟไว้
+3. เปิดไฟล์ `index.html` ด้วยเว็บเบราว์เซอร์ (Chrome, Edge, Firefox) เพื่อดูหน้าเว็บที่อัปเดตแล้วครับ
