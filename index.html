@@ -21,12 +21,7 @@
             z-index: 100;
         }
 
-        /* ด้านซ้าย: แสดงสถานะผู้ใช้และเครดิต */
-        .user-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .user-status { display: flex; align-items: center; gap: 8px; }
 
         .wallet-badge {
             background: #111827;
@@ -50,7 +45,6 @@
             border: 1px solid #bfdbfe;
         }
 
-        /* ด้านขวา: ปุ่มเมนู III */
         .menu-btn {
             font-size: 20px;
             font-weight: bold;
@@ -111,9 +105,7 @@
             cursor: pointer; 
         }
 
-        /* ----------------------------------
-           Sidebar & Modal ต่างๆ
-        ----------------------------------- */
+        /* Sidebar & Modal */
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -160,7 +152,6 @@
 
         .menu-item:hover { background: #f1f5f9; }
 
-        /* Modal ป๊อปอัป */
         .modal {
             position: fixed;
             top: 50%; left: 50%;
@@ -169,7 +160,9 @@
             padding: 20px;
             border-radius: 12px;
             width: 90%;
-            max-width: 400px;
+            max-width: 420px;
+            max-height: 85vh;
+            overflow-y: auto;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             display: none;
             z-index: 400;
@@ -199,24 +192,56 @@
         }
 
         .modal-btn-green { background: #10b981; }
-        .modal-btn-red { background: #ef4444; }
+
+        /* การ์ดประวัติคำสั่งซื้อ */
+        .history-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .history-title { font-weight: bold; color: #0f172a; font-size: 15px; }
+        .history-price { color: #ef4444; font-weight: bold; font-size: 14px; margin: 4px 0; }
+        .history-date { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
+        
+        .script-box {
+            background: #1e293b;
+            color: #38bdf8;
+            padding: 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-top: 5px;
+            border: 1px solid #334155;
+        }
+
+        .btn-copy {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            float: right;
+        }
     </style>
 </head>
 <body>
 
     <!-- Header ด้านบน -->
     <div class="header">
-        <!-- ซ้ายมือ: ข้อมูลผู้ใช้ + ยอดเงิน -->
         <div class="user-status">
             <div class="username-badge" id="userDisplay">👤 ยังไม่ได้เข้าสู่ระบบ</div>
             <div class="wallet-badge">💰 <span id="userBalance">0.00</span> ฿</div>
         </div>
-
-        <!-- ขวามือ: ปุ่มเมนู III -->
         <div class="menu-btn" onclick="toggleSidebar()">III</div>
     </div>
 
-    <!-- ฉากหลังสีทึบ -->
     <div class="overlay" id="overlay" onclick="closeAll()"></div>
 
     <!-- Sidebar เมนูด้านขวา -->
@@ -226,25 +251,16 @@
             <span style="cursor:pointer; font-weight:bold;" onclick="toggleSidebar()">✕</span>
         </div>
         
-        <!-- เมนูสมัครสมาชิก / เข้าสู่ระบบ (แสดงเมื่อยังไม่ล็อกอิน) -->
         <div id="authMenuGroup">
-            <div class="menu-item" onclick="openModal('registerModal')">
-                📝 สมัครสมาชิก
-            </div>
-            <div class="menu-item" onclick="openModal('loginModal')">
-                🔑 เข้าสู่ระบบ
-            </div>
+            <div class="menu-item" onclick="openModal('registerModal')">📝 สมัครสมาชิก</div>
+            <div class="menu-item" onclick="openModal('loginModal')">🔑 เข้าสู่ระบบ</div>
         </div>
 
-        <!-- เมนูเมื่อล็อกอินแล้ว -->
-        <div class="menu-item" onclick="openModal('topupModal')">
-            🎁 เติมเงิน TrueMoney Wallet
-        </div>
+        <div class="menu-item" onclick="openModal('topupModal')">🎁 เติมเงิน TrueMoney Wallet</div>
+        <div class="menu-item" onclick="openHistoryModal()">📜 ประวัติคำสั่งซื้อ</div>
 
         <div id="logoutMenuGroup" style="display: none;">
-            <div class="menu-item" style="color: #ef4444; border-color: #fca5a5;" onclick="logout()">
-                🚪 ออกจากระบบ
-            </div>
+            <div class="menu-item" style="color: #ef4444; border-color: #fca5a5;" onclick="logout()">🚪 ออกจากระบบ</div>
         </div>
     </div>
 
@@ -270,17 +286,23 @@
     <!-- 3. Modal เติมเงิน TrueMoney -->
     <div class="modal" id="topupModal">
         <h3 style="color: #0f172a;">🧧 เติมเงินซองอั่งเปา</h3>
-        <p style="font-size: 12px; color: #64748b; margin-top: 5px;">
-            ระบบจะโอนเงินเข้าเบอร์ <b>0827525423</b> แล้วเพิ่มเครดิตทันที
-        </p>
+        <p style="font-size: 12px; color: #64748b; margin-top: 5px;">ระบบจะโอนเงินเข้าเบอร์ <b>0827525423</b> แล้วเพิ่มเครดิตทันที</p>
         <input type="text" id="giftLink" placeholder="วางลิงก์ซองอั่งเปา TrueMoney ที่นี่...">
         <button class="modal-btn modal-btn-green" onclick="processAngpao()">ตรวจสอบ & เติมเงิน</button>
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
+    <!-- 4. Modal ประวัติคำสั่งซื้อ -->
+    <div class="modal" id="historyModal">
+        <h3 style="color: #0f172a; margin-bottom: 15px;">📜 ประวัติคำสั่งซื้อ</h3>
+        <div id="historyList">
+            <!-- ข้อมูลประวัติจะแสดงตรงนี้ -->
+        </div>
+        <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ปิดหน้าต่าง</button>
+    </div>
+
     <!-- หน้าต่างสินค้าหลัก -->
     <div class="container">
-        
         <div class="title-box">
             <h1>🚀 บริการรับรันสคริปต์</h1>
             <p>เลือกซื้อสคริปต์ Roblox คุณภาพสูง ได้ที่นี่</p>
@@ -292,54 +314,52 @@
                 <div class="product-img">Blox Fruits</div>
                 <div class="product-name">📜 สคริปต์ Blox Fruits</div>
                 <div class="product-price">50 บาท</div>
-                <button class="btn" onclick="buyProduct(50, 'Blox Fruits')">ซื้อสคริปต์</button>
+                <button class="btn" onclick="buyProduct(50, 'สคริปต์ Blox Fruits', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/bloxfruits.lua\'))()')">ซื้อสคริปต์</button>
             </div>
 
             <div class="product-card">
                 <div class="product-img">TSB Script</div>
                 <div class="product-name">📜 The Strongest Battlefield</div>
                 <div class="product-price">50 บาท</div>
-                <button class="btn" onclick="buyProduct(50, 'TSB')">ซื้อสคริปต์</button>
+                <button class="btn" onclick="buyProduct(50, 'The Strongest Battlefield', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/tsb.lua\'))()')">ซื้อสคริปต์</button>
             </div>
 
             <div class="product-card">
                 <div class="product-img">Universal Script</div>
                 <div class="product-name">📜 สคริปต์ใช้ได้ทุกแมพ</div>
                 <div class="product-price">99 บาท</div>
-                <button class="btn" onclick="buyProduct(99, 'ทุกแมพ')">ซื้อสคริปต์</button>
+                <button class="btn" onclick="buyProduct(99, 'สคริปต์ใช้ได้ทุกแมพ', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/universal.lua\'))()')">ซื้อสคริปต์</button>
             </div>
 
             <div class="product-card">
                 <div class="product-img">ESP / Wallhack</div>
                 <div class="product-name">📜 สคริปต์ ESP มองทะลุ</div>
                 <div class="product-price">35 บาท</div>
-                <button class="btn" onclick="buyProduct(35, 'ESP')">ซื้อสคริปต์</button>
+                <button class="btn" onclick="buyProduct(35, 'สคริปต์ ESP มองทะลุ', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/esp.lua\'))()')">ซื้อสคริปต์</button>
             </div>
 
             <div class="product-card">
                 <div class="product-img">Speed Hack</div>
                 <div class="product-name">📜 สคริปต์วิ่งเร็ว / กระโดดสูง</div>
                 <div class="product-price">20 บาท</div>
-                <button class="btn" onclick="buyProduct(20, 'วิ่งเร็ว')">ซื้อสคริปต์</button>
+                <button class="btn" onclick="buyProduct(20, 'สคริปต์วิ่งเร็ว', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/speed.lua\'))()')">ซื้อสคริปต์</button>
             </div>
 
             <div class="product-card">
                 <div class="product-img">FPS Boost</div>
                 <div class="product-name">📜 สคริปต์ FPS ปลดล็อกลื่นๆ</div>
                 <div class="product-price">20 บาท</div>
-                <button class="btn" onclick="buyProduct(20, 'FPS Boost')">ซื้อสคริปต์</button>
+                <button class="btn" onclick="buyProduct(20, 'สคริปต์ FPS Boost', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/fps.lua\'))()')">ซื้อสคริปต์</button>
             </div>
 
         </div>
-
     </div>
 
-    <!-- ระบบ JavaScript สั่งงาน -->
+    <!-- JavaScript สั่งงาน -->
     <script>
         let currentBalance = 0.00;
         let loggedInUser = null;
 
-        // โหลดข้อมูลบัญชีเมื่อเปิดเว็บขึ้นมา (จดจำการล็อกอิน)
         window.onload = function() {
             const savedSession = localStorage.getItem('activeUser');
             if (savedSession) {
@@ -352,7 +372,6 @@
             }
         };
 
-        // เปิด-ปิด Sidebar
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('overlay');
@@ -372,67 +391,46 @@
             document.getElementById('overlay').style.display = 'none';
         }
 
-        // 1. ระบบสมัครสมาชิก
         function register() {
             const user = document.getElementById('regUser').value.trim();
             const pass = document.getElementById('regPass').value;
             const passConfirm = document.getElementById('regPassConfirm').value;
 
-            if (!user || !pass) {
-                alert('❌ กรุณากรอกชื่อผู้ใช้งานและรหัสผ่านให้ครบถ้วน');
-                return;
-            }
-            if (pass !== passConfirm) {
-                alert('❌ รหัสผ่านทั้ง 2 ช่องไม่ตรงกัน');
-                return;
-            }
-            if (localStorage.getItem('user_' + user)) {
-                alert('❌ ชื่อผู้ใช้นี้ถูกใช้งานไปแล้ว');
-                return;
-            }
+            if (!user || !pass) { alert('❌ กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
+            if (pass !== passConfirm) { alert('❌ รหัสผ่านไม่ตรงกัน'); return; }
+            if (localStorage.getItem('user_' + user)) { alert('❌ ชื่อผู้ใช้นี้ถูกใช้งานแล้ว'); return; }
 
-            // บันทึกข้อมูลลงเครื่อง
-            const newUser = { username: user, password: pass, balance: 0.00 };
+            const newUser = { username: user, password: pass, balance: 0.00, history: [] };
             localStorage.setItem('user_' + user, JSON.stringify(newUser));
             
-            // ล็อกอินอัตโนมัติทันที
             localStorage.setItem('activeUser', user);
             loggedInUser = user;
             currentBalance = 0.00;
 
-            alert('🎉 สมัครสมาชิกสำเร็จ! ระบบทำการเข้าสู่ระบบให้อัตโนมัติ');
+            alert('🎉 สมัครสมาชิกสำเร็จ!');
             updateUI();
             closeAll();
         }
 
-        // 2. ระบบเข้าสู่ระบบ
         function login() {
             const user = document.getElementById('loginUser').value.trim();
             const pass = document.getElementById('loginPass').value;
 
             const userDataRaw = localStorage.getItem('user_' + user);
-            if (!userDataRaw) {
-                alert('❌ ไม่พบชื่อผู้ใช้นี้ในระบบ');
-                return;
-            }
+            if (!userDataRaw) { alert('❌ ไม่พบชื่อผู้ใช้นี้'); return; }
 
             const userData = JSON.parse(userDataRaw);
-            if (userData.password !== pass) {
-                alert('❌ รหัสผ่านไม่ถูกต้อง');
-                return;
-            }
+            if (userData.password !== pass) { alert('❌ รหัสผ่านไม่ถูกต้อง'); return; }
 
-            // จดจำการเข้าสู่ระบบ
             localStorage.setItem('activeUser', user);
             loggedInUser = user;
             currentBalance = userData.balance || 0.00;
 
-            alert(`🎉 ยินดีต้อนรับกลับมา คุณ ${user}!`);
+            alert(`🎉 ยินดีต้อนรับ คุณ ${user}!`);
             updateUI();
             closeAll();
         }
 
-        // 3. ระบบออกจากระบบ
         function logout() {
             localStorage.removeItem('activeUser');
             loggedInUser = null;
@@ -442,7 +440,6 @@
             closeAll();
         }
 
-        // อัปเดตหน้าตาเว็บตามสถานะล็อกอิน
         function updateUI() {
             const userDisplay = document.getElementById('userDisplay');
             const userBalance = document.getElementById('userBalance');
@@ -456,7 +453,6 @@
                 authMenu.style.display = 'none';
                 logoutMenu.style.display = 'block';
 
-                // เซฟยอดเงินล่าสุด
                 const userData = JSON.parse(localStorage.getItem('user_' + loggedInUser));
                 if (userData) {
                     userData.balance = currentBalance;
@@ -469,50 +465,88 @@
             }
         }
 
-        // ระบบรับซองอั่งเปา TrueMoney Wallet
         function processAngpao() {
-            if (!loggedInUser) {
-                alert('❌ กรุณาเข้าสู่ระบบก่อนทำการเติมเงิน');
-                openModal('loginModal');
-                return;
-            }
+            if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อน'); openModal('loginModal'); return; }
 
             const link = document.getElementById('giftLink').value.trim();
-
-            if (!link.includes('gift.truemoney.com')) {
-                alert('❌ ลิงก์ไม่ถูกต้อง! กรุณาใส่ลิงก์ซองอั่งเปา TrueMoney Wallet เท่านั้น');
-                return;
-            }
+            if (!link.includes('gift.truemoney.com')) { alert('❌ ลิงก์อั่งเปาไม่ถูกต้อง!'); return; }
 
             alert('⏳ กำลังตรวจสอบซองอั่งเปา และดึงเงินเข้าเบอร์ 0827525423...');
 
             setTimeout(() => {
-                const addedMoney = 50.00; // ยอดเงินสมมติ
+                const addedMoney = 50.00;
                 currentBalance += addedMoney;
-                
                 updateUI();
-                
                 alert(`✅ เติมเงินสำเร็จ! ได้รับเครดิตจำนวน ${addedMoney} บาท`);
                 document.getElementById('giftLink').value = '';
                 closeAll();
             }, 1500);
         }
 
-        // ระบบสั่งซื้อสินค้า
-        function buyProduct(price, name) {
-            if (!loggedInUser) {
-                alert('❌ กรุณาเข้าสู่ระบบก่อนสั่งซื้อสินค้า');
-                openModal('loginModal');
-                return;
-            }
+        /* 🛒 ระบบซื้อสินค้า และบันทึกประวัติ */
+        function buyProduct(price, name, scriptContent) {
+            if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนสั่งซื้อ'); openModal('loginModal'); return; }
 
             if (currentBalance < price) {
-                alert(`❌ เครดิตไม่พอ! สคริปต์นี้ราคา ${price} บาท (คุณมี ${currentBalance} บาท)\nกรุณาเติมเงินผ่าน TrueMoney Wallet ด้านขวามือครับ`);
+                alert(`❌ เครดิตไม่พอ! สคริปต์นี้ราคา ${price} บาท (คุณมี ${currentBalance} บาท)`);
             } else {
                 currentBalance -= price;
+                
+                // บันทึกคำสั่งซื้อลงในประวัติผู้ใช้
+                const userData = JSON.parse(localStorage.getItem('user_' + loggedInUser));
+                if (!userData.history) userData.history = [];
+
+                const newOrder = {
+                    name: name,
+                    price: price,
+                    script: scriptContent,
+                    date: new Date().toLocaleString('th-TH')
+                };
+
+                userData.history.unshift(newOrder); // ใส่ไว้บนสุด
+                userData.balance = currentBalance;
+                localStorage.setItem('user_' + loggedInUser, JSON.stringify(userData));
+
                 updateUI();
-                alert(`🎉 สั่งซื้อสคริปต์ ${name} สำเร็จ!\nยอดเงินคงเหลือ: ${currentBalance.toFixed(2)} บาท`);
+                alert(`🎉 สั่งซื้อ ${name} สำเร็จ!\nสามารถเข้าไปดูสคริปต์ได้ที่เมนู "ประวัติคำสั่งซื้อ" ครับ`);
             }
+        }
+
+        /* 📜 เปิดดูประวัติคำสั่งซื้อ */
+        function openHistoryModal() {
+            if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนดูประวัติ'); openModal('loginModal'); return; }
+
+            const userData = JSON.parse(localStorage.getItem('user_' + loggedInUser));
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+
+            if (!userData.history || userData.history.length === 0) {
+                historyList.innerHTML = '<p style="color:#64748b; font-size:14px;">ยังไม่มีประวัติคำสั่งซื้อ</p>';
+            } else {
+                userData.history.forEach((item, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'history-card';
+                    card.innerHTML = `
+                        <div class="history-title">📦 ${item.name}</div>
+                        <div class="history-price">💰 จำนวนเงิน: ${item.price} บาท</div>
+                        <div class="history-date">🕒 วันที่สั่งซื้อ: ${item.date}</div>
+                        <div style="font-size:12px; font-weight:bold; color:#334155;">รายการของ (สคริปต์):</div>
+                        <div class="script-box" id="scriptCode_${index}">${item.script}</div>
+                        <button class="btn-copy" onclick="copyScript('scriptCode_${index}')" style="margin-top:5px;">📋 คัดลอกสคริปต์</button>
+                        <div style="clear:both;"></div>
+                    `;
+                    historyList.appendChild(card);
+                });
+            }
+
+            openModal('historyModal');
+        }
+
+        // คัดลอกสคริปต์
+        function copyScript(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text);
+            alert('📋 คัดลอกสคริปต์เรียบร้อยแล้ว!');
         }
     </script>
 
