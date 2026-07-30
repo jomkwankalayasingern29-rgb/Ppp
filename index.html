@@ -1,13 +1,592 @@
-<!-- Modal เติมเงิน -->
-<div class="modal" id="topupModal">
-    <h3 style="color: #0f172a;">🧧 เติมเงินซองอั่งเปา</h3>
-    <p style="font-size: 12px; color: #64748b; margin-top: 5px;">ระบบจะโอนเงินเข้าเบอร์ <b>0827525423</b> แล้วเพิ่มเครดิตทันที</p>
-    
-    <!-- ช่องวางลิงก์ซองอั่งเปา -->
-    <input type="text" id="giftLink" placeholder="วางลิงก์ซองอั่งเปา TrueMoney ที่นี่...">
-    
-    <!-- ❌ บรรทัด <input type="number" id="testAmount"...> ถูกลบออกไปแล้ว -->
-    
-    <button class="modal-btn modal-btn-green" onclick="processAngpao()">ตรวจสอบ & เติมเงิน</button>
-    <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
-</div>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRIPT SHOP - ร้านขายสคริปต์</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 50px; }
+        
+        .header { 
+            background: #ffffff; 
+            padding: 12px 16px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .shop-brand {
+            font-size: 16px;
+            font-weight: 800;
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .user-status { display: flex; align-items: center; gap: 8px; }
+
+        .wallet-badge {
+            background: #111827;
+            color: #ffffff;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid #ef4444;
+        }
+
+        .username-badge {
+            background: #eff6ff;
+            color: #2563eb;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid #bfdbfe;
+            max-width: 110px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .menu-btn {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0f172a;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #f1f5f9;
+        }
+
+        .container { max-width: 500px; margin: 0 auto; padding: 15px; }
+        
+        .title-box { background: #ffffff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .title-box h1 { font-size: 22px; color: #0f172a; margin-bottom: 5px; }
+        .title-box p { font-size: 14px; color: #64748b; }
+        
+        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        .product-card { 
+            background: #111827; 
+            padding: 12px; 
+            border-radius: 12px; 
+            border: 2px solid #ef4444; 
+            text-align: center; 
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.15);
+        }
+        
+        .product-img { 
+            width: 100%; 
+            height: 100px; 
+            background: #1f2937; 
+            color: #ef4444; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            font-size: 13px;
+            margin-bottom: 8px; 
+            border: 1px dashed #ef4444;
+            padding: 5px;
+        }
+
+        .product-name { font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #f9fafb; }
+        .product-price { color: #ef4444; font-weight: bold; font-size: 16px; margin-bottom: 10px; }
+        
+        .btn { 
+            background: #ef4444; 
+            color: white; 
+            border: none; 
+            padding: 9px 0; 
+            width: 100%; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+        .btn:hover { background: #dc2626; }
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 200;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0; right: -300px; width: 300px; height: 100%;
+            background: #ffffff;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: 0.3s;
+            z-index: 300;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar.active { right: 0; }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .menu-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .menu-item:hover { background: #f1f5f9; }
+
+        .modal {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 420px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 400;
+            text-align: center;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 11px;
+            margin: 8px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .modal-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .modal-btn-green { background: #10b981; }
+
+        .history-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .history-title { font-weight: bold; color: #0f172a; font-size: 15px; }
+        .history-price { color: #ef4444; font-weight: bold; font-size: 14px; margin: 4px 0; }
+        .history-date { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
+        
+        .script-box {
+            background: #1e293b;
+            color: #38bdf8;
+            padding: 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-top: 5px;
+            border: 1px solid #334155;
+            user-select: all;
+        }
+
+        .btn-copy {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="shop-brand">🚀 SCRIPT SHOP</div>
+        <div class="user-status">
+            <div class="username-badge" id="userDisplay">👤 ไม่ได้ล็อกอิน</div>
+            <div class="wallet-badge">💰 <span id="userBalance">0.00</span> ฿</div>
+        </div>
+        <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeAll()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>เมนูหลัก</h3>
+            <span style="cursor:pointer; font-weight:bold;" onclick="toggleSidebar()">✕</span>
+        </div>
+        
+        <div id="authMenuGroup">
+            <div class="menu-item" onclick="openModal('registerModal')">📝 สมัครสมาชิก</div>
+            <div class="menu-item" onclick="openModal('loginModal')">🔑 เข้าสู่ระบบ</div>
+        </div>
+
+        <div id="userMenuGroup" style="display: none;">
+            <div class="menu-item" onclick="openModal('topupModal')">🎁 เติมเงิน TrueMoney Wallet</div>
+            <div class="menu-item" onclick="openHistoryModal()">📜 ประวัติคำสั่งซื้อ</div>
+            <div class="menu-item" style="color: #ef4444; border-color: #fca5a5;" onclick="logout()">🚪 ออกจากระบบ</div>
+        </div>
+    </div>
+
+    <!-- Modal สมัครสมาชิก -->
+    <div class="modal" id="registerModal">
+        <h3 style="color: #0f172a; margin-bottom: 10px;">📝 สมัครสมาชิก</h3>
+        <input type="text" id="regUser" placeholder="ตั้งชื่อผู้ใช้งาน">
+        <input type="password" id="regPass" placeholder="รหัสผ่าน">
+        <input type="password" id="regPassConfirm" placeholder="ยืนยันรหัสผ่าน">
+        <button class="modal-btn modal-btn-green" onclick="register()">สมัครสมาชิกเลย</button>
+        <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
+    </div>
+
+    <!-- Modal เข้าสู่ระบบ -->
+    <div class="modal" id="loginModal">
+        <h3 style="color: #0f172a; margin-bottom: 10px;">🔑 เข้าสู่ระบบ</h3>
+        <input type="text" id="loginUser" placeholder="ชื่อผู้ใช้งาน">
+        <input type="password" id="loginPass" placeholder="รหัสผ่าน">
+        <button class="modal-btn" onclick="login()">กดเพื่อเข้าสู่ระบบ</button>
+        <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
+    </div>
+
+    <!-- Modal เติมเงิน (นำช่องกรอกตัวเลขออกแล้ว) -->
+    <div class="modal" id="topupModal">
+        <h3 style="color: #0f172a;">🧧 เติมเงินซองอั่งเปา</h3>
+        <p style="font-size: 12px; color: #64748b; margin-top: 5px; margin-bottom: 10px;">
+            ระบบจะดึงเงินเข้าเบอร์ <b>0827525423</b> และปรับเครดิตให้อัตโนมัติ
+        </p>
+        <input type="text" id="giftLink" placeholder="วางลิงก์ซองอั่งเปา TrueMoney ที่นี่...">
+        <button class="modal-btn modal-btn-green" onclick="processAngpao()">ตรวจสอบ & เติมเงิน</button>
+        <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
+    </div>
+
+    <!-- Modal ประวัติ -->
+    <div class="modal" id="historyModal">
+        <h3 style="color: #0f172a; margin-bottom: 15px;">📜 ประวัติคำสั่งซื้อ</h3>
+        <div id="historyList"></div>
+        <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ปิดหน้าต่าง</button>
+    </div>
+
+    <!-- สินค้า -->
+    <div class="container">
+        <div class="title-box">
+            <h1>🚀 บริการรับรันสคริปต์</h1>
+            <p>เลือกซื้อสคริปต์ Roblox คุณภาพสูง ได้ที่นี่</p>
+        </div>
+
+        <div class="product-grid">
+            <div class="product-card">
+                <div class="product-img">Blox Fruits</div>
+                <div class="product-name">📜 สคริปต์ Blox Fruits</div>
+                <div class="product-price">50 บาท</div>
+                <button class="btn" onclick="buyProduct(50, 'สคริปต์ Blox Fruits', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/bloxfruits.lua\'))()')">ซื้อสคริปต์</button>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">TSB Script</div>
+                <div class="product-name">📜 The Strongest Battlefield</div>
+                <div class="product-price">50 บาท</div>
+                <button class="btn" onclick="buyProduct(50, 'The Strongest Battlefield', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/tsb.lua\'))()')">ซื้อสคริปต์</button>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">Universal Script</div>
+                <div class="product-name">📜 สคริปต์ใช้ได้ทุกแมพ</div>
+                <div class="product-price">99 บาท</div>
+                <button class="btn" onclick="buyProduct(99, 'สคริปต์ใช้ได้ทุกแมพ', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/universal.lua\'))()')">ซื้อสคริปต์</button>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">ESP / Wallhack</div>
+                <div class="product-name">📜 สคริปต์ ESP มองทะลุ</div>
+                <div class="product-price">35 บาท</div>
+                <button class="btn" onclick="buyProduct(35, 'สคริปต์ ESP มองทะลุ', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/esp.lua\'))()')">ซื้อสคริปต์</button>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">Speed Hack</div>
+                <div class="product-name">📜 สคริปต์วิ่งเร็ว / กระโดดสูง</div>
+                <div class="product-price">20 บาท</div>
+                <button class="btn" onclick="buyProduct(20, 'สคริปต์วิ่งเร็ว', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/speed.lua\'))()')">ซื้อสคริปต์</button>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">FPS Boost</div>
+                <div class="product-name">📜 สคริปต์ FPS ปลดล็อกลื่นๆ</div>
+                <div class="product-price">20 บาท</div>
+                <button class="btn" onclick="buyProduct(20, 'สคริปต์ FPS Boost', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/fps.lua\'))()')">ซื้อสคริปต์</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let DB = {
+            users: {},
+            usedVouchers: [],
+            currentUser: null
+        };
+
+        window.onload = function() {
+            loadDB();
+            updateUI();
+        };
+
+        function loadDB() {
+            const savedDB = localStorage.getItem('SHOP_DATABASE');
+            if (savedDB) {
+                try { DB = JSON.parse(savedDB); } catch(e) { console.error("Database error", e); }
+            }
+        }
+
+        function saveDB() {
+            localStorage.setItem('SHOP_DATABASE', JSON.stringify(DB));
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('active');
+            overlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
+        }
+
+        function openModal(id) {
+            closeAll();
+            document.getElementById(id).style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function closeAll() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        function register() {
+            const user = document.getElementById('regUser').value.trim();
+            const pass = document.getElementById('regPass').value;
+            const passConfirm = document.getElementById('regPassConfirm').value;
+
+            if (!user || !pass) { alert('❌ กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
+            if (pass !== passConfirm) { alert('❌ รหัสผ่านไม่ตรงกัน'); return; }
+
+            const lowerUser = user.toLowerCase();
+
+            if (DB.users[lowerUser]) {
+                alert('❌ ชื่อผู้ใช้งานนี้ถูกใช้งานแล้ว!');
+                return;
+            }
+
+            DB.users[lowerUser] = {
+                username: user,
+                password: pass,
+                balance: 0.00,
+                history: []
+            };
+
+            DB.currentUser = lowerUser;
+            saveDB();
+
+            alert('🎉 สมัครสมาชิกสำเร็จ!');
+            updateUI();
+            closeAll();
+        }
+
+        function login() {
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value;
+
+            if (!user || !pass) { alert('❌ กรุณากรอกชื่อและรหัสผ่าน'); return; }
+
+            const lowerUser = user.toLowerCase();
+            const account = DB.users[lowerUser];
+
+            if (!account || account.password !== pass) {
+                alert('❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                return;
+            }
+
+            DB.currentUser = lowerUser;
+            saveDB();
+
+            alert(`🎉 ยินดีต้อนรับ คุณ ${account.username}!`);
+            updateUI();
+            closeAll();
+        }
+
+        function logout() {
+            DB.currentUser = null;
+            saveDB();
+            alert('👋 ออกจากระบบเรียบร้อยแล้ว');
+            updateUI();
+            closeAll();
+        }
+
+        function updateUI() {
+            const userDisplay = document.getElementById('userDisplay');
+            const userBalance = document.getElementById('userBalance');
+            const authMenu = document.getElementById('authMenuGroup');
+            const userMenu = document.getElementById('userMenuGroup');
+
+            if (DB.currentUser && DB.users[DB.currentUser]) {
+                const account = DB.users[DB.currentUser];
+                userDisplay.innerText = `👤 ${account.username}`;
+                userBalance.innerText = account.balance.toFixed(2);
+                authMenu.style.display = 'none';
+                userMenu.style.display = 'block';
+            } else {
+                userDisplay.innerText = '👤 ไม่ได้ล็อกอิน';
+                userBalance.innerText = '0.00';
+                authMenu.style.display = 'block';
+                userMenu.style.display = 'none';
+            }
+        }
+
+        /* 🧧 เติมเงินอั่งเปา (ปรับปรุงระบบสุ่มจำนวนเงินจำลองอัตโนมัติ) */
+        function processAngpao() {
+            if (!DB.currentUser) { alert('❌ กรุณาเข้าสู่ระบบก่อน'); openModal('loginModal'); return; }
+
+            const link = document.getElementById('giftLink').value.trim();
+
+            if (!link.includes('gift.truemoney.com')) { 
+                alert('❌ ลิงก์อั่งเปาไม่ถูกต้อง!'); 
+                return; 
+            }
+
+            if (DB.usedVouchers.includes(link)) {
+                alert('❌ ซองอั่งเปานี้ถูกใช้งานไปแล้ว!');
+                return;
+            }
+
+            alert('⏳ กำลังตรวจสอบซองอั่งเปาและรับเงินเข้าบัญชี...');
+
+            setTimeout(() => {
+                // จำลองสุ่มมูลค่าเงินในซองอั่งเปา (10, 20, 50, หรือ 100 บาท)
+                const mockAmounts = [10, 20, 50, 100];
+                const receivedAmount = mockAmounts[Math.floor(Math.random() * mockAmounts.length)];
+
+                DB.usedVouchers.push(link);
+                DB.users[DB.currentUser].balance += receivedAmount;
+                saveDB();
+                updateUI();
+
+                alert(`✅ เติมเงินสำเร็จ! ได้รับเครดิตจำนวน ${receivedAmount.toFixed(2)} บาท`);
+                document.getElementById('giftLink').value = '';
+                closeAll();
+            }, 1200);
+        }
+
+        function buyProduct(price, name, scriptContent) {
+            if (!DB.currentUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนสั่งซื้อ'); openModal('loginModal'); return; }
+
+            const account = DB.users[DB.currentUser];
+
+            if (account.balance < price) {
+                alert(`❌ เครดิตไม่พอ! สคริปต์นี้ราคา ${price} บาท (คุณมี ${account.balance.toFixed(2)} บาท)`);
+            } else {
+                account.balance -= price;
+                
+                const newOrder = {
+                    name: name,
+                    price: price,
+                    script: scriptContent,
+                    date: new Date().toLocaleString('th-TH')
+                };
+
+                account.history.unshift(newOrder);
+                saveDB();
+                updateUI();
+
+                alert(`🎉 สั่งซื้อ ${name} สำเร็จ!\nสามารถเข้าไปดูสคริปต์ได้ที่เมนู "ประวัติคำสั่งซื้อ" ครับ`);
+            }
+        }
+
+        function openHistoryModal() {
+            if (!DB.currentUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนดูประวัติ'); openModal('loginModal'); return; }
+
+            const account = DB.users[DB.currentUser];
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+
+            if (!account.history || account.history.length === 0) {
+                historyList.innerHTML = '<p style="color:#64748b; font-size:14px;">ยังไม่มีประวัติคำสั่งซื้อ</p>';
+            } else {
+                account.history.forEach((item, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'history-card';
+                    card.innerHTML = `
+                        <div class="history-title">📦 ${item.name}</div>
+                        <div class="history-price">💰 จำนวนเงิน: ${item.price} บาท</div>
+                        <div class="history-date">🕒 วันที่สั่งซื้อ: ${item.date}</div>
+                        <div style="font-size:12px; font-weight:bold; color:#334155;">รายการของ (สคริปต์):</div>
+                        <div class="script-box" id="scriptCode_${index}">${item.script}</div>
+                        <button class="btn-copy" onclick="copyScript('scriptCode_${index}')" style="margin-top:8px;">📋 คัดลอกสคริปต์</button>
+                        <div style="clear:both;"></div>
+                    `;
+                    historyList.appendChild(card);
+                });
+            }
+
+            openModal('historyModal');
+        }
+
+        function copyScript(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('📋 คัดลอกสคริปต์เรียบร้อยแล้ว!');
+                });
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('📋 คัดลอกสคริปต์เรียบร้อยแล้ว!');
+            }
+        }
+    </script>
+
+</body>
+</html>
