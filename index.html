@@ -8,21 +8,65 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 50px; }
         
-        .header { background: #ffffff; padding: 15px 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #cbd5e1; }
-        .logo { font-size: 20px; font-weight: bold; color: #2563eb; }
+        /* Header */
+        .header { background: #ffffff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e1; }
+        .logo { font-size: 20px; font-weight: bold; color: #ef4444; }
         
         .container { max-width: 500px; margin: 0 auto; padding: 15px; }
         
+        /* กล่องหัวข้อหน้าต่างสีขาว */
         .title-box { background: #ffffff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px solid #e2e8f0; }
         .title-box h1 { font-size: 22px; color: #0f172a; margin-bottom: 5px; }
         .title-box p { font-size: 14px; color: #64748b; }
         
-        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .product-card { background: #ffffff; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; }
-        .product-img { width: 100%; height: 120px; background: #3b82f6; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 8px; }
-        .product-name { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
-        .product-price { color: #2563eb; font-weight: bold; font-size: 16px; margin-bottom: 8px; }
-        .btn { background: #2563eb; color: white; border: none; padding: 8px 0; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        /* Grid เรียง 2 คอลัมน์ลงมา */
+        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        /* 🖤 UI การ์ดสีดำ ขอบสีแดง ❤️ */
+        .product-card { 
+            background: #111827; 
+            padding: 12px; 
+            border-radius: 12px; 
+            border: 2px solid #ef4444; 
+            text-align: center; 
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.15);
+        }
+        
+        .product-img { 
+            width: 100%; 
+            height: 110px; 
+            background: #1f2937; 
+            color: #ef4444; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            font-size: 13px;
+            margin-bottom: 8px; 
+            border: 1px dashed #ef4444;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .product-name { font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #f9fafb; }
+        .product-price { color: #ef4444; font-weight: bold; font-size: 16px; margin-bottom: 10px; }
+        
+        /* ปุ่มสั่งซื้อสีแดง */
+        .btn { 
+            background: #ef4444; 
+            color: white; 
+            border: none; 
+            padding: 9px 0; 
+            width: 100%; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.2s;
+        }
+        
+        .btn:hover { background: #dc2626; }
     </style>
 </head>
 <body>
@@ -34,15 +78,16 @@
 
     <div class="container">
         
-        <!-- หมวดหมู่รันสคริปต์ -->
+        <!-- หน้าต่างหัวข้อสีขาว -->
         <div class="title-box">
             <h1>🚀 บริการรับรันสคริปต์</h1>
-            <p>เลือกซื้อสคริปต์เกมและบริการที่คุณต้องการได้เลย</p>
+            <p>เลือกซื้อสคริปต์ Roblox คุณภาพสูง ได้ที่นี่</p>
         </div>
 
-        <!-- รายการสินค้า -->
+        <!-- รายการสคริปต์ (การ์ดดำขอบแดง เรียงต่อลงมาละ 2 แถว) -->
         <div class="product-grid">
 
+            <!-- 1. สคริปต์ Blox Fruits -->
             <div class="product-card">
                 <div class="product-img">Blox Fruits</div>
                 <div class="product-name">📜 สคริปต์ Blox Fruits</div>
@@ -50,16 +95,33 @@
                 <button class="btn" onclick="alert('สั่งซื้อสคริปต์ Blox Fruits')">ซื้อสคริปต์</button>
             </div>
 
+            <!-- 2. สคริปต์ The Strongest Battlefield -->
             <div class="product-card">
-                <div class="product-img">Grow Garden</div>
-                <div class="product-name">📜 สคริปต์ Grow Garden</div>
-                <div class="product-price">30 บาท</div>
-                <button class="btn" onclick="alert('สั่งซื้อสคริปต์ Grow Garden')">ซื้อสคริปต์</button>
+                <div class="product-img">TSB Script</div>
+                <div class="product-name">📜 The Strongest Battlefield</div>
+                <div class="product-price">50 บาท</div>
+                <button class="btn" onclick="alert('สั่งซื้อสคริปต์ The Strongest Battlefield')">ซื้อสคริปต์</button>
             </div>
 
-        </div>
+            <!-- 3. สคริปต์ใช้ได้ทุกแมพ -->
+            <div class="product-card">
+                <div class="product-img">Universal Script</div>
+                <div class="product-name">📜 สคริปต์ใช้ได้ทุกแมพ</div>
+                <div class="product-price">99 บาท</div>
+                <button class="btn" onclick="alert('สั่งซื้อสคริปต์ใช้ได้ทุกแมพ')">ซื้อสคริปต์</button>
+            </div>
 
-    </div>
+            <!-- 4. สคริปต์ ESP (มองทะลุ) -->
+            <div class="product-card">
+                <div class="product-img">ESP / Wallhack</div>
+                <div class="product-name">📜 สคริปต์ ESP มองทะลุ</div>
+                <div class="product-price">35 บาท</div>
+                <button class="btn" onclick="alert('สั่งซื้อสคริปต์ ESP')">ซื้อสคริปต์</button>
+            </div>
 
-</body>
-</html>
+            <!-- 5. สคริปต์วิ่งเร็ว -->
+            <div class="product-card">
+                <div class="product-img">Speed Hack</div>
+                <div class="product-name">📜 สคริปต์วิ่งเร็ว / กระโดดสูง</div>
+                <div class="product-price">20 บาท</div>
+                <button class="btn" onclick="alert('สั่งซื้อ
