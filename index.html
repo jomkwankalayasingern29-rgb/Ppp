@@ -181,7 +181,7 @@
         .modal input {
             width: 100%;
             padding: 11px;
-            margin: 8px 0;
+            margin: 6px 0;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             font-size: 14px;
@@ -201,6 +201,16 @@
         }
 
         .modal-btn-green { background: #10b981; }
+
+        .qr-image {
+            width: 100%;
+            max-width: 240px;
+            border-radius: 12px;
+            margin: 10px auto;
+            display: block;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
 
         .history-card {
             background: #f8fafc;
@@ -265,7 +275,7 @@
         </div>
 
         <div id="userMenuGroup" style="display: none;">
-            <div class="menu-item" onclick="openModal('topupModal')">🎁 เติมเงิน TrueMoney Wallet</div>
+            <div class="menu-item" onclick="openModal('topupModal')">📲 เติมเงิน สแกน QR Code</div>
             <div class="menu-item" onclick="openHistoryModal()">📜 ประวัติคำสั่งซื้อ</div>
             <div class="menu-item" style="color: #ef4444; border-color: #fca5a5;" onclick="logout()">🚪 ออกจากระบบ</div>
         </div>
@@ -290,14 +300,24 @@
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
-    <!-- Modal เติมเงิน (นำช่องกรอกตัวเลขออกแล้ว) -->
+    <!-- Modal เติมเงินด้วยการสแกน QR Code -->
     <div class="modal" id="topupModal">
-        <h3 style="color: #0f172a;">🧧 เติมเงินซองอั่งเปา</h3>
-        <p style="font-size: 12px; color: #64748b; margin-top: 5px; margin-bottom: 10px;">
-            ระบบจะดึงเงินเข้าเบอร์ <b>0827525423</b> และปรับเครดิตให้อัตโนมัติ
+        <h3 style="color: #0f172a;">📲 เติมเงินผ่าน QR Code</h3>
+        <p style="font-size: 12px; color: #64748b; margin-top: 4px;">
+            รองรับ <b>TrueMoney Wallet</b> และ <b>PromptPay (ทุกธนาคาร)</b>
         </p>
-        <input type="text" id="giftLink" placeholder="วางลิงก์ซองอั่งเปา TrueMoney ที่นี่...">
-        <button class="modal-btn modal-btn-green" onclick="processAngpao()">ตรวจสอบ & เติมเงิน</button>
+        
+        <!-- รูป QR Code -->
+        <img src="qr-code.png" alt="QR Code เติมเงิน" class="qr-image">
+        
+        <p style="font-size: 13px; font-weight: bold; color: #0f172a; margin-bottom: 8px;">
+            ชื่อบัญชี: จิรพันธ์ เผือดผ่อง
+        </p>
+
+        <input type="number" id="topupAmount" placeholder="ระบุจำนวนเงินที่โอน (บาท)">
+        <input type="text" id="txRef" placeholder="ระบุเลขที่อ้างอิง / เลขสลิป">
+
+        <button class="modal-btn modal-btn-green" onclick="processScanTopup()">แจ้งชำระเงิน & เติมเครดิต</button>
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
@@ -363,7 +383,7 @@
     <script>
         let DB = {
             users: {},
-            usedVouchers: [],
+            usedRefs: [],
             currentUser: null
         };
 
@@ -482,36 +502,41 @@
             }
         }
 
-        /* 🧧 เติมเงินอั่งเปา (ปรับปรุงระบบสุ่มจำนวนเงินจำลองอัตโนมัติ) */
-        function processAngpao() {
+        /* 📲 ระบบยืนยันการเติมเงินด้วยการสแกน */
+        function processScanTopup() {
             if (!DB.currentUser) { alert('❌ กรุณาเข้าสู่ระบบก่อน'); openModal('loginModal'); return; }
 
-            const link = document.getElementById('giftLink').value.trim();
+            const amount = parseFloat(document.getElementById('topupAmount').value);
+            const ref = document.getElementById('txRef').value.trim();
 
-            if (!link.includes('gift.truemoney.com')) { 
-                alert('❌ ลิงก์อั่งเปาไม่ถูกต้อง!'); 
-                return; 
-            }
-
-            if (DB.usedVouchers.includes(link)) {
-                alert('❌ ซองอั่งเปานี้ถูกใช้งานไปแล้ว!');
+            if (isNaN(amount) || amount <= 0) {
+                alert('❌ กรุณาระบุจำนวนเงินที่ถูกต้อง');
                 return;
             }
 
-            alert('⏳ กำลังตรวจสอบซองอั่งเปาและรับเงินเข้าบัญชี...');
+            if (!ref) {
+                alert('❌ กรุณาระบุเลขที่อ้างอิง / เลขสลิปการโอน');
+                return;
+            }
+
+            if (!DB.usedRefs) DB.usedRefs = [];
+
+            if (DB.usedRefs.includes(ref)) {
+                alert('❌ เลขสลิปนี้ถูกใช้งานไปแล้ว!');
+                return;
+            }
+
+            alert('⏳ กำลังตรวจสอบการชำระเงิน...');
 
             setTimeout(() => {
-                // จำลองสุ่มมูลค่าเงินในซองอั่งเปา (10, 20, 50, หรือ 100 บาท)
-                const mockAmounts = [10, 20, 50, 100];
-                const receivedAmount = mockAmounts[Math.floor(Math.random() * mockAmounts.length)];
-
-                DB.usedVouchers.push(link);
-                DB.users[DB.currentUser].balance += receivedAmount;
+                DB.usedRefs.push(ref);
+                DB.users[DB.currentUser].balance += amount;
                 saveDB();
                 updateUI();
 
-                alert(`✅ เติมเงินสำเร็จ! ได้รับเครดิตจำนวน ${receivedAmount.toFixed(2)} บาท`);
-                document.getElementById('giftLink').value = '';
+                alert(`✅ เติมเงินสำเร็จ! เพิ่มเครดิตจำนวน ${amount.toFixed(2)} บาท เรียบร้อยแล้ว`);
+                document.getElementById('topupAmount').value = '';
+                document.getElementById('txRef').value = '';
                 closeAll();
             }, 1200);
         }
