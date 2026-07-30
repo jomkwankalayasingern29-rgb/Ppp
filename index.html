@@ -13,7 +13,7 @@
         }
 
         body {
-            background-color: #fde2e4; /* ฉากหลังสีชมพูอ่อนพาสเทล */
+            background-color: #fde2e4;
             color: #333;
             display: flex;
             justify-content: center;
@@ -21,7 +21,7 @@
 
         .container {
             width: 100%;
-            max-width: 480px; /* ขนาดจำลองจอมือถือ */
+            max-width: 480px;
             background-color: #fff0f3;
             min-height: 100vh;
             padding-bottom: 30px;
@@ -50,8 +50,11 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background-color: #ddd;
-            object-fit: cover;
+            background-color: #ffd1dc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
         }
 
         .shop-name {
@@ -88,23 +91,22 @@
             gap: 6px;
         }
 
-        /* Banner หมวดหมู่ - อัปเดตใส่รูปภาพของคุณ */
+        /* Banner หมวดหมู่รูปภาพ */
         .category-banner {
             width: 100%;
-            height: auto;
             border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             margin-bottom: 24px;
             border: 2px solid #ffffff;
             overflow: hidden;
-            display: flex;
+            background-color: #e5e7eb;
         }
 
         .category-banner img {
             width: 100%;
             height: auto;
-            object-fit: cover;
             display: block;
+            object-fit: cover;
         }
 
         /* Grid สินค้า 2 คอลัมน์ */
@@ -128,7 +130,7 @@
         .product-img-box {
             width: 100%;
             aspect-ratio: 1 / 1;
-            background-color: #2d2d2d;
+            background-color: #1f2937;
             border-radius: 12px;
             position: relative;
             display: flex;
@@ -137,7 +139,6 @@
             overflow: hidden;
         }
 
-        /* ป้าย x10 ด้านบนขวา */
         .badge-qty {
             position: absolute;
             top: 6px;
@@ -174,7 +175,7 @@
         /* ปุ่มสั่งซื้อ */
         .btn-buy {
             width: 100%;
-            background-color: #10b981; /* สีเขียวสดใส */
+            background-color: #10b981;
             color: white;
             border: none;
             padding: 8px 0;
@@ -193,7 +194,6 @@
             background-color: #059669;
         }
 
-        /* ปุ่มสินค้าหมด */
         .btn-out {
             background-color: #e5e7eb;
             color: #9ca3af;
@@ -207,9 +207,65 @@
     <!-- Navbar ด้านบน -->
     <div class="navbar">
         <div class="brand-box">
-            <img src="https://via.placeholder.com/40" class="avatar" alt="Logo">
-            <span class="shop-name">Mushroom Shop### วิธีนำไปใช้:
+            <div class="avatar">🐱</div>
+            <span class="shop-name">Mushroom Shop</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="user-balance">🪙 10</div>
+            <span style="font-size: 1.2rem; cursor: pointer;">🔍</span>
+        </div>
+    </div>
 
-1. ก๊อปปี้โค้ดด้านบนทั้งหมดไปวางในโปรแกรมเขียนโค้ด (เช่น Notepad, VS Code) และเซฟเป็นไฟล์ชื่อ `index.html`
-2. **สำคัญ:** ตรวจสอบให้แน่ใจว่าไฟล์รูปภาพ `image_5.png` ของคุณอยู่ในโฟลเดอร์เดียวกับไฟล์ `index.html` ที่คุณเซฟไว้
-3. เปิดไฟล์ `index.html` ด้วยเว็บเบราว์เซอร์ (Chrome, Edge, Firefox) เพื่อดูหน้าเว็บที่อัปเดตแล้วครับ
+    <div class="content">
+        <!-- หมวดหมู่ -->
+        <div class="section-title">
+            <span>田</span> หมวดหมู่: ไก่แมพปลูกเห็ด
+        </div>
+        <div class="category-banner">
+            <!-- เปลี่ยนชื่อไฟล์รูปภาพใน src ให้ตรงกับชื่อรูปที่คุณอัปโหลดขึ้น GitHub -->
+            <img src="mushroom-banner.jpg" alt="ไก่แมพปลูกเห็ด">
+        </div>
+
+        <!-- รายการสินค้า -->
+        <div class="section-title">
+            <span>📦</span> สินค้า
+        </div>
+
+        <div class="product-grid">
+            <!-- การ์ดสินค้าที่คุณต้องการ -->
+            <div class="product-card">
+                <div>
+                    <div class="product-img-box">
+                        <span class="badge-qty">x10</span>
+                        <span style="font-size: 3rem;">🍄</span>
+                    </div>
+                    <div class="product-title">ID ไก่เมล็ดเห็ดวิเศษ 10 ต้น</div>
+                </div>
+                <div>
+                    <div class="product-price">10 เครดิต</div>
+                    <div class="product-stock">เหลือ 5 ชิ้น</div>
+                    <button class="btn-buy">🛒 ซื้อสินค้า</button>
+                </div>
+            </div>
+
+            <!-- การ์ดสินค้าตัวอย่างที่ 2 -->
+            <div class="product-card">
+                <div>
+                    <div class="product-img-box">
+                        <span class="badge-qty">x100</span>
+                        <span style="font-size: 3rem;">🌱</span>
+                    </div>
+                    <div class="product-title">ID ไก่เมล็ดเห็ดธรรมดา</div>
+                </div>
+                <div>
+                    <div class="product-price">5 เครดิต</div>
+                    <div class="product-stock">เหลือ 0 ชิ้น</div>
+                    <button class="btn-buy btn-out" disabled>📦 สินค้าหมด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
