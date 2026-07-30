@@ -8,7 +8,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 50px; }
         
-        /* Header ด้านบน */
         .header { 
             background: #ffffff; 
             padding: 12px 16px; 
@@ -21,7 +20,6 @@
             z-index: 100;
         }
 
-        /* โลโก้/ชื่อร้าน */
         .shop-brand {
             font-size: 16px;
             font-weight: 800;
@@ -244,7 +242,6 @@
 </head>
 <body>
 
-    <!-- Header ด้านบน (เพิ่มชื่อร้านอยู่ซ้ายสุด ข้างๆ ข้อมูลผู้ใช้) -->
     <div class="header">
         <div class="shop-brand">
             🚀 SCRIPT SHOP
@@ -260,7 +257,6 @@
 
     <div class="overlay" id="overlay" onclick="closeAll()"></div>
 
-    <!-- Sidebar เมนูด้านขวา -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h3>เมนูหลัก</h3>
@@ -280,7 +276,6 @@
         </div>
     </div>
 
-    <!-- Modals -->
     <div class="modal" id="registerModal">
         <h3 style="color: #0f172a; margin-bottom: 10px;">📝 สมัครสมาชิก</h3>
         <input type="text" id="regUser" placeholder="ตั้งชื่อผู้ใช้งาน">
@@ -313,7 +308,6 @@
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ปิดหน้าต่าง</button>
     </div>
 
-    <!-- สินค้า -->
     <div class="container">
         <div class="title-box">
             <h1>🚀 บริการรับรันสคริปต์</h1>
@@ -365,7 +359,6 @@
         </div>
     </div>
 
-    <!-- JavaScript สั่งงาน -->
     <script>
         let currentBalance = 0.00;
         let loggedInUser = null;
@@ -401,7 +394,7 @@
             document.getElementById('overlay').style.display = 'none';
         }
 
-        /* 📝 ระบบสมัครสมาชิก (แก้บั๊กชื่อซ้ำ) */
+        /* 📝 สมัครสมาชิก */
         function register() {
             const user = document.getElementById('regUser').value.trim();
             const pass = document.getElementById('regPass').value;
@@ -410,7 +403,6 @@
             if (!user || !pass) { alert('❌ กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
             if (pass !== passConfirm) { alert('❌ รหัสผ่านไม่ตรงกัน'); return; }
 
-            // เช็กชื่อซ้ำโดยแปลงเป็นตัวพิมพ์เล็กทั้งหมดเพื่อความแม่นยำ
             const userKey = 'user_' + user.toLowerCase();
             if (localStorage.getItem(userKey)) { 
                 alert('❌ ชื่อผู้ใช้งานนี้ถูกใช้งานแล้ว! กรุณาใช้ชื่ออื่น'); 
@@ -429,17 +421,29 @@
             closeAll();
         }
 
-        /* 🔑 ระบบเข้าสู่ระบบ */
+        /* 🔑 เข้าสู่ระบบ (แก้ไขแก้บั๊กล็อกอินไม่ได้) */
         function login() {
             const user = document.getElementById('loginUser').value.trim();
             const pass = document.getElementById('loginPass').value;
 
+            if (!user || !pass) {
+                alert('❌ กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+                return;
+            }
+
             const userKey = 'user_' + user.toLowerCase();
             const userDataRaw = localStorage.getItem(userKey);
-            if (!userDataRaw) { alert('❌ ไม่พบชื่อผู้ใช้นี้ในระบบ'); return; }
+
+            if (!userDataRaw) { 
+                alert('❌ ไม่พบชื่อผู้ใช้นี้ในระบบ'); 
+                return; 
+            }
 
             const userData = JSON.parse(userDataRaw);
-            if (userData.password !== pass) { alert('❌ รหัสผ่านไม่ถูกต้อง'); return; }
+            if (userData.password !== pass) { 
+                alert('❌ รหัสผ่านไม่ถูกต้อง'); 
+                return; 
+            }
 
             localStorage.setItem('activeUser', user.toLowerCase());
             loggedInUser = userData.username;
@@ -485,7 +489,7 @@
             }
         }
 
-        /* 🧧 ระบบเติมเงินอั่งเปา (แก้บั๊กใช้ซ้ำข้ามบัญชี) */
+        /* 🧧 เติมเงินอั่งเปา */
         function processAngpao() {
             if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อน'); openModal('loginModal'); return; }
 
@@ -502,22 +506,19 @@
                 return;
             }
 
-            // ดึงข้อมูลรายการซองที่ถูกใช้ไปแล้วทั้งหมดในระบบ (Global Used Links)
             let usedLinks = JSON.parse(localStorage.getItem('global_used_angpao_links') || '[]');
             
             if (usedLinks.includes(link)) {
-                alert('❌ ซองอั่งเปานี้ถูกใช้งานไปแล้ว! (ไม่สามารถใช้ซ้ำได้ ไม่ว่าบัญชีใดก็ตาม)');
+                alert('❌ ซองอั่งเปานี้ถูกใช้งานไปแล้ว!');
                 return;
             }
 
             alert('⏳ กำลังตรวจสอบซองอั่งเปา และดึงเงินเข้าเบอร์ 0827525423...');
 
             setTimeout(() => {
-                // บันทึกลิงก์ลงในส่วนกลางว่าใช้ไปแล้ว
                 usedLinks.push(link);
                 localStorage.setItem('global_used_angpao_links', JSON.stringify(usedLinks));
 
-                // เพิ่มเครดิต
                 currentBalance += amountInput;
                 updateUI();
 
