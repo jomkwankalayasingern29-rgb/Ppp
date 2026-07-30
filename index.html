@@ -6,15 +6,21 @@
     <title>SCRIPT SHOP - ร้านขายสคริปต์</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 50px; }
+        
+        /* 🖤 พื้นหลังเว็บสีดำเข้ม */
+        body { 
+            background-color: #080808; 
+            color: #ffffff; 
+            padding-bottom: 50px; 
+        }
         
         .header { 
-            background: #ffffff; 
+            background: #111111; 
             padding: 12px 16px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            border-bottom: 1px solid #cbd5e1;
+            border-bottom: 1px solid #222222;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -33,7 +39,7 @@
         .user-status { display: flex; align-items: center; gap: 8px; }
 
         .wallet-badge {
-            background: #111827;
+            background: #18181b;
             color: #ffffff;
             padding: 6px 10px;
             border-radius: 20px;
@@ -43,13 +49,13 @@
         }
 
         .username-badge {
-            background: #eff6ff;
-            color: #2563eb;
+            background: #18181b;
+            color: #38bdf8;
             padding: 6px 10px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
-            border: 1px solid #bfdbfe;
+            border: 1px solid #27272a;
             max-width: 110px;
             white-space: nowrap;
             overflow: hidden;
@@ -59,35 +65,64 @@
         .menu-btn {
             font-size: 20px;
             font-weight: bold;
-            color: #0f172a;
+            color: #ffffff;
             cursor: pointer;
             padding: 4px 8px;
             border-radius: 6px;
-            background: #f1f5f9;
+            background: #18181b;
+            border: 1px solid #27272a;
         }
 
         .container { max-width: 500px; margin: 0 auto; padding: 15px; }
         
-        .title-box { background: #ffffff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-        .title-box h1 { font-size: 22px; color: #0f172a; margin-bottom: 5px; }
-        .title-box p { font-size: 14px; color: #64748b; }
+        /* ✨ Animate Border Gradient keyframes */
+        @keyframes borderAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .title-box { 
+            background: #121212; 
+            padding: 20px; 
+            border-radius: 12px; 
+            text-align: center; 
+            margin-bottom: 20px; 
+            border: 1px solid #27272a;
+        }
+        .title-box h1 { font-size: 22px; color: #ffffff; margin-bottom: 5px; }
+        .title-box p { font-size: 14px; color: #a1a1aa; }
         
-        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         
+        /* ✨ การ์ดสินค้า พร้อมขอบขาวอนิเมชั่น */
         .product-card { 
-            background: #111827; 
+            position: relative;
+            background: #121212; 
             padding: 12px; 
             border-radius: 12px; 
-            border: 2px solid #ef4444; 
             text-align: center; 
             color: #ffffff;
-            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.15);
+            z-index: 1;
+        }
+
+        /* โค้ดสร้างขอบขาวอนิเมชั่นเรืองแสง */
+        .product-card::before, .modal::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(90deg, #ffffff, #444444, #ffffff, #222222, #ffffff);
+            background-size: 300% 300%;
+            border-radius: 14px;
+            z-index: -1;
+            animation: borderAnimation 4s ease infinite;
+            opacity: 0.8;
         }
         
         .product-img { 
             width: 100%; 
             height: 100px; 
-            background: #1f2937; 
+            background: #18181b; 
             color: #ef4444; 
             border-radius: 8px; 
             display: flex; 
@@ -96,11 +131,11 @@
             font-weight: bold; 
             font-size: 13px;
             margin-bottom: 8px; 
-            border: 1px dashed #ef4444;
+            border: 1px dashed #3f3f46;
             padding: 5px;
         }
 
-        .product-name { font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #f9fafb; }
+        .product-name { font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #f4f4f5; }
         .product-price { color: #ef4444; font-weight: bold; font-size: 16px; margin-bottom: 10px; }
         
         .btn { 
@@ -118,7 +153,8 @@
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
             display: none;
             z-index: 200;
         }
@@ -126,8 +162,9 @@
         .sidebar {
             position: fixed;
             top: 0; right: -300px; width: 300px; height: 100%;
-            background: #ffffff;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            background: #121212;
+            border-left: 1px solid #27272a;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.8);
             transition: 0.3s;
             z-index: 300;
             padding: 20px;
@@ -140,14 +177,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #27272a;
             padding-bottom: 10px;
             margin-bottom: 15px;
         }
 
         .menu-item {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: #18181b;
+            border: 1px solid #27272a;
             padding: 12px;
             border-radius: 8px;
             cursor: pointer;
@@ -155,36 +192,44 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            color: #0f172a;
+            color: #f4f4f5;
             margin-bottom: 10px;
         }
 
-        .menu-item:hover { background: #f1f5f9; }
+        .menu-item:hover { background: #27272a; }
 
+        /* ✨ Modal แบบพื้นหลังดำ ขอบขาวอนิเมชั่น */
         .modal {
             position: fixed;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            background: #ffffff;
+            background: #121212;
             padding: 20px;
             border-radius: 12px;
             width: 90%;
             max-width: 420px;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             display: none;
             z-index: 400;
             text-align: center;
+            color: #ffffff;
         }
 
         .modal input {
             width: 100%;
             padding: 11px;
             margin: 6px 0;
-            border: 1px solid #cbd5e1;
+            background: #18181b;
+            border: 1px solid #3f3f46;
+            color: #ffffff;
             border-radius: 8px;
             font-size: 14px;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: #ffffff;
         }
 
         .modal-btn {
@@ -206,31 +251,32 @@
         .modal-btn-fb { background: #1877f2; }
 
         .info-card {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
+            background: #18181b;
+            border: 1px solid #27272a;
             border-radius: 10px;
             padding: 15px;
             margin: 12px 0;
             text-align: left;
             font-size: 13px;
             line-height: 1.6;
+            color: #d4d4d8;
         }
 
         .history-card {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
+            background: #18181b;
+            border: 1px solid #27272a;
             border-radius: 10px;
             padding: 12px;
             margin-bottom: 12px;
             text-align: left;
         }
 
-        .history-title { font-weight: bold; color: #0f172a; font-size: 15px; }
+        .history-title { font-weight: bold; color: #ffffff; font-size: 15px; }
         .history-price { color: #ef4444; font-weight: bold; font-size: 14px; margin: 4px 0; }
-        .history-date { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
+        .history-date { font-size: 11px; color: #71717a; margin-bottom: 8px; }
         
         .script-box {
-            background: #1e293b;
+            background: #09090b;
             color: #38bdf8;
             padding: 8px;
             border-radius: 6px;
@@ -238,12 +284,12 @@
             font-size: 12px;
             word-break: break-all;
             margin-top: 5px;
-            border: 1px solid #334155;
+            border: 1px solid #27272a;
             user-select: all;
         }
 
         .btn-copy {
-            background: #3b82f6;
+            background: #2563eb;
             color: white;
             border: none;
             padding: 6px 12px;
@@ -287,7 +333,7 @@
 
     <!-- Modal สมัครสมาชิก -->
     <div class="modal" id="registerModal">
-        <h3 style="color: #0f172a; margin-bottom: 10px;">📝 สมัครสมาชิก</h3>
+        <h3 style="color: #ffffff; margin-bottom: 10px;">📝 สมัครสมาชิก</h3>
         <input type="text" id="regUser" placeholder="ตั้งชื่อผู้ใช้งาน">
         <input type="password" id="regPass" placeholder="รหัสผ่าน">
         <input type="password" id="regPassConfirm" placeholder="ยืนยันรหัสผ่าน">
@@ -297,22 +343,22 @@
 
     <!-- Modal เข้าสู่ระบบ -->
     <div class="modal" id="loginModal">
-        <h3 style="color: #0f172a; margin-bottom: 10px;">🔑 เข้าสู่ระบบ</h3>
+        <h3 style="color: #ffffff; margin-bottom: 10px;">🔑 เข้าสู่ระบบ</h3>
         <input type="text" id="loginUser" placeholder="ชื่อผู้ใช้งาน">
         <input type="password" id="loginPass" placeholder="รหัสผ่าน">
         <button class="modal-btn" onclick="login()">กดเพื่อเข้าสู่ระบบ</button>
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
-    <!-- Modal เติมเงิน (แบบโอนเงินส่งหลักฐาน) -->
+    <!-- Modal เติมเงิน -->
     <div class="modal" id="topupModal">
-        <h3 style="color: #0f172a;">💸 เติมเงินผ่านการโอน</h3>
+        <h3 style="color: #ffffff;">💸 เติมเงินผ่านการโอน</h3>
         
         <div class="info-card">
             <p><b>1. โอนเงินมายังเบอร์:</b> <span style="color:#ef4444; font-size:16px; font-weight:bold;">0827525423</span></p>
             <p><b>ชื่อบัญชี:</b> จิรพันธ์ เผือดผ่อง</p>
-            <p><b>2. ส่งหลักฐาน:</b> โอนเสร็จแล้ว ให้ส่งหลักฐานสลิปการโอนเงินไปที่ Facebook แอดมิน</p>
-            <p><b>3. รับรหัสเข้าใช้งาน:</b> แอดมินจะทำการส่งรหัสให้คุณล็อกอิน ซึ่งในบัญชีจะมีจำนวนเงินที่เติมไว้ครับ</p>
+            <p style="margin-top: 5px;"><b>2. ส่งหลักฐาน:</b> โอนเสร็จแล้ว ให้ส่งหลักฐานสลิปการโอนเงินไปที่ Facebook แอดมิน</p>
+            <p style="margin-top: 5px;"><b>3. รับรหัสเข้าใช้งาน:</b> แอดมินจะทำการส่งรหัสให้คุณล็อกอิน ซึ่งในบัญชีจะมีจำนวนเงินที่เติมไว้ครับ</p>
         </div>
 
         <a href="https://www.facebook.com/share/1BGFfaPDG1/" target="_blank" class="modal-btn modal-btn-fb">
@@ -324,7 +370,7 @@
 
     <!-- Modal ประวัติ -->
     <div class="modal" id="historyModal">
-        <h3 style="color: #0f172a; margin-bottom: 15px;">📜 ประวัติคำสั่งซื้อ</h3>
+        <h3 style="color: #ffffff; margin-bottom: 15px;">📜 ประวัติคำสั่งซื้อ</h3>
         <div id="historyList"></div>
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ปิดหน้าต่าง</button>
     </div>
@@ -535,7 +581,7 @@
             historyList.innerHTML = '';
 
             if (!account.history || account.history.length === 0) {
-                historyList.innerHTML = '<p style="color:#64748b; font-size:14px;">ยังไม่มีประวัติคำสั่งซื้อ</p>';
+                historyList.innerHTML = '<p style="color:#71717a; font-size:14px;">ยังไม่มีประวัติคำสั่งซื้อ</p>';
             } else {
                 account.history.forEach((item, index) => {
                     const card = document.createElement('div');
@@ -544,7 +590,7 @@
                         <div class="history-title">📦 ${item.name}</div>
                         <div class="history-price">💰 จำนวนเงิน: ${item.price} บาท</div>
                         <div class="history-date">🕒 วันที่สั่งซื้อ: ${item.date}</div>
-                        <div style="font-size:12px; font-weight:bold; color:#334155;">รายการของ (สคริปต์):</div>
+                        <div style="font-size:12px; font-weight:bold; color:#a1a1aa;">รายการของ (สคริปต์):</div>
                         <div class="script-box" id="scriptCode_${index}">${item.script}</div>
                         <button class="btn-copy" onclick="copyScript('scriptCode_${index}')" style="margin-top:8px;">📋 คัดลอกสคริปต์</button>
                         <div style="clear:both;"></div>
