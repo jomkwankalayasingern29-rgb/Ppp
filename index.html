@@ -9,20 +9,55 @@
         body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 50px; }
         
         /* Header */
-        .header { background: #ffffff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e1; }
-        .logo { font-size: 20px; font-weight: bold; color: #ef4444; }
-        
+        .header { 
+            background: #ffffff; 
+            padding: 12px 16px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* ด้านซ้าย: ยอดเงินสะสม */
+        .wallet-badge {
+            background: #111827;
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 1px solid #ef4444;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wallet-badge span { color: #22c55e; }
+
+        /* ด้านขวา: ปุ่มเมนู III */
+        .menu-btn {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0f172a;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #f1f5f9;
+        }
+
         .container { max-width: 500px; margin: 0 auto; padding: 15px; }
         
-        /* กล่องหัวข้อหน้าต่างสีขาว */
+        /* กล่องหัวข้อ */
         .title-box { background: #ffffff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px solid #e2e8f0; }
         .title-box h1 { font-size: 22px; color: #0f172a; margin-bottom: 5px; }
         .title-box p { font-size: 14px; color: #64748b; }
         
-        /* Grid เรียง 2 คอลัมน์ลงมา */
+        /* Grid รายการสินค้า */
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
-        /* 🖤 UI การ์ดสีดำ ขอบสีแดง ❤️ */
         .product-card { 
             background: #111827; 
             padding: 12px; 
@@ -32,10 +67,9 @@
             color: #ffffff;
             box-shadow: 0 4px 10px rgba(239, 68, 68, 0.15);
         }
-        
         .product-img { 
             width: 100%; 
-            height: 110px; 
+            height: 100px; 
             background: #1f2937; 
             color: #ef4444; 
             border-radius: 8px; 
@@ -47,13 +81,11 @@
             margin-bottom: 8px; 
             border: 1px dashed #ef4444;
             padding: 5px;
-            text-align: center;
         }
 
         .product-name { font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #f9fafb; }
         .product-price { color: #ef4444; font-weight: bold; font-size: 16px; margin-bottom: 10px; }
         
-        /* ปุ่มสั่งซื้อสีแดง */
         .btn { 
             background: #ef4444; 
             color: white; 
@@ -63,65 +95,243 @@
             border-radius: 6px; 
             font-weight: bold; 
             cursor: pointer; 
-            transition: 0.2s;
         }
-        
-        .btn:hover { background: #dc2626; }
+
+        /* ----------------------------------
+           Sidebar & Modal เติมเงิน TrueMoney
+        ----------------------------------- */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 200;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0; right: -280px; width: 280px; height: 100%;
+            background: #ffffff;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: 0.3s;
+            z-index: 300;
+            padding: 20px;
+        }
+
+        .sidebar.active { right: 0; }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .menu-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #0f172a;
+        }
+
+        /* Modal ป๊อปอัปเติมเงิน */
+        .modal {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 400;
+            text-align: center;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .modal-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Header ด้านบน -->
     <div class="header">
-        <div class="logo">⚡ SCRIPT SHOP</div>
-        <div>🔍</div>
-    </div>
-
-    <div class="container">
-        
-        <!-- หน้าต่างหัวข้อสีขาว -->
-        <div class="title-box">
-            <h1>🚀 บริการรับรันสคริปต์</h1>
-            <p>เลือกซื้อสคริปต์ Roblox คุณภาพสูง ได้ที่นี่</p>
+        <!-- ซ้ายมือ: ยอดเงิน -->
+        <div class="wallet-badge">
+            💰 เครดิต: <span id="userBalance">0.00</span> ฿
         </div>
 
-        <!-- รายการสคริปต์ (การ์ดดำขอบแดง เรียงต่อลงมาละ 2 แถว) -->
-        <div class="product-grid">
+        <!-- ขวามือ: ปุ่มเมนู III -->
+        <div class="menu-btn" onclick="toggleSidebar()">III</div>
+    </div>
 
-            <!-- 1. สคริปต์ Blox Fruits -->
+    <!-- ฉากหลังสีทึบเวลาเปิดเมนู -->
+    <div class="overlay" id="overlay" onclick="closeAll()"></div>
+
+    <!-- Sidebar เมนูด้านขวา -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>เมนูหลัก</h3>
+            <span style="cursor:pointer; font-weight:bold;" onclick="toggleSidebar()">✕</span>
+        </div>
+        
+        <!-- ปุ่มเติมเงิน -->
+        <div class="menu-item" onclick="openTopupModal()">
+            🎁 เติมเงิน TrueMoney Wallet
+        </div>
+    </div>
+
+    <!-- Modal ป๊อปอัปกรอกซองอั่งเปา -->
+    <div class="modal" id="topupModal">
+        <h3 style="color: #0f172a;">🧧 เติมเงินซองอั่งเปา</h3>
+        <p style="font-size: 12px; color: #64748b; margin-top: 5px;">
+            ระบบจะโอนเงินเข้าเบอร์ <b>0827525423</b> แล้วเพิ่มเครดิตให้คุณทันที
+        </p>
+
+        <input type="text" id="giftLink" placeholder="วางลิงก์ซองอั่งเปา TrueMoney ที่นี่...">
+
+        <button class="modal-btn" onclick="processAngpao()">ตรวจสอบ & เติมเงิน</button>
+        <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
+    </div>
+
+<div class="product-grid">
+
             <div class="product-card">
                 <div class="product-img">Blox Fruits</div>
                 <div class="product-name">📜 สคริปต์ Blox Fruits</div>
                 <div class="product-price">50 บาท</div>
-                <button class="btn" onclick="alert('สั่งซื้อสคริปต์ Blox Fruits')">ซื้อสคริปต์</button>
+                <button class="btn" onclick="buyProduct(50, 'Blox Fruits')">ซื้อสคริปต์</button>
             </div>
 
-            <!-- 2. สคริปต์ The Strongest Battlefield -->
             <div class="product-card">
                 <div class="product-img">TSB Script</div>
                 <div class="product-name">📜 The Strongest Battlefield</div>
                 <div class="product-price">50 บาท</div>
-                <button class="btn" onclick="alert('สั่งซื้อสคริปต์ The Strongest Battlefield')">ซื้อสคริปต์</button>
+                <button class="btn" onclick="buyProduct(50, 'TSB')">ซื้อสคริปต์</button>
             </div>
 
-            <!-- 3. สคริปต์ใช้ได้ทุกแมพ -->
             <div class="product-card">
                 <div class="product-img">Universal Script</div>
                 <div class="product-name">📜 สคริปต์ใช้ได้ทุกแมพ</div>
                 <div class="product-price">99 บาท</div>
-                <button class="btn" onclick="alert('สั่งซื้อสคริปต์ใช้ได้ทุกแมพ')">ซื้อสคริปต์</button>
+                <button class="btn" onclick="buyProduct(99, 'ทุกแมพ')">ซื้อสคริปต์</button>
             </div>
 
-            <!-- 4. สคริปต์ ESP (มองทะลุ) -->
             <div class="product-card">
                 <div class="product-img">ESP / Wallhack</div>
                 <div class="product-name">📜 สคริปต์ ESP มองทะลุ</div>
                 <div class="product-price">35 บาท</div>
-                <button class="btn" onclick="alert('สั่งซื้อสคริปต์ ESP')">ซื้อสคริปต์</button>
+                <button class="btn" onclick="buyProduct(35, 'ESP')">ซื้อสคริปต์</button>
             </div>
 
-            <!-- 5. สคริปต์วิ่งเร็ว -->
             <div class="product-card">
                 <div class="product-img">Speed Hack</div>
                 <div class="product-name">📜 สคริปต์วิ่งเร็ว / กระโดดสูง</div>
                 <div class="product-price">20 บาท</div>
-                <button class="btn" onclick="alert('สั่งซื้อ
+                <button class="btn" onclick="buyProduct(20, 'วิ่งเร็ว')">ซื้อสคริปต์</button>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">FPS Boost</div>
+                <div class="product-name">📜 สคริปต์ FPS ปลดล็อกลื่นๆ</div>
+                <div class="product-price">20 บาท</div>
+                <button class="btn" onclick="buyProduct(20, 'FPS Boost')">ซื้อสคริปต์</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ระบบ JavaScript สั่งงาน -->
+    <script>
+        let currentBalance = 0.00; // ยอดเงินเริ่มต้น
+
+        // เปิด-ปิด Sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('active');
+            overlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
+        }
+
+        // เปิด Modal เติมเงิน
+        function openTopupModal() {
+            toggleSidebar();
+            document.getElementById('topupModal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        // ปิดหน้าต่างทั้งหมด
+        function closeAll() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('topupModal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        // ระบบรับซองอั่งเปา TrueMoney Wallet
+        function processAngpao() {
+            const link = document.getElementById('giftLink').value.trim();
+
+            if (!link.includes('gift.truemoney.com')) {
+                alert('❌ ลิงก์ไม่ถูกต้อง! กรุณาใส่ลิงก์ซองอั่งเปา TrueMoney Wallet เท่านั้น');
+                return;
+            }
+
+            // จำลองการตรวจสอบซองอั่งเปา (จำลองว่าได้เงิน 50 บาท)
+            alert('⏳ กำลังตรวจสอบซองอั่งเปา และดึงเงินเข้าเบอร์ 0827525423...');
+
+            setTimeout(() => {
+                const addedMoney = 50; // ยอดเงินสมมติ (ในระบบจริงต้องต่อ API หลังบ้าน)
+                currentBalance += addedMoney;
+                
+                // อัปเดตยอดเงินขึ้นหน้าเว็บด้านซ้ายมือ
+                document.getElementById('userBalance').innerText = currentBalance.toFixed(2);
+                
+                alert(`✅ เติมเงินสำเร็จ! ได้รับเครดิตจำนวน ${addedMoney} บาท`);
+                document.getElementById('giftLink').value = '';
+                closeAll();
+            }, 1500);
+        }
+
+        // ระบบสั่งซื้อสินค้า (หักเครดิต)
+        function buyProduct(price, name) {
+            if (currentBalance < price) {
+                alert(`❌ เครดิตไม่พอ! สคริปต์นี้ราคา ${price} บาท (คุณมี ${currentBalance} บาท)\nกรุณาเติมเงินผ่าน TrueMoney Wallet ด้านขวามือครับ`);
+            } else {
+                currentBalance -= price;
+                document.getElementById('userBalance').innerText = currentBalance.toFixed(2);
+                alert(`🎉 สั่งซื้อสคริปต์ ${name} สำเร็จ!\nยอดเงินคงเหลือ: ${currentBalance} บาท`);
+            }
+        }
+    </script>
+
+</body>
+</html>
