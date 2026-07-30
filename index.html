@@ -8,6 +8,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 50px; }
         
+        /* Header ด้านบน */
         .header { 
             background: #ffffff; 
             padding: 12px 16px; 
@@ -20,14 +21,25 @@
             z-index: 100;
         }
 
+        /* โลโก้/ชื่อร้าน */
+        .shop-brand {
+            font-size: 16px;
+            font-weight: 800;
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.5px;
+        }
+
         .user-status { display: flex; align-items: center; gap: 8px; }
 
         .wallet-badge {
             background: #111827;
             color: #ffffff;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             border: 1px solid #ef4444;
         }
@@ -37,11 +49,15 @@
         .username-badge {
             background: #eff6ff;
             color: #2563eb;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             border: 1px solid #bfdbfe;
+            max-width: 110px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .menu-btn {
@@ -228,16 +244,23 @@
 </head>
 <body>
 
+    <!-- Header ด้านบน (เพิ่มชื่อร้านอยู่ซ้ายสุด ข้างๆ ข้อมูลผู้ใช้) -->
     <div class="header">
+        <div class="shop-brand">
+            🚀 SCRIPT SHOP
+        </div>
+
         <div class="user-status">
-            <div class="username-badge" id="userDisplay">👤 ยังไม่ได้เข้าสู่ระบบ</div>
+            <div class="username-badge" id="userDisplay">👤 ไม่ได้ล็อกอิน</div>
             <div class="wallet-badge">💰 <span id="userBalance">0.00</span> ฿</div>
         </div>
+
         <div class="menu-btn" onclick="toggleSidebar()">III</div>
     </div>
 
     <div class="overlay" id="overlay" onclick="closeAll()"></div>
 
+    <!-- Sidebar เมนูด้านขวา -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h3>เมนูหลัก</h3>
@@ -257,6 +280,7 @@
         </div>
     </div>
 
+    <!-- Modals -->
     <div class="modal" id="registerModal">
         <h3 style="color: #0f172a; margin-bottom: 10px;">📝 สมัครสมาชิก</h3>
         <input type="text" id="regUser" placeholder="ตั้งชื่อผู้ใช้งาน">
@@ -278,10 +302,7 @@
         <h3 style="color: #0f172a;">🧧 เติมเงินซองอั่งเปา</h3>
         <p style="font-size: 12px; color: #64748b; margin-top: 5px;">ระบบจะโอนเงินเข้าเบอร์ <b>0827525423</b> แล้วเพิ่มเครดิตทันที</p>
         <input type="text" id="giftLink" placeholder="วางลิงก์ซองอั่งเปา TrueMoney ที่นี่...">
-        
-        <!-- เพิ่มช่องระบุยอดเงิน (ไว้ทดสอบระหว่างที่ยังไม่มี Backend API ตรวจสอบซองจริง) -->
         <input type="number" id="testAmount" placeholder="ระบุจำนวนเงินในซอง (บาท)" value="10">
-
         <button class="modal-btn modal-btn-green" onclick="processAngpao()">ตรวจสอบ & เติมเงิน</button>
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
@@ -292,6 +313,7 @@
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ปิดหน้าต่าง</button>
     </div>
 
+    <!-- สินค้า -->
     <div class="container">
         <div class="title-box">
             <h1>🚀 บริการรับรันสคริปต์</h1>
@@ -343,6 +365,7 @@
         </div>
     </div>
 
+    <!-- JavaScript สั่งงาน -->
     <script>
         let currentBalance = 0.00;
         let loggedInUser = null;
@@ -350,9 +373,9 @@
         window.onload = function() {
             const savedSession = localStorage.getItem('activeUser');
             if (savedSession) {
-                const userData = JSON.parse(localStorage.getItem('user_' + savedSession));
+                const userData = JSON.parse(localStorage.getItem('user_' + savedSession.toLowerCase()));
                 if (userData) {
-                    loggedInUser = savedSession;
+                    loggedInUser = userData.username;
                     currentBalance = userData.balance || 0.00;
                     updateUI();
                 }
@@ -378,6 +401,7 @@
             document.getElementById('overlay').style.display = 'none';
         }
 
+        /* 📝 ระบบสมัครสมาชิก (แก้บั๊กชื่อซ้ำ) */
         function register() {
             const user = document.getElementById('regUser').value.trim();
             const pass = document.getElementById('regPass').value;
@@ -385,12 +409,18 @@
 
             if (!user || !pass) { alert('❌ กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
             if (pass !== passConfirm) { alert('❌ รหัสผ่านไม่ตรงกัน'); return; }
-            if (localStorage.getItem('user_' + user)) { alert('❌ ชื่อผู้ใช้นี้ถูกใช้งานแล้ว'); return; }
+
+            // เช็กชื่อซ้ำโดยแปลงเป็นตัวพิมพ์เล็กทั้งหมดเพื่อความแม่นยำ
+            const userKey = 'user_' + user.toLowerCase();
+            if (localStorage.getItem(userKey)) { 
+                alert('❌ ชื่อผู้ใช้งานนี้ถูกใช้งานแล้ว! กรุณาใช้ชื่ออื่น'); 
+                return; 
+            }
 
             const newUser = { username: user, password: pass, balance: 0.00, history: [] };
-            localStorage.setItem('user_' + user, JSON.stringify(newUser));
+            localStorage.setItem(userKey, JSON.stringify(newUser));
             
-            localStorage.setItem('activeUser', user);
+            localStorage.setItem('activeUser', user.toLowerCase());
             loggedInUser = user;
             currentBalance = 0.00;
 
@@ -399,21 +429,23 @@
             closeAll();
         }
 
+        /* 🔑 ระบบเข้าสู่ระบบ */
         function login() {
             const user = document.getElementById('loginUser').value.trim();
             const pass = document.getElementById('loginPass').value;
 
-            const userDataRaw = localStorage.getItem('user_' + user);
-            if (!userDataRaw) { alert('❌ ไม่พบชื่อผู้ใช้นี้'); return; }
+            const userKey = 'user_' + user.toLowerCase();
+            const userDataRaw = localStorage.getItem(userKey);
+            if (!userDataRaw) { alert('❌ ไม่พบชื่อผู้ใช้นี้ในระบบ'); return; }
 
             const userData = JSON.parse(userDataRaw);
             if (userData.password !== pass) { alert('❌ รหัสผ่านไม่ถูกต้อง'); return; }
 
-            localStorage.setItem('activeUser', user);
-            loggedInUser = user;
+            localStorage.setItem('activeUser', user.toLowerCase());
+            loggedInUser = userData.username;
             currentBalance = userData.balance || 0.00;
 
-            alert(`🎉 ยินดีต้อนรับ คุณ ${user}!`);
+            alert(`🎉 ยินดีต้อนรับ คุณ ${loggedInUser}!`);
             updateUI();
             closeAll();
         }
@@ -440,19 +472,20 @@
                 authMenu.style.display = 'none';
                 logoutMenu.style.display = 'block';
 
-                const userData = JSON.parse(localStorage.getItem('user_' + loggedInUser));
+                const userKey = 'user_' + loggedInUser.toLowerCase();
+                const userData = JSON.parse(localStorage.getItem(userKey));
                 if (userData) {
                     userData.balance = currentBalance;
-                    localStorage.setItem('user_' + loggedInUser, JSON.stringify(userData));
+                    localStorage.setItem(userKey, JSON.stringify(userData));
                 }
             } else {
-                userDisplay.innerText = '👤 ยังไม่ได้เข้าสู่ระบบ';
+                userDisplay.innerText = '👤 ไม่ได้ล็อกอิน';
                 authMenu.style.display = 'block';
                 logoutMenu.style.display = 'none';
             }
         }
 
-        /* 🧧 ระบบตรวจซองอั่งเปา (ปรับปรุงป้องกันซองซ้ำ) */
+        /* 🧧 ระบบเติมเงินอั่งเปา (แก้บั๊กใช้ซ้ำข้ามบัญชี) */
         function processAngpao() {
             if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อน'); openModal('loginModal'); return; }
 
@@ -469,21 +502,22 @@
                 return;
             }
 
-            // 🚫 ระบบตรวจสอบว่าลิงก์ซองนี้เคยถูกใช้ไปแล้วหรือยัง
-            let usedLinks = JSON.parse(localStorage.getItem('usedAngpaoLinks') || '[]');
+            // ดึงข้อมูลรายการซองที่ถูกใช้ไปแล้วทั้งหมดในระบบ (Global Used Links)
+            let usedLinks = JSON.parse(localStorage.getItem('global_used_angpao_links') || '[]');
+            
             if (usedLinks.includes(link)) {
-                alert('❌ ซองอั่งเปานี้ถูกใช้งานไปแล้ว! ไม่สามารถใช้ซ้ำได้');
+                alert('❌ ซองอั่งเปานี้ถูกใช้งานไปแล้ว! (ไม่สามารถใช้ซ้ำได้ ไม่ว่าบัญชีใดก็ตาม)');
                 return;
             }
 
             alert('⏳ กำลังตรวจสอบซองอั่งเปา และดึงเงินเข้าเบอร์ 0827525423...');
 
             setTimeout(() => {
-                // บันทึกซองว่าใช้ไปแล้ว
+                // บันทึกลิงก์ลงในส่วนกลางว่าใช้ไปแล้ว
                 usedLinks.push(link);
-                localStorage.setItem('usedAngpaoLinks', JSON.stringify(usedLinks));
+                localStorage.setItem('global_used_angpao_links', JSON.stringify(usedLinks));
 
-                // เพิ่มเครดิตตามจำนวนจริงที่ระบุ
+                // เพิ่มเครดิต
                 currentBalance += amountInput;
                 updateUI();
 
@@ -493,6 +527,7 @@
             }, 1200);
         }
 
+        /* 🛒 สั่งซื้อสินค้า */
         function buyProduct(price, name, scriptContent) {
             if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนสั่งซื้อ'); openModal('loginModal'); return; }
 
@@ -501,7 +536,8 @@
             } else {
                 currentBalance -= price;
                 
-                const userData = JSON.parse(localStorage.getItem('user_' + loggedInUser));
+                const userKey = 'user_' + loggedInUser.toLowerCase();
+                const userData = JSON.parse(localStorage.getItem(userKey));
                 if (!userData.history) userData.history = [];
 
                 const newOrder = {
@@ -513,17 +549,19 @@
 
                 userData.history.unshift(newOrder);
                 userData.balance = currentBalance;
-                localStorage.setItem('user_' + loggedInUser, JSON.stringify(userData));
+                localStorage.setItem(userKey, JSON.stringify(userData));
 
                 updateUI();
                 alert(`🎉 สั่งซื้อ ${name} สำเร็จ!\nสามารถเข้าไปดูสคริปต์ได้ที่เมนู "ประวัติคำสั่งซื้อ" ครับ`);
             }
         }
 
+        /* 📜 ประวัติคำสั่งซื้อ */
         function openHistoryModal() {
             if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนดูประวัติ'); openModal('loginModal'); return; }
 
-            const userData = JSON.parse(localStorage.getItem('user_' + loggedInUser));
+            const userKey = 'user_' + loggedInUser.toLowerCase();
+            const userData = JSON.parse(localStorage.getItem(userKey));
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = '';
 
