@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ร้านขายไอดีเกม - ID ไก่เมล็ดเห็ดวิเศษ</title>
+    <title>ร้านขายไอดีเกม - ปลูกเห็ด</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,155 +13,259 @@
         }
 
         body {
-            background-color: #120919;
-            color: #ffffff;
+            background-color: #fde2e4; /* ฉากหลังสีชมพูอ่อนพาสเทล */
+            color: #333;
             display: flex;
             justify-content: center;
         }
 
         .container {
             width: 100%;
-            max-width: 480px; /* ขนาดจำลองหน้าจอมือถือ */
-            background: radial-gradient(circle, #2a0845 0%, #120919 100%);
+            max-width: 480px; /* ขนาดจำลองจอมือถือ */
+            background-color: #fff0f3;
             min-height: 100vh;
-            padding-bottom: 40px;
+            padding-bottom: 30px;
         }
 
-        /* Navbar */
+        /* Top Navbar */
         .navbar {
-            background-color: #7b2cbf;
-            padding: 15px;
+            background-color: #ffffff;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .navbar h2 {
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ddd;
+            object-fit: cover;
+        }
+
+        .shop-name {
             font-size: 1.2rem;
+            font-weight: bold;
+            color: #2b2b2b;
         }
 
-        /* Breadcrumb / Navigation path */
-        .breadcrumb {
-            padding: 15px;
+        .user-balance {
+            background-color: #fff8e7;
+            border: 1px solid #ffe082;
+            padding: 4px 10px;
+            border-radius: 20px;
             font-size: 0.85rem;
-            color: #b3a5c9;
+            font-weight: bold;
+            color: #d97706;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .breadcrumb a {
-            color: #b3a5c9;
-            text-decoration: none;
+        /* Main Content */
+        .content {
+            padding: 16px;
         }
 
-        /* Detail Card */
-        .product-detail-card {
-            padding: 0 15px;
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ff4d6d;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Banner หมวดหมู่ */
+        .category-banner {
+            width: 100%;
+            height: 110px;
+            background: linear-gradient(135deg, #a8e6cf 0%, #dbede3 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #ffffff;
+        }
+
+        .category-banner h3 {
+            font-size: 1.3rem;
+            color: #2d5a27;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        /* Grid สินค้า 2 คอลัมน์ */
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Card สินค้า */
+        .product-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-img-box {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* ป้าย x10 ด้านบนขวา */
+        .badge-qty {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000;
+            font-weight: bold;
+            font-size: 0.85rem;
+            padding: 2px 6px;
+            border-radius: 6px;
         }
 
         .product-title {
-            font-size: 1.5rem;
+            font-size: 0.9rem;
             font-weight: bold;
-            margin-bottom: 5px;
+            color: #222;
+            margin: 10px 0 4px 0;
+            line-height: 1.3;
         }
 
         .product-price {
-            font-size: 1.3rem;
-            color: #d8b4fe;
-            margin-bottom: 20px;
+            color: #7209b7;
             font-weight: bold;
+            font-size: 1.05rem;
+            margin-bottom: 2px;
         }
 
-        /* Rules Box */
-        .info-box {
-            background-color: #1d1626;
-            border: 1px solid #3c2a4d;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .info-box h3 {
-            font-size: 1rem;
-            margin-bottom: 12px;
-            color: #e9d5ff;
-        }
-
-        .info-box p {
-            font-size: 0.88rem;
-            color: #d1d5db;
-            line-height: 1.5;
+        .product-stock {
+            font-size: 0.75rem;
+            color: #888;
             margin-bottom: 10px;
         }
 
-        .warning-text {
-            color: #ef4444;
-            font-weight: bold;
-        }
-
-        /* Quantity & Purchase Button */
-        .action-box {
-            background-color: #1d1626;
-            border: 1px solid #3c2a4d;
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .stock-info {
-            font-size: 0.9rem;
-            color: #9ca3af;
-            margin-bottom: 10px;
-        }
-
-        .buy-btn {
+        /* ปุ่มสั่งซื้อ */
+        .btn-buy {
             width: 100%;
-            background-color: #9d4edd;
+            background-color: #10b981; /* สีเขียวสดใส */
             color: white;
             border: none;
-            padding: 12px;
+            padding: 8px 0;
             border-radius: 8px;
-            font-size: 1rem;
             font-weight: bold;
+            font-size: 0.85rem;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
             transition: 0.2s;
         }
 
-        .buy-btn:hover {
-            background-color: #7b2cbf;
+        .btn-buy:hover {
+            background-color: #059669;
+        }
+
+        /* ปุ่มสินค้าหมด */
+        .btn-out {
+            background-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Header Navbar -->
+    <!-- Navbar ด้านบน -->
     <div class="navbar">
-        <h2>🍄 MUSHROOM SHOP</h2>
-        <div>🔍</div>
+        <div class="brand-box">
+            <img src="https://via.placeholder.com/40" class="avatar" alt="Logo">
+            <span class="shop-name">Mushroom Shop</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="user-balance">🪙 2</div>
+            <span style="font-size: 1.2rem; cursor: pointer;">🔍</span>
+        </div>
     </div>
 
-    <!-- Navigation Path -->
-    <div class="breadcrumb">
-        <a href="#">หน้าแรก</a> &gt; <a href="#">แมพปลูกเห็ด</a> &gt; ID ไก่เมล็ดเห็ดวิเศษ 10ต้น
-    </div>
-
-    <!-- Product Details -->
-    <div class="product-detail-card">
-        <h1 class="product-title">ID ไก่เมล็ดเห็ดวิเศษ 10ต้น</h1>
-        <div class="product-price">10 เครดิต</div>
-
-        <!-- Rules & Warranties -->
-        <div class="info-box">
-            <h3>ℹ️ รายละเอียดสินค้า</h3>
-            <p><span class="warning-text">❗❗ รับประกันไอดี 1 ชั่วโมง ❗</span></p>
-            <p>⭐ หากพบปัญหาหรือติดรหัส ให้ติดต่อแอดมินเพื่อเคลมทันที ⭐</p>
-            <p><span class="warning-text">❗❗ กติกาการเคลม:</span> ต้องมีวิดีโอหลักฐานตั้งแต่กดซื้อจนถึงเข้าเกมเท่านั้น หากไม่มีคลิปไม่รับเคลมทุกกรณี</p>
-            <p>⭐ เมื่อเช็คสินค้าแล้ว อย่าลืมเปลี่ยนรหัสผ่านและผูกอีเมล/เบอร์โทรทันที</p>
-            <p style="margin-top: 15px; font-size: 0.8rem; color: #9ca3af;">* ทางร้านไม่มีนโยบายการคืนเงิน โปรดตัดสินใจให้ดีก่อนซื้อ</p>
+    <div class="content">
+        <!-- หมวดหมู่ -->
+        <div class="section-title">
+            <span>田</span> หมวดหมู่
+        </div>
+        <div class="category-banner">
+            <h3>🍄 ไก่แมพปลูกเห็ด</h3>
         </div>
 
-        <!-- Buy Action -->
-        <div class="action-box">
-            <div class="stock-info">จำนวนสินค้าคงเหลือ: 99 ชิ้น</div>
-            <button class="buy-btn">ซื้อสินค้า (10 เครดิต)</button>
+        <!-- รายการสินค้า -->
+        <div class="section-title">
+            <span>📦</span> สินค้า
+        </div>
+
+        <div class="product-grid">
+            <!-- การ์ดสินค้า 1 (สินค้าตามที่คุณระบุ) -->
+            <div class="product-card">
+                <div>
+                    <div class="product-img-box">
+                        <span class="badge-qty">x10</span>
+                        <!-- ใส่รูปเห็ดหรือไอคอนตรงนี้ -->
+                        <span style="font-size: 3rem;">🍄</span>
+                    </div>
+                    <div class="product-title">ID ไก่เมล็ดเห็ดวิเศษ 10 ต้น</div>
+                </div>
+                <div>
+                    <div class="product-price">10 เครดิต</div>
+                    <div class="product-stock">เหลือ 5 ชิ้น</div>
+                    <button class="btn-buy">🛒 ซื้อสินค้า</button>
+                </div>
+            </div>
+
+            <!-- การ์ดสินค้า 2 (ตัวอย่างกรณีสินค้าหมด) -->
+            <div class="product-card">
+                <div>
+                    <div class="product-img-box">
+                        <span class="badge-qty">x100</span>
+                        <span style="font-size: 3rem;">🌱</span>
+                    </div>
+                    <div class="product-title">ID ไก่เมล็ดเห็ดธรรมดา</div>
+                </div>
+                <div>
+                    <div class="product-price">5 เครดิต</div>
+                    <div class="product-stock">เหลือ 0 ชิ้น</div>
+                    <button class="btn-buy btn-out" disabled>📦 สินค้าหมด</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
