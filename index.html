@@ -198,18 +198,22 @@
             font-size: 15px;
             cursor: pointer;
             margin-top: 10px;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .modal-btn-green { background: #10b981; }
+        .modal-btn-fb { background: #1877f2; }
 
-        .qr-image {
-            width: 100%;
-            max-width: 240px;
-            border-radius: 12px;
-            margin: 10px auto;
-            display: block;
-            border: 2px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 12px 0;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.6;
         }
 
         .history-card {
@@ -275,7 +279,7 @@
         </div>
 
         <div id="userMenuGroup" style="display: none;">
-            <div class="menu-item" onclick="openModal('topupModal')">📲 เติมเงิน สแกน QR Code</div>
+            <div class="menu-item" onclick="openModal('topupModal')">💸 เติมเงิน (โอนเงินผ่านแอดมิน)</div>
             <div class="menu-item" onclick="openHistoryModal()">📜 ประวัติคำสั่งซื้อ</div>
             <div class="menu-item" style="color: #ef4444; border-color: #fca5a5;" onclick="logout()">🚪 ออกจากระบบ</div>
         </div>
@@ -300,25 +304,22 @@
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
-    <!-- Modal เติมเงินด้วยการสแกน QR Code -->
+    <!-- Modal เติมเงิน (แบบโอนเงินส่งหลักฐาน) -->
     <div class="modal" id="topupModal">
-        <h3 style="color: #0f172a;">📲 เติมเงินผ่าน QR Code</h3>
-        <p style="font-size: 12px; color: #64748b; margin-top: 4px;">
-            รองรับ <b>TrueMoney Wallet</b> และ <b>PromptPay (ทุกธนาคาร)</b>
-        </p>
+        <h3 style="color: #0f172a;">💸 เติมเงินผ่านการโอน</h3>
         
-        <!-- รูป QR Code -->
-        <img src="qr-code.png" alt="QR Code เติมเงิน" class="qr-image">
+        <div class="info-card">
+            <p><b>1. โอนเงินมายังเบอร์:</b> <span style="color:#ef4444; font-size:16px; font-weight:bold;">0827525423</span></p>
+            <p><b>ชื่อบัญชี:</b> จิรพันธ์ เผือดผ่อง</p>
+            <p><b>2. ส่งหลักฐาน:</b> โอนเสร็จแล้ว ให้ส่งหลักฐานสลิปการโอนเงินไปที่ Facebook แอดมิน</p>
+            <p><b>3. รับรหัสเข้าใช้งาน:</b> แอดมินจะทำการส่งรหัสให้คุณล็อกอิน ซึ่งในบัญชีจะมีจำนวนเงินที่เติมไว้ครับ</p>
+        </div>
+
+        <a href="https://www.facebook.com/share/1BGFfaPDG1/" target="_blank" class="modal-btn modal-btn-fb">
+            👉 ติดต่อแอดมินส่งหลักฐาน (Facebook)
+        </a>
         
-        <p style="font-size: 13px; font-weight: bold; color: #0f172a; margin-bottom: 8px;">
-            ชื่อบัญชี: จิรพันธ์ เผือดผ่อง
-        </p>
-
-        <input type="number" id="topupAmount" placeholder="ระบุจำนวนเงินที่โอน (บาท)">
-        <input type="text" id="txRef" placeholder="ระบุเลขที่อ้างอิง / เลขสลิป">
-
-        <button class="modal-btn modal-btn-green" onclick="processScanTopup()">แจ้งชำระเงิน & เติมเครดิต</button>
-        <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
+        <button style="background:none; border:none; color:#ef4444; margin-top:15px; cursor:pointer;" onclick="closeAll()">ปิดหน้าต่าง</button>
     </div>
 
     <!-- Modal ประวัติ -->
@@ -383,7 +384,6 @@
     <script>
         let DB = {
             users: {},
-            usedRefs: [],
             currentUser: null
         };
 
@@ -500,45 +500,6 @@
                 authMenu.style.display = 'block';
                 userMenu.style.display = 'none';
             }
-        }
-
-        /* 📲 ระบบยืนยันการเติมเงินด้วยการสแกน */
-        function processScanTopup() {
-            if (!DB.currentUser) { alert('❌ กรุณาเข้าสู่ระบบก่อน'); openModal('loginModal'); return; }
-
-            const amount = parseFloat(document.getElementById('topupAmount').value);
-            const ref = document.getElementById('txRef').value.trim();
-
-            if (isNaN(amount) || amount <= 0) {
-                alert('❌ กรุณาระบุจำนวนเงินที่ถูกต้อง');
-                return;
-            }
-
-            if (!ref) {
-                alert('❌ กรุณาระบุเลขที่อ้างอิง / เลขสลิปการโอน');
-                return;
-            }
-
-            if (!DB.usedRefs) DB.usedRefs = [];
-
-            if (DB.usedRefs.includes(ref)) {
-                alert('❌ เลขสลิปนี้ถูกใช้งานไปแล้ว!');
-                return;
-            }
-
-            alert('⏳ กำลังตรวจสอบการชำระเงิน...');
-
-            setTimeout(() => {
-                DB.usedRefs.push(ref);
-                DB.users[DB.currentUser].balance += amount;
-                saveDB();
-                updateUI();
-
-                alert(`✅ เติมเงินสำเร็จ! เพิ่มเครดิตจำนวน ${amount.toFixed(2)} บาท เรียบร้อยแล้ว`);
-                document.getElementById('topupAmount').value = '';
-                document.getElementById('txRef').value = '';
-                closeAll();
-            }, 1200);
         }
 
         function buyProduct(price, name, scriptContent) {
