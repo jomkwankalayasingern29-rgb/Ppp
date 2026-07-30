@@ -3,21 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ร้านขายไอดีเกมสุดเท่</title>
+    <title>บริการรันสคริปต์ & ขายสินค้า</title>
     <style>
-        body { background-color: #0d1117; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin: 15px auto; max-width: 300px; }
-        .btn { background: #238636; color: white; padding: 12px 24px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; width: 100%; margin-top: 10px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', sans-serif, system-ui;
+        }
+
+        /* พื้นหลังรวมโทนสีขาว-เทาอ่อน */
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            padding-bottom: 40px;
+        }
+
+        /* 1. Header ด้านบน (สีขาวสะอาดตา) */
+        .header {
+            background: #ffffff;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-icon {
+            font-size: 20px;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* 2. หัวข้อ "รันสคริปต์" แบบหน้าต่างกล่องสีขาว */
+        .script-header-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            text-align: center;
+        }
+
+        .script-header-box .badge {
+            background-color: #eff6ff;
+            color: #2563eb;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .script-header-box h1 {
+            font-size: 22px;
+            color: #0f172a;
+            font-weight: bold;
+        }
+
+        .script-header-box p {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* 3. Grid การ์ดสินค้า/บริการ (สีขาว) */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .product-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .product-img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            border-radius: 12px;
+            background-color: #f1f5f9;
+        }
+
+        .product-name {
+            font-size: 15px;
+            font-weight: bold;
+            margin: 10px 0 4px 0;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .product-price {
+            color: #2563eb;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .btn-buy {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px 0;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-buy:hover {
+            background-color: #1d4ed8;
+        }
+
+        .sold-count {
+            font-size: 12px;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        /* ปุ่มแชทมุมขวาล่าง */
+        .chat-float {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #2563eb;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <h1>🎮 ร้านขายไอดีเกม</h1>
-    <p>เว็บนี้สร้างบนมือถือ!</p>
-    
-    <div class="card">
-        <h3>🔥 ไอดี RoV ระดับ VIP</h3>
-        <p style="color: #2ea043; font-size: 20px; font-weight: bold;">500 บาท</p>
-        <button class="btn" onclick="alert('ระบบพร้อมใช้งาน!')">สั่งซื้อไอดีนี้</button>
+
+    <!-- Header ด้านบน -->
+    <div class="header">
+        <div class="logo">⚡ <span>SCRIPT SHOP</span></div>
+        <div class="search-icon">🔍</div>
     </div>
-</body>
-</html>
+
+    <div class="container">
+        
+        <!-- หน้าต่างหัวข้อ "รันสคริปต์" สีขาว -->
+        <div class="script-header-box">
+        
