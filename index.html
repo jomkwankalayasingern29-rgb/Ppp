@@ -3,622 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCRIPT SHOP - ร้านขายสคริปต์</title>
+    <title>ร้านขายไอดีเกม - ID ไก่เมล็ดเห็ดวิเศษ</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        
-        /* 🖤 พื้นหลังเว็บสีดำเข้ม */
-        body { 
-            background-color: #080808; 
-            color: #ffffff; 
-            padding-bottom: 50px; 
-        }
-        
-        .header { 
-            background: #111111; 
-            padding: 12px 16px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 1px solid #222222;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', sans-serif, Arial;
         }
 
-        .shop-brand {
-            font-size: 16px;
-            font-weight: 800;
-            color: #ef4444;
+        body {
+            background-color: #120919;
+            color: #ffffff;
             display: flex;
-            align-items: center;
-            gap: 6px;
-            letter-spacing: 0.5px;
+            justify-content: center;
         }
 
-        .user-status { display: flex; align-items: center; gap: 8px; }
-
-        .wallet-badge {
-            background: #18181b;
-            color: #ffffff;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            border: 1px solid #ef4444;
+        .container {
+            width: 100%;
+            max-width: 480px; /* ขนาดจำลองหน้าจอมือถือ */
+            background: radial-gradient(circle, #2a0845 0%, #120919 100%);
+            min-height: 100vh;
+            padding-bottom: 40px;
         }
 
-        .username-badge {
-            background: #18181b;
-            color: #38bdf8;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            border: 1px solid #27272a;
-            max-width: 110px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .menu-btn {
-            font-size: 20px;
-            font-weight: bold;
-            color: #ffffff;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 6px;
-            background: #18181b;
-            border: 1px solid #27272a;
-        }
-
-        .container { max-width: 500px; margin: 0 auto; padding: 15px; }
-        
-        /* ✨ Animate Border Gradient keyframes */
-        @keyframes borderAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .title-box { 
-            background: #121212; 
-            padding: 20px; 
-            border-radius: 12px; 
-            text-align: center; 
-            margin-bottom: 20px; 
-            border: 1px solid #27272a;
-        }
-        .title-box h1 { font-size: 22px; color: #ffffff; margin-bottom: 5px; }
-        .title-box p { font-size: 14px; color: #a1a1aa; }
-        
-        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        
-        /* ✨ การ์ดสินค้า พร้อมขอบขาวอนิเมชั่น */
-        .product-card { 
-            position: relative;
-            background: #121212; 
-            padding: 12px; 
-            border-radius: 12px; 
-            text-align: center; 
-            color: #ffffff;
-            z-index: 1;
-        }
-
-        /* โค้ดสร้างขอบขาวอนิเมชั่นเรืองแสง */
-        .product-card::before, .modal::before {
-            content: '';
-            position: absolute;
-            top: -2px; left: -2px; right: -2px; bottom: -2px;
-            background: linear-gradient(90deg, #ffffff, #444444, #ffffff, #222222, #ffffff);
-            background-size: 300% 300%;
-            border-radius: 14px;
-            z-index: -1;
-            animation: borderAnimation 4s ease infinite;
-            opacity: 0.8;
-        }
-        
-        .product-img { 
-            width: 100%; 
-            height: 100px; 
-            background: #18181b; 
-            color: #ef4444; 
-            border-radius: 8px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold; 
-            font-size: 13px;
-            margin-bottom: 8px; 
-            border: 1px dashed #3f3f46;
-            padding: 5px;
-        }
-
-        .product-name { font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #f4f4f5; }
-        .product-price { color: #ef4444; font-weight: bold; font-size: 16px; margin-bottom: 10px; }
-        
-        .btn { 
-            background: #ef4444; 
-            color: white; 
-            border: none; 
-            padding: 9px 0; 
-            width: 100%; 
-            border-radius: 6px; 
-            font-weight: bold; 
-            cursor: pointer; 
-        }
-        .btn:hover { background: #dc2626; }
-
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
-            display: none;
-            z-index: 200;
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0; right: -300px; width: 300px; height: 100%;
-            background: #121212;
-            border-left: 1px solid #27272a;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.8);
-            transition: 0.3s;
-            z-index: 300;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .sidebar.active { right: 0; }
-
-        .sidebar-header {
+        /* Navbar */
+        .navbar {
+            background-color: #7b2cbf;
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #27272a;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
         }
 
-        .menu-item {
-            background: #18181b;
-            border: 1px solid #27272a;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
+        .navbar h2 {
+            font-size: 1.2rem;
+        }
+
+        /* Breadcrumb / Navigation path */
+        .breadcrumb {
+            padding: 15px;
+            font-size: 0.85rem;
+            color: #b3a5c9;
+        }
+
+        .breadcrumb a {
+            color: #b3a5c9;
+            text-decoration: none;
+        }
+
+        /* Detail Card */
+        .product-detail-card {
+            padding: 0 15px;
+        }
+
+        .product-title {
+            font-size: 1.5rem;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #f4f4f5;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-size: 1.3rem;
+            color: #d8b4fe;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        /* Rules Box */
+        .info-box {
+            background-color: #1d1626;
+            border: 1px solid #3c2a4d;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: #e9d5ff;
+        }
+
+        .info-box p {
+            font-size: 0.88rem;
+            color: #d1d5db;
+            line-height: 1.5;
             margin-bottom: 10px;
         }
 
-        .menu-item:hover { background: #27272a; }
-
-        /* ✨ Modal แบบพื้นหลังดำ ขอบขาวอนิเมชั่น */
-        .modal {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: #121212;
-            padding: 20px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 420px;
-            max-height: 85vh;
-            overflow-y: auto;
-            display: none;
-            z-index: 400;
-            text-align: center;
-            color: #ffffff;
-        }
-
-        .modal input {
-            width: 100%;
-            padding: 11px;
-            margin: 6px 0;
-            background: #18181b;
-            border: 1px solid #3f3f46;
-            color: #ffffff;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .modal input:focus {
-            outline: none;
-            border-color: #ffffff;
-        }
-
-        .modal-btn {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 12px;
-            width: 100%;
-            border-radius: 8px;
+        .warning-text {
+            color: #ef4444;
             font-weight: bold;
-            font-size: 15px;
-            cursor: pointer;
-            margin-top: 10px;
-            text-decoration: none;
-            display: inline-block;
         }
 
-        .modal-btn-green { background: #10b981; }
-        .modal-btn-fb { background: #1877f2; }
-
-        .info-card {
-            background: #18181b;
-            border: 1px solid #27272a;
-            border-radius: 10px;
+        /* Quantity & Purchase Button */
+        .action-box {
+            background-color: #1d1626;
+            border: 1px solid #3c2a4d;
+            border-radius: 12px;
             padding: 15px;
-            margin: 12px 0;
-            text-align: left;
-            font-size: 13px;
-            line-height: 1.6;
-            color: #d4d4d8;
         }
 
-        .history-card {
-            background: #18181b;
-            border: 1px solid #27272a;
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 12px;
-            text-align: left;
+        .stock-info {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            margin-bottom: 10px;
         }
 
-        .history-title { font-weight: bold; color: #ffffff; font-size: 15px; }
-        .history-price { color: #ef4444; font-weight: bold; font-size: 14px; margin: 4px 0; }
-        .history-date { font-size: 11px; color: #71717a; margin-bottom: 8px; }
-        
-        .script-box {
-            background: #09090b;
-            color: #38bdf8;
-            padding: 8px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 12px;
-            word-break: break-all;
-            margin-top: 5px;
-            border: 1px solid #27272a;
-            user-select: all;
-        }
-
-        .btn-copy {
-            background: #2563eb;
+        .buy-btn {
+            width: 100%;
+            background-color: #9d4edd;
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
-            float: right;
+            transition: 0.2s;
+        }
+
+        .buy-btn:hover {
+            background-color: #7b2cbf;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="shop-brand">🚀 SCRIPT SHOP</div>
-        <div class="user-status">
-            <div class="username-badge" id="userDisplay">👤 ไม่ได้ล็อกอิน</div>
-            <div class="wallet-badge">💰 <span id="userBalance">0.00</span> ฿</div>
-        </div>
-        <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+<div class="container">
+    <!-- Header Navbar -->
+    <div class="navbar">
+        <h2>🍄 MUSHROOM SHOP</h2>
+        <div>🔍</div>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closeAll()"></div>
-
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h3>เมนูหลัก</h3>
-            <span style="cursor:pointer; font-weight:bold;" onclick="toggleSidebar()">✕</span>
-        </div>
-        
-        <div id="authMenuGroup">
-            <div class="menu-item" onclick="openModal('registerModal')">📝 สมัครสมาชิก</div>
-            <div class="menu-item" onclick="openModal('loginModal')">🔑 เข้าสู่ระบบ</div>
-        </div>
-
-        <div id="userMenuGroup" style="display: none;">
-            <div class="menu-item" onclick="openModal('topupModal')">💸 เติมเงิน (โอนเงินผ่านแอดมิน)</div>
-            <div class="menu-item" onclick="openHistoryModal()">📜 ประวัติคำสั่งซื้อ</div>
-            <div class="menu-item" style="color: #ef4444; border-color: #fca5a5;" onclick="logout()">🚪 ออกจากระบบ</div>
-        </div>
+    <!-- Navigation Path -->
+    <div class="breadcrumb">
+        <a href="#">หน้าแรก</a> &gt; <a href="#">แมพปลูกเห็ด</a> &gt; ID ไก่เมล็ดเห็ดวิเศษ 10ต้น
     </div>
 
-    <!-- Modal สมัครสมาชิก -->
-    <div class="modal" id="registerModal">
-        <h3 style="color: #ffffff; margin-bottom: 10px;">📝 สมัครสมาชิก</h3>
-        <input type="text" id="regUser" placeholder="ตั้งชื่อผู้ใช้งาน">
-        <input type="password" id="regPass" placeholder="รหัสผ่าน">
-        <input type="password" id="regPassConfirm" placeholder="ยืนยันรหัสผ่าน">
-        <button class="modal-btn modal-btn-green" onclick="register()">สมัครสมาชิกเลย</button>
-        <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
-    </div>
+    <!-- Product Details -->
+    <div class="product-detail-card">
+        <h1 class="product-title">ID ไก่เมล็ดเห็ดวิเศษ 10ต้น</h1>
+        <div class="product-price">10 เครดิต</div>
 
-    <!-- Modal เข้าสู่ระบบ -->
-    <div class="modal" id="loginModal">
-        <h3 style="color: #ffffff; margin-bottom: 10px;">🔑 เข้าสู่ระบบ</h3>
-        <input type="text" id="loginUser" placeholder="ชื่อผู้ใช้งาน">
-        <input type="password" id="loginPass" placeholder="รหัสผ่าน">
-        <button class="modal-btn" onclick="login()">กดเพื่อเข้าสู่ระบบ</button>
-        <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
-    </div>
-
-    <!-- Modal เติมเงิน -->
-    <div class="modal" id="topupModal">
-        <h3 style="color: #ffffff;">💸 เติมเงินผ่านการโอน</h3>
-        
-        <div class="info-card">
-            <p><b>1. โอนเงินมายังเบอร์:</b> <span style="color:#ef4444; font-size:16px; font-weight:bold;">0827525423</span></p>
-            <p><b>ชื่อบัญชี:</b> จิรพันธ์ เผือดผ่อง</p>
-            <p style="margin-top: 5px;"><b>2. ส่งหลักฐาน:</b> โอนเสร็จแล้ว ให้ส่งหลักฐานสลิปการโอนเงินไปที่ Facebook แอดมิน</p>
-            <p style="margin-top: 5px;"><b>3. รับรหัสเข้าใช้งาน:</b> แอดมินจะทำการส่งรหัสให้คุณล็อกอิน ซึ่งในบัญชีจะมีจำนวนเงินที่เติมไว้ครับ</p>
+        <!-- Rules & Warranties -->
+        <div class="info-box">
+            <h3>ℹ️ รายละเอียดสินค้า</h3>
+            <p><span class="warning-text">❗❗ รับประกันไอดี 1 ชั่วโมง ❗</span></p>
+            <p>⭐ หากพบปัญหาหรือติดรหัส ให้ติดต่อแอดมินเพื่อเคลมทันที ⭐</p>
+            <p><span class="warning-text">❗❗ กติกาการเคลม:</span> ต้องมีวิดีโอหลักฐานตั้งแต่กดซื้อจนถึงเข้าเกมเท่านั้น หากไม่มีคลิปไม่รับเคลมทุกกรณี</p>
+            <p>⭐ เมื่อเช็คสินค้าแล้ว อย่าลืมเปลี่ยนรหัสผ่านและผูกอีเมล/เบอร์โทรทันที</p>
+            <p style="margin-top: 15px; font-size: 0.8rem; color: #9ca3af;">* ทางร้านไม่มีนโยบายการคืนเงิน โปรดตัดสินใจให้ดีก่อนซื้อ</p>
         </div>
 
-        <a href="https://www.facebook.com/share/1BGFfaPDG1/" target="_blank" class="modal-btn modal-btn-fb">
-            👉 ติดต่อแอดมินส่งหลักฐาน (Facebook)
-        </a>
-        
-        <button style="background:none; border:none; color:#ef4444; margin-top:15px; cursor:pointer;" onclick="closeAll()">ปิดหน้าต่าง</button>
-    </div>
-
-    <!-- Modal ประวัติ -->
-    <div class="modal" id="historyModal">
-        <h3 style="color: #ffffff; margin-bottom: 15px;">📜 ประวัติคำสั่งซื้อ</h3>
-        <div id="historyList"></div>
-        <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ปิดหน้าต่าง</button>
-    </div>
-
-    <!-- สินค้า -->
-    <div class="container">
-        <div class="title-box">
-            <h1>🚀 บริการรับรันสคริปต์</h1>
-            <p>เลือกซื้อสคริปต์ Roblox คุณภาพสูง ได้ที่นี่</p>
-        </div>
-
-        <div class="product-grid">
-            <div class="product-card">
-                <div class="product-img">Blox Fruits</div>
-                <div class="product-name">📜 สคริปต์ Blox Fruits</div>
-                <div class="product-price">50 บาท</div>
-                <button class="btn" onclick="buyProduct(50, 'สคริปต์ Blox Fruits', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/bloxfruits.lua\'))()')">ซื้อสคริปต์</button>
-            </div>
-
-            <div class="product-card">
-                <div class="product-img">TSB Script</div>
-                <div class="product-name">📜 The Strongest Battlefield</div>
-                <div class="product-price">50 บาท</div>
-                <button class="btn" onclick="buyProduct(50, 'The Strongest Battlefield', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/tsb.lua\'))()')">ซื้อสคริปต์</button>
-            </div>
-
-            <div class="product-card">
-                <div class="product-img">Universal Script</div>
-                <div class="product-name">📜 สคริปต์ใช้ได้ทุกแมพ</div>
-                <div class="product-price">99 บาท</div>
-                <button class="btn" onclick="buyProduct(99, 'สคริปต์ใช้ได้ทุกแมพ', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/universal.lua\'))()')">ซื้อสคริปต์</button>
-            </div>
-
-            <div class="product-card">
-                <div class="product-img">ESP / Wallhack</div>
-                <div class="product-name">📜 สคริปต์ ESP มองทะลุ</div>
-                <div class="product-price">35 บาท</div>
-                <button class="btn" onclick="buyProduct(35, 'สคริปต์ ESP มองทะลุ', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/esp.lua\'))()')">ซื้อสคริปต์</button>
-            </div>
-
-            <div class="product-card">
-                <div class="product-img">Speed Hack</div>
-                <div class="product-name">📜 สคริปต์วิ่งเร็ว / กระโดดสูง</div>
-                <div class="product-price">20 บาท</div>
-                <button class="btn" onclick="buyProduct(20, 'สคริปต์วิ่งเร็ว', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/speed.lua\'))()')">ซื้อสคริปต์</button>
-            </div>
-
-            <div class="product-card">
-                <div class="product-img">FPS Boost</div>
-                <div class="product-name">📜 สคริปต์ FPS ปลดล็อกลื่นๆ</div>
-                <div class="product-price">20 บาท</div>
-                <button class="btn" onclick="buyProduct(20, 'สคริปต์ FPS Boost', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/fps.lua\'))()')">ซื้อสคริปต์</button>
-            </div>
+        <!-- Buy Action -->
+        <div class="action-box">
+            <div class="stock-info">จำนวนสินค้าคงเหลือ: 99 ชิ้น</div>
+            <button class="buy-btn">ซื้อสินค้า (10 เครดิต)</button>
         </div>
     </div>
-
-    <script>
-        let DB = {
-            users: {},
-            currentUser: null
-        };
-
-        window.onload = function() {
-            loadDB();
-            updateUI();
-        };
-
-        function loadDB() {
-            const savedDB = localStorage.getItem('SHOP_DATABASE');
-            if (savedDB) {
-                try { DB = JSON.parse(savedDB); } catch(e) { console.error("Database error", e); }
-            }
-        }
-
-        function saveDB() {
-            localStorage.setItem('SHOP_DATABASE', JSON.stringify(DB));
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            sidebar.classList.toggle('active');
-            overlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
-        }
-
-        function openModal(id) {
-            closeAll();
-            document.getElementById(id).style.display = 'block';
-            document.getElementById('overlay').style.display = 'block';
-        }
-
-        function closeAll() {
-            document.getElementById('sidebar').classList.remove('active');
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-            document.getElementById('overlay').style.display = 'none';
-        }
-
-        function register() {
-            const user = document.getElementById('regUser').value.trim();
-            const pass = document.getElementById('regPass').value;
-            const passConfirm = document.getElementById('regPassConfirm').value;
-
-            if (!user || !pass) { alert('❌ กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
-            if (pass !== passConfirm) { alert('❌ รหัสผ่านไม่ตรงกัน'); return; }
-
-            const lowerUser = user.toLowerCase();
-
-            if (DB.users[lowerUser]) {
-                alert('❌ ชื่อผู้ใช้งานนี้ถูกใช้งานแล้ว!');
-                return;
-            }
-
-            DB.users[lowerUser] = {
-                username: user,
-                password: pass,
-                balance: 0.00,
-                history: []
-            };
-
-            DB.currentUser = lowerUser;
-            saveDB();
-
-            alert('🎉 สมัครสมาชิกสำเร็จ!');
-            updateUI();
-            closeAll();
-        }
-
-        function login() {
-            const user = document.getElementById('loginUser').value.trim();
-            const pass = document.getElementById('loginPass').value;
-
-            if (!user || !pass) { alert('❌ กรุณากรอกชื่อและรหัสผ่าน'); return; }
-
-            const lowerUser = user.toLowerCase();
-            const account = DB.users[lowerUser];
-
-            if (!account || account.password !== pass) {
-                alert('❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-                return;
-            }
-
-            DB.currentUser = lowerUser;
-            saveDB();
-
-            alert(`🎉 ยินดีต้อนรับ คุณ ${account.username}!`);
-            updateUI();
-            closeAll();
-        }
-
-        function logout() {
-            DB.currentUser = null;
-            saveDB();
-            alert('👋 ออกจากระบบเรียบร้อยแล้ว');
-            updateUI();
-            closeAll();
-        }
-
-        function updateUI() {
-            const userDisplay = document.getElementById('userDisplay');
-            const userBalance = document.getElementById('userBalance');
-            const authMenu = document.getElementById('authMenuGroup');
-            const userMenu = document.getElementById('userMenuGroup');
-
-            if (DB.currentUser && DB.users[DB.currentUser]) {
-                const account = DB.users[DB.currentUser];
-                userDisplay.innerText = `👤 ${account.username}`;
-                userBalance.innerText = account.balance.toFixed(2);
-                authMenu.style.display = 'none';
-                userMenu.style.display = 'block';
-            } else {
-                userDisplay.innerText = '👤 ไม่ได้ล็อกอิน';
-                userBalance.innerText = '0.00';
-                authMenu.style.display = 'block';
-                userMenu.style.display = 'none';
-            }
-        }
-
-        function buyProduct(price, name, scriptContent) {
-            if (!DB.currentUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนสั่งซื้อ'); openModal('loginModal'); return; }
-
-            const account = DB.users[DB.currentUser];
-
-            if (account.balance < price) {
-                alert(`❌ เครดิตไม่พอ! สคริปต์นี้ราคา ${price} บาท (คุณมี ${account.balance.toFixed(2)} บาท)`);
-            } else {
-                account.balance -= price;
-                
-                const newOrder = {
-                    name: name,
-                    price: price,
-                    script: scriptContent,
-                    date: new Date().toLocaleString('th-TH')
-                };
-
-                account.history.unshift(newOrder);
-                saveDB();
-                updateUI();
-
-                alert(`🎉 สั่งซื้อ ${name} สำเร็จ!\nสามารถเข้าไปดูสคริปต์ได้ที่เมนู "ประวัติคำสั่งซื้อ" ครับ`);
-            }
-        }
-
-        function openHistoryModal() {
-            if (!DB.currentUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนดูประวัติ'); openModal('loginModal'); return; }
-
-            const account = DB.users[DB.currentUser];
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = '';
-
-            if (!account.history || account.history.length === 0) {
-                historyList.innerHTML = '<p style="color:#71717a; font-size:14px;">ยังไม่มีประวัติคำสั่งซื้อ</p>';
-            } else {
-                account.history.forEach((item, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'history-card';
-                    card.innerHTML = `
-                        <div class="history-title">📦 ${item.name}</div>
-                        <div class="history-price">💰 จำนวนเงิน: ${item.price} บาท</div>
-                        <div class="history-date">🕒 วันที่สั่งซื้อ: ${item.date}</div>
-                        <div style="font-size:12px; font-weight:bold; color:#a1a1aa;">รายการของ (สคริปต์):</div>
-                        <div class="script-box" id="scriptCode_${index}">${item.script}</div>
-                        <button class="btn-copy" onclick="copyScript('scriptCode_${index}')" style="margin-top:8px;">📋 คัดลอกสคริปต์</button>
-                        <div style="clear:both;"></div>
-                    `;
-                    historyList.appendChild(card);
-                });
-            }
-
-            openModal('historyModal');
-        }
-
-        function copyScript(elementId) {
-            const text = document.getElementById(elementId).innerText;
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('📋 คัดลอกสคริปต์เรียบร้อยแล้ว!');
-                });
-            } else {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                alert('📋 คัดลอกสคริปต์เรียบร้อยแล้ว!');
-            }
-        }
-    </script>
+</div>
 
 </body>
 </html>
