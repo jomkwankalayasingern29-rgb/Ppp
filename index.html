@@ -8,7 +8,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 50px; }
         
-        /* Header */
         .header { 
             background: #ffffff; 
             padding: 12px 16px; 
@@ -57,12 +56,10 @@
 
         .container { max-width: 500px; margin: 0 auto; padding: 15px; }
         
-        /* กล่องหัวข้อ */
         .title-box { background: #ffffff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px solid #e2e8f0; }
         .title-box h1 { font-size: 22px; color: #0f172a; margin-bottom: 5px; }
         .title-box p { font-size: 14px; color: #64748b; }
         
-        /* Grid รายการสินค้า */
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
         .product-card { 
@@ -105,7 +102,6 @@
             cursor: pointer; 
         }
 
-        /* Sidebar & Modal */
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -193,7 +189,6 @@
 
         .modal-btn-green { background: #10b981; }
 
-        /* การ์ดประวัติคำสั่งซื้อ */
         .history-card {
             background: #f8fafc;
             border: 1px solid #cbd5e1;
@@ -233,7 +228,6 @@
 </head>
 <body>
 
-    <!-- Header ด้านบน -->
     <div class="header">
         <div class="user-status">
             <div class="username-badge" id="userDisplay">👤 ยังไม่ได้เข้าสู่ระบบ</div>
@@ -244,7 +238,6 @@
 
     <div class="overlay" id="overlay" onclick="closeAll()"></div>
 
-    <!-- Sidebar เมนูด้านขวา -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h3>เมนูหลัก</h3>
@@ -264,7 +257,6 @@
         </div>
     </div>
 
-    <!-- 1. Modal สมัครสมาชิก -->
     <div class="modal" id="registerModal">
         <h3 style="color: #0f172a; margin-bottom: 10px;">📝 สมัครสมาชิก</h3>
         <input type="text" id="regUser" placeholder="ตั้งชื่อผู้ใช้งาน">
@@ -274,7 +266,6 @@
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
-    <!-- 2. Modal เข้าสู่ระบบ -->
     <div class="modal" id="loginModal">
         <h3 style="color: #0f172a; margin-bottom: 10px;">🔑 เข้าสู่ระบบ</h3>
         <input type="text" id="loginUser" placeholder="ชื่อผู้ใช้งาน">
@@ -283,25 +274,24 @@
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
-    <!-- 3. Modal เติมเงิน TrueMoney -->
     <div class="modal" id="topupModal">
         <h3 style="color: #0f172a;">🧧 เติมเงินซองอั่งเปา</h3>
         <p style="font-size: 12px; color: #64748b; margin-top: 5px;">ระบบจะโอนเงินเข้าเบอร์ <b>0827525423</b> แล้วเพิ่มเครดิตทันที</p>
         <input type="text" id="giftLink" placeholder="วางลิงก์ซองอั่งเปา TrueMoney ที่นี่...">
+        
+        <!-- เพิ่มช่องระบุยอดเงิน (ไว้ทดสอบระหว่างที่ยังไม่มี Backend API ตรวจสอบซองจริง) -->
+        <input type="number" id="testAmount" placeholder="ระบุจำนวนเงินในซอง (บาท)" value="10">
+
         <button class="modal-btn modal-btn-green" onclick="processAngpao()">ตรวจสอบ & เติมเงิน</button>
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
-    <!-- 4. Modal ประวัติคำสั่งซื้อ -->
     <div class="modal" id="historyModal">
         <h3 style="color: #0f172a; margin-bottom: 15px;">📜 ประวัติคำสั่งซื้อ</h3>
-        <div id="historyList">
-            <!-- ข้อมูลประวัติจะแสดงตรงนี้ -->
-        </div>
+        <div id="historyList"></div>
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ปิดหน้าต่าง</button>
     </div>
 
-    <!-- หน้าต่างสินค้าหลัก -->
     <div class="container">
         <div class="title-box">
             <h1>🚀 บริการรับรันสคริปต์</h1>
@@ -309,7 +299,6 @@
         </div>
 
         <div class="product-grid">
-
             <div class="product-card">
                 <div class="product-img">Blox Fruits</div>
                 <div class="product-name">📜 สคริปต์ Blox Fruits</div>
@@ -351,11 +340,9 @@
                 <div class="product-price">20 บาท</div>
                 <button class="btn" onclick="buyProduct(20, 'สคริปต์ FPS Boost', 'loadstring(game:HttpGet(\'https://raw.githubusercontent.com/script/fps.lua\'))()')">ซื้อสคริปต์</button>
             </div>
-
         </div>
     </div>
 
-    <!-- JavaScript สั่งงาน -->
     <script>
         let currentBalance = 0.00;
         let loggedInUser = null;
@@ -465,25 +452,47 @@
             }
         }
 
+        /* 🧧 ระบบตรวจซองอั่งเปา (ปรับปรุงป้องกันซองซ้ำ) */
         function processAngpao() {
             if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อน'); openModal('loginModal'); return; }
 
             const link = document.getElementById('giftLink').value.trim();
-            if (!link.includes('gift.truemoney.com')) { alert('❌ ลิงก์อั่งเปาไม่ถูกต้อง!'); return; }
+            const amountInput = parseFloat(document.getElementById('testAmount').value);
+
+            if (!link.includes('gift.truemoney.com')) { 
+                alert('❌ ลิงก์อั่งเปาไม่ถูกต้อง!'); 
+                return; 
+            }
+
+            if (isNaN(amountInput) || amountInput <= 0) {
+                alert('❌ กรุณาระบุจำนวนเงินที่ถูกต้อง');
+                return;
+            }
+
+            // 🚫 ระบบตรวจสอบว่าลิงก์ซองนี้เคยถูกใช้ไปแล้วหรือยัง
+            let usedLinks = JSON.parse(localStorage.getItem('usedAngpaoLinks') || '[]');
+            if (usedLinks.includes(link)) {
+                alert('❌ ซองอั่งเปานี้ถูกใช้งานไปแล้ว! ไม่สามารถใช้ซ้ำได้');
+                return;
+            }
 
             alert('⏳ กำลังตรวจสอบซองอั่งเปา และดึงเงินเข้าเบอร์ 0827525423...');
 
             setTimeout(() => {
-                const addedMoney = 50.00;
-                currentBalance += addedMoney;
+                // บันทึกซองว่าใช้ไปแล้ว
+                usedLinks.push(link);
+                localStorage.setItem('usedAngpaoLinks', JSON.stringify(usedLinks));
+
+                // เพิ่มเครดิตตามจำนวนจริงที่ระบุ
+                currentBalance += amountInput;
                 updateUI();
-                alert(`✅ เติมเงินสำเร็จ! ได้รับเครดิตจำนวน ${addedMoney} บาท`);
+
+                alert(`✅ เติมเงินสำเร็จ! ได้รับเครดิตจำนวน ${amountInput.toFixed(2)} บาท`);
                 document.getElementById('giftLink').value = '';
                 closeAll();
-            }, 1500);
+            }, 1200);
         }
 
-        /* 🛒 ระบบซื้อสินค้า และบันทึกประวัติ */
         function buyProduct(price, name, scriptContent) {
             if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนสั่งซื้อ'); openModal('loginModal'); return; }
 
@@ -492,7 +501,6 @@
             } else {
                 currentBalance -= price;
                 
-                // บันทึกคำสั่งซื้อลงในประวัติผู้ใช้
                 const userData = JSON.parse(localStorage.getItem('user_' + loggedInUser));
                 if (!userData.history) userData.history = [];
 
@@ -503,7 +511,7 @@
                     date: new Date().toLocaleString('th-TH')
                 };
 
-                userData.history.unshift(newOrder); // ใส่ไว้บนสุด
+                userData.history.unshift(newOrder);
                 userData.balance = currentBalance;
                 localStorage.setItem('user_' + loggedInUser, JSON.stringify(userData));
 
@@ -512,7 +520,6 @@
             }
         }
 
-        /* 📜 เปิดดูประวัติคำสั่งซื้อ */
         function openHistoryModal() {
             if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนดูประวัติ'); openModal('loginModal'); return; }
 
@@ -542,7 +549,6 @@
             openModal('historyModal');
         }
 
-        // คัดลอกสคริปต์
         function copyScript(elementId) {
             const text = document.getElementById(elementId).innerText;
             navigator.clipboard.writeText(text);
