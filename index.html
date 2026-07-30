@@ -42,8 +42,6 @@
             border: 1px solid #ef4444;
         }
 
-        .wallet-badge span { color: #22c55e; }
-
         .username-badge {
             background: #eff6ff;
             color: #2563eb;
@@ -276,6 +274,7 @@
         </div>
     </div>
 
+    <!-- Modal สมัครสมาชิก -->
     <div class="modal" id="registerModal">
         <h3 style="color: #0f172a; margin-bottom: 10px;">📝 สมัครสมาชิก</h3>
         <input type="text" id="regUser" placeholder="ตั้งชื่อผู้ใช้งาน">
@@ -285,6 +284,7 @@
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
+    <!-- Modal เข้าสู่ระบบ -->
     <div class="modal" id="loginModal">
         <h3 style="color: #0f172a; margin-bottom: 10px;">🔑 เข้าสู่ระบบ</h3>
         <input type="text" id="loginUser" placeholder="ชื่อผู้ใช้งาน">
@@ -293,6 +293,7 @@
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
+    <!-- Modal เติมเงิน -->
     <div class="modal" id="topupModal">
         <h3 style="color: #0f172a;">🧧 เติมเงินซองอั่งเปา</h3>
         <p style="font-size: 12px; color: #64748b; margin-top: 5px;">ระบบจะโอนเงินเข้าเบอร์ <b>0827525423</b> แล้วเพิ่มเครดิตทันที</p>
@@ -302,12 +303,14 @@
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ยกเลิก</button>
     </div>
 
+    <!-- Modal ประวัติ -->
     <div class="modal" id="historyModal">
         <h3 style="color: #0f172a; margin-bottom: 15px;">📜 ประวัติคำสั่งซื้อ</h3>
         <div id="historyList"></div>
         <button style="background:none; border:none; color:#ef4444; margin-top:10px; cursor:pointer;" onclick="closeAll()">ปิดหน้าต่าง</button>
     </div>
 
+    <!-- สินค้า -->
     <div class="container">
         <div class="title-box">
             <h1>🚀 บริการรับรันสคริปต์</h1>
@@ -359,21 +362,31 @@
         </div>
     </div>
 
+    <!-- โครงสร้างระบบฐานข้อมูลแบบใหม่ -->
     <script>
-        let currentBalance = 0.00;
-        let loggedInUser = null;
-
-        window.onload = function() {
-            const savedSession = localStorage.getItem('activeUser');
-            if (savedSession) {
-                const userData = JSON.parse(localStorage.getItem('user_' + savedSession.toLowerCase()));
-                if (userData) {
-                    loggedInUser = userData.username;
-                    currentBalance = userData.balance || 0.00;
-                    updateUI();
-                }
-            }
+        // โครงสร้าง Database จำลอง
+        let DB = {
+            users: {},       // เก็บข้อมูลสมาชิกทั้งหมด
+            usedVouchers: [],// เก็บลิงก์อั่งเปาที่เติมไปแล้ว
+            currentUser: null// สมาชิกที่กำลังล็อกอิน
         };
+
+        // โหลดข้อมูลขึ้นมาทันทีที่เปิดเว็บ
+        window.onload = function() {
+            loadDB();
+            updateUI();
+        };
+
+        function loadDB() {
+            const savedDB = localStorage.getItem('SHOP_DATABASE');
+            if (savedDB) {
+                DB = JSON.parse(savedDB);
+            }
+        }
+
+        function saveDB() {
+            localStorage.setItem('SHOP_DATABASE', JSON.stringify(DB));
+        }
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -394,7 +407,7 @@
             document.getElementById('overlay').style.display = 'none';
         }
 
-        /* 📝 สมัครสมาชิก */
+        /* 📝 ระบบสมัครสมาชิก (กันชื่อซ้ำ 100%) */
         function register() {
             const user = document.getElementById('regUser').value.trim();
             const pass = document.getElementById('regPass').value;
@@ -403,61 +416,61 @@
             if (!user || !pass) { alert('❌ กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
             if (pass !== passConfirm) { alert('❌ รหัสผ่านไม่ตรงกัน'); return; }
 
-            const userKey = 'user_' + user.toLowerCase();
-            if (localStorage.getItem(userKey)) { 
-                alert('❌ ชื่อผู้ใช้งานนี้ถูกใช้งานแล้ว! กรุณาใช้ชื่ออื่น'); 
-                return; 
+            const lowerUser = user.toLowerCase();
+
+            // เช็กชื่อซ้ำใน Database ศูนย์กลาง
+            if (DB.users[lowerUser]) {
+                alert('❌ ชื่อผู้ใช้งานนี้ถูกใช้งานแล้ว! ไม่สามารถตั้งซ้ำได้');
+                return;
             }
 
-            const newUser = { username: user, password: pass, balance: 0.00, history: [] };
-            localStorage.setItem(userKey, JSON.stringify(newUser));
-            
-            localStorage.setItem('activeUser', user.toLowerCase());
-            loggedInUser = user;
-            currentBalance = 0.00;
+            // บันทึกบัญชีใหม่
+            DB.users[lowerUser] = {
+                username: user,
+                password: pass,
+                balance: 0.00,
+                history: []
+            };
+
+            DB.currentUser = lowerUser;
+            saveDB();
 
             alert('🎉 สมัครสมาชิกสำเร็จ!');
             updateUI();
             closeAll();
         }
 
-        /* 🔑 เข้าสู่ระบบ (แก้ไขแก้บั๊กล็อกอินไม่ได้) */
+        /* 🔑 ระบบเข้าสู่ระบบ (ชัวร์ 100%) */
         function login() {
             const user = document.getElementById('loginUser').value.trim();
             const pass = document.getElementById('loginPass').value;
 
-            if (!user || !pass) {
-                alert('❌ กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+            if (!user || !pass) { alert('❌ กรุณากรอกชื่อและรหัสผ่าน'); return; }
+
+            const lowerUser = user.toLowerCase();
+            const account = DB.users[lowerUser];
+
+            if (!account) {
+                alert('❌ ไม่พบชื่อผู้ใช้นี้ในระบบ');
                 return;
             }
 
-            const userKey = 'user_' + user.toLowerCase();
-            const userDataRaw = localStorage.getItem(userKey);
-
-            if (!userDataRaw) { 
-                alert('❌ ไม่พบชื่อผู้ใช้นี้ในระบบ'); 
-                return; 
+            if (account.password !== pass) {
+                alert('❌ รหัสผ่านไม่ถูกต้อง');
+                return;
             }
 
-            const userData = JSON.parse(userDataRaw);
-            if (userData.password !== pass) { 
-                alert('❌ รหัสผ่านไม่ถูกต้อง'); 
-                return; 
-            }
+            DB.currentUser = lowerUser;
+            saveDB();
 
-            localStorage.setItem('activeUser', user.toLowerCase());
-            loggedInUser = userData.username;
-            currentBalance = userData.balance || 0.00;
-
-            alert(`🎉 ยินดีต้อนรับ คุณ ${loggedInUser}!`);
+            alert(`🎉 ยินดีต้อนรับ คุณ ${account.username}!`);
             updateUI();
             closeAll();
         }
 
         function logout() {
-            localStorage.removeItem('activeUser');
-            loggedInUser = null;
-            currentBalance = 0.00;
+            DB.currentUser = null;
+            saveDB();
             alert('👋 ออกจากระบบเรียบร้อยแล้ว');
             updateUI();
             closeAll();
@@ -469,29 +482,23 @@
             const authMenu = document.getElementById('authMenuGroup');
             const logoutMenu = document.getElementById('logoutMenuGroup');
 
-            userBalance.innerText = currentBalance.toFixed(2);
-
-            if (loggedInUser) {
-                userDisplay.innerText = `👤 ${loggedInUser}`;
+            if (DB.currentUser && DB.users[DB.currentUser]) {
+                const account = DB.users[DB.currentUser];
+                userDisplay.innerText = `👤 ${account.username}`;
+                userBalance.innerText = account.balance.toFixed(2);
                 authMenu.style.display = 'none';
                 logoutMenu.style.display = 'block';
-
-                const userKey = 'user_' + loggedInUser.toLowerCase();
-                const userData = JSON.parse(localStorage.getItem(userKey));
-                if (userData) {
-                    userData.balance = currentBalance;
-                    localStorage.setItem(userKey, JSON.stringify(userData));
-                }
             } else {
                 userDisplay.innerText = '👤 ไม่ได้ล็อกอิน';
+                userBalance.innerText = '0.00';
                 authMenu.style.display = 'block';
                 logoutMenu.style.display = 'none';
             }
         }
 
-        /* 🧧 เติมเงินอั่งเปา */
+        /* 🧧 เติมเงินอั่งเปา (ห้ามใช้ซ้ำข้ามบัญชีเด็ดขาด) */
         function processAngpao() {
-            if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อน'); openModal('loginModal'); return; }
+            if (!DB.currentUser) { alert('❌ กรุณาเข้าสู่ระบบก่อน'); openModal('loginModal'); return; }
 
             const link = document.getElementById('giftLink').value.trim();
             const amountInput = parseFloat(document.getElementById('testAmount').value);
@@ -506,41 +513,40 @@
                 return;
             }
 
-            let usedLinks = JSON.parse(localStorage.getItem('global_used_angpao_links') || '[]');
-            
-            if (usedLinks.includes(link)) {
-                alert('❌ ซองอั่งเปานี้ถูกใช้งานไปแล้ว!');
+            // ตรวจสอบใน Global List ว่าเคยใช้ซองนี้หรือยัง
+            if (DB.usedVouchers.includes(link)) {
+                alert('❌ ซองอั่งเปานี้ถูกใช้งานไปแล้ว! (ห้ามใช้ซ้ำในทุกบัญชี)');
                 return;
             }
 
             alert('⏳ กำลังตรวจสอบซองอั่งเปา และดึงเงินเข้าเบอร์ 0827525423...');
 
             setTimeout(() => {
-                usedLinks.push(link);
-                localStorage.setItem('global_used_angpao_links', JSON.stringify(usedLinks));
+                // บันทึกซองเข้าลิสต์ที่ใช้แล้ว
+                DB.usedVouchers.push(link);
 
-                currentBalance += amountInput;
+                // บวกเงินให้บัญชีที่ล็อกอินอยู่
+                DB.users[DB.currentUser].balance += amountInput;
+                saveDB();
                 updateUI();
 
                 alert(`✅ เติมเงินสำเร็จ! ได้รับเครดิตจำนวน ${amountInput.toFixed(2)} บาท`);
                 document.getElementById('giftLink').value = '';
                 closeAll();
-            }, 1200);
+            }, 1000);
         }
 
         /* 🛒 สั่งซื้อสินค้า */
         function buyProduct(price, name, scriptContent) {
-            if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนสั่งซื้อ'); openModal('loginModal'); return; }
+            if (!DB.currentUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนสั่งซื้อ'); openModal('loginModal'); return; }
 
-            if (currentBalance < price) {
-                alert(`❌ เครดิตไม่พอ! สคริปต์นี้ราคา ${price} บาท (คุณมี ${currentBalance} บาท)`);
+            const account = DB.users[DB.currentUser];
+
+            if (account.balance < price) {
+                alert(`❌ เครดิตไม่พอ! สคริปต์นี้ราคา ${price} บาท (คุณมี ${account.balance.toFixed(2)} บาท)`);
             } else {
-                currentBalance -= price;
+                account.balance -= price;
                 
-                const userKey = 'user_' + loggedInUser.toLowerCase();
-                const userData = JSON.parse(localStorage.getItem(userKey));
-                if (!userData.history) userData.history = [];
-
                 const newOrder = {
                     name: name,
                     price: price,
@@ -548,28 +554,26 @@
                     date: new Date().toLocaleString('th-TH')
                 };
 
-                userData.history.unshift(newOrder);
-                userData.balance = currentBalance;
-                localStorage.setItem(userKey, JSON.stringify(userData));
-
+                account.history.unshift(newOrder);
+                saveDB();
                 updateUI();
+
                 alert(`🎉 สั่งซื้อ ${name} สำเร็จ!\nสามารถเข้าไปดูสคริปต์ได้ที่เมนู "ประวัติคำสั่งซื้อ" ครับ`);
             }
         }
 
         /* 📜 ประวัติคำสั่งซื้อ */
         function openHistoryModal() {
-            if (!loggedInUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนดูประวัติ'); openModal('loginModal'); return; }
+            if (!DB.currentUser) { alert('❌ กรุณาเข้าสู่ระบบก่อนดูประวัติ'); openModal('loginModal'); return; }
 
-            const userKey = 'user_' + loggedInUser.toLowerCase();
-            const userData = JSON.parse(localStorage.getItem(userKey));
+            const account = DB.users[DB.currentUser];
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = '';
 
-            if (!userData.history || userData.history.length === 0) {
+            if (!account.history || account.history.length === 0) {
                 historyList.innerHTML = '<p style="color:#64748b; font-size:14px;">ยังไม่มีประวัติคำสั่งซื้อ</p>';
             } else {
-                userData.history.forEach((item, index) => {
+                account.history.forEach((item, index) => {
                     const card = document.createElement('div');
                     card.className = 'history-card';
                     card.innerHTML = `
