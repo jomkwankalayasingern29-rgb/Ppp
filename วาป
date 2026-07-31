@@ -531,6 +531,9 @@ createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", Too
 local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
 local HitboxBack, HitboxBtn, HitboxLabel = createSlider("ขนาดฮิดบล็อก: 1 (ปกติ)", ToolTab)
 
+createHeader(">> ระบบภาพดินน้ำมัน (Plastic) <<", ToolTab)
+local ClayGraphicsToggle = createToggle("ClayGraphics", "เปิดใช้งานภาพดินน้ำมัน", ToolTab)
+
 createHeader(">> แสงสว่างแผนที่ (Fullbright) <<", ToolTab)
 local FullbrightToggle = createToggle("Fullbright", "เปิดใช้งานแมพสว่างสุดๆ", ToolTab)
 
@@ -685,7 +688,6 @@ RunService.RenderStepped:Connect(function()
 
             if closestTarget and closestTarget:FindFirstChild("HumanoidRootPart") then
                 local targetRoot = closestTarget.HumanoidRootPart
-                -- ล็อกตำแหน่งติดด้านหลังตลอดเวลา (ถอยหลังไป 3.5 หน่วย)
                 myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 3.5)
             end
         end
@@ -793,6 +795,50 @@ task.spawn(function()
                 end
             end
         end
+    end
+end)
+
+-- =============================================================================
+-- ระบบภาพดินน้ำมัน (Plastic Graphics)
+-- =============================================================================
+local ClayGraphicsEnabled = false
+local originalMaterials = {}
+
+local function applyClayMaterial()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
+            if not originalMaterials[obj] then
+                originalMaterials[obj] = obj.Material
+            end
+            pcall(function()
+                obj.Material = Enum.Material.SmoothPlastic
+                obj.Reflectance = 0
+            end)
+        end
+    end
+end
+
+local function restoreMaterials()
+    for obj, mat in pairs(originalMaterials) do
+        if obj and obj.Parent then
+            pcall(function()
+                obj.Material = mat
+            end)
+        end
+    end
+    originalMaterials = {}
+end
+
+ClayGraphicsToggle.MouseButton1Click:Connect(function()
+    ClayGraphicsEnabled = not ClayGraphicsEnabled
+    ClayGraphicsToggle.BackgroundColor3 = ClayGraphicsEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    ClayGraphicsToggle.Text = ClayGraphicsEnabled and "เปิด" or "ปิด"
+    showNotification((ClayGraphicsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ภาพดินน้ำมัน', ClayGraphicsEnabled)
+
+    if ClayGraphicsEnabled then
+        applyClayMaterial()
+    else
+        restoreMaterials()
     end
 end)
 
@@ -1515,6 +1561,8 @@ YesButton.MouseButton1Click:Connect(function()
     HitboxConfig.Enabled = false
     CooldownConfig.Enabled = false
     AutoTpBackConfig.Enabled = false
+    ClayGraphicsEnabled = false
+    restoreMaterials()
     
     for char, origSize in pairs(OriginalSizes) do
         if char and char:FindFirstChild("HumanoidRootPart") then
