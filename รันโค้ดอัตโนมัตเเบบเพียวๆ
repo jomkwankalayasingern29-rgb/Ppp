@@ -40,7 +40,7 @@ textBox.Size = UDim2.new(1, -20, 0, 65)
 textBox.Position = UDim2.new(0, 10, 0, 32)
 textBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 textBox.TextColor3 = Color3.fromRGB(212, 212, 212)
-textBox.PlaceholderText = "print('Hello Roblox')"
+textBox.PlaceholderText = "ใส่โค้ดเพื่อรัน"
 textBox.Text = ""
 textBox.TextSize = 12
 textBox.Font = Enum.Font.Code
@@ -101,7 +101,7 @@ local autoLabel = Instance.new("TextLabel")
 autoLabel.Size = UDim2.new(0, 120, 0, 25)
 autoLabel.Position = UDim2.new(0, 10, 0, 138)
 autoLabel.BackgroundTransparency = 1
-autoLabel.Text = "Auto (0.3s):"
+autoLabel.Text = "Auto (0.1s):"
 autoLabel.TextColor3 = Color3.fromRGB(212, 212, 212)
 autoLabel.TextSize = 12
 autoLabel.Font = Enum.Font.SourceSans
@@ -133,7 +133,7 @@ autoButton.MouseButton1Click:Connect(function()
 		task.spawn(function()
 			while isAutoRunning do
 				runCode(1)
-				task.wait(0.3)
+				task.wait(0.1)
 			end
 		end)
 	else
