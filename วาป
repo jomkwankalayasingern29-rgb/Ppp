@@ -540,6 +540,9 @@ local FullbrightToggle = createToggle("Fullbright", "เปิดใช้งา
 createHeader(">> เพิ่ม FPS (ลบเอฟเฟค & ควัน) <<", ToolTab)
 local FpsBoostToggle = createToggle("FpsBoost", "ลบเอฟเฟคทั้งหมด/ควัน/ละออง", ToolTab)
 
+createHeader(">> เพิ่ม FPS แบบเจาะลึก (แก้จุดแลค) <<", ToolTab)
+local SelectiveFpsToggle = createToggle("SelectiveFps", "เปิดใช้งานแก้แลคเฉพาะจุด", ToolTab)
+
 createHeader(">> ลบสิ่งที่ไม่จำเป็น (หิน/เศษเอฟเฟค) <<", ToolTab)
 local RemoveJunkToggle = createToggle("RemoveJunk", "ลบหิน/เศษเอฟเฟคการโจมตี", ToolTab)
 
@@ -839,6 +842,64 @@ ClayGraphicsToggle.MouseButton1Click:Connect(function()
         applyClayMaterial()
     else
         restoreMaterials()
+    end
+end)
+
+-- =============================================================================
+-- ระบบเพิ่ม FPS แบบเจาะลึกเฉพาะจุดที่แลค (Selective FPS Boost)
+-- =============================================================================
+local SelectiveFpsEnabled = false
+local optimizedParts = {}
+
+local function optimizeLaggyObjects()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
+            local nameLower = string.lower(obj.Name)
+            if string.find(nameLower, "debris") or string.find(nameLower, "rock") or string.find(nameLower, "stone") or string.find(nameLower, "grass") or string.find(nameLower, "leaf") or string.find(nameLower, "particle") then
+                if not optimizedParts[obj] then
+                    optimizedParts[obj] = {
+                        CanCollide = obj.CanCollide,
+                        Transparency = obj.Transparency,
+                        CastShadow = obj.CastShadow
+                    }
+                end
+                pcall(function()
+                    obj.CanCollide = false
+                    obj.CastShadow = false
+                    obj.Transparency = 1
+                end)
+            end
+        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
+            pcall(function()
+                obj.Enabled = false
+            end)
+        end
+    end
+end
+
+local function restoreLaggyObjects()
+    for obj, data in pairs(optimizedParts) do
+        if obj and obj.Parent then
+            pcall(function()
+                obj.CanCollide = data.CanCollide
+                obj.Transparency = data.Transparency
+                obj.CastShadow = data.CastShadow
+            end)
+        end
+    end
+    optimizedParts = {}
+end
+
+SelectiveFpsToggle.MouseButton1Click:Connect(function()
+    SelectiveFpsEnabled = not SelectiveFpsEnabled
+    SelectiveFpsToggle.BackgroundColor3 = SelectiveFpsEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    SelectiveFpsToggle.Text = SelectiveFpsEnabled and "เปิด" or "ปิด"
+    showNotification((SelectiveFpsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'แก้แลคเฉพาะจุด (FPS Boost)', SelectiveFpsEnabled)
+
+    if SelectiveFpsEnabled then
+        optimizeLaggyObjects()
+    else
+        restoreLaggyObjects()
     end
 end)
 
@@ -1557,12 +1618,14 @@ YesButton.MouseButton1Click:Connect(function()
     WallCheckEnabled = false
     FullbrightEnabled = false
     FpsBoostEnabled = false
+    SelectiveFpsEnabled = false
     RemoveJunkEnabled = false
     HitboxConfig.Enabled = false
     CooldownConfig.Enabled = false
     AutoTpBackConfig.Enabled = false
     ClayGraphicsEnabled = false
     restoreMaterials()
+    restoreLaggyObjects()
     
     for char, origSize in pairs(OriginalSizes) do
         if char and char:FindFirstChild("HumanoidRootPart") then
