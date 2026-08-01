@@ -486,7 +486,7 @@ task.spawn(function()
     IntroText.Text = "คัดลอกลิ้งดิสสำเร็จแล้ว!"
     pcall(function()
         if setclipboard then
-            setclipboard("https://discord.gg/yourinvite") -- ใส่ลิงก์ Discord ของคุณตรงนี้
+            setclipboard("discord.gg/RYERtzS9cQ") -- ใส่ลิงก์ Discord ของคุณตรงนี้
         end
     end)
     task.wait(1)
