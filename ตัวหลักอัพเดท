@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.4.11: OPTIMIZED FINAL TARGET LOCK ]] --
+-- [[ HJ1JK v1.4.12: FLOATING QUICK TOGGLE INTEGRATED ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -13,7 +13,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Camera = Workspace.CurrentCamera
 
 -- ลบ UI เก่ากันบั๊กทับซ้อนทั้งหมด
-local oldUIs = {"HJ1JK_Gui", "HJ1JK_LoadingUI", "HJ1JK_NotifGui", "D_Icon", "FOV_Circle"}
+local oldUIs = {"HJ1JK_Gui", "HJ1JK_LoadingUI", "HJ1JK_NotifGui", "HJ1JK_FloatGui", "D_Icon", "FOV_Circle"}
 for _, uiName in ipairs(oldUIs) do
     if PlayerGui:FindFirstChild(uiName) then
         pcall(function() PlayerGui[uiName]:Destroy() end)
@@ -220,7 +220,7 @@ Title.Name = "Title"
 Title.Size = UDim2.new(0, 150, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "HJ1JK v1.4.11"
+Title.Text = "HJ1JK v1.4.12"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextTransparency = 1
@@ -519,7 +519,6 @@ ResetBtn.Parent = ResetFrame
 table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 4); ResetCorner.Parent = ResetBtn
 
--- หมวดหมู่เครื่องมือ (ToolTab)
 createHeader(">> ออโต้เทเลพอร์ต <<", ToolTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", ToolTab)
 
@@ -566,9 +565,7 @@ GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolCorner = Instance.new("UICorner"); GiveToolCorner.CornerRadius = UDim.new(0, 4); GiveToolCorner.Parent = GiveToolBtn
 
--- หมวดหมู่ "รันโค้ดอัตโนมัติ" (AutoExecTab)
 createHeader(">> ใส่โค้ดที่ต้องการรัน <<", AutoExecTab)
-
 local CodeBoxFrame = Instance.new("Frame")
 CodeBoxFrame.Size = UDim2.new(0, 260, 0, 95)
 CodeBoxFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -577,9 +574,7 @@ CodeBoxFrame.BorderSizePixel = 0
 CodeBoxFrame.Parent = AutoExecTab
 table.insert(allSliders, CodeBoxFrame)
 
-local CodeBoxCorner = Instance.new("UICorner")
-CodeBoxCorner.CornerRadius = UDim.new(0, 4)
-CodeBoxCorner.Parent = CodeBoxFrame
+local CodeBoxCorner = Instance.new("UICorner"); CodeBoxCorner.CornerRadius = UDim.new(0, 4); CodeBoxCorner.Parent = CodeBoxFrame
 
 local CodeTextBox = Instance.new("TextBox")
 CodeTextBox.Size = UDim2.new(1, -10, 1, -10)
@@ -599,7 +594,6 @@ CodeTextBox.Parent = CodeBoxFrame
 table.insert(allTextLabels, CodeTextBox)
 
 createHeader(">> เลือกจำนวนครั้งที่ต้องการรันทีเดียว <<", AutoExecTab)
-
 local ExecBtnFrame = Instance.new("Frame")
 ExecBtnFrame.Size = UDim2.new(0, 260, 0, 32)
 ExecBtnFrame.BackgroundTransparency = 1
@@ -618,9 +612,7 @@ local function createExecButton(name, text, posX, color)
     btn.TextSize = 10
     btn.Parent = ExecBtnFrame
     table.insert(allButtons, btn)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = btn
+    local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 4); corner.Parent = btn
     return btn
 end
 
@@ -644,9 +636,7 @@ local function executeUserCode(times)
     local successCount = 0
     for i = 1, times do
         local success, result = pcall(func)
-        if success then
-            successCount = successCount + 1
-        end
+        if success then successCount = successCount + 1 end
     end
 
     showNotification("รันโค้ดสำเร็จ " .. successCount .. " / " .. times .. " ครั้ง!", true)
@@ -657,10 +647,9 @@ Run10Btn.MouseButton1Click:Connect(function() executeUserCode(10) end)
 Run100Btn.MouseButton1Click:Connect(function() executeUserCode(100) end)
 
 -- =============================================================================
--- ระบบฟังก์ชัน: วาร์ปติดด้านหลังผู้เล่นที่ใกล้ที่สุดอัตโนมัติ (เพิ่มประสิทธิภาพเช็คตัวละคร)
+-- ระบบฟังก์ชันพื้นฐาน
 -- =============================================================================
 local AutoTpBackConfig = { Enabled = false }
-
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
     AutoTpBackToggle.BackgroundColor3 = AutoTpBackConfig.Enabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
@@ -695,11 +684,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- =============================================================================
--- ระบบ Cooldown Bypass (ลดความถี่ลูปเพื่อป้องกันหน่วง)
--- =============================================================================
 local CooldownConfig = { Enabled = false, Time = 0 }
-
 CooldownToggle.MouseButton1Click:Connect(function()
     CooldownConfig.Enabled = not CooldownConfig.Enabled
     CooldownToggle.BackgroundColor3 = CooldownConfig.Enabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
@@ -735,9 +720,6 @@ task.spawn(function()
     end
 end)
 
--- =============================================================================
--- ระบบ Hitbox Expander
--- =============================================================================
 local HitboxConfig = { Enabled = false, Size = 1 }
 local OriginalSizes = {}
 
@@ -769,16 +751,9 @@ task.spawn(function()
                 if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
                     local char = player.Character
                     local hrp = char.HumanoidRootPart
-                    
-                    if not OriginalSizes[char] then
-                        OriginalSizes[char] = hrp.Size
-                    end
-                    
+                    if not OriginalSizes[char] then OriginalSizes[char] = hrp.Size end
                     local targetSize = (HitboxConfig.Size == 1) and OriginalSizes[char] or Vector3.new(HitboxConfig.Size, HitboxConfig.Size, HitboxConfig.Size)
-                    if hrp.Size ~= targetSize then
-                        hrp.Size = targetSize
-                    end
-                    
+                    if hrp.Size ~= targetSize then hrp.Size = targetSize end
                     if hrp.Transparency ~= 0.7 then
                         hrp.Transparency = 0.7 
                         hrp.Color = Color3.fromRGB(0, 170, 255)
@@ -791,9 +766,6 @@ task.spawn(function()
     end
 end)
 
--- =============================================================================
--- ระบบภาพดินน้ำมัน (Plastic Graphics) - แบบแบ่งโหลดป้องกันเกมค้าง
--- =============================================================================
 local ClayGraphicsEnabled = false
 local originalMaterials = {}
 
@@ -802,17 +774,10 @@ local function applyClayMaterial()
         local count = 0
         for _, obj in ipairs(Workspace:GetDescendants()) do
             if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
-                if not originalMaterials[obj] then
-                    originalMaterials[obj] = obj.Material
-                end
-                pcall(function()
-                    obj.Material = Enum.Material.SmoothPlastic
-                    obj.Reflectance = 0
-                end)
+                if not originalMaterials[obj] then originalMaterials[obj] = obj.Material end
+                pcall(function() obj.Material = Enum.Material.SmoothPlastic; obj.Reflectance = 0 end)
                 count = count + 1
-                if count % 200 == 0 then
-                    task.wait() -- ช่วยป้องกันไม่ให้ Main Thread สะดุดค้าง
-                end
+                if count % 200 == 0 then task.wait() end
             end
         end
     end)
@@ -821,11 +786,7 @@ end
 local function restoreMaterials()
     task.spawn(function()
         for obj, mat in pairs(originalMaterials) do
-            if obj and obj.Parent then
-                pcall(function()
-                    obj.Material = mat
-                end)
-            end
+            if obj and obj.Parent then pcall(function() obj.Material = mat end) end
         end
         originalMaterials = {}
     end)
@@ -836,17 +797,9 @@ ClayGraphicsToggle.MouseButton1Click:Connect(function()
     ClayGraphicsToggle.BackgroundColor3 = ClayGraphicsEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
     ClayGraphicsToggle.Text = ClayGraphicsEnabled and "เปิด" or "ปิด"
     showNotification((ClayGraphicsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ภาพดินน้ำมัน', ClayGraphicsEnabled)
-
-    if ClayGraphicsEnabled then
-        applyClayMaterial()
-    else
-        restoreMaterials()
-    end
+    if ClayGraphicsEnabled then applyClayMaterial() else restoreMaterials() end
 end)
 
--- =============================================================================
--- ระบบเพิ่ม FPS แบบเจาะลึกเฉพาะจุดที่แลค (Selective FPS Boost)
--- =============================================================================
 local SelectiveFpsEnabled = false
 local optimizedParts = {}
 
@@ -857,22 +810,12 @@ local function optimizeLaggyObjects()
                 local nameLower = string.lower(obj.Name)
                 if string.find(nameLower, "debris") or string.find(nameLower, "rock") or string.find(nameLower, "stone") or string.find(nameLower, "grass") or string.find(nameLower, "leaf") or string.find(nameLower, "particle") then
                     if not optimizedParts[obj] then
-                        optimizedParts[obj] = {
-                            CanCollide = obj.CanCollide,
-                            Transparency = obj.Transparency,
-                            CastShadow = obj.CastShadow
-                        }
+                        optimizedParts[obj] = { CanCollide = obj.CanCollide, Transparency = obj.Transparency, CastShadow = obj.CastShadow }
                     end
-                    pcall(function()
-                        obj.CanCollide = false
-                        obj.CastShadow = false
-                        obj.Transparency = 1
-                    end)
+                    pcall(function() obj.CanCollide = false; obj.CastShadow = false; obj.Transparency = 1 end)
                 end
             elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
-                pcall(function()
-                    obj.Enabled = false
-                end)
+                pcall(function() obj.Enabled = false end)
             end
         end
     end)
@@ -881,11 +824,7 @@ end
 local function restoreLaggyObjects()
     for obj, data in pairs(optimizedParts) do
         if obj and obj.Parent then
-            pcall(function()
-                obj.CanCollide = data.CanCollide
-                obj.Transparency = data.Transparency
-                obj.CastShadow = data.CastShadow
-            end)
+            pcall(function() obj.CanCollide = data.CanCollide; obj.Transparency = data.Transparency; obj.CastShadow = data.CastShadow end)
         end
     end
     optimizedParts = {}
@@ -895,23 +834,12 @@ SelectiveFpsToggle.MouseButton1Click:Connect(function()
     SelectiveFpsEnabled = not SelectiveFpsEnabled
     SelectiveFpsToggle.BackgroundColor3 = SelectiveFpsEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
     SelectiveFpsToggle.Text = SelectiveFpsEnabled and "เปิด" or "ปิด"
-    showNotification((SelectiveFpsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'แก้แลคเฉพาะจุด (FPS Boost)', SelectiveFpsEnabled)
-
-    if SelectiveFpsEnabled then
-        optimizeLaggyObjects()
-    else
-        restoreLaggyObjects()
-    end
+    showNotification((SelectiveFpsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'แก้แลคเฉพาะจุด', SelectiveFpsEnabled)
+    if SelectiveFpsEnabled then optimizeLaggyObjects() else restoreLaggyObjects() end
 end)
 
--- ระบบ Fullbright
 local FullbrightEnabled = false
-local oldBrightness = Lighting.Brightness
-local oldClockTime = Lighting.ClockTime
-local oldFogEnd = Lighting.FogEnd
-local oldGlobalShadows = Lighting.GlobalShadows
-local oldAmbient = Lighting.Ambient
-local oldOutdoorAmbient = Lighting.OutdoorAmbient
+local oldBrightness, oldClockTime, oldFogEnd, oldGlobalShadows, oldAmbient, oldOutdoorAmbient = Lighting.Brightness, Lighting.ClockTime, Lighting.FogEnd, Lighting.GlobalShadows, Lighting.Ambient, Lighting.OutdoorAmbient
 
 FullbrightToggle.MouseButton1Click:Connect(function()
     FullbrightEnabled = not FullbrightEnabled
@@ -922,26 +850,16 @@ end)
 
 RunService.RenderStepped:Connect(function()
     if FullbrightEnabled then
-        Lighting.Brightness = 2
-        Lighting.ClockTime = 14
-        Lighting.FogEnd = 100000
-        Lighting.GlobalShadows = false
-        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        Lighting.Brightness = 2; Lighting.ClockTime = 14; Lighting.FogEnd = 100000; Lighting.GlobalShadows = false
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255); Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
     else
-        Lighting.Brightness = oldBrightness
-        Lighting.ClockTime = oldClockTime
-        Lighting.FogEnd = oldFogEnd
-        Lighting.GlobalShadows = oldGlobalShadows
-        Lighting.Ambient = oldAmbient
-        Lighting.OutdoorAmbient = oldOutdoorAmbient
+        Lighting.Brightness = oldBrightness; Lighting.ClockTime = oldClockTime; Lighting.FogEnd = oldFogEnd
+        Lighting.GlobalShadows = oldGlobalShadows; Lighting.Ambient = oldAmbient; Lighting.OutdoorAmbient = oldOutdoorAmbient
     end
 end)
 
--- ระบบ FPS Boost
 local FpsBoostEnabled = false
 local effectConnection = nil
-
 local function clearEffectsInObject(parentObj)
     for _, obj in ipairs(parentObj:GetDescendants()) do
         if obj:IsA("ParticleEmitter") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Explosion") or obj:IsA("Beam") or obj:IsA("Trail") then
@@ -954,73 +872,45 @@ FpsBoostToggle.MouseButton1Click:Connect(function()
     FpsBoostEnabled = not FpsBoostEnabled
     FpsBoostToggle.BackgroundColor3 = FpsBoostEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
     FpsBoostToggle.Text = FpsBoostEnabled and "เปิด" or "ปิด"
-    showNotification((FpsBoostEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'เพิ่ม FPS (ลบเอฟเฟค)', FpsBoostEnabled)
-
+    showNotification((FpsBoostEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'เพิ่ม FPS', FpsBoostEnabled)
     if FpsBoostEnabled then
-        clearEffectsInObject(Workspace)
-        clearEffectsInObject(Lighting)
-        
+        clearEffectsInObject(Workspace); clearEffectsInObject(Lighting)
         effectConnection = Workspace.DescendantAdded:Connect(function(obj)
             if FpsBoostEnabled and (obj:IsA("ParticleEmitter") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Explosion") or obj:IsA("Beam") or obj:IsA("Trail")) then
-                task.spawn(function()
-                    pcall(function() obj:Destroy() end)
-                end)
+                task.spawn(function() pcall(function() obj:Destroy() end) end)
             end
         end)
     else
-        if effectConnection then
-            effectConnection:Disconnect()
-            effectConnection = nil
-        end
+        if effectConnection then effectConnection:Disconnect(); effectConnection = nil end
     end
 end)
 
--- ระบบลบสิ่งที่ไม่จำเป็น
 local RemoveJunkEnabled = false
 local junkConnection = nil
-
 local function isJunkPart(obj)
     if obj:IsA("BasePart") then
         local nameLower = string.lower(obj.Name)
         if string.find(nameLower, "rock") or string.find(nameLower, "stone") or string.find(nameLower, "debris") or string.find(nameLower, "fx") or string.find(nameLower, "impact") or string.find(nameLower, "dust") or string.find(nameLower, "hit") then
-            if not obj:IsDescendantOf(Players) and obj.Parent ~= Workspace then
-                return true
-            end
+            if not obj:IsDescendantOf(Players) and obj.Parent ~= Workspace then return true end
         end
     end
     return false
-end
-
-local function clearExistingJunk()
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if isJunkPart(obj) then
-            pcall(function() obj:Destroy() end)
-        end
-    end
 end
 
 RemoveJunkToggle.MouseButton1Click:Connect(function()
     RemoveJunkEnabled = not RemoveJunkEnabled
     RemoveJunkToggle.BackgroundColor3 = RemoveJunkEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
     RemoveJunkToggle.Text = RemoveJunkEnabled and "เปิด" or "ปิด"
-    showNotification((RemoveJunkEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ลบสิ่งที่ไม่จำเป็น (หิน/เอฟเฟค)', RemoveJunkEnabled)
-
+    showNotification((RemoveJunkEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ลบสิ่งที่ไม่จำเป็น', RemoveJunkEnabled)
     if RemoveJunkEnabled then
-        clearExistingJunk()
-        
+        for _, obj in ipairs(Workspace:GetDescendants()) do if isJunkPart(obj) then pcall(function() obj:Destroy() end) end end
         junkConnection = Workspace.DescendantAdded:Connect(function(obj)
             if RemoveJunkEnabled and isJunkPart(obj) then
-                task.spawn(function()
-                    task.wait(0.05)
-                    pcall(function() obj:Destroy() end)
-                end)
+                task.spawn(function() task.wait(0.05); pcall(function() obj:Destroy() end) end)
             end
         end)
     else
-        if junkConnection then
-            junkConnection:Disconnect()
-            junkConnection = nil
-        end
+        if junkConnection then junkConnection:Disconnect(); junkConnection = nil end
     end
 end)
 
@@ -1028,8 +918,7 @@ GiveToolBtn.MouseButton1Click:Connect(function()
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
     local character = LocalPlayer.Character
     if not backpack or not character then return end
-
-    if backpack:FindFirstChild("ClickTeleportTool") or (character and character:FindFirstChild("ClickTeleportTool")) then
+    if backpack:FindFirstChild("ClickTeleportTool") or character:FindFirstChild("ClickTeleportTool") then
         showNotification("คุณมีไอเท็มนี้อยู่ในกระเป๋าแล้ว!", false)
         return
     end
@@ -1037,31 +926,25 @@ GiveToolBtn.MouseButton1Click:Connect(function()
     local tool = Instance.new("Tool")
     tool.Name = "ClickTeleportTool"
     tool.RequiresHandle = true
-
     local handle = Instance.new("Part")
     handle.Name = "Handle"
     handle.Size = Vector3.new(1, 1, 3)
     handle.BrickColor = BrickColor.new("Bright red")
     handle.Parent = tool
-
     local mesh = Instance.new("SpecialMesh")
     mesh.MeshType = Enum.MeshType.Wedge
-    mesh.Scale = Vector3.new(1, 1, 1)
     mesh.Parent = handle
 
     tool.Activated:Connect(function()
         local mouse = LocalPlayer:GetMouse()
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
-            local hrp = char.HumanoidRootPart
-            local targetPos = mouse.Hit.Position
-            hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
+            char.HumanoidRootPart.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3, 0))
             showNotification("วาร์ปไปยังตำแหน่งที่คลิกสำเร็จ!", true)
         end
     end)
-
     tool.Parent = backpack
-    showNotification("รับไอเท็ม 'อุปกรณ์คลิกวาร์ป' สำเร็จ!", true)
+    showNotification("รับไอเท็มสำเร็จ!", true)
 end)
 
 local D_Icon = Instance.new("TextButton")
@@ -1091,7 +974,142 @@ FOV_Corner.CornerRadius = UDim.new(1, 0); FOV_Corner.Parent = FOV_Circle
 FOV_Stroke.Color = Color3.fromRGB(255, 255, 255); FOV_Stroke.Thickness = 1; FOV_Stroke.Parent = FOV_Circle
 
 -- =============================================================================
--- 6. ระบบ LOADING SCREEN
+-- 6. ระบบสวิตช์ลอย (Floating Quick Toggle UI)
+-- =============================================================================
+local FloatGui = Instance.new("ScreenGui")
+FloatGui.Name = "HJ1JK_FloatGui"
+FloatGui.ResetOnSpawn = false
+FloatGui.Parent = PlayerGui
+
+local FloatFrame = Instance.new("Frame")
+FloatFrame.Name = "FloatFrame"
+FloatFrame.Size = UDim2.new(0, 160, 0, 75)
+FloatFrame.Position = UDim2.new(0, 15, 0, 70)
+FloatFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+FloatFrame.BorderSizePixel = 0
+FloatFrame.Active = true
+FloatFrame.Draggable = true
+FloatFrame.Parent = FloatGui
+
+local FloatCorner = Instance.new("UICorner")
+FloatCorner.CornerRadius = UDim.new(0, 6)
+FloatCorner.Parent = FloatFrame
+
+local FloatStroke = Instance.new("UIStroke")
+FloatStroke.Color = Color3.fromRGB(255, 255, 255)
+FloatStroke.Thickness = 1.2
+FloatStroke.Parent = FloatFrame
+
+local FloatCategoryBtn = Instance.new("TextButton")
+FloatCategoryBtn.Size = UDim2.new(1, -10, 0, 20)
+FloatCategoryBtn.Position = UDim2.new(0, 5, 0, 6)
+FloatCategoryBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+FloatCategoryBtn.BorderSizePixel = 0
+FloatCategoryBtn.Text = "หมวดหมู่: ล็อกคน"
+FloatCategoryBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatCategoryBtn.TextSize = 10
+FloatCategoryBtn.Font = Enum.Font.GothamBold
+FloatCategoryBtn.Parent = FloatFrame
+local FloatCatCorner = Instance.new("UICorner"); FloatCatCorner.CornerRadius = UDim.new(0, 4); FloatCatCorner.Parent = FloatCategoryBtn
+
+local FloatToggleBtn = Instance.new("TextButton")
+FloatToggleBtn.Size = UDim2.new(1, -10, 0, 24)
+FloatToggleBtn.Position = UDim2.new(0, 5, 0, 36)
+FloatToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+FloatToggleBtn.BorderSizePixel = 0
+FloatToggleBtn.Text = "ปิด"
+FloatToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatToggleBtn.TextSize = 11
+FloatToggleBtn.Font = Enum.Font.GothamBold
+FloatToggleBtn.Parent = FloatFrame
+local FloatTogCorner = Instance.new("UICorner"); FloatTogCorner.CornerRadius = UDim.new(0, 4); FloatTogCorner.Parent = FloatToggleBtn
+
+-- สถานะจำโหมดในสวิตช์ลอย (เริ่มที่ ล็อกหัวคน)
+-- โหมดที่เป็นไปได้: "PlayerHead", "PlayerTorso", "NPCHead", "NPCTorso"
+local floatModeIndex = 1
+local floatModes = {
+    {Name = "ล็อกคน (หัว)", TargetVar = "PlayerHead"},
+    {Name = "ล็อกคน (ตัว)", TargetVar = "PlayerTorso"},
+    {Name = "ล็อก NPC (หัว)", TargetVar = "NPCHead"},
+    {Name = "ล็อก NPC (ตัว)", TargetVar = "NPCTorso"}
+}
+
+-- ตัวแปรจำสถานะเปิด/ปิดล่าสุดของแต่ละโหมด
+local savedModeStates = {
+    PlayerHead = false,
+    PlayerTorso = false,
+    NPCHead = false,
+    NPCTorso = false
+}
+
+local LockConfig = {
+    FullLock = false, FullLockTorso = false, FullLockTorsoWallCheck = false, PlayerHead = false, PlayerTorso = false, NPCHead = false, NPCTorso = false,
+    PlayerEspChams = false, NpcEspChams = false, MasterEsp2D = false, PlayerEsp2D = false, NpcEsp2D = false,
+    EnableSpeed = false, EnableJump = false
+}
+
+-- อัปเดต UI เมนูหลักให้ตรงกับสถานะ
+local function syncUIState(varName, state)
+    if varName == "PlayerHead" then
+        PlayerHeadToggle.BackgroundColor3 = state and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+        PlayerHeadToggle.Text = state and "เปิด" or "ปิด"
+    elseif varName == "PlayerTorso" then
+        PlayerTorsoToggle.BackgroundColor3 = state and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+        PlayerTorsoToggle.Text = state and "เปิด" or "ปิด"
+    elseif varName == "NPCHead" then
+        NPCHeadToggle.BackgroundColor3 = state and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+        NPCHeadToggle.Text = state and "เปิด" or "ปิด"
+    elseif varName == "NPCTorso" then
+        NPCTorsoToggle.BackgroundColor3 = state and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+        NPCTorsoToggle.Text = state and "เปิด" or "ปิด"
+    end
+end
+
+local function updateFloatUIAppearance()
+    local current = floatModes[floatModeIndex]
+    FloatCategoryBtn.Text = "หมวดหมู่: " .. current.Name
+    local isActive = LockConfig[current.TargetVar]
+    FloatToggleBtn.BackgroundColor3 = isActive and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    FloatToggleBtn.Text = isActive and "เปิด" or "ปิด"
+end
+
+-- กดคลิกที่ปุ่มหมวดหมู่เพื่อเปลี่ยนโหมดวนไปเรื่อยๆ
+FloatCategoryBtn.MouseButton1Click:Connect(function()
+    floatModeIndex = floatModeIndex + 1
+    if floatModeIndex > #floatModes then floatModeIndex = 1 end
+    updateFloatUIAppearance()
+end)
+
+-- กดเปิด/ปิดจากสวิตช์ลอย
+FloatToggleBtn.MouseButton1Click:Connect(function()
+    local current = floatModes[floatModeIndex]
+    local varName = current.TargetVar
+    
+    -- ปิดโหมดล็อคตัวอื่นทั้งหมดก่อน เพื่อให้ทำงานทีละโหมด
+    LockConfig.PlayerHead = false
+    LockConfig.PlayerTorso = false
+    LockConfig.NPCHead = false
+    LockConfig.NPCTorso = false
+    syncUIState("PlayerHead", false)
+    syncUIState("PlayerTorso", false)
+    syncUIState("NPCHead", false)
+    syncUIState("NPCTorso", false)
+
+    -- สลับสถานะเปิด/ปิดของโหมดปัจจุบัน
+    savedModeStates[varName] = not savedModeStates[varName]
+    LockConfig[varName] = savedModeStates[varName]
+    
+    syncUIState(varName, LockConfig[varName])
+    updateFloatUIAppearance()
+    
+    local anyEnabled = LockConfig.PlayerHead or LockConfig.PlayerTorso or LockConfig.NPCHead or LockConfig.NPCTorso or LockConfig.FullLock or LockConfig.FullLockTorso
+    FOV_Circle.Visible = anyEnabled and not LockConfig.FullLock and not LockConfig.FullLockTorso and not LockConfig.NPCHead and not LockConfig.NPCTorso
+    
+    showNotification((LockConfig[varName] and 'เปิดใช้งาน "' or 'ปิดใช้งาน "') .. current.Name .. '"', LockConfig[varName])
+end)
+
+-- =============================================================================
+-- 7. ระบบ LOADING SCREEN
 -- =============================================================================
 local LoadingGui = Instance.new("ScreenGui")
 LoadingGui.Name = "HJ1JK_LoadingUI"
@@ -1104,10 +1122,8 @@ LoadFrame.Position = UDim2.new(0.5, -110, 1, 10)
 LoadFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 LoadFrame.BorderSizePixel = 0
 LoadFrame.Parent = LoadingGui
-local LoadCorner = Instance.new("UICorner")
-LoadCorner.CornerRadius = UDim.new(0, 6); LoadCorner.Parent = LoadFrame
-local LoadStroke = Instance.new("UIStroke")
-LoadStroke.Color = Color3.fromRGB(255, 255, 255); LoadStroke.Thickness = 1.2; LoadStroke.Parent = LoadFrame
+local LoadCorner = Instance.new("UICorner"); LoadCorner.CornerRadius = UDim.new(0, 6); LoadCorner.Parent = LoadFrame
+local LoadStroke = Instance.new("UIStroke"); LoadStroke.Color = Color3.fromRGB(255, 255, 255); LoadStroke.Thickness = 1.2; LoadStroke.Parent = LoadFrame
 
 local LoadText = Instance.new("TextLabel")
 LoadText.Size = UDim2.new(1, 0, 1, 0)
@@ -1150,7 +1166,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- 7. ระบบลากเมนู & ย่อขยาย
+-- 8. ระบบลากเมนู & ย่อขยาย
 -- =============================================================================
 local dragging, dragInput, dragStart, startPos
 local function update(input)
@@ -1196,15 +1212,8 @@ CloseButton.MouseButton1Click:Connect(function() if not isMinimized then Confirm
 NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
 
 -- =============================================================================
--- 8. ควบคุมค่าสวิตช์และตัวแปร
+-- 9. ควบคุมค่าสวิตช์และตัวแปรหลัก
 -- =============================================================================
-local LockConfig = {
-    FullLock = false, FullLockTorso = false, FullLockTorsoWallCheck = false, PlayerHead = false, PlayerTorso = false, NPCHead = false, NPCTorso = false,
-    PlayerEspChams = false, NpcEspChams = false,
-    MasterEsp2D = false, PlayerEsp2D = false, NpcEsp2D = false,
-    EnableSpeed = false, EnableJump = false
-}
-
 local WallCheckEnabled = false
 local FOV_Radius = 100
 local LockSpeed = 50 
@@ -1218,30 +1227,6 @@ local function updateFOV(radius)
 end
 updateFOV(FOV_Radius)
 
-local function updateWalkSpeedUI(speed)
-    CurrentWalkSpeed = speed
-    local multiplier = speed / 16
-    local multText = string.format(" (x%.1f)", multiplier)
-    if speed == 16 then multText = " (ปกติ)" end
-    WalkSpeedLabel.Text = "ความเร็ว: " .. math.floor(speed) .. multText
-    
-    local percentage = math.clamp((speed - 16) / (800 - 16), 0, 1)
-    WalkSpeedBtn.Position = UDim2.new(percentage, -7, 0, -4.5)
-end
-updateWalkSpeedUI(CurrentWalkSpeed)
-
-local function updateJumpPowerUI(jump)
-    CurrentJumpPower = jump
-    local multiplier = jump / 50
-    local multText = string.format(" (x%.1f)", multiplier)
-    if jump == 50 then multText = " (ปกติ)" end
-    JumpPowerLabel.Text = "กระโดดสูง: " .. math.floor(jump) .. multText
-    
-    local percentage = math.clamp((jump - 50) / (500 - 50), 0, 1)
-    JumpPowerBtn.Position = UDim2.new(percentage, -7, 0, -4.5)
-end
-updateJumpPowerUI(CurrentJumpPower)
-
 local function updateVisuals(btn, state, funcName)
     btn.BackgroundColor3 = state and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
     btn.Text = state and "เปิด" or "ปิด"
@@ -1252,21 +1237,13 @@ end
 
 FullLockToggle.MouseButton1Click:Connect(function()
     LockConfig.FullLock = not LockConfig.FullLock
-    if LockConfig.FullLock then
-        LockConfig.FullLockTorso = false
-        FullLockTorsoToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-        FullLockTorsoToggle.Text = "ปิด"
-    end
+    if LockConfig.FullLock then LockConfig.FullLockTorso = false; FullLockTorsoToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50); FullLockTorsoToggle.Text = "ปิด" end
     updateVisuals(FullLockToggle, LockConfig.FullLock, "ล็อกหัว 100%")
 end)
 
 FullLockTorsoToggle.MouseButton1Click:Connect(function()
     LockConfig.FullLockTorso = not LockConfig.FullLockTorso
-    if LockConfig.FullLockTorso then
-        LockConfig.FullLock = false
-        FullLockToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-        FullLockToggle.Text = "ปิด"
-    end
+    if LockConfig.FullLockTorso then LockConfig.FullLock = false; FullLockToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50); FullLockToggle.Text = "ปิด" end
     updateVisuals(FullLockTorsoToggle, LockConfig.FullLockTorso, "ล็อกตัว 100%")
 end)
 
@@ -1275,25 +1252,37 @@ FullLockTorsoWallCheckToggle.MouseButton1Click:Connect(function()
     updateVisuals(FullLockTorsoWallCheckToggle, LockConfig.FullLockTorsoWallCheck, "ไม่ล็อกตัวหลังกำแพง")
 end)
 
+-- ฟังก์ชันกดจากเมนูหลัก (เชื่อมโยงกับสวิตช์ลอย)
 PlayerHeadToggle.MouseButton1Click:Connect(function()
     LockConfig.PlayerHead = not LockConfig.PlayerHead
     if LockConfig.PlayerHead then LockConfig.PlayerTorso = false; PlayerTorsoToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50); PlayerTorsoToggle.Text = "ปิด" end
+    savedModeStates.PlayerHead = LockConfig.PlayerHead
     updateVisuals(PlayerHeadToggle, LockConfig.PlayerHead, "ล็อกหัวคน")
+    updateFloatUIAppearance()
 end)
+
 PlayerTorsoToggle.MouseButton1Click:Connect(function()
     LockConfig.PlayerTorso = not LockConfig.PlayerTorso
     if LockConfig.PlayerTorso then LockConfig.PlayerHead = false; PlayerHeadToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50); PlayerHeadToggle.Text = "ปิด" end
+    savedModeStates.PlayerTorso = LockConfig.PlayerTorso
     updateVisuals(PlayerTorsoToggle, LockConfig.PlayerTorso, "ล็อกตัวคน")
+    updateFloatUIAppearance()
 end)
+
 NPCHeadToggle.MouseButton1Click:Connect(function()
     LockConfig.NPCHead = not LockConfig.NPCHead
     if LockConfig.NPCHead then LockConfig.NPCTorso = false; NPCTorsoToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50); NPCTorsoToggle.Text = "ปิด" end
+    savedModeStates.NPCHead = LockConfig.NPCHead
     updateVisuals(NPCHeadToggle, LockConfig.NPCHead, "ล็อกหัว NPC")
+    updateFloatUIAppearance()
 end)
+
 NPCTorsoToggle.MouseButton1Click:Connect(function()
     LockConfig.NPCTorso = not LockConfig.NPCTorso
     if LockConfig.NPCTorso then LockConfig.NPCHead = false; NPCHeadToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50); NPCHeadToggle.Text = "ปิด" end
+    savedModeStates.NPCTorso = LockConfig.NPCTorso
     updateVisuals(NPCTorsoToggle, LockConfig.NPCTorso, "ล็อกตัว NPC")
+    updateFloatUIAppearance()
 end)
 
 PlayerEspChamsToggle.MouseButton1Click:Connect(function() LockConfig.PlayerEspChams = not LockConfig.PlayerEspChams; updateVisuals(PlayerEspChamsToggle, LockConfig.PlayerEspChams, "ทะลุกำแพง (คน)") end)
@@ -1328,13 +1317,10 @@ EnableJumpToggle.MouseButton1Click:Connect(function()
 end)
 
 ResetBtn.MouseButton1Click:Connect(function()
-    updateWalkSpeedUI(16)
-    updateJumpPowerUI(50)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        local humanoid = LocalPlayer.Character.Humanoid
-        humanoid.WalkSpeed = 16
-        humanoid.UseJumpPower = true
-        humanoid.JumpPower = 50
+        LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        LocalPlayer.Character.Humanoid.UseJumpPower = true
+        LocalPlayer.Character.Humanoid.JumpPower = 50
     end
     showNotification("รีเซ็ตค่าความเร็ว/กระโดดสำเร็จ", true)
 end)
@@ -1370,15 +1356,8 @@ UserInputService.InputChanged:Connect(function(input)
         if walkSpeedDragging then
             local percentage = math.clamp((input.Position.X - WalkSpeedBack.AbsolutePosition.X) / WalkSpeedBack.AbsoluteSize.X, 0, 1)
             WalkSpeedBtn.Position = UDim2.new(percentage, -7, 0, -4.5)
-            
-            local newSpeed = 16 + (percentage * (800 - 16))
-            CurrentWalkSpeed = math.floor(newSpeed)
-            
-            local multiplier = CurrentWalkSpeed / 16
-            local multText = string.format(" (x%.1f)", multiplier)
-            if CurrentWalkSpeed == 16 then multText = " (ปกติ)" end
-            WalkSpeedLabel.Text = "ความเร็ว: " .. CurrentWalkSpeed .. multText
-            
+            CurrentWalkSpeed = math.floor(16 + (percentage * (800 - 16)))
+            WalkSpeedLabel.Text = "ความเร็ว: " .. CurrentWalkSpeed
             if LockConfig.EnableSpeed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
                 LocalPlayer.Character.Humanoid.WalkSpeed = CurrentWalkSpeed
             end
@@ -1386,15 +1365,8 @@ UserInputService.InputChanged:Connect(function(input)
         if jumpPowerDragging then
             local percentage = math.clamp((input.Position.X - JumpPowerBack.AbsolutePosition.X) / JumpPowerBack.AbsoluteSize.X, 0, 1)
             JumpPowerBtn.Position = UDim2.new(percentage, -7, 0, -4.5)
-            
-            local newJump = 50 + (percentage * (500 - 50))
-            CurrentJumpPower = math.floor(newJump)
-            
-            local multiplier = CurrentJumpPower / 50
-            local multText = string.format(" (x%.1f)", multiplier)
-            if CurrentJumpPower == 50 then multText = " (ปกติ)" end
-            JumpPowerLabel.Text = "กระโดดสูง: " .. CurrentJumpPower .. multText
-            
+            CurrentJumpPower = math.floor(50 + (percentage * (500 - 50)))
+            JumpPowerLabel.Text = "กระโดดสูง: " .. CurrentJumpPower
             if LockConfig.EnableJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
                 LocalPlayer.Character.Humanoid.UseJumpPower = true
                 LocalPlayer.Character.Humanoid.JumpPower = CurrentJumpPower
@@ -1403,35 +1375,14 @@ UserInputService.InputChanged:Connect(function(input)
         if hitboxDragging then
             local percentage = math.clamp((input.Position.X - HitboxBack.AbsolutePosition.X) / HitboxBack.AbsoluteSize.X, 0, 1)
             HitboxBtn.Position = UDim2.new(percentage, -7, 0, -4.5)
-            
             HitboxConfig.Size = math.floor(1 + (percentage * 999))
-            local textDesc = (HitboxConfig.Size == 1) and " (ปกติ)" or ((HitboxConfig.Size >= 1000) and " (ทั้งแมพ!)" or "")
-            HitboxLabel.Text = "ขนาดฮิดบล็อก: " .. HitboxConfig.Size .. textDesc
+            HitboxLabel.Text = "ขนาดฮิดบล็อก: " .. HitboxConfig.Size
         end
         if cooldownDragging then
             local percentage = math.clamp((input.Position.X - CooldownBack.AbsolutePosition.X) / CooldownBack.AbsoluteSize.X, 0, 1)
             CooldownBtn.Position = UDim2.new(percentage, -7, 0, -4.5)
-            
             CooldownConfig.Time = math.floor((percentage * 5) * 10) / 10
-            local textDesc = (CooldownConfig.Time == 0) and " (ไม่มีดีเลย์)" or ""
-            CooldownLabel.Text = "เวลาคูลดาวน์: " .. CooldownConfig.Time .. " วิ" .. textDesc
-        end
-    end
-end)
-
-task.spawn(function()
-    while task.wait(0.1) do
-        if not ScreenGui.Parent then break end
-        local char = LocalPlayer.Character
-        if char and char:FindFirstChild("Humanoid") then
-            local humanoid = char.Humanoid
-            if LockConfig.EnableSpeed then
-                humanoid.WalkSpeed = CurrentWalkSpeed
-            end
-            if LockConfig.EnableJump then
-                humanoid.UseJumpPower = true
-                humanoid.JumpPower = CurrentJumpPower
-            end
+            CooldownLabel.Text = "เวลาคูลดาวน์: " .. CooldownConfig.Time .. " วิ"
         end
     end
 end)
@@ -1449,12 +1400,11 @@ local function isVisible(targetPartInstance, targetChar)
 end
 
 -- =============================================================================
--- 9. ระบบ CHAMS & ESP & AIMBOT
+-- 10. ระบบ CHAMS & ESP & AIMBOT
 -- =============================================================================
 task.spawn(function()
     while task.wait(0.2) do
         if not ScreenGui.Parent then break end
-        
         if LockConfig.PlayerEspChams then
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
@@ -1550,10 +1500,7 @@ local function getClosestTarget()
                 local head = p.Character.Head
                 if not LockConfig.FullLockTorsoWallCheck or isVisible(head, p.Character) then
                     local dist = (head.Position - myRootPos).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closestPart = head
-                    end
+                    if dist < shortestDist then shortestDist = dist; closestPart = head end
                 end
             end
         end
@@ -1566,10 +1513,7 @@ local function getClosestTarget()
                 local torso = p.Character.HumanoidRootPart
                 if not LockConfig.FullLockTorsoWallCheck or isVisible(torso, p.Character) then
                     local dist = (torso.Position - myRootPos).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closestPart = torso
-                    end
+                    if dist < shortestDist then shortestDist = dist; closestPart = torso end
                 end
             end
         end
@@ -1584,8 +1528,7 @@ local function getClosestTarget()
                 if part then
                     local dist = (part.Position - myRootPos).Magnitude
                     if dist < shortestDist and (not WallCheckEnabled or isVisible(part, d)) then
-                        shortestDist = dist
-                        closestPart = part
+                        shortestDist = dist; closestPart = part
                     end
                 end
             end
@@ -1602,24 +1545,14 @@ local function getClosestTarget()
             if onScreen then
                 local screenDist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
                 if screenDist <= FOV_Radius and screenDist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
-                    shortestDist = screenDist
-                    closestPart = part
+                    shortestDist = screenDist; closestPart = part
                 end
             end
         end
     end
 
-    for _, p in ipairs(Players:GetPlayers()) do 
-        if p ~= LocalPlayer and p.Character then 
-            processModel(p.Character, false) 
-        end 
-    end
-
-    for _, d in ipairs(Workspace:GetDescendants()) do 
-        if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then 
-            processModel(d, true) 
-        end 
-    end
+    for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character then processModel(p.Character, false) end end
+    for _, d in ipairs(Workspace:GetDescendants()) do if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then processModel(d, true) end end
 
     return closestPart
 end
@@ -1640,21 +1573,13 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- =============================================================================
--- 10. ระบบล้างข้อมูลเมื่อปิด
+-- 11. ระบบล้างข้อมูลเมื่อปิด
 -- =============================================================================
 YesButton.MouseButton1Click:Connect(function()
     for k, _ in pairs(LockConfig) do LockConfig[k] = false end
-    WallCheckEnabled = false
-    FullbrightEnabled = false
-    FpsBoostEnabled = false
-    SelectiveFpsEnabled = false
-    RemoveJunkEnabled = false
-    HitboxConfig.Enabled = false
-    CooldownConfig.Enabled = false
-    AutoTpBackConfig.Enabled = false
-    ClayGraphicsEnabled = false
-    restoreMaterials()
-    restoreLaggyObjects()
+    WallCheckEnabled = false; FullbrightEnabled = false; FpsBoostEnabled = false; SelectiveFpsEnabled = false; RemoveJunkEnabled = false
+    HitboxConfig.Enabled = false; CooldownConfig.Enabled = false; AutoTpBackConfig.Enabled = false; ClayGraphicsEnabled = false
+    restoreMaterials(); restoreLaggyObjects()
     
     for char, origSize in pairs(OriginalSizes) do
         if char and char:FindFirstChild("HumanoidRootPart") then
@@ -1670,18 +1595,13 @@ YesButton.MouseButton1Click:Connect(function()
     if junkConnection then junkConnection:Disconnect() end
     clearAllDrawings()
 
-    Lighting.Brightness = oldBrightness
-    Lighting.ClockTime = oldClockTime
-    Lighting.FogEnd = oldFogEnd
-    Lighting.GlobalShadows = oldGlobalShadows
-    Lighting.Ambient = oldAmbient
-    Lighting.OutdoorAmbient = oldOutdoorAmbient
+    Lighting.Brightness = oldBrightness; Lighting.ClockTime = oldClockTime; Lighting.FogEnd = oldFogEnd
+    Lighting.GlobalShadows = oldGlobalShadows; Lighting.Ambient = oldAmbient; Lighting.OutdoorAmbient = oldOutdoorAmbient
 
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        local humanoid = LocalPlayer.Character.Humanoid
-        humanoid.WalkSpeed = 16
-        humanoid.UseJumpPower = true
-        humanoid.JumpPower = 50
+        LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        LocalPlayer.Character.Humanoid.UseJumpPower = true
+        LocalPlayer.Character.Humanoid.JumpPower = 50
     end
 
     for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("HJ1JK_Cham") then player.Character.HJ1JK_Cham:Destroy() end end
@@ -1690,6 +1610,6 @@ YesButton.MouseButton1Click:Connect(function()
     local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 420, 0, 0), BackgroundTransparency = 1})
     closeTween:Play()
     closeTween.Completed:Connect(function() 
-        ScreenGui:Destroy(); NotifGui:Destroy(); FOV_Circle:Destroy(); D_Icon:Destroy()
+        ScreenGui:Destroy(); NotifGui:Destroy(); FloatGui:Destroy(); FOV_Circle:Destroy(); D_Icon:Destroy()
     end)
 end)
