@@ -1,5 +1,5 @@
 -- =============================================================================
--- HJ1JK : MOBILE FPS BOOSTER (DRAGGABLE D-ICON & CONFIRM CLOSE)
+-- HJ1JK : MOBILE FPS BOOSTER (INTRO LOADING + AUTO DISCORD COPY + FULL UI)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -8,6 +8,7 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -26,7 +27,42 @@ ScreenGui.Name = "HJ1JK_FpsGui"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = PlayerGui
 
--- หน้าต่างหลัก (MainFrame)
+-- =============================================================================
+-- 1. หน้าจอโหลดอินโทร (Intro Loading Screen)
+-- =============================================================================
+local IntroFrame = Instance.new("Frame")
+IntroFrame.Name = "IntroFrame"
+IntroFrame.Size = UDim2.new(0, 280, 0, 110)
+IntroFrame.Position = UDim2.new(0.5, -140, 0.5, -55)
+IntroFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+IntroFrame.BorderSizePixel = 0
+IntroFrame.BackgroundTransparency = 1
+IntroFrame.Parent = ScreenGui
+
+local IntroCorner = Instance.new("UICorner")
+IntroCorner.CornerRadius = UDim.new(0, 8)
+IntroCorner.Parent = IntroFrame
+
+local IntroStroke = Instance.new("UIStroke")
+IntroStroke.Color = Color3.fromRGB(60, 60, 60)
+IntroStroke.Thickness = 1.5
+IntroStroke.Transparency = 1
+IntroStroke.Parent = IntroFrame
+
+local IntroText = Instance.new("TextLabel")
+IntroText.Size = UDim2.new(1, -20, 1, 0)
+IntroText.Position = UDim2.new(0, 10, 0, 0)
+IntroText.BackgroundTransparency = 1
+IntroText.Text = "กำลังโหลด..."
+IntroText.TextColor3 = Color3.fromRGB(255, 255, 255)
+IntroText.TextSize = 13
+IntroText.Font = Enum.Font.GothamBold
+IntroText.TextTransparency = 1
+IntroText.Parent = IntroFrame
+
+-- =============================================================================
+-- หน้าต่างหลัก (MainFrame ซ่อนไว้ตอนเริ่ม)
+-- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 320, 0, 260)
@@ -34,6 +70,8 @@ MainFrame.Position = UDim2.new(0.5, -160, 0.5, -130)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
+MainFrame.Visible = false
+MainFrame.BackgroundTransparency = 1
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
@@ -167,7 +205,6 @@ TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- ปุ่มปิด (X)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 28, 0, 32)
 CloseBtn.Position = UDim2.new(1, -28, 0, 0)
@@ -178,7 +215,6 @@ CloseBtn.TextSize = 12
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.Parent = TopBar
 
--- ปุ่มย่อ (─)
 local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.Size = UDim2.new(0, 28, 0, 32)
 MinimizeBtn.Position = UDim2.new(1, -56, 0, 0)
@@ -189,7 +225,6 @@ MinimizeBtn.TextSize = 11
 MinimizeBtn.Font = Enum.Font.GothamBold
 MinimizeBtn.Parent = TopBar
 
--- ระบบกดปุ่มย่อ / ขยาย / ปิด
 local isMinimized = false
 local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
@@ -303,29 +338,18 @@ local function createToggle(name, labelText, callback)
 end
 
 -- =============================================================================
--- ระบบลากหน้าต่างหลัก (Draggable MainFrame)
+-- ระบบลากหน้าต่างหลัก & ไอคอนตัว D
 -- =============================================================================
 local dragging, dragInput, dragStart, startPos
-
 TopBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
+        dragging = true; dragStart = input.Position; startPos = MainFrame.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
     end
 end)
-
 TopBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         local delta = input.Position - dragStart
@@ -333,30 +357,16 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- =============================================================================
--- ระบบลากไอคอนตัว D (Draggable D-Icon)
--- =============================================================================
 local dDragging, dDragInput, dDragStart, dStartPos
-
 D_Icon.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dDragging = true
-        dDragStart = input.Position
-        dStartPos = D_Icon.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dDragging = false
-            end
-        end)
+        dDragging = true; dDragStart = input.Position; dStartPos = D_Icon.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dDragging = false end end)
     end
 end)
-
 D_Icon.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dDragInput = input
-    end
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dDragInput = input end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if input == dDragInput and dDragging then
         local delta = input.Position - dDragStart
@@ -367,33 +377,23 @@ end)
 -- =============================================================================
 -- ฟังก์ชัน FPS ทั้งหมด
 -- =============================================================================
-
--- 1. ภาพดินน้ำมัน (Plastic Graphics)
 local originalMaterials = {}
 createToggle("ClayToggle", "ภาพดินน้ำมัน (ลดภาระการประมวลผล)", function(state)
     if state then
         for _, obj in ipairs(Workspace:GetDescendants()) do
             if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
-                if not originalMaterials[obj] then
-                    originalMaterials[obj] = obj.Material
-                end
-                pcall(function()
-                    obj.Material = Enum.Material.SmoothPlastic
-                    obj.Reflectance = 0
-                end)
+                if not originalMaterials[obj] then originalMaterials[obj] = obj.Material end
+                pcall(function() obj.Material = Enum.Material.SmoothPlastic; obj.Reflectance = 0 end)
             end
         end
     else
         for obj, mat in pairs(originalMaterials) do
-            if obj and obj.Parent then
-                pcall(function() obj.Material = mat end)
-            end
+            if obj and obj.Parent then pcall(function() obj.Material = mat end) end
         end
         originalMaterials = {}
     end
 end)
 
--- 2. แก้แลคเฉพาะจุด (Selective FPS Boost)
 local optimizedParts = {}
 createToggle("SelectiveFpsToggle", "แก้แลคเฉพาะจุด (ซ่อนหิน/ใบไม้/ฝุ่น)", function(state)
     if state then
@@ -401,14 +401,8 @@ createToggle("SelectiveFpsToggle", "แก้แลคเฉพาะจุด (
             if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
                 local nameLower = string.lower(obj.Name)
                 if string.find(nameLower, "debris") or string.find(nameLower, "rock") or string.find(nameLower, "stone") or string.find(nameLower, "grass") or string.find(nameLower, "leaf") or string.find(nameLower, "particle") then
-                    if not optimizedParts[obj] then
-                        optimizedParts[obj] = {CanCollide = obj.CanCollide, Transparency = obj.Transparency, CastShadow = obj.CastShadow}
-                    end
-                    pcall(function()
-                        obj.CanCollide = false
-                        obj.CastShadow = false
-                        obj.Transparency = 1
-                    end)
+                    if not optimizedParts[obj] then optimizedParts[obj] = {CanCollide = obj.CanCollide, Transparency = obj.Transparency, CastShadow = obj.CastShadow} end
+                    pcall(function() obj.CanCollide = false; obj.CastShadow = false; obj.Transparency = 1 end)
                 end
             elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
                 pcall(function() obj.Enabled = false end)
@@ -417,18 +411,13 @@ createToggle("SelectiveFpsToggle", "แก้แลคเฉพาะจุด (
     else
         for obj, data in pairs(optimizedParts) do
             if obj and obj.Parent then
-                pcall(function()
-                    obj.CanCollide = data.CanCollide
-                    obj.Transparency = data.Transparency
-                    obj.CastShadow = data.CastShadow
-                end)
+                pcall(function() obj.CanCollide = data.CanCollide; obj.Transparency = data.Transparency; obj.CastShadow = data.CastShadow end)
             end
         end
         optimizedParts = {}
     end
 end)
 
--- 3. ลบเอฟเฟคและควันทั้งหมด (FPS Boost)
 local effectConnection = nil
 local function clearEffects(parentObj)
     for _, obj in ipairs(parentObj:GetDescendants()) do
@@ -437,38 +426,29 @@ local function clearEffects(parentObj)
         end
     end
 end
-
 createToggle("FpsBoostToggle", "ลบเอฟเฟคทั้งหมด / ควัน / ละออง", function(state)
     if state then
-        clearEffects(Workspace)
-        clearEffects(Lighting)
+        clearEffects(Workspace); clearEffects(Lighting)
         effectConnection = Workspace.DescendantAdded:Connect(function(obj)
             if obj:IsA("ParticleEmitter") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Explosion") or obj:IsA("Beam") or obj:IsA("Trail") then
                 task.spawn(function() pcall(function() obj:Destroy() end) end)
             end
         end)
     else
-        if effectConnection then
-            effectConnection:Disconnect()
-            effectConnection = nil
-        end
+        if effectConnection then effectConnection:Disconnect(); effectConnection = nil end
     end
 end)
 
--- 4. ลบสิ่งที่ไม่จำเป็น (หิน/เศษเอฟเฟคการโจมตี)
 local junkConnection = nil
 local function isJunkPart(obj)
     if obj:IsA("BasePart") then
         local nameLower = string.lower(obj.Name)
         if string.find(nameLower, "rock") or string.find(nameLower, "stone") or string.find(nameLower, "debris") or string.find(nameLower, "fx") or string.find(nameLower, "impact") or string.find(nameLower, "dust") or string.find(nameLower, "hit") then
-            if not obj:IsDescendantOf(Players) and obj.Parent ~= Workspace then
-                return true
-            end
+            if not obj:IsDescendantOf(Players) and obj.Parent ~= Workspace then return true end
         end
     end
     return false
 end
-
 createToggle("RemoveJunkToggle", "ลบหิน / เศษซาก / เอฟเฟคตี", function(state)
     if state then
         for _, obj in ipairs(Workspace:GetDescendants()) do
@@ -476,16 +456,56 @@ createToggle("RemoveJunkToggle", "ลบหิน / เศษซาก / เอ�
         end
         junkConnection = Workspace.DescendantAdded:Connect(function(obj)
             if isJunkPart(obj) then
-                task.spawn(function()
-                    task.wait(0.05)
-                    pcall(function() obj:Destroy() end)
-                end)
+                task.spawn(function() task.wait(0.05); pcall(function() obj:Destroy() end) end)
             end
         end)
     else
-        if junkConnection then
-            junkConnection:Disconnect()
-            junkConnection = nil
-        end
+        if junkConnection then junkConnection:Disconnect(); junkConnection = nil end
     end
+end)
+
+-- =============================================================================
+-- ระบบอนิเมชั่นอินโทรและการคัดลอกลิงก์ Discord อัตโนมัติ
+-- =============================================================================
+task.spawn(function()
+    -- 1. เฟดอิน Intro
+    TweenService:Create(IntroFrame, TweenInfo.new(0.4), {BackgroundTransparency = 0.1}):Play()
+    TweenService:Create(IntroStroke, TweenInfo.new(0.4), {Transparency = 0}):Play()
+    TweenService:Create(IntroText, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+    task.wait(0.4)
+
+    -- ขั้นที่ 1: กำลังโหลด (3 วินาที)
+    IntroText.Text = "กำลังโหลด..."
+    task.wait(3)
+
+    -- ขั้นที่ 2: ดาวน์โหลดเสร็จแล้ว (1 วินาที)
+    IntroText.Text = "ดาวน์โหลดเสร็จแล้ว!"
+    task.wait(1)
+
+    -- ขั้นที่ 3: คัดลอกลิงก์ Discord อัตโนมัติ (1 วินาที)
+    IntroText.Text = "คัดลอกลิ้งดิสสำเร็จแล้ว!"
+    pcall(function()
+        if setclipboard then
+            setclipboard("https://discord.gg/yourinvite") -- ใส่ลิงก์ Discord ของคุณตรงนี้
+        end
+    end)
+    task.wait(1)
+
+    -- 2. เฟดเอาต์ Intro
+    TweenService:Create(IntroFrame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(IntroStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
+    TweenService:Create(IntroText, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    task.wait(0.4)
+    IntroFrame:Destroy()
+
+    -- 3. อนิเมชั่นเด้งกลับหน้าหลัก ค่อยๆ ปรากฏขึ้นมาอย่างนุ่มนวล
+    MainFrame.Visible = true
+    MainFrame.Size = UDim2.new(0, 0, 0, 0)
+    MainFrame.BackgroundTransparency = 1
+
+    local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 320, 0, 260),
+        BackgroundTransparency = 0
+    })
+    openTween:Play()
 end)
