@@ -1,0 +1,188 @@
+-- สร้าง ScreenGui และหน้าต่าง Mini UI
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MiniCodeRunner"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- ตัวกรอบหลัก (Main Frame)
+local frame = Instance.new("Frame")
+local DiscordLink = "https://discord.gg/bvZ3aGHcW"
+frame.Size = UDim2.new(0, 260, 0, 180)
+frame.Position = UDim2.new(0.1, 0, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(37, 37, 38)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true -- ทำให้ลากหน้าต่างไปมาได้
+frame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = frame
+
+-- หัวข้อ
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 25)
+title.Position = UDim2.new(0, 10, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "GH1JK RUN CODE"
+title.TextColor3 = Color3.fromRGB(156, 220, 254)
+title.TextSize = 14
+title.Font = Enum.Font.SourceSansBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = frame
+
+-- กล่องเขียนโค้ด (TextBox)
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(1, -20, 0, 65)
+textBox.Position = UDim2.new(0, 10, 0, 32)
+textBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+textBox.TextColor3 = Color3.fromRGB(212, 212, 212)
+textBox.PlaceholderText = "ใส่โค้ดเพื่อรัน"
+textBox.Text = ""
+textBox.TextSize = 12
+textBox.Font = Enum.Font.Code
+textBox.ClearTextOnFocus = false
+textBox.MultiLine = true
+textBox.Parent = frame
+
+local tbCorner = Instance.new("UICorner")
+tbCorner.CornerRadius = UDim.new(0, 4)
+tbCorner.Parent = textBox
+
+-- ฟังก์ชันรันโค้ด
+local function runCode(times)
+	local codeText = textBox.Text
+	if codeText == "" then return end
+	
+	-- ใช้ loadstring เพื่อรัน Luau Script ที่พิมพ์ลงไป
+	local func, err = loadstring(codeText)
+	if func then
+		pcall(function()
+			for i = 1, times do
+				func()
+			end
+		end)
+	else
+		warn("Code Error: " .. tostring(err))
+	end
+end
+
+-- สร้างปุ่มกด (×1, ×10, ×100, ×1000, 10000)
+local function createButton(name, text, posX, sizeX, color, callback)
+	local btn = Instance.new("TextButton")
+	btn.Name = name
+	btn.Size = UDim2.new(sizeX, -3, 0, 26)
+	btn.Position = UDim2.new(posX, 0, 0, 102)
+	btn.BackgroundColor3 = color
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.TextSize = 12
+	btn.Font = Enum.Font.SourceSansBold
+	btn.Parent = frame
+	
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 4)
+	c.Parent = btn
+	
+	btn.MouseButton1Click:Connect(callback)
+end
+
+createButton("Btn1", "×1", 0, 0.33, Color3.fromRGB(14, 99, 156), function() runCode(1) end)
+createButton("Btn10", "×10", 0.34, 0.33, Color3.fromRGB(14, 99, 156), function() runCode(10) end)
+createButton("Btn100", "×100", 0.68, 0.32, Color3.fromRGB(14, 99, 156), function() runCode(100) end)
+createButton("Btn1000", "×1000", 0.68, 0.32, Color3.fromRGB(14, 99, 156), function() runCode(1000) end)
+createButton("Btn10000", "×10000", 0.68, 0.32, Color3.fromRGB(14, 99, 156), function() runCode(10000) end)
+
+-- ส่วนระบบ Auto (เปิด-ปิด ดีเลย์ 0.1 วิ)
+local autoLabel = Instance.new("TextLabel")
+autoLabel.Size = UDim2.new(0, 120, 0, 25)
+autoLabel.Position = UDim2.new(0, 10, 0, 138)
+autoLabel.BackgroundTransparency = 1
+autoLabel.Text = "Auto (0.1s):"
+autoLabel.TextColor3 = Color3.fromRGB(212, 212, 212)
+autoLabel.TextSize = 12
+autoLabel.Font = Enum.Font.SourceSans
+autoLabel.TextXAlignment = Enum.TextXAlignment.Left
+autoLabel.Parent = frame
+
+local isAutoRunning = false
+local autoButton = Instance.new("TextButton")
+autoButton.Size = UDim2.new(0, 80, 0, 24)
+autoButton.Position = UDim2.new(1, -90, 0, 139)
+autoButton.BackgroundColor3 = Color3.fromRGB(56, 138, 52)
+autoButton.Text = "เปิด"
+autoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoButton.TextSize = 12
+autoButton.Font = Enum.Font.SourceSansBold
+autoButton.Parent = frame
+
+local abCorner = Instance.new("UICorner")
+abCorner.CornerRadius = UDim.new(0, 4)
+abCorner.Parent = autoButton
+
+autoButton.MouseButton1Click:Connect(function()
+	isAutoRunning = not isAutoRunning
+	if isAutoRunning then
+		autoButton.Text = "ปิด"
+		autoButton.BackgroundColor3 = Color3.fromRGB(209, 105, 105)
+		
+		-- Task ลูปทำงานทุกๆ 0.1 วินาที
+		task.spawn(function()
+			while isAutoRunning do
+				runCode(1)
+				task.wait(0.1)
+			end
+		end)
+	else
+		autoButton.Text = "เปิด"
+		autoButton.BackgroundColor3 = Color3.fromRGB(56, 138, 52)
+	end
+end)
+ =============================================================================
+-- ระบบอนิเมชั่นอินโทรและการคัดลอกลิงก์ Discord อัตโนมัติ
+-- =============================================================================
+task.spawn(function()
+    -- 1. เฟดอิน Intro
+    TweenService:Create(IntroFrame, TweenInfo.new(0.4), {BackgroundTransparency = 0.1}):Play()
+    TweenService:Create(IntroStroke, TweenInfo.new(0.4), {Transparency = 0}):Play()
+    TweenService:Create(IntroText, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+    task.wait(0.4)
+
+    -- ขั้นที่ 1: กำลังโหลด (3 วินาที)
+    IntroText.Text = "กำลังโหลด..."
+    task.wait(3)
+
+    -- ขั้นที่ 2: ดาวน์โหลดเสร็จแล้ว (1 วินาที)
+    IntroText.Text = "ดาวน์โหลดเสร็จแล้ว!"
+    task.wait(1)
+
+    -- ขั้นที่ 3: คัดลอกลิงก์ Discord อัตโนมัติ (1 วินาที)
+    IntroText.Text = "คัดลอกลิ้งดิสสำเร็จแล้ว!"
+    pcall(function()
+        if setclipboard then
+            setclipboard("discord.gg/RYERtzS9cQ") -- ใส่ลิงก์ Discord ของคุณตรงนี้
+        end
+    end)
+    task.wait(1)
+
+    -- 2. เฟดเอาต์ Intro
+    TweenService:Create(IntroFrame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(IntroStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
+    TweenService:Create(IntroText, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    task.wait(0.4)
+    IntroFrame:Destroy()
+
+    -- 3. อนิเมชั่นเด้งกลับหน้าหลัก ค่อยๆ ปรากฏขึ้นมาอย่างนุ่มนวล
+    MainFrame.Visible = true
+    MainFrame.Size = UDim2.new(0, 0, 0, 0)
+    MainFrame.BackgroundTransparency = 1
+
+    local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 320, 0, 260),
+        BackgroundTransparency = 0
+    })
+    openTween:Play()
+end
