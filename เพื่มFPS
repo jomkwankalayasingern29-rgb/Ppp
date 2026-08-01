@@ -1,5 +1,5 @@
 -- =============================================================================
--- HJ1JK : MOBILE FPS BOOSTER (WITH MINIMIZE D-ICON & CONFIRM CLOSE)
+-- HJ1JK : MOBILE FPS BOOSTER (DRAGGABLE D-ICON & CONFIRM CLOSE)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -112,7 +112,7 @@ NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
 -- =============================================================================
--- ไอคอนรูปตัว D (สำหรับกดเปิด UI กลับมาตอนย่อ)
+-- ไอคอนรูปตัว D (ย้ายตำแหน่งได้ & กดเปิด UI กลับมา)
 -- =============================================================================
 local D_Icon = Instance.new("TextButton")
 D_Icon.Name = "D_Icon"
@@ -303,7 +303,7 @@ local function createToggle(name, labelText, callback)
 end
 
 -- =============================================================================
--- ระบบลากหน้าต่าง (Draggable)
+-- ระบบลากหน้าต่างหลัก (Draggable MainFrame)
 -- =============================================================================
 local dragging, dragInput, dragStart, startPos
 
@@ -330,6 +330,37 @@ UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         local delta = input.Position - dragStart
         MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- =============================================================================
+-- ระบบลากไอคอนตัว D (Draggable D-Icon)
+-- =============================================================================
+local dDragging, dDragInput, dDragStart, dStartPos
+
+D_Icon.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dDragging = true
+        dDragStart = input.Position
+        dStartPos = D_Icon.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dDragging = false
+            end
+        end)
+    end
+end)
+
+D_Icon.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dDragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dDragInput and dDragging then
+        local delta = input.Position - dDragStart
+        D_Icon.Position = UDim2.new(dStartPos.X.Scale, dStartPos.X.Offset + delta.X, dStartPos.Y.Scale, dStartPos.Y.Offset + delta.Y)
     end
 end)
 
