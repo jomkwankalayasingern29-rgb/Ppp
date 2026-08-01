@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.4.10: FINAL TARGET LOCK VERSION ]] --
+-- [[ HJ1JK v1.4.11: OPTIMIZED FINAL TARGET LOCK ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -220,7 +220,7 @@ Title.Name = "Title"
 Title.Size = UDim2.new(0, 150, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "HJ1JK v1.4.10"
+Title.Text = "HJ1JK v1.4.11"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextTransparency = 1
@@ -657,11 +657,9 @@ Run10Btn.MouseButton1Click:Connect(function() executeUserCode(10) end)
 Run100Btn.MouseButton1Click:Connect(function() executeUserCode(100) end)
 
 -- =============================================================================
--- ระบบฟังก์ชัน: วาร์ปติดด้านหลังผู้เล่นที่ใกล้ที่สุดอัตโนมัติ (Auto Teleport Behind)
+-- ระบบฟังก์ชัน: วาร์ปติดด้านหลังผู้เล่นที่ใกล้ที่สุดอัตโนมัติ (เพิ่มประสิทธิภาพเช็คตัวละคร)
 -- =============================================================================
-local AutoTpBackConfig = {
-    Enabled = false
-}
+local AutoTpBackConfig = { Enabled = false }
 
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
@@ -698,12 +696,9 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- =============================================================================
--- ระบบ Cooldown Bypass (ลบและปรับเวลาคูลดาวน์อุปกรณ์ที่ถืออยู่)
+-- ระบบ Cooldown Bypass (ลดความถี่ลูปเพื่อป้องกันหน่วง)
 -- =============================================================================
-local CooldownConfig = {
-    Enabled = false,
-    Time = 0
-}
+local CooldownConfig = { Enabled = false, Time = 0 }
 
 CooldownToggle.MouseButton1Click:Connect(function()
     CooldownConfig.Enabled = not CooldownConfig.Enabled
@@ -713,7 +708,7 @@ CooldownToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.2) do
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         if CooldownConfig.Enabled then
             local char = LocalPlayer.Character
@@ -728,11 +723,9 @@ task.spawn(function()
                         end
                     end
                     for _, desc in ipairs(tool:GetDescendants()) do
-                        if desc:IsA("NumberValue") or desc:IsA("IntValue") then
-                            if string.match(string.lower(desc.Name), "cooldown") or string.match(string.lower(desc.Name), "cd") then
-                                if desc.Value ~= CooldownConfig.Time then
-                                    desc.Value = CooldownConfig.Time
-                                end
+                        if (desc:IsA("NumberValue") or desc:IsA("IntValue")) and (string.match(string.lower(desc.Name), "cooldown") or string.match(string.lower(desc.Name), "cd")) then
+                            if desc.Value ~= CooldownConfig.Time then
+                                desc.Value = CooldownConfig.Time
                             end
                         end
                     end
@@ -745,10 +738,7 @@ end)
 -- =============================================================================
 -- ระบบ Hitbox Expander
 -- =============================================================================
-local HitboxConfig = {
-    Enabled = false,
-    Size = 1
-}
+local HitboxConfig = { Enabled = false, Size = 1 }
 local OriginalSizes = {}
 
 HitboxToggle.MouseButton1Click:Connect(function()
@@ -802,34 +792,43 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- ระบบภาพดินน้ำมัน (Plastic Graphics)
+-- ระบบภาพดินน้ำมัน (Plastic Graphics) - แบบแบ่งโหลดป้องกันเกมค้าง
 -- =============================================================================
 local ClayGraphicsEnabled = false
 local originalMaterials = {}
 
 local function applyClayMaterial()
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
-            if not originalMaterials[obj] then
-                originalMaterials[obj] = obj.Material
+    task.spawn(function()
+        local count = 0
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
+                if not originalMaterials[obj] then
+                    originalMaterials[obj] = obj.Material
+                end
+                pcall(function()
+                    obj.Material = Enum.Material.SmoothPlastic
+                    obj.Reflectance = 0
+                end)
+                count = count + 1
+                if count % 200 == 0 then
+                    task.wait() -- ช่วยป้องกันไม่ให้ Main Thread สะดุดค้าง
+                end
             end
-            pcall(function()
-                obj.Material = Enum.Material.SmoothPlastic
-                obj.Reflectance = 0
-            end)
         end
-    end
+    end)
 end
 
 local function restoreMaterials()
-    for obj, mat in pairs(originalMaterials) do
-        if obj and obj.Parent then
-            pcall(function()
-                obj.Material = mat
-            end)
+    task.spawn(function()
+        for obj, mat in pairs(originalMaterials) do
+            if obj and obj.Parent then
+                pcall(function()
+                    obj.Material = mat
+                end)
+            end
         end
-    end
-    originalMaterials = {}
+        originalMaterials = {}
+    end)
 end
 
 ClayGraphicsToggle.MouseButton1Click:Connect(function()
@@ -852,29 +851,31 @@ local SelectiveFpsEnabled = false
 local optimizedParts = {}
 
 local function optimizeLaggyObjects()
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
-            local nameLower = string.lower(obj.Name)
-            if string.find(nameLower, "debris") or string.find(nameLower, "rock") or string.find(nameLower, "stone") or string.find(nameLower, "grass") or string.find(nameLower, "leaf") or string.find(nameLower, "particle") then
-                if not optimizedParts[obj] then
-                    optimizedParts[obj] = {
-                        CanCollide = obj.CanCollide,
-                        Transparency = obj.Transparency,
-                        CastShadow = obj.CastShadow
-                    }
+    task.spawn(function()
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
+                local nameLower = string.lower(obj.Name)
+                if string.find(nameLower, "debris") or string.find(nameLower, "rock") or string.find(nameLower, "stone") or string.find(nameLower, "grass") or string.find(nameLower, "leaf") or string.find(nameLower, "particle") then
+                    if not optimizedParts[obj] then
+                        optimizedParts[obj] = {
+                            CanCollide = obj.CanCollide,
+                            Transparency = obj.Transparency,
+                            CastShadow = obj.CastShadow
+                        }
+                    end
+                    pcall(function()
+                        obj.CanCollide = false
+                        obj.CastShadow = false
+                        obj.Transparency = 1
+                    end)
                 end
+            elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
                 pcall(function()
-                    obj.CanCollide = false
-                    obj.CastShadow = false
-                    obj.Transparency = 1
+                    obj.Enabled = false
                 end)
             end
-        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
-            pcall(function()
-                obj.Enabled = false
-            end)
         end
-    end
+    end)
 end
 
 local function restoreLaggyObjects()
