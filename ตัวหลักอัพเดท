@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.4.10: AUTO-TELEPORT BEHIND TARGET VERSION ]] --
+-- [[ HJ1JK v1.4.10: FINAL TARGET LOCK VERSION ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -426,7 +426,7 @@ local FullLockToggle = createToggle("FullLock", "ล็อกหัว 100% (ท
 local FullLockTorsoToggle = createToggle("FullLockTorso", "ล็อกตัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
 local FullLockTorsoWallCheckToggle = createToggle("FullLockTorsoWallCheck", "ไม่ล็อกตัวหลังกำแพง", AimbotTab)
 
-createHeader(">> ล็อกคน <<", AimbotTab)
+createHeader(">> ล็อกคน (เฉพาะคนด้านหน้าสุด) <<", AimbotTab)
 local PlayerHeadToggle = createToggle("PlayerHead", "เปิดใช้งานระบบล็อกหัวคน", AimbotTab)
 local PlayerTorsoToggle = createToggle("PlayerTorso", "เปิดใช้งานระบบล็อกตัวคน", AimbotTab)
 createHeader(">> ล็อก NPC (ใกล้สุดอัตโนมัติ) <<", AimbotTab)
@@ -1599,16 +1599,27 @@ local function getClosestTarget()
         if part and model:FindFirstChild("Humanoid") and model.Humanoid.Health > 0 then
             local partPos, onScreen = Camera:WorldToViewportPoint(part.Position)
             if onScreen then
-                local dist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                if dist <= FOV_Radius and dist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
-                    shortestDist = dist; closestPart = part
+                local screenDist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if screenDist <= FOV_Radius and screenDist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
+                    shortestDist = screenDist
+                    closestPart = part
                 end
             end
         end
     end
 
-    for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character then processModel(p.Character, false) end end
-    for _, d in ipairs(Workspace:GetDescendants()) do if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then processModel(d, true) end end
+    for _, p in ipairs(Players:GetPlayers()) do 
+        if p ~= LocalPlayer and p.Character then 
+            processModel(p.Character, false) 
+        end 
+    end
+
+    for _, d in ipairs(Workspace:GetDescendants()) do 
+        if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then 
+            processModel(d, true) 
+        end 
+    end
+
     return closestPart
 end
 
