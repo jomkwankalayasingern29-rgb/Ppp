@@ -1,5 +1,8 @@
--- สร้าง ScreenGui และหน้าต่าง Mini UI
-local player = game.Players.LocalPlayer
+-- บริการระบบต่างๆ
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local screenGui = Instance.new("ScreenGui")
@@ -7,15 +10,51 @@ screenGui.Name = "MiniCodeRunner"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- ตัวกรอบหลัก (Main Frame)
+-- ==========================================
+-- 1. สร้าง Intro Frame (หน้าต่างโหลดตอนเริ่ม)
+-- ==========================================
+local introFrame = Instance.new("Frame")
+introFrame.Name = "IntroFrame"
+introFrame.Size = UDim2.new(0, 250, 0, 70)
+introFrame.Position = UDim2.new(0.5, -125, 0.5, -35)
+introFrame.BackgroundColor3 = Color3.fromRGB(37, 37, 38)
+introFrame.BackgroundTransparency = 1
+introFrame.BorderSizePixel = 0
+introFrame.Parent = screenGui
+
+local introCorner = Instance.new("UICorner")
+introCorner.CornerRadius = UDim.new(0, 8)
+introCorner.Parent = introFrame
+
+local introStroke = Instance.new("UIStroke")
+introStroke.Name = "IntroStroke"
+introStroke.Color = Color3.fromRGB(80, 80, 80)
+introStroke.Transparency = 1
+introStroke.Parent = introFrame
+
+local introText = Instance.new("TextLabel")
+introText.Name = "IntroText"
+introText.Size = UDim2.new(1, 0, 1, 0)
+introText.BackgroundTransparency = 1
+introText.Text = "กำลังเตรียมระบบ..."
+introText.TextColor3 = Color3.fromRGB(255, 255, 255)
+introText.TextSize = 14
+introText.Font = Enum.Font.SourceSansBold
+introText.TextTransparency = 1
+introText.Parent = introFrame
+
+-- ==========================================
+-- 2. ตัวกรอบหลัก (Main Frame)
+-- ==========================================
 local frame = Instance.new("Frame")
-local DiscordLink = "https://discord.gg/bvZ3aGHcW"
+frame.Name = "MainFrame"
 frame.Size = UDim2.new(0, 260, 0, 180)
-frame.Position = UDim2.new(0.1, 0, 0.1, 0)
+frame.Position = UDim2.new(0.5, -130, 0.5, -90)
 frame.BackgroundColor3 = Color3.fromRGB(37, 37, 38)
 frame.BorderSizePixel = 0
 frame.Active = true
-frame.Draggable = true -- ทำให้ลากหน้าต่างไปมาได้
+frame.Draggable = true
+frame.Visible = false -- ซ่อนไว้ก่อนรอให้อินโทรเล่นจบ
 frame.Parent = screenGui
 
 local corner = Instance.new("UICorner")
@@ -57,7 +96,6 @@ local function runCode(times)
 	local codeText = textBox.Text
 	if codeText == "" then return end
 	
-	-- ใช้ loadstring เพื่อรัน Luau Script ที่พิมพ์ลงไป
 	local func, err = loadstring(codeText)
 	if func then
 		pcall(function()
@@ -70,7 +108,7 @@ local function runCode(times)
 	end
 end
 
--- สร้างปุ่มกด (×1, ×10, ×100, ×1000, 10000)
+-- สร้างปุ่มกด (จัดระยะปุ่มใหม่ให้ไม่ทับกัน)
 local function createButton(name, text, posX, sizeX, color, callback)
 	local btn = Instance.new("TextButton")
 	btn.Name = name
@@ -90,11 +128,12 @@ local function createButton(name, text, posX, sizeX, color, callback)
 	btn.MouseButton1Click:Connect(callback)
 end
 
-createButton("Btn1", "×1", 0, 0.33, Color3.fromRGB(14, 99, 156), function() runCode(1) end)
-createButton("Btn10", "×10", 0.34, 0.33, Color3.fromRGB(14, 99, 156), function() runCode(10) end)
-createButton("Btn100", "×100", 0.68, 0.32, Color3.fromRGB(14, 99, 156), function() runCode(100) end)
-createButton("Btn1000", "×1000", 0.68, 0.32, Color3.fromRGB(14, 99, 156), function() runCode(1000) end)
-createButton("Btn10000", "×10000", 0.68, 0.32, Color3.fromRGB(14, 99, 156), function() runCode(10000) end)
+-- จัดเรียงปุ่ม 5 ปุ่มให้อยู่ในแถวเดียวกันอย่างพอดี
+createButton("Btn1", "×1", 0.0, 0.18, Color3.fromRGB(14, 99, 156), function() runCode(1) end)
+createButton("Btn10", "×10", 0.20, 0.18, Color3.fromRGB(14, 99, 156), function() runCode(10) end)
+createButton("Btn100", "×100", 0.40, 0.18, Color3.fromRGB(14, 99, 156), function() runCode(100) end)
+createButton("Btn1000", "×1000", 0.60, 0.18, Color3.fromRGB(14, 99, 156), function() runCode(1000) end)
+createButton("Btn10000", "×10k", 0.80, 0.18, Color3.fromRGB(14, 99, 156), function() runCode(10000) end)
 
 -- ส่วนระบบ Auto (เปิด-ปิด ดีเลย์ 0.1 วิ)
 local autoLabel = Instance.new("TextLabel")
@@ -123,13 +162,12 @@ local abCorner = Instance.new("UICorner")
 abCorner.CornerRadius = UDim.new(0, 4)
 abCorner.Parent = autoButton
 
-autoButton.MouseButton1Click:Connect(function()
+autoButton.MouseButton1ClientConnect = autoButton.MouseButton1Click:Connect(function()
 	isAutoRunning = not isAutoRunning
 	if isAutoRunning then
 		autoButton.Text = "ปิด"
 		autoButton.BackgroundColor3 = Color3.fromRGB(209, 105, 105)
 		
-		-- Task ลูปทำงานทุกๆ 0.1 วินาที
 		task.spawn(function()
 			while isAutoRunning do
 				runCode(1)
@@ -141,48 +179,49 @@ autoButton.MouseButton1Click:Connect(function()
 		autoButton.BackgroundColor3 = Color3.fromRGB(56, 138, 52)
 	end
 end)
- =============================================================================
--- ระบบอนิเมชั่นอินโทรและการคัดลอกลิงก์ Discord อัตโนมัติ
--- =============================================================================
+
+-- ==========================================
+-- 3. ระบบอนิเมชั่นอินโทรและการคัดลอกลิงก์
+-- ==========================================
 task.spawn(function()
     -- 1. เฟดอิน Intro
-    TweenService:Create(IntroFrame, TweenInfo.new(0.4), {BackgroundTransparency = 0.1}):Play()
-    TweenService:Create(IntroStroke, TweenInfo.new(0.4), {Transparency = 0}):Play()
-    TweenService:Create(IntroText, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+    TweenService:Create(introFrame, TweenInfo.new(0.4), {BackgroundTransparency = 0.1}):Play()
+    TweenService:Create(introStroke, TweenInfo.new(0.4), {Transparency = 0}):Play()
+    TweenService:Create(introText, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
     task.wait(0.4)
 
     -- ขั้นที่ 1: กำลังโหลด (3 วินาที)
-    IntroText.Text = "กำลังโหลด..."
+    introText.Text = "กำลังโหลด..."
     task.wait(3)
 
     -- ขั้นที่ 2: ดาวน์โหลดเสร็จแล้ว (1 วินาที)
-    IntroText.Text = "ดาวน์โหลดเสร็จแล้ว!"
+    introText.Text = "ดาวน์โหลดเสร็จแล้ว!"
     task.wait(1)
 
     -- ขั้นที่ 3: คัดลอกลิงก์ Discord อัตโนมัติ (1 วินาที)
-    IntroText.Text = "คัดลอกลิ้งดิสสำเร็จแล้ว!"
+    introText.Text = "คัดลอกลิ้งดิสสำเร็จแล้ว!"
     pcall(function()
         if setclipboard then
-            setclipboard("discord.gg/RYERtzS9cQ") -- ใส่ลิงก์ Discord ของคุณตรงนี้
+            setclipboard("https://discord.gg/bvZ3aGHcW") 
         end
     end)
     task.wait(1)
 
     -- 2. เฟดเอาต์ Intro
-    TweenService:Create(IntroFrame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
-    TweenService:Create(IntroStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
-    TweenService:Create(IntroText, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    TweenService:Create(introFrame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(introStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
+    TweenService:Create(introText, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
     task.wait(0.4)
-    IntroFrame:Destroy()
+    introFrame:Destroy()
 
-    -- 3. อนิเมชั่นเด้งกลับหน้าหลัก ค่อยๆ ปรากฏขึ้นมาอย่างนุ่มนวล
-    MainFrame.Visible = true
-    MainFrame.Size = UDim2.new(0, 0, 0, 0)
-    MainFrame.BackgroundTransparency = 1
+    -- 3. แสดงหน้าต่างหลักพร้อมอนิเมชั่นเด้ง
+    frame.Visible = true
+    frame.Size = UDim2.new(0, 0, 0, 0)
+    frame.BackgroundTransparency = 1
 
-    local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 320, 0, 260),
+    local openTween = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 260, 0, 180),
         BackgroundTransparency = 0
     })
     openTween:Play()
-end
+end)
