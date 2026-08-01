@@ -1025,7 +1025,6 @@ FloatToggleBtn.Parent = FloatFrame
 local FloatTogCorner = Instance.new("UICorner"); FloatTogCorner.CornerRadius = UDim.new(0, 4); FloatTogCorner.Parent = FloatToggleBtn
 
 -- สถานะจำโหมดในสวิตช์ลอย (เริ่มที่ ล็อกหัวคน)
--- โหมดที่เป็นไปได้: "PlayerHead", "PlayerTorso", "NPCHead", "NPCTorso"
 local floatModeIndex = 1
 local floatModes = {
     {Name = "ล็อกคน (หัว)", TargetVar = "PlayerHead"},
@@ -1034,7 +1033,6 @@ local floatModes = {
     {Name = "ล็อก NPC (ตัว)", TargetVar = "NPCTorso"}
 }
 
--- ตัวแปรจำสถานะเปิด/ปิดล่าสุดของแต่ละโหมด
 local savedModeStates = {
     PlayerHead = false,
     PlayerTorso = false,
@@ -1048,7 +1046,6 @@ local LockConfig = {
     EnableSpeed = false, EnableJump = false
 }
 
--- อัปเดต UI เมนูหลักให้ตรงกับสถานะ
 local function syncUIState(varName, state)
     if varName == "PlayerHead" then
         PlayerHeadToggle.BackgroundColor3 = state and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
@@ -1073,19 +1070,16 @@ local function updateFloatUIAppearance()
     FloatToggleBtn.Text = isActive and "เปิด" or "ปิด"
 end
 
--- กดคลิกที่ปุ่มหมวดหมู่เพื่อเปลี่ยนโหมดวนไปเรื่อยๆ
 FloatCategoryBtn.MouseButton1Click:Connect(function()
     floatModeIndex = floatModeIndex + 1
     if floatModeIndex > #floatModes then floatModeIndex = 1 end
     updateFloatUIAppearance()
 end)
 
--- กดเปิด/ปิดจากสวิตช์ลอย
 FloatToggleBtn.MouseButton1Click:Connect(function()
     local current = floatModes[floatModeIndex]
     local varName = current.TargetVar
     
-    -- ปิดโหมดล็อคตัวอื่นทั้งหมดก่อน เพื่อให้ทำงานทีละโหมด
     LockConfig.PlayerHead = false
     LockConfig.PlayerTorso = false
     LockConfig.NPCHead = false
@@ -1095,7 +1089,6 @@ FloatToggleBtn.MouseButton1Click:Connect(function()
     syncUIState("NPCHead", false)
     syncUIState("NPCTorso", false)
 
-    -- สลับสถานะเปิด/ปิดของโหมดปัจจุบัน
     savedModeStates[varName] = not savedModeStates[varName]
     LockConfig[varName] = savedModeStates[varName]
     
@@ -1252,7 +1245,6 @@ FullLockTorsoWallCheckToggle.MouseButton1Click:Connect(function()
     updateVisuals(FullLockTorsoWallCheckToggle, LockConfig.FullLockTorsoWallCheck, "ไม่ล็อกตัวหลังกำแพง")
 end)
 
--- ฟังก์ชันกดจากเมนูหลัก (เชื่อมโยงกับสวิตช์ลอย)
 PlayerHeadToggle.MouseButton1Click:Connect(function()
     LockConfig.PlayerHead = not LockConfig.PlayerHead
     if LockConfig.PlayerHead then LockConfig.PlayerTorso = false; PlayerTorsoToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50); PlayerTorsoToggle.Text = "ปิด" end
