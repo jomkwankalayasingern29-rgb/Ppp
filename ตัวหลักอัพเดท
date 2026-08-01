@@ -423,7 +423,6 @@ end
 
 createHeader(">> ตั้งค่าสวิตช์ลอย <<", AimbotTab)
 local FloatToggleVisibilityToggle = createToggle("FloatToggleVis", "แสดง/ซ่อน สวิตช์ลอยบนจอ", AimbotTab)
--- ตั้งค่าเริ่มต้นให้สวิตช์ลอยเปิดอยู่
 FloatToggleVisibilityToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
 FloatToggleVisibilityToggle.Text = "เปิด"
 
@@ -432,7 +431,7 @@ local FullLockToggle = createToggle("FullLock", "ล็อกหัว 100% (ท
 local FullLockTorsoToggle = createToggle("FullLockTorso", "ล็อกตัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
 local FullLockTorsoWallCheckToggle = createToggle("FullLockTorsoWallCheck", "ไม่ล็อกตัวหลังกำแพง", AimbotTab)
 
-createHeader(">> ล็อกคน (เฉพาะคนด้านหน้าสุด) <<", AimbotTab)
+createHeader(">> ล็อกคน (ใกล้สุดในวงสีขาว) <<", AimbotTab)
 local PlayerHeadToggle = createToggle("PlayerHead", "เปิดใช้งานระบบล็อกหัวคน", AimbotTab)
 local PlayerTorsoToggle = createToggle("PlayerTorso", "เปิดใช้งานระบบล็อกตัวคน", AimbotTab)
 createHeader(">> ล็อก NPC (ใกล้สุดอัตโนมัติ) <<", AimbotTab)
@@ -1030,7 +1029,6 @@ FloatToggleBtn.Font = Enum.Font.GothamBold
 FloatToggleBtn.Parent = FloatFrame
 local FloatTogCorner = Instance.new("UICorner"); FloatTogCorner.CornerRadius = UDim.new(0, 4); FloatTogCorner.Parent = FloatToggleBtn
 
--- เชื่อมโยงระบบเปิด/ปิดการแสดงผลสวิตช์ลอย
 FloatToggleVisibilityToggle.MouseButton1Click:Connect(function()
     local isVisible = FloatGui.Enabled
     FloatGui.Enabled = not isVisible
@@ -1039,7 +1037,6 @@ FloatToggleVisibilityToggle.MouseButton1Click:Connect(function()
     showNotification((FloatGui.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'สวิตช์ลอยบนจอ', FloatGui.Enabled)
 end)
 
--- สถานะจำโหมดในสวิตช์ลอย (เริ่มที่ ล็อกหัวคน)
 local floatModeIndex = 1
 local floatModes = {
     {Name = "ล็อกคน (หัว)", TargetVar = "PlayerHead"},
@@ -1499,9 +1496,9 @@ end)
 local function getClosestTarget()
     local closestPart, shortestDist = nil, math.huge
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return nil end
-    local myRootPos = LocalPlayer.Character.HumanoidRootPart.Position
 
     if LockConfig.FullLock then
+        local myRootPos = LocalPlayer.Character.HumanoidRootPart.Position
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
                 local head = p.Character.Head
@@ -1515,6 +1512,7 @@ local function getClosestTarget()
     end
 
     if LockConfig.FullLockTorso then
+        local myRootPos = LocalPlayer.Character.HumanoidRootPart.Position
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
                 local torso = p.Character.HumanoidRootPart
@@ -1528,6 +1526,7 @@ local function getClosestTarget()
     end
 
     if LockConfig.NPCHead or LockConfig.NPCTorso then
+        local myRootPos = LocalPlayer.Character.HumanoidRootPart.Position
         local pName = LockConfig.NPCHead and "Head" or "HumanoidRootPart"
         for _, d in ipairs(Workspace:GetDescendants()) do
             if d:IsA("Model") and d:FindFirstChild("Humanoid") and d.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then
@@ -1551,6 +1550,7 @@ local function getClosestTarget()
             local partPos, onScreen = Camera:WorldToViewportPoint(part.Position)
             if onScreen then
                 local screenDist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                -- เช็คให้อยู่ในวงกลม FOV และหาตัวที่ใกล้จุดกึ่งกลางวงกลมที่สุด (Screen Distance น้อยที่สุด)
                 if screenDist <= FOV_Radius and screenDist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
                     shortestDist = screenDist; closestPart = part
                 end
