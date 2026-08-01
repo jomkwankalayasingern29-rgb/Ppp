@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.4.12: FLOATING QUICK TOGGLE INTEGRATED ]] --
+-- [[ HJ1JK v1.4.13: FLOATING QUICK TOGGLE VISIBILITY ADDED ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -220,7 +220,7 @@ Title.Name = "Title"
 Title.Size = UDim2.new(0, 150, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "HJ1JK v1.4.12"
+Title.Text = "HJ1JK v1.4.13"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextTransparency = 1
@@ -420,6 +420,12 @@ local function createToggle(name, labelText, parentTab)
 
     return Button
 end
+
+createHeader(">> ตั้งค่าสวิตช์ลอย <<", AimbotTab)
+local FloatToggleVisibilityToggle = createToggle("FloatToggleVis", "แสดง/ซ่อน สวิตช์ลอยบนจอ", AimbotTab)
+-- ตั้งค่าเริ่มต้นให้สวิตช์ลอยเปิดอยู่
+FloatToggleVisibilityToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+FloatToggleVisibilityToggle.Text = "เปิด"
 
 createHeader(">> ฟังก์ชันพิเศษ <<", AimbotTab)
 local FullLockToggle = createToggle("FullLock", "ล็อกหัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
@@ -1023,6 +1029,15 @@ FloatToggleBtn.TextSize = 11
 FloatToggleBtn.Font = Enum.Font.GothamBold
 FloatToggleBtn.Parent = FloatFrame
 local FloatTogCorner = Instance.new("UICorner"); FloatTogCorner.CornerRadius = UDim.new(0, 4); FloatTogCorner.Parent = FloatToggleBtn
+
+-- เชื่อมโยงระบบเปิด/ปิดการแสดงผลสวิตช์ลอย
+FloatToggleVisibilityToggle.MouseButton1Click:Connect(function()
+    local isVisible = FloatGui.Enabled
+    FloatGui.Enabled = not isVisible
+    FloatToggleVisibilityToggle.BackgroundColor3 = FloatGui.Enabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    FloatToggleVisibilityToggle.Text = FloatGui.Enabled and "เปิด" or "ปิด"
+    showNotification((FloatGui.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'สวิตช์ลอยบนจอ', FloatGui.Enabled)
+end)
 
 -- สถานะจำโหมดในสวิตช์ลอย (เริ่มที่ ล็อกหัวคน)
 local floatModeIndex = 1
