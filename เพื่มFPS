@@ -1,5 +1,5 @@
 -- =============================================================================
--- HJ1JK : MOBILE FPS BOOST MENU (UI + FPS FUNCTIONS)
+-- HJ1JK : MOBILE FPS BOOSTER (WITH MINIMIZE D-ICON & CONFIRM CLOSE)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -13,8 +13,11 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 -- ลบ UI เก่ากันบั๊ก
-if PlayerGui:FindFirstChild("HJ1JK_FpsGui") then
-    PlayerGui.HJ1JK_FpsGui:Destroy()
+local oldUIs = {"HJ1JK_FpsGui", "D_Icon"}
+for _, uiName in ipairs(oldUIs) do
+    if PlayerGui:FindFirstChild(uiName) then
+        pcall(function() PlayerGui[uiName]:Destroy() end)
+    end
 end
 
 -- สร้าง ScreenGui หลัก
@@ -42,7 +45,99 @@ MainStroke.Color = Color3.fromRGB(60, 60, 60)
 MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
--- แถบด้านบน (สำหรับกดลากหน้าต่าง)
+-- =============================================================================
+-- ระบบ Confirm Overlay (หน้าต่างยืนยันการปิด UI)
+-- =============================================================================
+local ConfirmOverlay = Instance.new("Frame")
+ConfirmOverlay.Name = "ConfirmOverlay"
+ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
+ConfirmOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ConfirmOverlay.BackgroundTransparency = 0.5
+ConfirmOverlay.Visible = false
+ConfirmOverlay.ZIndex = 10
+ConfirmOverlay.Parent = MainFrame
+
+local ConfirmBox = Instance.new("Frame")
+ConfirmBox.Size = UDim2.new(0, 240, 0, 110)
+ConfirmBox.Position = UDim2.new(0.5, -120, 0.5, -55)
+ConfirmBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ConfirmBox.BorderSizePixel = 0
+ConfirmBox.ZIndex = 11
+ConfirmBox.Parent = ConfirmOverlay
+
+local ConfirmCorner = Instance.new("UICorner")
+ConfirmCorner.CornerRadius = UDim.new(0, 6)
+ConfirmCorner.Parent = ConfirmBox
+
+local ConfirmStroke = Instance.new("UIStroke")
+ConfirmStroke.Color = Color3.fromRGB(60, 60, 60)
+ConfirmStroke.Thickness = 1.2
+ConfirmStroke.Parent = ConfirmBox
+
+local ConfirmTitle = Instance.new("TextLabel")
+ConfirmTitle.Size = UDim2.new(1, 0, 0, 35)
+ConfirmTitle.Position = UDim2.new(0, 0, 0, 10)
+ConfirmTitle.BackgroundTransparency = 1
+ConfirmTitle.Text = "คุณต้องการลบ UI นี้หรือไม่?"
+ConfirmTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ConfirmTitle.TextSize = 12
+ConfirmTitle.Font = Enum.Font.GothamBold
+ConfirmTitle.ZIndex = 12
+ConfirmTitle.Parent = ConfirmBox
+
+local YesButton = Instance.new("TextButton")
+YesButton.Size = UDim2.new(0, 90, 0, 30)
+YesButton.Position = UDim2.new(0, 20, 1, -40)
+YesButton.BackgroundColor3 = Color3.fromRGB(50, 180, 80)
+YesButton.Text = "ใช่"
+YesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+YesButton.TextSize = 11
+YesButton.Font = Enum.Font.GothamBold
+YesButton.BorderSizePixel = 0
+YesButton.ZIndex = 12
+YesButton.Parent = ConfirmBox
+local YesCorner = Instance.new("UICorner"); YesCorner.CornerRadius = UDim.new(0, 4); YesCorner.Parent = YesButton
+
+local NoButton = Instance.new("TextButton")
+NoButton.Size = UDim2.new(0, 90, 0, 30)
+NoButton.Position = UDim2.new(1, -110, 1, -40)
+NoButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+NoButton.Text = "ไม่ใช่"
+NoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoButton.TextSize = 11
+NoButton.Font = Enum.Font.GothamBold
+NoButton.BorderSizePixel = 0
+NoButton.ZIndex = 12
+NoButton.Parent = ConfirmBox
+local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
+
+-- =============================================================================
+-- ไอคอนรูปตัว D (สำหรับกดเปิด UI กลับมาตอนย่อ)
+-- =============================================================================
+local D_Icon = Instance.new("TextButton")
+D_Icon.Name = "D_Icon"
+D_Icon.Size = UDim2.new(0, 40, 0, 40)
+D_Icon.Position = UDim2.new(0, 15, 0, 15)
+D_Icon.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+D_Icon.Text = "D"
+D_Icon.TextColor3 = Color3.fromRGB(255, 255, 255)
+D_Icon.TextSize = 18
+D_Icon.Font = Enum.Font.GothamBold
+D_Icon.Visible = false
+D_Icon.Parent = ScreenGui
+
+local D_Corner = Instance.new("UICorner")
+D_Corner.CornerRadius = UDim.new(0, 6)
+D_Corner.Parent = D_Icon
+
+local D_Stroke = Instance.new("UIStroke")
+D_Stroke.Color = Color3.fromRGB(60, 60, 60)
+D_Stroke.Thickness = 1.2
+D_Stroke.Parent = D_Icon
+
+-- =============================================================================
+-- แถบด้านบน (TopBar) และปุ่มควบคุมหน้าต่าง
+-- =============================================================================
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 32)
@@ -54,7 +149,6 @@ local TopBarCorner = Instance.new("UICorner")
 TopBarCorner.CornerRadius = UDim.new(0, 8)
 TopBarCorner.Parent = TopBar
 
--- แก้มุมบนไม่ให้มนเกินไปตรงขอบล่างของ TopBar
 local FixCover = Instance.new("Frame")
 FixCover.Size = UDim2.new(1, 0, 0, 6)
 FixCover.Position = UDim2.new(0, 0, 1, -6)
@@ -63,31 +157,86 @@ FixCover.BorderSizePixel = 0
 FixCover.Parent = TopBar
 
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -40, 1, 0)
+TitleLabel.Size = UDim2.new(1, -70, 1, 0)
 TitleLabel.Position = UDim2.new(0, 12, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Text = "⚡ HJ1JK - Mobile FPS Booster"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 12
+TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
+-- ปุ่มปิด (X)
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 32, 0, 32)
-CloseBtn.Position = UDim2.new(1, -32, 0, 0)
+CloseBtn.Size = UDim2.new(0, 28, 0, 32)
+CloseBtn.Position = UDim2.new(1, -28, 0, 0)
 CloseBtn.BackgroundTransparency = 1
 CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = Color3.fromRGB(200, 50, 50)
-CloseBtn.TextSize = 14
+CloseBtn.TextSize = 12
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.Parent = TopBar
 
+-- ปุ่มย่อ (─)
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.new(0, 28, 0, 32)
+MinimizeBtn.Position = UDim2.new(1, -56, 0, 0)
+MinimizeBtn.BackgroundTransparency = 1
+MinimizeBtn.Text = "─"
+MinimizeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+MinimizeBtn.TextSize = 11
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.Parent = TopBar
+
+-- ระบบกดปุ่มย่อ / ขยาย / ปิด
+local isMinimized = false
+local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+local function minimizeUI()
+    if isMinimized or ConfirmOverlay.Visible then return end
+    isMinimized = true
+    local minimizeTween = TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 320, 0, 0), BackgroundTransparency = 1})
+    minimizeTween:Play()
+    minimizeTween.Completed:Connect(function()
+        if isMinimized then
+            MainFrame.Visible = false
+            D_Icon.Visible = true
+            D_Icon.Size = UDim2.new(0, 0, 0, 0)
+            TweenService:Create(D_Icon, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+        end
+    end)
+end
+
+local function maximizeUI()
+    if not isMinimized then return end
+    isMinimized = false
+    D_Icon.Visible = false
+    MainFrame.Visible = true
+    MainFrame.BackgroundTransparency = 0
+    TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 320, 0, 260)}):Play()
+end
+
+MinimizeBtn.MouseButton1Click:Connect(minimizeUI)
+D_Icon.MouseButton1Click:Connect(maximizeUI)
+
 CloseBtn.MouseButton1Click:Connect(function()
+    if not isMinimized then
+        ConfirmOverlay.Visible = true
+    end
+end)
+
+NoButton.MouseButton1Click:Connect(function()
+    ConfirmOverlay.Visible = false
+end)
+
+YesButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- พื้นที่แสดงรายการฟังก์ชัน (ScrollingFrame)
+-- =============================================================================
+-- พื้นที่เนื้อหาและฟังก์ชัน FPS
+-- =============================================================================
 local ContentScroll = Instance.new("ScrollingFrame")
 ContentScroll.Size = UDim2.new(1, 0, 1, -32)
 ContentScroll.Position = UDim2.new(0, 0, 0, 32)
@@ -108,7 +257,6 @@ UIPadding.PaddingLeft = UDim.new(0, 12)
 UIPadding.PaddingRight = UDim.new(0, 12)
 UIPadding.Parent = ContentScroll
 
--- ฟังก์ชันสร้างปุ่ม Toggle สำหรับมือถือ
 local function createToggle(name, labelText, callback)
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(1, 0, 0, 36)
@@ -155,7 +303,7 @@ local function createToggle(name, labelText, callback)
 end
 
 -- =============================================================================
--- ระบบลากหน้าต่าง (Draggable for Mobile & PC)
+-- ระบบลากหน้าต่าง (Draggable)
 -- =============================================================================
 local dragging, dragInput, dragStart, startPos
 
@@ -186,7 +334,7 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- =============================================================================
--- รวบรวมฟังก์ชัน FPS ทั้งหมดที่คุณต้องการ
+-- ฟังก์ชัน FPS ทั้งหมด
 -- =============================================================================
 
 -- 1. ภาพดินน้ำมัน (Plastic Graphics)
