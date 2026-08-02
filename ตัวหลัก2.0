@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.4.11: FIX ALL NPC LOCKING & ADVANCED SCANNING ]] --
+-- [[ HJ1JK v1.4.12: ULTIMATE UPDATE - INFINITE JUMP, NOCLIP & SCANNING ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -220,7 +220,7 @@ Title.Name = "Title"
 Title.Size = UDim2.new(0, 150, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "HJ1JK v1.4.11"
+Title.Text = "HJ1JK v1.4.12"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextTransparency = 1
@@ -499,6 +499,7 @@ local WalkSpeedBack, WalkSpeedBtn, WalkSpeedLabel = createSlider("ความ�
 createHeader(">> กระโดดสูงผู้เล่น <<", SpeedTab)
 local EnableJumpToggle = createToggle("EnableJump", "เปิดใช้งานกระโดดสูง", SpeedTab)
 local JumpPowerBack, JumpPowerBtn, JumpPowerLabel = createSlider("กระโดดสูง: 50 (ปกติ)", SpeedTab)
+local InfJumpToggle = createToggle("InfJump", "เปิดใช้งานกระโดดไม่จำกัด (Inf Jump)", SpeedTab)
 
 local ResetFrame = Instance.new("Frame")
 ResetFrame.Size = UDim2.new(0, 260, 0, 35)
@@ -522,6 +523,9 @@ local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.ne
 -- หมวดหมู่เครื่องมือ (ToolTab)
 createHeader(">> ออโต้เทเลพอร์ต <<", ToolTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", ToolTab)
+
+createHeader(">> เดินทะลุกำแพง (Noclip) <<", ToolTab)
+local NoclipToggle = createToggle("NoclipToggle", "เปิดใช้งานเดินทะลุกำแพง", ToolTab)
 
 createHeader(">> ลบคูลดาวน์อุปกรณ์ที่ถืออยู่ <<", ToolTab)
 local CooldownToggle = createToggle("CooldownToggle", "เปิดใช้งานลบ/ปรับคูลดาวน์", ToolTab)
@@ -657,7 +661,7 @@ Run10Btn.MouseButton1Click:Connect(function() executeUserCode(10) end)
 Run100Btn.MouseButton1Click:Connect(function() executeUserCode(100) end)
 
 -- =============================================================================
--- [ADVANCED DUAL-SCAN ENGINE v1.4.11] สแกนหา NPC ทุกประเภทอย่างละเอียดแม่นยำ 100%
+-- [ADVANCED DUAL-SCAN ENGINE v1.4.12] สแกนหา NPC ทุกประเภทอย่างรายละเอียดแม่นยำ 100%
 -- =============================================================================
 local CachedNPCs = {}
 
@@ -672,7 +676,6 @@ local function scanContainer(container, targetList)
                 end
             end
         end
-        -- สแกนลึกลงไปอีก 1 ชั้นรองรับระบบโฟลเดอร์ซ้อน
         if child:IsA("Folder") or (child:IsA("Model") and not child:FindFirstChildOfClass("Humanoid")) then
             for _, subChild in ipairs(child:GetChildren()) do
                 if subChild:IsA("Model") and subChild ~= LocalPlayer.Character then
@@ -695,7 +698,6 @@ task.spawn(function()
         local newCache = {}
         scanContainer(Workspace, newCache)
         
-        -- ค้นหาโฟลเดอร์มอนสเตอร์ ยอดนิยม
         local commonFolders = {"NPCs", "Enemies", "Monsters", "Mobs", "NPC", "Bots"}
         for _, folderName in ipairs(commonFolders) do
             local folder = Workspace:FindFirstChild(folderName)
@@ -705,6 +707,45 @@ task.spawn(function()
         end
         
         CachedNPCs = newCache
+    end
+end)
+
+-- =============================================================================
+-- ระบบ Infinite Jump & Noclip
+-- =============================================================================
+local InfJumpEnabled = false
+local NoclipEnabled = false
+
+InfJumpToggle.MouseButton1Click:Connect(function()
+    InfJumpEnabled = not InfJumpEnabled
+    InfJumpToggle.BackgroundColor3 = InfJumpEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    InfJumpToggle.Text = InfJumpEnabled and "เปิด" or "ปิด"
+    showNotification((InfJumpEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'กระโดดไม่จำกัด (Inf Jump)', InfJumpEnabled)
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if InfJumpEnabled and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+NoclipToggle.MouseButton1Click:Connect(function()
+    NoclipEnabled = not NoclipEnabled
+    NoclipToggle.BackgroundColor3 = NoclipEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    NoclipToggle.Text = NoclipEnabled and "เปิด" or "ปิด"
+    showNotification((NoclipEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'เดินทะลุกำแพง (Noclip)', NoclipEnabled)
+end)
+
+RunService.Stepped:Connect(function()
+    if NoclipEnabled and LocalPlayer.Character then
+        for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
     end
 end)
 
@@ -1447,7 +1488,7 @@ local function drawESP(model, isNpc)
 end
 
 -- =============================================================================
--- ปรับปรุงระบบค้นหาเป้าหมาย (AIMBOT RE-ENGINEERED)
+-- ระบบค้นหาเป้าหมาย (AIMBOT RE-ENGINEERED)
 -- =============================================================================
 local function getClosestTarget()
     local closestPart, shortestDist = nil, math.huge
@@ -1612,6 +1653,9 @@ YesButton.MouseButton1Click:Connect(function()
     CooldownConfig.Enabled = false
     AutoTpBackConfig.Enabled = false
     ClayGraphicsEnabled = false
+    InfJumpEnabled = false
+    NoclipEnabled = false
+    
     restoreMaterials()
     restoreLaggyObjects()
     
