@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.4.12: ULTIMATE UPDATE - INFINITE JUMP, NOCLIP & SCANNING ]] --
+-- [[ HJ1JK v1.4.12: ULTIMATE UPDATE - INFINITE JUMP, NOCLIP, FAST PICKUP & SCANNING ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -558,6 +558,9 @@ table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 4); ResetCorner.Parent = ResetBtn
 
 -- หมวดหมู่เครื่องมือ (ToolTab)
+createHeader(">> ระบบเก็บของไว <<", ToolTab)
+local FastPickUpToggle = createToggle("FastPickUpToggle", "เก็บของไว 0 วิ (ไม่ต้องกดค้าง)", ToolTab)
+
 createHeader(">> ออโต้เทเลพอร์ต <<", ToolTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", ToolTab)
 
@@ -781,6 +784,51 @@ RunService.Stepped:Connect(function()
         for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
             if part:IsA("BasePart") and part.CanCollide then
                 part.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- =============================================================================
+-- ระบบเก็บของไว 0 วิ (Fast Pick Up / Instant Proximity Prompt)
+-- =============================================================================
+local FastPickUpEnabled = false
+local promptConnection = nil
+
+FastPickUpToggle.MouseButton1Click:Connect(function()
+    FastPickUpEnabled = not FastPickUpEnabled
+    FastPickUpToggle.BackgroundColor3 = FastPickUpEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    FastPickUpToggle.Text = FastPickUpEnabled and "เปิด" or "ปิด"
+    showNotification((FastPickUpEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'เก็บของไว 0 วิ', FastPickUpEnabled)
+
+    if FastPickUpEnabled then
+        for _, prompt in ipairs(Workspace:GetDescendants()) do
+            if prompt:IsA("ProximityPrompt") then
+                prompt.HoldDuration = 0
+            end
+        end
+        
+        promptConnection = Workspace.DescendantAdded:Connect(function(descendant)
+            if FastPickUpEnabled and descendant:IsA("ProximityPrompt") then
+                descendant.HoldDuration = 0
+            end
+        end)
+    else
+        if promptConnection then
+            promptConnection:Disconnect()
+            promptConnection = nil
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if not ScreenGui.Parent then break end
+        if FastPickUpEnabled then
+            for _, prompt in ipairs(Workspace:GetDescendants()) do
+                if prompt:IsA("ProximityPrompt") and prompt.HoldDuration > 0 then
+                    prompt.HoldDuration = 0
+                end
             end
         end
     end
@@ -1692,6 +1740,7 @@ YesButton.MouseButton1Click:Connect(function()
     ClayGraphicsEnabled = false
     InfJumpEnabled = false
     NoclipEnabled = false
+    FastPickUpEnabled = false
     
     restoreMaterials()
     restoreLaggyObjects()
@@ -1708,6 +1757,7 @@ YesButton.MouseButton1Click:Connect(function()
 
     if effectConnection then effectConnection:Disconnect() end
     if junkConnection then junkConnection:Disconnect() end
+    if promptConnection then promptConnection:Disconnect() end
     clearAllDrawings()
 
     Lighting.Brightness = oldBrightness
