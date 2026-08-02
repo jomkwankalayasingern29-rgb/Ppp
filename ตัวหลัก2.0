@@ -290,8 +290,11 @@ local function createTab(name)
     return Tab
 end
 
+-- สร้างหมวดหมู่หลักไว้บนสุด
+local MainTab = createTab("MainTab")
+MainTab.Visible = true
+
 local AimbotTab = createTab("AimbotTab")
-AimbotTab.Visible = true
 local EspTab = createTab("EspTab")
 local SpeedTab = createTab("SpeedTab")
 local ToolTab = createTab("ToolTab")
@@ -335,17 +338,20 @@ local function createCategoryBtn(text)
     return Btn
 end
 
+-- ปุ่มหมวดหมู่ (วาง "หลัก" ไว้บนสุดและเปิดใช้งานเป็นค่าเริ่มต้น)
+local MainCategory = createCategoryBtn("หลัก")
+MainCategory.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MainCategory.TextColor3 = Color3.fromRGB(255, 255, 255)
+
 local LockHeadCategory = createCategoryBtn("ระบบล็อกเป้า")
-LockHeadCategory.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-LockHeadCategory.TextColor3 = Color3.fromRGB(255, 255, 255)
 local ESPCategory = createCategoryBtn("ESP")
 local SpeedCategory = createCategoryBtn("ปรับความเร็ว/กระโดด")
 local ToolCategory = createCategoryBtn("อุปกรณ์ & เพิ่ม FPS")
 local AutoExecCategory = createCategoryBtn("รันโค้ดอัตโนมัติ")
 
 local function switchTab(activeTab, activeBtn)
-    local tabs = {AimbotTab, EspTab, SpeedTab, ToolTab, AutoExecTab}
-    local btns = {LockHeadCategory, ESPCategory, SpeedCategory, ToolCategory, AutoExecCategory}
+    local tabs = {MainTab, AimbotTab, EspTab, SpeedTab, ToolTab, AutoExecTab}
+    local btns = {MainCategory, LockHeadCategory, ESPCategory, SpeedCategory, ToolCategory, AutoExecCategory}
     
     for _, tab in ipairs(tabs) do tab.Visible = (tab == activeTab) end
     for _, btn in ipairs(btns) do
@@ -354,6 +360,7 @@ local function switchTab(activeTab, activeBtn)
     end
 end
 
+MainCategory.MouseButton1Click:Connect(function() switchTab(MainTab, MainCategory) end)
 LockHeadCategory.MouseButton1Click:Connect(function() switchTab(AimbotTab, LockHeadCategory) end)
 ESPCategory.MouseButton1Click:Connect(function() switchTab(EspTab, ESPCategory) end)
 SpeedCategory.MouseButton1Click:Connect(function() switchTab(SpeedTab, SpeedCategory) end)
@@ -420,6 +427,9 @@ local function createToggle(name, labelText, parentTab)
 
     return Button
 end
+
+-- เพิ่มข้อความต้อนรับในหมวดหมู่ "หลัก"
+createHeader(">> หมวดหมู่หลัก <<", MainTab)
 
 createHeader(">> ฟังก์ชันพิเศษ <<", AimbotTab)
 local FullLockToggle = createToggle("FullLock", "ล็อกหัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
