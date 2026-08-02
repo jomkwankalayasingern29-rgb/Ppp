@@ -1,4 +1,9 @@
--- [[ HJ1JK v1.4.12: ULTIMATE UPDATE - INFINITE JUMP, NOCLIP & SCANNING ]] --
+import tkinter as tk
+from tkinter import messagebox
+import webbrowser
+
+# สคริปต์ Lua HJ1JK v1.4.12 ทั้งหมด
+ROBLOX_LUA_SCRIPT = r"""-- [[ HJ1JK v1.4.12: ULTIMATE UPDATE - INFINITE JUMP, NOCLIP & SCANNING ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -1705,4 +1710,76 @@ YesButton.MouseButton1Click:Connect(function()
     closeTween.Completed:Connect(function() 
         ScreenGui:Destroy(); NotifGui:Destroy(); FOV_Circle:Destroy(); D_Icon:Destroy()
     end)
-end)
+end)"""
+
+
+class Application(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("ระบบจัดการ - HJ1JK v1.4.12 Manager")
+        self.geometry("450x320")
+        self.configure(bg="#1a1a1a")
+
+        # หัวข้อหลัก
+        self.label_title = tk.Label(
+            self,
+            text="HJ1JK v1.4.12 Manager",
+            font=("Gotham", 16, "bold"),
+            fg="#ffffff",
+            bg="#1a1a1a"
+        )
+        self.label_title.pack(pady=20)
+
+        # รายละเอียด
+        self.label_desc = tk.Label(
+            self,
+            text="ระบบจัดการสคริปต์ Roblox Ultimate Update\nInfinite Jump, Noclip & Scanning Engine",
+            font=("Tahoma", 9),
+            fg="#aaaaaa",
+            bg="#1a1a1a"
+        )
+        self.label_desc.pack(pady=5)
+
+        # ปุ่มคัดลอกสคริปต์
+        self.btn_copy_script = tk.Button(
+            self,
+            text="คัดลอกสคริปต์ Roblox (HJ1JK v1.4.12)",
+            font=("Tahoma", 10, "bold"),
+            bg="#00a86b",
+            fg="white",
+            width=32,
+            height=2,
+            relief="flat",
+            cursor="hand2",
+            command=self.copy_script_to_clipboard
+        )
+        self.btn_copy_script.pack(pady=15)
+
+        # ปุ่ม Discord
+        self.btn_discord = tk.Button(
+            self,
+            text="เข้าร่วม Discord ผู้พัฒนา",
+            font=("Tahoma", 10, "bold"),
+            bg="#5865f2",
+            fg="white",
+            width=32,
+            height=2,
+            relief="flat",
+            cursor="hand2",
+            command=self.open_discord
+        )
+        self.btn_discord.pack(pady=5)
+
+    def copy_script_to_clipboard(self):
+        self.clipboard_clear()
+        self.clipboard_append(ROBLOX_LUA_SCRIPT)
+        self.update()
+        messagebox.showinfo("สำเร็จ", "คัดลอกสคริปต์ Roblox HJ1JK v1.4.12 ลงใน Clipboard เรียบร้อยแล้ว!\nนำไปวางใน Executor ได้ทันที")
+
+    def open_discord(self):
+        webbrowser.open_new("https://discord.gg/bvZ3aGHcW")
+
+
+if __name__ == "__main__":
+    app = Application()
+    app.mainloop()
