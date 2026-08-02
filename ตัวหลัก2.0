@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.4.10: AUTO-TELEPORT BEHIND TARGET VERSION (OPTIMIZED) ]] --
+-- [[ HJ1JK v1.4.10: AUTO-TELEPORT BEHIND TARGET VERSION (OPTIMIZED & FIXED CLOSEST LOCK) ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -665,7 +665,6 @@ task.spawn(function()
     while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         local newCache = {}
-        -- สแกนระดับชั้นบนสุด เพื่อหลีกเลี่ยง GetDescendants() ที่กิน FPS มหาศาล
         for _, child in ipairs(Workspace:GetChildren()) do
             if child:IsA("Model") and child:FindFirstChild("Humanoid") and child:FindFirstChild("HumanoidRootPart") then
                 if not Players:GetPlayerFromCharacter(child) and child ~= LocalPlayer.Character then
@@ -1341,7 +1340,7 @@ local function isVisible(targetPartInstance, targetChar)
 end
 
 -- =============================================================================
--- 9. ระบบ CHAMS & ESP & AIMBOT (OPTIMIZED)
+-- 9. ระบบ CHAMS & ESP & AIMBOT (OPTIMIZED & CLOSEST TARGET FILTER)
 -- =============================================================================
 task.spawn(function()
     while task.wait(0.3) do
@@ -1412,11 +1411,15 @@ local function drawESP(model, isNpc)
     end
 end
 
+-- =============================================================================
+-- ปรับปรุงฟังก์ชันค้นหาเป้าหมาย: ค้นหาคนที่ "ใกล้ตัวและใกล้เป้าที่สุด"
+-- =============================================================================
 local function getClosestTarget()
     local closestPart, shortestDist = nil, math.huge
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return nil end
     local myRootPos = LocalPlayer.Character.HumanoidRootPart.Position
 
+    -- 1. กรณีเปิดระบบ FullLock (ล็อกหัว 100%)
     if LockConfig.FullLock then
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
@@ -1432,6 +1435,7 @@ local function getClosestTarget()
         return closestPart
     end
 
+    -- 2. กรณีเปิดระบบ FullLockTorso (ล็อกตัว 100%)
     if LockConfig.FullLockTorso then
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
@@ -1447,6 +1451,7 @@ local function getClosestTarget()
         return closestPart
     end
 
+    -- 3. กรณีล็อกปกติ (เช็คเป้าใกล้กลางหน้าจอ + อยู่ในรัศมี FOV)
     local function processModel(model, isNpc)
         local pName = (isNpc and (LockConfig.NPCHead and "Head" or LockConfig.NPCTorso and "HumanoidRootPart")) or (LockConfig.PlayerHead and "Head" or LockConfig.PlayerTorso and "HumanoidRootPart")
         if not pName then return end
@@ -1454,9 +1459,15 @@ local function getClosestTarget()
         if part and model:FindFirstChild("Humanoid") and model.Humanoid.Health > 0 then
             local partPos, onScreen = Camera:WorldToViewportPoint(part.Position)
             if onScreen then
-                local dist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                if dist <= FOV_Radius and dist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
-                    shortestDist = dist; closestPart = part
+                local screenDist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if screenDist <= FOV_Radius then
+                    -- คำนวณระยะห่างตัวละคร + ระยะบนหน้าจอเพื่อให้ล็อกคนที่อยู่ใกล้ตัวเรามากที่สุดก่อน
+                    local worldDist = (part.Position - myRootPos).Magnitude
+                    local totalPriorityDist = screenDist + (worldDist * 2) 
+                    
+                    if totalPriorityDist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
+                        shortestDist = totalPriorityDist; closestPart = part
+                    end
                 end
             end
         end
