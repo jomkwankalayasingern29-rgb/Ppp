@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.4.10: AUTO-TELEPORT BEHIND TARGET VERSION (OPTIMIZED & FIXED CLOSEST LOCK) ]] --
+-- [[ HJ1JK v1.4.11: FIX ALL NPC LOCKING & ADVANCED SCANNING ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -220,7 +220,7 @@ Title.Name = "Title"
 Title.Size = UDim2.new(0, 150, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "HJ1JK v1.4.10"
+Title.Text = "HJ1JK v1.4.11"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextTransparency = 1
@@ -429,7 +429,7 @@ local FullLockTorsoWallCheckToggle = createToggle("FullLockTorsoWallCheck", "ไ
 createHeader(">> ล็อกคน <<", AimbotTab)
 local PlayerHeadToggle = createToggle("PlayerHead", "เปิดใช้งานระบบล็อกหัวคน", AimbotTab)
 local PlayerTorsoToggle = createToggle("PlayerTorso", "เปิดใช้งานระบบล็อกตัวคน", AimbotTab)
-createHeader(">> ล็อก NPC <<", AimbotTab)
+createHeader(">> ล็อก NPC / มอนสเตอร์ <<", AimbotTab)
 local NPCHeadToggle = createToggle("NPCHead", "เปิดใช้งานระบบล็อกหัว NPC", AimbotTab)
 local NPCTorsoToggle = createToggle("NPCTorso", "เปิดใช้งานระบบล็อกตัว NPC", AimbotTab)
 createHeader(">> ตั้งค่าระบบล็อก <<", AimbotTab)
@@ -657,21 +657,53 @@ Run10Btn.MouseButton1Click:Connect(function() executeUserCode(10) end)
 Run100Btn.MouseButton1Click:Connect(function() executeUserCode(100) end)
 
 -- =============================================================================
--- [OPTIMIZATION CACHE ENGINE] สแกนหา NPC และ Player ครั้งเดียว แล้วแชร์ไปทุกฟังก์ชัน
+-- [ADVANCED DUAL-SCAN ENGINE v1.4.11] สแกนหา NPC ทุกประเภทอย่างละเอียดแม่นยำ 100%
 -- =============================================================================
 local CachedNPCs = {}
 
-task.spawn(function()
-    while task.wait(0.5) do
-        if not ScreenGui.Parent then break end
-        local newCache = {}
-        for _, child in ipairs(Workspace:GetChildren()) do
-            if child:IsA("Model") and child:FindFirstChild("Humanoid") and child:FindFirstChild("HumanoidRootPart") then
-                if not Players:GetPlayerFromCharacter(child) and child ~= LocalPlayer.Character then
-                    table.insert(newCache, child)
+local function scanContainer(container, targetList)
+    for _, child in ipairs(container:GetChildren()) do
+        if child:IsA("Model") and child ~= LocalPlayer.Character then
+            local hum = child:FindFirstChildOfClass("Humanoid")
+            local hrp = child:FindFirstChild("HumanoidRootPart") or child:FindFirstChild("Torso") or child:FindFirstChild("UpperTorso")
+            if hum and hrp and hum.Health > 0 then
+                if not Players:GetPlayerFromCharacter(child) then
+                    table.insert(targetList, child)
                 end
             end
         end
+        -- สแกนลึกลงไปอีก 1 ชั้นรองรับระบบโฟลเดอร์ซ้อน
+        if child:IsA("Folder") or (child:IsA("Model") and not child:FindFirstChildOfClass("Humanoid")) then
+            for _, subChild in ipairs(child:GetChildren()) do
+                if subChild:IsA("Model") and subChild ~= LocalPlayer.Character then
+                    local hum = subChild:FindFirstChildOfClass("Humanoid")
+                    local hrp = subChild:FindFirstChild("HumanoidRootPart") or subChild:FindFirstChild("Torso") or subChild:FindFirstChild("UpperTorso")
+                    if hum and hrp and hum.Health > 0 then
+                        if not Players:GetPlayerFromCharacter(subChild) then
+                            table.insert(targetList, subChild)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+task.spawn(function()
+    while task.wait(0.3) do
+        if not ScreenGui.Parent then break end
+        local newCache = {}
+        scanContainer(Workspace, newCache)
+        
+        -- ค้นหาโฟลเดอร์มอนสเตอร์ ยอดนิยม
+        local commonFolders = {"NPCs", "Enemies", "Monsters", "Mobs", "NPC", "Bots"}
+        for _, folderName in ipairs(commonFolders) do
+            local folder = Workspace:FindFirstChild(folderName)
+            if folder then
+                scanContainer(folder, newCache)
+            end
+        end
+        
         CachedNPCs = newCache
     end
 end)
@@ -1340,7 +1372,7 @@ local function isVisible(targetPartInstance, targetChar)
 end
 
 -- =============================================================================
--- 9. ระบบ CHAMS & ESP & AIMBOT (OPTIMIZED & CLOSEST TARGET FILTER)
+-- 9. ระบบ CHAMS & ESP & AIMBOT
 -- =============================================================================
 task.spawn(function()
     while task.wait(0.3) do
@@ -1362,10 +1394,13 @@ task.spawn(function()
 
         if LockConfig.NpcEspChams then
             for _, desc in ipairs(CachedNPCs) do
-                if desc and desc.Parent and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 then
+                if desc and desc.Parent and desc:FindFirstChildOfClass("Humanoid") and desc:FindFirstChildOfClass("Humanoid").Health > 0 then
                     local ncham = desc:FindFirstChild("HJ1JK_NpcCham") or Instance.new("Highlight")
                     ncham.Name = "HJ1JK_NpcCham"; ncham.FillTransparency = 0.5; ncham.OutlineTransparency = 0; ncham.OutlineColor = Color3.fromRGB(255, 255, 255); ncham.Parent = desc
-                    ncham.FillColor = isVisible(desc.HumanoidRootPart, desc) and Color3.fromRGB(0, 225, 255) or Color3.fromRGB(0, 50, 255)
+                    local mainPart = desc:FindFirstChild("HumanoidRootPart") or desc:FindFirstChild("Head") or desc:FindFirstChild("Torso")
+                    if mainPart then
+                        ncham.FillColor = isVisible(mainPart, desc) and Color3.fromRGB(0, 225, 255) or Color3.fromRGB(0, 50, 255)
+                    end
                 end
             end
         else
@@ -1392,7 +1427,7 @@ local function drawESP(model, isNpc)
         tracer.Visible = false; tracer.Thickness = 1.2
         Active2D[model] = {Box = box, Tracer = tracer}
     end
-    local hrp = model:FindFirstChild("HumanoidRootPart")
+    local hrp = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
     if hrp then
         local hrpPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
         local data = Active2D[model]
@@ -1412,14 +1447,14 @@ local function drawESP(model, isNpc)
 end
 
 -- =============================================================================
--- ปรับปรุงฟังก์ชันค้นหาเป้าหมาย: ค้นหาคนที่ "ใกล้ตัวและใกล้เป้าที่สุด"
+-- ปรับปรุงระบบค้นหาเป้าหมาย (AIMBOT RE-ENGINEERED)
 -- =============================================================================
 local function getClosestTarget()
     local closestPart, shortestDist = nil, math.huge
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return nil end
     local myRootPos = LocalPlayer.Character.HumanoidRootPart.Position
 
-    -- 1. กรณีเปิดระบบ FullLock (ล็อกหัว 100%)
+    -- 1. ล็อกหัว 100% (Full Lock Head)
     if LockConfig.FullLock then
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
@@ -1435,7 +1470,7 @@ local function getClosestTarget()
         return closestPart
     end
 
-    -- 2. กรณีเปิดระบบ FullLockTorso (ล็อกตัว 100%)
+    -- 2. ล็อกตัว 100% (Full Lock Torso)
     if LockConfig.FullLockTorso then
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
@@ -1451,34 +1486,58 @@ local function getClosestTarget()
         return closestPart
     end
 
-    -- 3. กรณีล็อกปกติ (เช็คเป้าใกล้กลางหน้าจอ + อยู่ในรัศมี FOV)
+    -- 3. ล็อกเป้าแบบเลือกรายหมวดหมู่ (Player / NPC)
     local function processModel(model, isNpc)
-        local pName = (isNpc and (LockConfig.NPCHead and "Head" or LockConfig.NPCTorso and "HumanoidRootPart")) or (LockConfig.PlayerHead and "Head" or LockConfig.PlayerTorso and "HumanoidRootPart")
-        if not pName then return end
-        local part = model:FindFirstChild(pName) or (pName == "HumanoidRootPart" and (model:FindFirstChild("UpperTorso") or model:FindFirstChild("Torso")))
-        if part and model:FindFirstChild("Humanoid") and model.Humanoid.Health > 0 then
-            local partPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+        local hum = model:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then return end
+        
+        local partName = nil
+        if isNpc then
+            if LockConfig.NPCHead then partName = "Head" end
+            if LockConfig.NPCTorso then partName = "HumanoidRootPart" end
+        else
+            if LockConfig.PlayerHead then partName = "Head" end
+            if LockConfig.PlayerTorso then partName = "HumanoidRootPart" end
+        end
+
+        if not partName then return end
+
+        local targetPart = model:FindFirstChild(partName) or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso") or model:FindFirstChild("Head")
+        if targetPart then
+            local partPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
             if onScreen then
                 local screenDist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
                 if screenDist <= FOV_Radius then
-                    -- คำนวณระยะห่างตัวละคร + ระยะบนหน้าจอเพื่อให้ล็อกคนที่อยู่ใกล้ตัวเรามากที่สุดก่อน
-                    local worldDist = (part.Position - myRootPos).Magnitude
-                    local totalPriorityDist = screenDist + (worldDist * 2) 
+                    local worldDist = (targetPart.Position - myRootPos).Magnitude
+                    local totalPriorityDist = screenDist + (worldDist * 1.5)
                     
-                    if totalPriorityDist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
-                        shortestDist = totalPriorityDist; closestPart = part
+                    if totalPriorityDist < shortestDist and (not WallCheckEnabled or isVisible(targetPart, model)) then
+                        shortestDist = totalPriorityDist
+                        closestPart = targetPart
                     end
                 end
             end
         end
     end
 
-    for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character then processModel(p.Character, false) end end
-    for _, d in ipairs(CachedNPCs) do if d and d.Parent then processModel(d, true) end end
+    -- ตรวจสอบ Player
+    if LockConfig.PlayerHead or LockConfig.PlayerTorso then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then processModel(p.Character, false) end
+        end
+    end
+
+    -- ตรวจสอบ NPC
+    if LockConfig.NPCHead or LockConfig.NPCTorso then
+        for _, npcModel in ipairs(CachedNPCs) do
+            if npcModel and npcModel.Parent then processModel(npcModel, true) end
+        end
+    end
+
     return closestPart
 end
 
--- MAIN RENDER LOOP: รวมการทำ ESP 2D, Auto TP, Aimbot และ Lighting เข้าลูปเดียว
+-- MAIN RENDER LOOP
 RunService.RenderStepped:Connect(function()
     if not ScreenGui.Parent then return end
 
@@ -1513,13 +1572,13 @@ RunService.RenderStepped:Connect(function()
     -- 3. ESP 2D Render
     if Drawing and LockConfig.MasterEsp2D then
         for model, _ in pairs(Active2D) do
-            if not model or not model.Parent or not model:FindFirstChild("Humanoid") or model.Humanoid.Health <= 0 then removeDrawingObject(model) end
+            if not model or not model.Parent or not model:FindFirstChildOfClass("Humanoid") or model:FindFirstChildOfClass("Humanoid").Health <= 0 then removeDrawingObject(model) end
         end
         for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then drawESP(player.Character, false) end
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChildOfClass("Humanoid") and player.Character:FindFirstChildOfClass("Humanoid").Health > 0 then drawESP(player.Character, false) end
         end
         for _, desc in ipairs(CachedNPCs) do
-            if desc and desc.Parent and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 then drawESP(desc, true) end
+            if desc and desc.Parent and desc:FindFirstChildOfClass("Humanoid") and desc:FindFirstChildOfClass("Humanoid").Health > 0 then drawESP(desc, true) end
         end
     elseif next(Active2D) then
         clearAllDrawings()
