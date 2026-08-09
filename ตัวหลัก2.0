@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.4.12: ULTIMATE UPDATE - INFINITE JUMP, NOCLIP, FAST PICKUP & SCANNING ]] --
+-- [[ HJ1JK v1.1: ULTIMATE UPDATE - INFINITE JUMP, NOCLIP, FAST PICKUP & SCANNING ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
