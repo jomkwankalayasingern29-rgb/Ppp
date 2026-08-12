@@ -1,4 +1,4 @@
--- Roblox Delta UI Script (MM2 with Tools Tab: Click TP)
+-- Roblox Delta UI Script (MM2 with Auto Text Resizing & Scale)
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -42,8 +42,8 @@ local baseHeight = 320
 local currentScale = 1 -- 100%
 local currentAlpha = 1 -- เก็บค่าความทึบปัจจุบัน (1 = ทึบ 100%)
 
--- เก็บรายการข้อความทั้งหมดไว้สำหรับเปลี่ยนสีข้อความแบบเรียลไทม์
-local allTextLabels = {}
+-- เก็บรายการข้อความและขนาดตั้งต้นไว้สำหรับปรับขนาดพร้อมสเกล UI
+local textLabelData = {}
 
 -- 3. หน้าต่างหลัก (MainFrame)
 local MainFrame = Instance.new("Frame")
@@ -88,7 +88,7 @@ TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 14
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.BackgroundTransparency = 1
-table.insert(allTextLabels, TitleText)
+table.insert(textLabelData, {Obj = TitleText, BaseSize = 14})
 
 -- ปุ่มย่อ (-)
 local MinBtn = Instance.new("TextButton", TopBar)
@@ -100,7 +100,7 @@ MinBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
 MinBtn.Font = Enum.Font.GothamBold
 MinBtn.TextSize = 16
 Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
-table.insert(allTextLabels, MinBtn)
+table.insert(textLabelData, {Obj = MinBtn, BaseSize = 16})
 
 -- ปุ่มปิด (X)
 local CloseBtn = Instance.new("TextButton", TopBar)
@@ -112,7 +112,7 @@ CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 14
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
-table.insert(allTextLabels, CloseBtn)
+table.insert(textLabelData, {Obj = CloseBtn, BaseSize = 14})
 
 CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
@@ -154,7 +154,7 @@ local function CreateTab(name)
     TabBtn.Font = Enum.Font.GothamMedium
     TabBtn.TextSize = 13
     Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
-    table.insert(allTextLabels, TabBtn)
+    table.insert(textLabelData, {Obj = TabBtn, BaseSize = 13})
 
     local Page = Instance.new("ScrollingFrame", ContentArea)
     Page.Name = name .. "Page"
@@ -217,7 +217,7 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
     Label.TextSize = 12
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.BackgroundTransparency = 1
-    table.insert(allTextLabels, Label)
+    table.insert(textLabelData, {Obj = Label, BaseSize = 12})
 
     local ValueLabel = Instance.new("TextLabel", SliderFrame)
     ValueLabel.Size = UDim2.new(0.3, 0, 0, 20)
@@ -228,7 +228,7 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
     ValueLabel.TextSize = 12
     ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
     ValueLabel.BackgroundTransparency = 1
-    table.insert(allTextLabels, ValueLabel)
+    table.insert(textLabelData, {Obj = ValueLabel, BaseSize = 12})
 
     local SliderBar = Instance.new("Frame", SliderFrame)
     SliderBar.Size = UDim2.new(1, -20, 0, 8)
@@ -282,13 +282,20 @@ CreateSlider(UIPage, "ปรับความทึบของ UI", 1, 100, 10
     Sidebar.BackgroundTransparency = transparency
 end)
 
--- เพิ่ม Slider ในหมวดหมู่ UI: 2) ปรับขนาดความใหญ่ UI (50% - 150%)
+-- เพิ่ม Slider ในหมวดหมู่ UI: 2) ปรับขนาดความใหญ่ UI (พร้อมปรับขนาดข้อความอัตโนมัติ)
 CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 150, 100, "%", function(val)
     currentScale = val / 100
     local newW = baseWidth * currentScale
     local newH = baseHeight * currentScale
     MainFrame.Size = UDim2.new(0, newW, 0, newH)
     MainFrame.Position = UDim2.new(0.5, -newW/2, 0.5, -newH/2)
+
+    -- ปรับขนาดตัวหนังสือทุกตัวตามสเกลเปอร์เซ็นต์
+    for _, item in ipairs(textLabelData) do
+        if item.Obj and item.Obj.Parent then
+            item.Obj.TextSize = math.clamp(math.floor(item.BaseSize * currentScale), 8, 30)
+        end
+    end
 end)
 
 -- รายการ 13 สีโทนพาสเทล/สบายตา (รวมสีดำ)
@@ -323,7 +330,7 @@ ThemeDropBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
 ThemeDropBtn.Font = Enum.Font.GothamBold
 ThemeDropBtn.TextSize = 12
 ThemeDropBtn.TextXAlignment = Enum.TextXAlignment.Left
-table.insert(allTextLabels, ThemeDropBtn)
+table.insert(textLabelData, {Obj = ThemeDropBtn, BaseSize = 12})
 
 local ThemeScroll = Instance.new("ScrollingFrame", ThemeDropFrame)
 ThemeScroll.Size = UDim2.new(1, -16, 0, 150)
@@ -357,6 +364,7 @@ for _, item in ipairs(colorList) do
     cBtn.TextSize = 11
     cBtn.TextXAlignment = Enum.TextXAlignment.Left
     Instance.new("UICorner", cBtn).CornerRadius = UDim.new(0, 5)
+    table.insert(textLabelData, {Obj = cBtn, BaseSize = 11})
 
     cBtn.MouseButton1Click:Connect(function()
         MainFrame.BackgroundColor3 = item.Color
@@ -380,7 +388,7 @@ TextDropBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
 TextDropBtn.Font = Enum.Font.GothamBold
 TextDropBtn.TextSize = 12
 TextDropBtn.TextXAlignment = Enum.TextXAlignment.Left
-table.insert(allTextLabels, TextDropBtn)
+table.insert(textLabelData, {Obj = TextDropBtn, BaseSize = 12})
 
 local TextScroll = Instance.new("ScrollingFrame", TextDropFrame)
 TextScroll.Size = UDim2.new(1, -16, 0, 150)
@@ -414,11 +422,12 @@ for _, item in ipairs(colorList) do
     tBtn.TextSize = 11
     tBtn.TextXAlignment = Enum.TextXAlignment.Left
     Instance.new("UICorner", tBtn).CornerRadius = UDim.new(0, 5)
+    table.insert(textLabelData, {Obj = tBtn, BaseSize = 11})
 
     tBtn.MouseButton1Click:Connect(function()
-        for _, txtObj in pairs(allTextLabels) do
-            if txtObj and txtObj.Parent then
-                txtObj.TextColor3 = item.Color
+        for _, data in pairs(textLabelData) do
+            if data.Obj and data.Obj.Parent then
+                data.Obj.TextColor3 = item.Color
             end
         end
     end)
@@ -439,7 +448,7 @@ BgIdTitle.Font = Enum.Font.Gotham
 BgIdTitle.TextSize = 12
 BgIdTitle.TextXAlignment = Enum.TextXAlignment.Left
 BgIdTitle.BackgroundTransparency = 1
-table.insert(allTextLabels, BgIdTitle)
+table.insert(textLabelData, {Obj = BgIdTitle, BaseSize = 12})
 
 local BgIdInput = Instance.new("TextBox", BgIdFrame)
 BgIdInput.Size = UDim2.new(0.55, 0, 0, 30)
@@ -451,6 +460,7 @@ BgIdInput.TextColor3 = Color3.fromRGB(240, 240, 240)
 BgIdInput.Font = Enum.Font.Gotham
 BgIdInput.TextSize = 11
 Instance.new("UICorner", BgIdInput).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = BgIdInput, BaseSize = 11})
 
 BgIdInput.FocusLost:Connect(function(enterPressed)
     if enterPressed then
@@ -499,7 +509,7 @@ NoclipLabel.Font = Enum.Font.Gotham
 NoclipLabel.TextSize = 12
 NoclipLabel.TextXAlignment = Enum.TextXAlignment.Left
 NoclipLabel.BackgroundTransparency = 1
-table.insert(allTextLabels, NoclipLabel)
+table.insert(textLabelData, {Obj = NoclipLabel, BaseSize = 12})
 
 local NoclipBtn = Instance.new("TextButton", NoclipFrame)
 NoclipBtn.Size = UDim2.new(0, 80, 0, 26)
@@ -510,7 +520,7 @@ NoclipBtn.Text = "ปิด (OFF)"
 NoclipBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 NoclipBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
 Instance.new("UICorner", NoclipBtn).CornerRadius = UDim.new(0, 5)
-table.insert(allTextLabels, NoclipBtn)
+table.insert(textLabelData, {Obj = NoclipBtn, BaseSize = 11})
 
 NoclipBtn.MouseButton1Click:Connect(function()
     noclipEnabled = not noclipEnabled
@@ -547,7 +557,7 @@ ToolLabel.Font = Enum.Font.Gotham
 ToolLabel.TextSize = 12
 ToolLabel.TextXAlignment = Enum.TextXAlignment.Left
 ToolLabel.BackgroundTransparency = 1
-table.insert(allTextLabels, ToolLabel)
+table.insert(textLabelData, {Obj = ToolLabel, BaseSize = 12})
 
 local GetToolBtn = Instance.new("TextButton", ToolFrame)
 GetToolBtn.Size = UDim2.new(0, 80, 0, 26)
@@ -558,7 +568,7 @@ GetToolBtn.Text = "รับไอเทม"
 GetToolBtn.BackgroundColor3 = Color3.fromRGB(80, 110, 180)
 GetToolBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 Instance.new("UICorner", GetToolBtn).CornerRadius = UDim.new(0, 5)
-table.insert(allTextLabels, GetToolBtn)
+table.insert(textLabelData, {Obj = GetToolBtn, BaseSize = 11})
 
 GetToolBtn.MouseButton1Click:Connect(function()
     local mouse = LocalPlayer:GetMouse()
@@ -593,7 +603,7 @@ SwitchLabel.Font = Enum.Font.Gotham
 SwitchLabel.TextSize = 12
 SwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
 SwitchLabel.BackgroundTransparency = 1
-table.insert(allTextLabels, SwitchLabel)
+table.insert(textLabelData, {Obj = SwitchLabel, BaseSize = 12})
 
 local SwitchBtn = Instance.new("TextButton", SwitchFrame)
 SwitchBtn.Size = UDim2.new(0, 80, 0, 26)
@@ -604,7 +614,7 @@ SwitchBtn.Text = "ปิด (OFF)"
 SwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 SwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
 Instance.new("UICorner", SwitchBtn).CornerRadius = UDim.new(0, 5)
-table.insert(allTextLabels, SwitchBtn)
+table.insert(textLabelData, {Obj = SwitchBtn, BaseSize = 11})
 
 -- กล่องอธิบายสี ESP
 local InfoBox = Instance.new("Frame", ESPPage)
@@ -622,7 +632,7 @@ InfoText.TextSize = 11
 InfoText.TextYAlignment = Enum.TextYAlignment.Center
 InfoText.TextXAlignment = Enum.TextXAlignment.Left
 InfoText.BackgroundTransparency = 1
-table.insert(allTextLabels, InfoText)
+table.insert(textLabelData, {Obj = InfoText, BaseSize = 11})
 
 local espTextObjects = {}
 
@@ -741,7 +751,7 @@ ShootSwitchLabel.Font = Enum.Font.Gotham
 ShootSwitchLabel.TextSize = 12
 ShootSwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
 ShootSwitchLabel.BackgroundTransparency = 1
-table.insert(allTextLabels, ShootSwitchLabel)
+table.insert(textLabelData, {Obj = ShootSwitchLabel, BaseSize = 12})
 
 local ShootSwitchBtn = Instance.new("TextButton", ShootSwitchFrame)
 ShootSwitchBtn.Size = UDim2.new(0, 80, 0, 26)
@@ -752,7 +762,7 @@ ShootSwitchBtn.Text = "ปิด (OFF)"
 ShootSwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 ShootSwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
 Instance.new("UICorner", ShootSwitchBtn).CornerRadius = UDim.new(0, 5)
-table.insert(allTextLabels, ShootSwitchBtn)
+table.insert(textLabelData, {Obj = ShootSwitchBtn, BaseSize = 11})
 
 -- ฟังก์ชันยิงปืน MM2 ที่แก้ไขให้เรียกใช้ผ่าน Tool / Remote ทะลุกำแพง/เข้าเป้าทันที
 local function TriggerMM2Shoot()
@@ -848,7 +858,7 @@ local function ToggleMiniShootUI(state)
             shootBtn.Font = Enum.Font.GothamBold
             shootBtn.TextSize = 11
             Instance.new("UICorner", shootBtn).CornerRadius = UDim.new(0, 6)
-            table.insert(allTextLabels, shootBtn)
+            table.insert(textLabelData, {Obj = shootBtn, BaseSize = 11})
 
             shootBtn.MouseButton1Click:Connect(function()
                 TriggerMM2Shoot()
