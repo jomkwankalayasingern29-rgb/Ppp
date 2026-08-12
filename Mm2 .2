@@ -1,4 +1,4 @@
--- Roblox Delta UI Script (MM2 Fixed Minimize & Opacity)
+-- Roblox Delta UI Script (MM2 with Player Tab: WalkSpeed, JumpPower, Noclip)
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -173,8 +173,9 @@ local function CreateTab(name)
     return Page
 end
 
--- หมวดหมู่ (UI, ESP, Auto Shoot)
+-- หมวดหมู่ (UI, ตัวละคร, ESP, Auto Shoot)
 local UIPage = CreateTab("UI")
+local PlayerPage = CreateTab("ตัวละคร")
 local ESPPage = CreateTab("ESP")
 local AutoShootPage = CreateTab("Auto Shoot")
 
@@ -271,7 +272,70 @@ CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 
     MainFrame.Position = UDim2.new(0.5, -newW/2, 0.5, -newH/2)
 end)
 
--- 8. หมวดหมู่ ESP: สวิตช์ภาษาไทย
+-- 8. หมวดหมู่ตัวละคร: วิ่งเร็ว, กระโดดสูง, ทะลุกำแพง (Noclip)
+CreateSlider(PlayerPage, "ความเร็วในการวิ่ง (WalkSpeed)", 16, 250, 16, "", function(val)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = val
+    end
+end)
+
+CreateSlider(PlayerPage, "ความสูงในการกระโดด (JumpPower)", 50, 300, 50, "", function(val)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.UseJumpPower = true
+        char.Humanoid.JumpPower = val
+    end
+end)
+
+-- ระบบเปิด-ปิด ทะลุกำแพง (Noclip)
+local noclipEnabled = false
+local NoclipFrame = Instance.new("Frame", PlayerPage)
+NoclipFrame.Size = UDim2.new(1, 0, 0, 45)
+NoclipFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+Instance.new("UICorner", NoclipFrame).CornerRadius = UDim.new(0, 6)
+
+local NoclipLabel = Instance.new("TextLabel", NoclipFrame)
+NoclipLabel.Size = UDim2.new(0, 200, 1, 0)
+NoclipLabel.Position = UDim2.new(0, 10, 0, 0)
+NoclipLabel.Text = "เปิดทะลุกำแพง (Noclip)"
+NoclipLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoclipLabel.Font = Enum.Font.Gotham
+NoclipLabel.TextSize = 12
+NoclipLabel.TextXAlignment = Enum.TextXAlignment.Left
+NoclipLabel.BackgroundTransparency = 1
+
+local NoclipBtn = Instance.new("TextButton", NoclipFrame)
+NoclipBtn.Size = UDim2.new(0, 80, 0, 26)
+NoclipBtn.Position = UDim2.new(1, -88, 0.5, -13)
+NoclipBtn.Font = Enum.Font.GothamBold
+NoclipBtn.TextSize = 11
+NoclipBtn.Text = "ปิด (OFF)"
+NoclipBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+NoclipBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+Instance.new("UICorner", NoclipBtn).CornerRadius = UDim.new(0, 5)
+
+NoclipBtn.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    NoclipBtn.Text = noclipEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    NoclipBtn.BackgroundColor3 = noclipEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(60, 60, 60)
+    NoclipBtn.TextColor3 = noclipEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+end)
+
+RunService.Stepped:Connect(function()
+    if noclipEnabled then
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+-- 9. หมวดหมู่ ESP: สวิตช์ภาษาไทย
 local espEnabled = false
 
 local SwitchFrame = Instance.new("Frame", ESPPage)
@@ -316,7 +380,7 @@ InfoText.TextYAlignment = Enum.TextYAlignment.Center
 InfoText.TextXAlignment = Enum.TextXAlignment.Left
 InfoText.BackgroundTransparency = 1
 
--- 9. ระบบ ESP ไฮไลต์ตัวละคร + แสดงชื่อบนหัว
+-- 10. ระบบ ESP ไฮไลต์ตัวละคร + แสดงชื่อบนหัว
 local espTextObjects = {}
 
 local function ScanTools(container)
@@ -418,7 +482,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 10. หมวดหมู่ Auto Shoot & ระบบปุ่มย่อยลอยจอ (ระบบ Instant Hit / เลี้ยวยิงอัตโนมัติ)
+-- 11. หมวดหมู่ Auto Shoot & ระบบปุ่มย่อยลอยจอ (ระบบ Instant Hit / เลี้ยวยิงอัตโนมัติ)
 local autoShootEnabled = false
 local miniShootGui = nil
 
@@ -559,7 +623,7 @@ ShootSwitchBtn.MouseButton1Click:Connect(function()
     ToggleMiniShootUI(autoShootEnabled)
 end)
 
--- 11. ระบบ Animation ย่อ/กาง UI เข้าหาไอคอน D
+-- 12. ระบบ Animation ย่อ/กาง UI เข้าหาไอคอน D
 local isOpen = false
 local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
