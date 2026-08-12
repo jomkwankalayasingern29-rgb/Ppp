@@ -1,4 +1,4 @@
--- Roblox Delta UI Script (MM2 with Soft Colors Dropdown Menu)
+-- Roblox Delta UI Script (MM2 Working Auto Shoot)
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -50,7 +50,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, baseWidth, 0, baseHeight)
 MainFrame.Position = UDim2.new(0.5, -baseWidth/2, 0.5, -baseHeight/2)
-MainFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 28) -- โทนสีเข้มสบายตา
+MainFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
 MainFrame.ClipsDescendants = true
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
@@ -290,9 +290,7 @@ CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 
     MainFrame.Position = UDim2.new(0.5, -newW/2, 0.5, -newH/2)
 end)
 
--- --- ฟังก์ชันเพิ่มเติมในหมวดหมู่ UI (สี UI, สีข้อความ, รูปภาพ Roblox ID 13 สีโทนพาสเทล/สบายตา รวมสีดำ) ---
-
--- รายการ 13 สี (ปรับโทนให้นุ่มนวล ไม่แสบตา และเพิ่มสีดำ)
+-- รายการ 13 สีโทนพาสเทล/สบายตา (รวมสีดำ)
 local colorList = {
     {Name = "1. สีดำ (Black)", Color = Color3.fromRGB(20, 20, 22)},
     {Name = "2. สีเทานุ่ม (Soft Gray)", Color = Color3.fromRGB(70, 70, 80)},
@@ -339,8 +337,6 @@ DropLay1.SortOrder = Enum.SortOrder.LayoutOrder
 DropLay1.Padding = UDim.new(0, 4)
 
 local themeOpen = false
-ThemeDropFrame.Size = UDim2.new(1, 0, 0, 45)
-
 ThemeDropBtn.MouseButton1Click:Connect(function()
     themeOpen = not themeOpen
     if themeOpen then
@@ -398,8 +394,6 @@ DropLay2.SortOrder = Enum.SortOrder.LayoutOrder
 DropLay2.Padding = UDim.new(0, 4)
 
 local textOpen = false
-TextDropFrame.Size = UDim2.new(1, 0, 0, 45)
-
 TextDropBtn.MouseButton1Click:Connect(function()
     textOpen = not textOpen
     if textOpen then
@@ -585,7 +579,6 @@ InfoText.TextXAlignment = Enum.TextXAlignment.Left
 InfoText.BackgroundTransparency = 1
 table.insert(allTextLabels, InfoText)
 
--- 10. ระบบ ESP ไฮไลต์ตัวละคร + แสดงชื่อบนหัว
 local espTextObjects = {}
 
 local function ScanTools(container)
@@ -650,15 +643,14 @@ RunService.RenderStepped:Connect(function()
                 local hasKnife = charKnife or packKnife
                 local hasGun = charGun or packGun
 
-                local color = Color3.fromRGB(80, 200, 100) -- เขียว (ปกติ)
+                local color = Color3.fromRGB(80, 200, 100)
 
                 if hasKnife then
-                    color = Color3.fromRGB(220, 80, 80) -- แดง (มีด)
+                    color = Color3.fromRGB(220, 80, 80)
                 elseif hasGun then
-                    color = Color3.fromRGB(80, 150, 220) -- ฟ้า (ปืน)
+                    color = Color3.fromRGB(80, 150, 220)
                 end
 
-                -- ไฮไลต์ตัวละคร (Highlight)
                 local highlight = character:FindFirstChild("ESPHighlight")
                 if not highlight then
                     highlight = Instance.new("Highlight")
@@ -670,7 +662,6 @@ RunService.RenderStepped:Connect(function()
                 highlight.FillTransparency = 0.5
                 highlight.OutlineTransparency = 0.2
 
-                -- แสดงชื่อผู้เล่นบนหัว
                 if onScreen then
                     local textObj = Drawing.new("Text")
                     textObj.Text = player.Name
@@ -687,7 +678,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 11. หมวดหมู่ Auto Shoot & ระบบปุ่มย่อยลอยจอ (ระบบ Instant Hit / เลี้ยวยิงอัตโนมัติ)
+-- 10. หมวดหมู่ Auto Shoot & ระบบปุ่มย่อยลอยจอ (ระบบ MM2 Fix ยิงออกจริง)
 local autoShootEnabled = false
 local miniShootGui = nil
 
@@ -718,31 +709,30 @@ ShootSwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
 Instance.new("UICorner", ShootSwitchBtn).CornerRadius = UDim.new(0, 5)
 table.insert(allTextLabels, ShootSwitchBtn)
 
--- ฟังก์ชันยิงพุ่งเป้าอัตโนมัติแบบทันที (Silent Aim / Instant Hit)
-local function TriggerInstantShoot()
+-- ฟังก์ชันยิงปืน MM2 ที่แก้ไขให้เรียกใช้ผ่าน Tool / Remote ทะลุกำแพง/เข้าเป้าทันที
+local function TriggerMM2Shoot()
     local myChar = LocalPlayer.Character
     if not myChar then return end
 
-    -- ค้นหาปืนในตัวหรือดึงมาจาก Backpack ทันที
-    local currentTool = myChar:FindFirstChildWhichIsA("Tool")
-    if not currentTool or not (string.find(string.lower(currentTool.Name), "gun") or currentTool:FindFirstChild("GunScript")) then
+    -- ค้นหาปืนในตัวละครหรือดึงมาจาก Backpack
+    local gunTool = myChar:FindFirstChild("Gun") or myChar:FindFirstChildWhichIsA("Tool")
+    if not gunTool or (not string.find(string.lower(gunTool.Name), "gun") and not gunTool:FindFirstChild("GunScript") and not gunTool:FindFirstChild("Shoot")) then
         for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
             if item:IsA("Tool") then
                 local name = string.lower(item.Name)
                 if string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or item:FindFirstChild("Gun") then
                     item.Parent = myChar
-                    currentTool = item
+                    gunTool = item
                     break
                 end
             end
         end
     end
 
-    if not currentTool then return end
+    if not gunTool then return end
 
+    -- ค้นหาตำแหน่งหัวของฆาตกร
     local targetHead = nil
-
-    -- ค้นหาตัวฆาตกรที่มีมีด
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= LocalPlayer and p.Character then
             local charKnife, _ = ScanTools(p.Character)
@@ -759,24 +749,34 @@ local function TriggerInstantShoot()
     end
 
     if targetHead then
-        -- ค้นหา RemoteEvent ของปืนในเกม MM2 เพื่อสั่งยิงไปที่พิกัดหัวของเป้าหมายทันทีโดยไม่ต้องเล็ง
-        local gunRemote = nil
-        for _, desc in pairs(currentTool:GetDescendants()) do
+        -- ค้นหา RemoteEvent ภายในปืนของ MM2
+        local remote = nil
+        for _, desc in pairs(gunTool:GetDescendants()) do
             if desc:IsA("RemoteEvent") then
                 local rName = string.lower(desc.Name)
-                if rName:find("shoot") or rName:find("gun") or rName:find("fire") or rName:find("hit") then
-                    gunRemote = desc
+                if rName:find("shoot") or rName:find("gun") or rName:find("fire") or rName:find("hit") or rName:find("create") then
+                    remote = desc
                     break
                 end
             end
         end
 
-        if gunRemote then
-            -- ส่งพิกัดตำแหน่งหัวเป้าหมายผ่าน Remote ไปยังเซิร์ฟเวอร์โดยตรง กระสุนจะพุ่งเข้าหาเป้าหมายทันที
-            gunRemote:FireServer(targetHead.Position)
+        if remote then
+            -- ส่งพิกัดเป้าหมายผ่าน RemoteEvent หลักของปืน MM2
+            remote:FireServer(targetHead.Position)
         else
-            -- ทางเลือกเสริม: บังคับยิงผ่าน Tool Activate
-            currentTool:Activate()
+            -- กรณีไม่เจอ Remote ให้จำลองการกดคลิกยิงผ่านเมาส์/Tool Activate
+            gunTool.Parent = myChar
+            if gunTool:FindFirstChild("Handle") then
+                local shootEvent = gunTool:FindFirstChildWhichIsA("RemoteEvent")
+                if shootEvent then
+                    shootEvent:FireServer(targetHead.Position)
+                else
+                    gunTool:Activate()
+                end
+            else
+                gunTool:Activate()
+            end
         end
     end
 end
@@ -811,7 +811,7 @@ local function ToggleMiniShootUI(state)
             table.insert(allTextLabels, shootBtn)
 
             shootBtn.MouseButton1Click:Connect(function()
-                TriggerInstantShoot()
+                TriggerMM2Shoot()
             end)
         end
         miniShootGui.Visible = true
@@ -831,7 +831,7 @@ ShootSwitchBtn.MouseButton1Click:Connect(function()
     ToggleMiniShootUI(autoShootEnabled)
 end)
 
--- 12. ระบบ Animation ย่อ/กาง UI เข้าหาไอคอน D
+-- 11. ระบบ Animation ย่อ/กาง UI เข้าหาไอคอน D
 local isOpen = false
 local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
