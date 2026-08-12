@@ -1,4 +1,4 @@
--- Roblox Delta UI Script (MM2 Instant Auto Shoot)
+-- Roblox Delta UI Script (MM2 Fixed Minimize & Opacity)
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -40,6 +40,7 @@ ToggleStroke.Thickness = 1
 local baseWidth = 500
 local baseHeight = 320
 local currentScale = 1 -- 100%
+local currentAlpha = 1 -- เก็บค่าความทึบปัจจุบัน (1 = ทึบ 100%)
 
 -- 3. หน้าต่างหลัก (MainFrame)
 local MainFrame = Instance.new("Frame")
@@ -52,6 +53,8 @@ MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
+MainFrame.BackgroundTransparency = 1 - currentAlpha
+
 local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(255, 255, 255)
 MainStroke.Thickness = 1.5
@@ -62,6 +65,7 @@ TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 35)
 TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 TopBar.BorderSizePixel = 0
+TopBar.BackgroundTransparency = 1 - currentAlpha
 
 local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 200, 1, 0)
@@ -106,6 +110,7 @@ Sidebar.Size = UDim2.new(0, 120, 1, -35)
 Sidebar.Position = UDim2.new(0, 0, 0, 35)
 Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Sidebar.BorderSizePixel = 0
+Sidebar.BackgroundTransparency = 1 - currentAlpha
 
 local SideLayout = Instance.new("UIListLayout", Sidebar)
 SideLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -250,8 +255,8 @@ end
 
 -- เพิ่ม Slider ในหมวดหมู่ UI: 1) ปรับความทึบ
 CreateSlider(UIPage, "ปรับความทึบของ UI", 1, 100, 100, "%", function(val)
-    local alpha = val / 100
-    local transparency = 1 - alpha
+    currentAlpha = val / 100
+    local transparency = 1 - currentAlpha
     MainFrame.BackgroundTransparency = transparency
     TopBar.BackgroundTransparency = transparency
     Sidebar.BackgroundTransparency = transparency
@@ -572,7 +577,7 @@ local function ToggleUI()
         TweenService:Create(MainFrame, tweenInfo, {
             Size = UDim2.new(0, targetW, 0, targetH),
             Position = UDim2.new(0.5, -targetW/2, 0.5, -targetH/2),
-            BackgroundTransparency = 0
+            BackgroundTransparency = 1 - currentAlpha
         }):Play()
     else
         local closeTween = TweenService:Create(MainFrame, tweenInfo, {
@@ -588,7 +593,6 @@ local function ToggleUI()
 end
 
 ToggleBtn.MouseButton1Click:Connect(ToggleUI)
-MinBtn.MinBtn = MinBtn -- ป้องกันตัวแปรตกหล่น
 MinBtn.MouseButton1Click:Connect(ToggleUI)
 
 -- ระบบลากหน้าต่างผ่าน TopBar
