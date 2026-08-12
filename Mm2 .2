@@ -1,4 +1,4 @@
--- Roblox Delta UI Script (MM2 Optimized Auto Shoot - Fixed)
+-- Roblox Delta UI Script (MM2 Optimized Auto Shoot - Fixed Final)
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -442,26 +442,31 @@ ShootSwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 ShootSwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
 Instance.new("UICorner", ShootSwitchBtn).CornerRadius = UDim.new(0, 5)
 
--- ฟังก์ชันยิงใส่คนมีมีดใน MM2 (แก้ไขส่วนสั่งยิงให้ทำงานได้จริงผ่าน Remote และ Tool:Activate())
+-- ฟังก์ชันยิงอัตโนมัติ (แก้ไขให้ยิงใน MM2 ได้จริง)
 local function TriggerAutoShoot()
     local myChar = LocalPlayer.Character
     if not myChar then return end
 
-    -- หาปืนในมือ หรือปืนในกระเป๋าแล้วสวมใส่
+    -- ค้นหาปืนในตัวหรือในกระเป๋าแล้วหยิบขึ้นมา
     local currentTool = myChar:FindFirstChildWhichIsA("Tool")
-    if not currentTool then
-        local backpackTool = LocalPlayer.Backpack:FindFirstChildWhichIsA("Tool")
-        if backpackTool then
-            backpackTool.Parent = myChar
-            currentTool = backpackTool
+    if not currentTool or (not string.find(string.lower(currentTool.Name), "gun") and not currentTool:FindFirstChild("GunScript")) then
+        for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
+            if item:IsA("Tool") then
+                local name = string.lower(item.Name)
+                if string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or item:FindFirstChild("Gun") then
+                    item.Parent = myChar
+                    currentTool = item
+                    break
+                end
+            end
         end
     end
 
-    if not currentTool then return end -- ไม่มีปืน
+    if not currentTool then return end -- หากไม่มีปืนจะไม่ทำงาน
 
     local targetHead = nil
 
-    -- ค้นหาคนที่มีมีดในแมพ
+    -- ค้นหาฆาตกร (คนที่ถือมีด) ในเซิร์ฟเวอร์
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= LocalPlayer and p.Character then
             local charKnife, _ = ScanTools(p.Character)
@@ -478,18 +483,23 @@ local function TriggerAutoShoot()
     end
 
     if targetHead then
-        -- ล็อคมุมกล้องไปที่หัวเป้าหมาย
+        -- ล็อคมุมกล้องไปที่หัวของฆาตกรทันที
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
-        if myChar:FindFirstChild("HumanoidRootPart") then
-            myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, Vector3.new(targetHead.Position.X, myChar.HumanoidRootPart.Position.Y, targetHead.Position.Z))
+        
+        -- ค้นหา RemoteEvent สำหรับยิงปืนของ MM2
+        local gunRemote = nil
+        for _, desc in pairs(currentTool:GetDescendants()) do
+            if desc:IsA("RemoteEvent") and (string.lower(desc.Name):find("shoot") or string.lower(desc.Name):find("gun") or string.lower(desc.Name):find("fire")) then
+                gunRemote = desc
+                break
+            end
         end
 
-        -- ส่งสัญญาณยิงผ่าน RemoteEvent ของ MM2
-        local gunRemote = currentTool:FindFirstChild("GunServer") or currentTool:FindFirstChild("Shoot") or currentTool:FindFirstChildWhichIsA("RemoteEvent", true)
-        if gunRemote and gunRemote:IsA("RemoteEvent") then
+        if gunRemote then
+            -- ส่งพิกัดยิงผ่าน RemoteEvent ของเกมโดยตรง
             gunRemote:FireServer(targetHead.Position)
         else
-            -- สำรองด้วยการกระตุ้นการใช้งาน Tool ปกติ
+            -- ใช้วิธีจำลองกระตุ้นการทำงานของ Tool
             currentTool:Activate()
         end
     end
