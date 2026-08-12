@@ -1,0 +1,598 @@
+-- Roblox Delta UI Script (MM2 Optimized Auto Shoot - Fixed)
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+-- 1. ทำความสะอาด UI เก่า ป้องกันการรันซ้อน
+if CoreGui:FindFirstChild("DeltaCustomUI") then 
+    CoreGui.DeltaCustomUI:Destroy() 
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DeltaCustomUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+-- 2. ปุ่มไอคอนตัว "D" สี่เหลี่ยมมน ขนาด 40x40
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "ToggleIcon"
+ToggleBtn.Size = UDim2.new(0, 40, 0, 40)
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleBtn.Text = "D"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 20
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+ToggleBtn.Parent = ScreenGui
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 8)
+
+local ToggleStroke = Instance.new("UIStroke", ToggleBtn)
+ToggleStroke.Color = Color3.fromRGB(80, 80, 80)
+ToggleStroke.Thickness = 1
+
+-- ขนาดมาตรฐานของ MainFrame (Base Width = 500, Base Height = 320)
+local baseWidth = 500
+local baseHeight = 320
+local currentScale = 1 -- 100%
+
+-- 3. หน้าต่างหลัก (MainFrame)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, baseWidth, 0, baseHeight)
+MainFrame.Position = UDim2.new(0.5, -baseWidth/2, 0.5, -baseHeight/2)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.ClipsDescendants = true
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Color = Color3.fromRGB(255, 255, 255)
+MainStroke.Thickness = 1.5
+
+-- 4. TopBar ด้านบน
+local TopBar = Instance.new("Frame", MainFrame)
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+TopBar.BorderSizePixel = 0
+
+local TitleText = Instance.new("TextLabel", TopBar)
+TitleText.Size = UDim2.new(0, 200, 1, 0)
+TitleText.Position = UDim2.new(0, 12, 0, 0)
+TitleText.Text = "DELTA HUB"
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.Font = Enum.Font.GothamBold
+TitleText.TextSize = 14
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.BackgroundTransparency = 1
+
+-- ปุ่มย่อ (-)
+local MinBtn = Instance.new("TextButton", TopBar)
+MinBtn.Size = UDim2.new(0, 28, 0, 28)
+MinBtn.Position = UDim2.new(1, -65, 0, 3.5)
+MinBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MinBtn.Text = "-"
+MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.TextSize = 16
+Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+
+-- ปุ่มปิด (X)
+local CloseBtn = Instance.new("TextButton", TopBar)
+CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+CloseBtn.Position = UDim2.new(1, -33, 0, 3.5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 14
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- 5. แถบหมวดหมู่ซ้ายมือ (Sidebar)
+local Sidebar = Instance.new("Frame", MainFrame)
+Sidebar.Name = "Sidebar"
+Sidebar.Size = UDim2.new(0, 120, 1, -35)
+Sidebar.Position = UDim2.new(0, 0, 0, 35)
+Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Sidebar.BorderSizePixel = 0
+
+local SideLayout = Instance.new("UIListLayout", Sidebar)
+SideLayout.SortOrder = Enum.SortOrder.LayoutOrder
+SideLayout.Padding = UDim.new(0, 6)
+
+local SidePadding = Instance.new("UIPadding", Sidebar)
+SidePadding.PaddingTop = UDim.new(0, 10)
+SidePadding.PaddingLeft = UDim.new(0, 8)
+SidePadding.PaddingRight = UDim.new(0, 8)
+
+-- 6. พื้นที่ฟังชั่นขวามือ (Content Area)
+local ContentArea = Instance.new("Frame", MainFrame)
+ContentArea.Name = "ContentArea"
+ContentArea.Size = UDim2.new(1, -130, 1, -45)
+ContentArea.Position = UDim2.new(0, 125, 0, 40)
+ContentArea.BackgroundTransparency = 1
+
+local tabs = {}
+
+local function CreateTab(name)
+    local TabBtn = Instance.new("TextButton", Sidebar)
+    TabBtn.Size = UDim2.new(1, 0, 0, 32)
+    TabBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    TabBtn.Text = name
+    TabBtn.TextColor3 = Color3.fromRGB(160, 160, 160)
+    TabBtn.Font = Enum.Font.GothamMedium
+    TabBtn.TextSize = 13
+    Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
+
+    local Page = Instance.new("ScrollingFrame", ContentArea)
+    Page.Name = name .. "Page"
+    Page.Size = UDim2.new(1, 0, 1, 0)
+    Page.BackgroundTransparency = 1
+    Page.Visible = false
+    Page.ScrollBarThickness = 3
+    Page.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    Page.BorderSizePixel = 0
+
+    local PageLayout = Instance.new("UIListLayout", Page)
+    PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    PageLayout.Padding = UDim.new(0, 8)
+
+    local PagePadding = Instance.new("UIPadding", Page)
+    PagePadding.PaddingRight = UDim.new(0, 6)
+
+    tabs[name] = {Btn = TabBtn, Page = Page}
+
+    TabBtn.MouseButton1Click:Connect(function()
+        for _, t in pairs(tabs) do
+            t.Page.Visible = false
+            t.Btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+            t.Btn.TextColor3 = Color3.fromRGB(160, 160, 160)
+        end
+        Page.Visible = true
+        TabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        TabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+
+    return Page
+end
+
+-- หมวดหมู่ (UI, ESP, Auto Shoot)
+local UIPage = CreateTab("UI")
+local ESPPage = CreateTab("ESP")
+local AutoShootPage = CreateTab("Auto Shoot")
+
+-- เปิดหมวดหมู่ UI เป็นหน้าแรก
+tabs["UI"].Page.Visible = true
+tabs["UI"].Btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+tabs["UI"].Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- 7. ระบบสร้าง Slider คอมโพเนนต์
+local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffix, callback)
+    local SliderFrame = Instance.new("Frame", parent)
+    SliderFrame.Size = UDim2.new(1, 0, 0, 50)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+    Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
+
+    local Label = Instance.new("TextLabel", SliderFrame)
+    Label.Size = UDim2.new(0.6, 0, 0, 20)
+    Label.Position = UDim2.new(0, 10, 0, 6)
+    Label.Text = titleText
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 12
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.BackgroundTransparency = 1
+
+    local ValueLabel = Instance.new("TextLabel", SliderFrame)
+    ValueLabel.Size = UDim2.new(0.3, 0, 0, 20)
+    ValueLabel.Position = UDim2.new(0.67, 0, 0, 6)
+    ValueLabel.Text = tostring(defaultVal) .. suffix
+    ValueLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    ValueLabel.Font = Enum.Font.GothamBold
+    ValueLabel.TextSize = 12
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    ValueLabel.BackgroundTransparency = 1
+
+    local SliderBar = Instance.new("Frame", SliderFrame)
+    SliderBar.Size = UDim2.new(1, -20, 0, 8)
+    SliderBar.Position = UDim2.new(0, 10, 0, 32)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    SliderBar.BorderSizePixel = 0
+    Instance.new("UICorner", SliderBar).CornerRadius = UDim.new(1, 0)
+
+    local SliderFill = Instance.new("Frame", SliderBar)
+    SliderFill.Size = UDim2.new((defaultVal - minVal)/(maxVal - minVal), 0, 1, 0)
+    SliderFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SliderFill.BorderSizePixel = 0
+    Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
+
+    local isDragging = false
+
+    local function updateSlider(input)
+        local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+        local val = math.floor(minVal + (maxVal - minVal) * pos)
+        SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+        ValueLabel.Text = tostring(val) .. suffix
+        callback(val)
+    end
+
+    SliderBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = true
+            updateSlider(input)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateSlider(input)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = false
+        end
+    end)
+end
+
+-- เพิ่ม Slider ในหมวดหมู่ UI: 1) ปรับความทึบ
+CreateSlider(UIPage, "ปรับความทึบของ UI", 1, 100, 100, "%", function(val)
+    local alpha = val / 100
+    local transparency = 1 - alpha
+    MainFrame.BackgroundTransparency = transparency
+    TopBar.BackgroundTransparency = transparency
+    Sidebar.BackgroundTransparency = transparency
+end)
+
+-- เพิ่ม Slider ในหมวดหมู่ UI: 2) ปรับขนาดความใหญ่ UI (50% - 150%)
+CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 150, 100, "%", function(val)
+    currentScale = val / 100
+    local newW = baseWidth * currentScale
+    local newH = baseHeight * currentScale
+    MainFrame.Size = UDim2.new(0, newW, 0, newH)
+    MainFrame.Position = UDim2.new(0.5, -newW/2, 0.5, -newH/2)
+end)
+
+-- 8. หมวดหมู่ ESP: สวิตช์ภาษาไทย
+local espEnabled = false
+
+local SwitchFrame = Instance.new("Frame", ESPPage)
+SwitchFrame.Size = UDim2.new(1, 0, 0, 45)
+SwitchFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+Instance.new("UICorner", SwitchFrame).CornerRadius = UDim.new(0, 6)
+
+local SwitchLabel = Instance.new("TextLabel", SwitchFrame)
+SwitchLabel.Size = UDim2.new(0, 200, 1, 0)
+SwitchLabel.Position = UDim2.new(0, 10, 0, 0)
+SwitchLabel.Text = "เปิดใช้งาน ESP ไฮไลท์ตัวละคร"
+SwitchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+SwitchLabel.Font = Enum.Font.Gotham
+SwitchLabel.TextSize = 12
+SwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
+SwitchLabel.BackgroundTransparency = 1
+
+local SwitchBtn = Instance.new("TextButton", SwitchFrame)
+SwitchBtn.Size = UDim2.new(0, 80, 0, 26)
+SwitchBtn.Position = UDim2.new(1, -88, 0.5, -13)
+SwitchBtn.Font = Enum.Font.GothamBold
+SwitchBtn.TextSize = 11
+SwitchBtn.Text = "ปิด (OFF)"
+SwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+Instance.new("UICorner", SwitchBtn).CornerRadius = UDim.new(0, 5)
+
+-- กล่องอธิบายสี ESP
+local InfoBox = Instance.new("Frame", ESPPage)
+InfoBox.Size = UDim2.new(1, 0, 0, 75)
+InfoBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+Instance.new("UICorner", InfoBox).CornerRadius = UDim.new(0, 6)
+
+local InfoText = Instance.new("TextLabel", InfoBox)
+InfoText.Size = UDim2.new(1, -16, 1, 0)
+InfoText.Position = UDim2.new(0, 10, 0, 0)
+InfoText.Text = "คำอธิบายสีไฮไลท์และชื่อ:\n• สีแดง = ถือ/มีมีดในตัว (Knife)\n• สีฟ้า = ถือ/มีปืนในตัว (Gun)\n• สีเขียว = คนปกติ"
+InfoText.TextColor3 = Color3.fromRGB(180, 180, 180)
+InfoText.Font = Enum.Font.Gotham
+InfoText.TextSize = 11
+InfoText.TextYAlignment = Enum.TextYAlignment.Center
+InfoText.TextXAlignment = Enum.TextXAlignment.Left
+InfoText.BackgroundTransparency = 1
+
+-- 9. ระบบ ESP ไฮไลต์ตัวละคร + แสดงชื่อบนหัว
+local espTextObjects = {}
+
+local function ScanTools(container)
+    local foundKnife, foundGun = false, false
+    if container then
+        for _, item in pairs(container:GetChildren()) do
+            if item:IsA("Tool") then
+                local name = string.lower(item.Name)
+                if string.find(name, "knife") or string.find(name, "dagger") or string.find(name, "blade") or string.find(name, "sword") or item:FindFirstChild("Knife") then
+                    foundKnife = true
+                elseif string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or string.find(name, "rifle") or string.find(name, "shotgun") or item:FindFirstChild("Gun") then
+                    foundGun = true
+                end
+            end
+        end
+    end
+    return foundKnife, foundGun
+end
+
+local function ClearAllHighlights()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character then
+            local highlight = player.Character:FindFirstChild("ESPHighlight")
+            if highlight then
+                highlight:Destroy()
+            end
+        end
+    end
+end
+
+SwitchBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    SwitchBtn.Text = espEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    SwitchBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(60, 60, 60)
+    SwitchBtn.TextColor3 = espEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+    
+    if not espEnabled then
+        ClearAllHighlights()
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    for _, v in pairs(espTextObjects) do 
+        pcall(function() v:Remove() end) 
+    end
+    espTextObjects = {}
+
+    if not espEnabled then return end
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local character = player.Character
+            local head = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
+            
+            if head then
+                local headWorldPos = head.Position + Vector3.new(0, 1.8, 0)
+                local pos, onScreen = Camera:WorldToViewportPoint(headWorldPos)
+
+                local charKnife, charGun = ScanTools(character)
+                local packKnife, packGun = ScanTools(player:FindFirstChild("Backpack"))
+
+                local hasKnife = charKnife or packKnife
+                local hasGun = charGun or packGun
+
+                local color = Color3.fromRGB(50, 255, 50) -- เขียว (ปกติ)
+
+                if hasKnife then
+                    color = Color3.fromRGB(255, 50, 50) -- แดง (มีด)
+                elseif hasGun then
+                    color = Color3.fromRGB(50, 160, 255) -- ฟ้า (ปืน)
+                end
+
+                -- ไฮไลต์ตัวละคร (Highlight)
+                local highlight = character:FindFirstChild("ESPHighlight")
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "ESPHighlight"
+                    highlight.Parent = character
+                end
+                highlight.FillColor = color
+                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                highlight.FillTransparency = 0.5
+                highlight.OutlineTransparency = 0.2
+
+                -- แสดงชื่อผู้เล่นบนหัว
+                if onScreen then
+                    local textObj = Drawing.new("Text")
+                    textObj.Text = player.Name
+                    textObj.Color = color
+                    textObj.Position = Vector2.new(pos.X, pos.Y)
+                    textObj.Center = true
+                    textObj.Outline = true
+                    textObj.Size = 15
+                    textObj.Visible = true
+                    table.insert(espTextObjects, textObj)
+                end
+            end
+        end
+    end
+end)
+
+-- 10. หมวดหมู่ Auto Shoot & ระบบปุ่มย่อยลอยจอ (รองรับ MM2)
+local autoShootEnabled = false
+local miniShootGui = nil
+
+local ShootSwitchFrame = Instance.new("Frame", AutoShootPage)
+ShootSwitchFrame.Size = UDim2.new(1, 0, 0, 45)
+ShootSwitchFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+Instance.new("UICorner", ShootSwitchFrame).CornerRadius = UDim.new(0, 6)
+
+local ShootSwitchLabel = Instance.new("TextLabel", ShootSwitchFrame)
+ShootSwitchLabel.Size = UDim2.new(0, 200, 1, 0)
+ShootSwitchLabel.Position = UDim2.new(0, 10, 0, 0)
+ShootSwitchLabel.Text = "ยิงอัตโนมัติ (MM2)"
+ShootSwitchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ShootSwitchLabel.Font = Enum.Font.Gotham
+ShootSwitchLabel.TextSize = 12
+ShootSwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
+ShootSwitchLabel.BackgroundTransparency = 1
+
+local ShootSwitchBtn = Instance.new("TextButton", ShootSwitchFrame)
+ShootSwitchBtn.Size = UDim2.new(0, 80, 0, 26)
+ShootSwitchBtn.Position = UDim2.new(1, -88, 0.5, -13)
+ShootSwitchBtn.Font = Enum.Font.GothamBold
+ShootSwitchBtn.TextSize = 11
+ShootSwitchBtn.Text = "ปิด (OFF)"
+ShootSwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ShootSwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+Instance.new("UICorner", ShootSwitchBtn).CornerRadius = UDim.new(0, 5)
+
+-- ฟังก์ชันยิงใส่คนมีมีดใน MM2 (แก้ไขส่วนสั่งยิงให้ทำงานได้จริงผ่าน Remote และ Tool:Activate())
+local function TriggerAutoShoot()
+    local myChar = LocalPlayer.Character
+    if not myChar then return end
+
+    -- หาปืนในมือ หรือปืนในกระเป๋าแล้วสวมใส่
+    local currentTool = myChar:FindFirstChildWhichIsA("Tool")
+    if not currentTool then
+        local backpackTool = LocalPlayer.Backpack:FindFirstChildWhichIsA("Tool")
+        if backpackTool then
+            backpackTool.Parent = myChar
+            currentTool = backpackTool
+        end
+    end
+
+    if not currentTool then return end -- ไม่มีปืน
+
+    local targetHead = nil
+
+    -- ค้นหาคนที่มีมีดในแมพ
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local charKnife, _ = ScanTools(p.Character)
+            local packKnife, _ = ScanTools(p:FindFirstChild("Backpack"))
+            
+            if charKnife or packKnife then
+                local head = p.Character:FindFirstChild("Head") or p.Character:FindFirstChild("HumanoidRootPart")
+                if head then
+                    targetHead = head
+                    break
+                end
+            end
+        end
+    end
+
+    if targetHead then
+        -- ล็อคมุมกล้องไปที่หัวเป้าหมาย
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+        if myChar:FindFirstChild("HumanoidRootPart") then
+            myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, Vector3.new(targetHead.Position.X, myChar.HumanoidRootPart.Position.Y, targetHead.Position.Z))
+        end
+
+        -- ส่งสัญญาณยิงผ่าน RemoteEvent ของ MM2
+        local gunRemote = currentTool:FindFirstChild("GunServer") or currentTool:FindFirstChild("Shoot") or currentTool:FindFirstChildWhichIsA("RemoteEvent", true)
+        if gunRemote and gunRemote:IsA("RemoteEvent") then
+            gunRemote:FireServer(targetHead.Position)
+        else
+            -- สำรองด้วยการกระตุ้นการใช้งาน Tool ปกติ
+            currentTool:Activate()
+        end
+    end
+end
+
+-- สร้าง/ทำลาย UI ปุ่มยิงอันเล็ก
+local function ToggleMiniShootUI(state)
+    if state then
+        if not miniShootGui then
+            miniShootGui = Instance.new("Frame")
+            miniShootGui.Name = "MiniShootUI"
+            miniShootGui.Size = UDim2.new(0, 110, 0, 50)
+            miniShootGui.Position = UDim2.new(0.8, 0, 0.5, -25)
+            miniShootGui.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            miniShootGui.Active = true
+            miniShootGui.Draggable = true
+            miniShootGui.Parent = ScreenGui
+            Instance.new("UICorner", miniShootGui).CornerRadius = UDim.new(0, 8)
+
+            local stroke = Instance.new("UIStroke", miniShootGui)
+            stroke.Color = Color3.fromRGB(255, 50, 50)
+            stroke.Thickness = 1.5
+
+            local shootBtn = Instance.new("TextButton", miniShootGui)
+            shootBtn.Size = UDim2.new(1, -10, 1, -10)
+            shootBtn.Position = UDim2.new(0, 5, 0, 5)
+            shootBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+            shootBtn.Text = "ยิง (SHOOT)"
+            shootBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            shootBtn.Font = Enum.Font.GothamBold
+            shootBtn.TextSize = 12
+            Instance.new("UICorner", shootBtn).CornerRadius = UDim.new(0, 6)
+
+            shootBtn.MouseButton1Click:Connect(function()
+                TriggerAutoShoot()
+            end)
+        end
+        miniShootGui.Visible = true
+    else
+        if miniShootGui then
+            miniShootGui.Visible = false
+        end
+    end
+end
+
+ShootSwitchBtn.MouseButton1Click:Connect(function()
+    autoShootEnabled = not autoShootEnabled
+    ShootSwitchBtn.Text = autoShootEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    ShootSwitchBtn.BackgroundColor3 = autoShootEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(60, 60, 60)
+    ShootSwitchBtn.TextColor3 = autoShootEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+    
+    ToggleMiniShootUI(autoShootEnabled)
+end)
+
+-- 11. ระบบ Animation ย่อ/กาง UI เข้าหาไอคอน D
+local isOpen = false
+local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+local function ToggleUI()
+    isOpen = not isOpen
+    if isOpen then
+        MainFrame.Visible = true
+        MainFrame.Size = UDim2.new(0, 40, 0, 40)
+        MainFrame.Position = ToggleBtn.Position
+        MainFrame.BackgroundTransparency = 1
+        
+        local targetW = baseWidth * currentScale
+        local targetH = baseHeight * currentScale
+        
+        TweenService:Create(MainFrame, tweenInfo, {
+            Size = UDim2.new(0, targetW, 0, targetH),
+            Position = UDim2.new(0.5, -targetW/2, 0.5, -targetH/2),
+            BackgroundTransparency = 0
+        }):Play()
+    else
+        local closeTween = TweenService:Create(MainFrame, tweenInfo, {
+            Size = UDim2.new(0, 40, 0, 40),
+            Position = ToggleBtn.Position,
+            BackgroundTransparency = 1
+        })
+        closeTween:Play()
+        closeTween.Completed:Connect(function()
+            if not isOpen then MainFrame.Visible = false end
+        end)
+    end
+end
+
+ToggleBtn.MouseButton1Click:Connect(ToggleUI)
+MinBtn.MouseButton1Click:Connect(ToggleUI)
+
+-- ระบบลากหน้าต่างผ่าน TopBar
+local Dragging, DragStart, StartPos
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        Dragging = true; DragStart = input.Position; StartPos = MainFrame.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - DragStart
+        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + delta.X, StartPos.Y.Scale, StartPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then Dragging = false end
+end)
