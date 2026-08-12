@@ -1,4 +1,4 @@
--- Roblox Delta UI Script (MM2 with Auto Text Resizing & Scale)
+-- Roblox Delta UI Script (MM2 with Fixed Roblox Image ID Background)
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -58,13 +58,13 @@ Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
 MainFrame.BackgroundTransparency = 1 - currentAlpha
 
--- ภาพพื้นหลังของ UI (BackgroundImage)
+-- ภาพพื้นหลังของ UI (BackgroundImage แก้ไขให้รองรับการแสดงผลภาพที่ถูกต้อง)
 local BgImage = Instance.new("ImageLabel", MainFrame)
 BgImage.Name = "BackgroundImage"
 BgImage.Size = UDim2.new(1, 0, 1, 0)
 BgImage.BackgroundTransparency = 1
 BgImage.Image = ""
-BgImage.ScaleType = Enum.ScaleType.Slice
+BgImage.ScaleType = Enum.ScaleType.Stretch
 BgImage.ZIndex = 0
 
 local MainStroke = Instance.new("UIStroke", MainFrame)
@@ -290,7 +290,6 @@ CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 
     MainFrame.Size = UDim2.new(0, newW, 0, newH)
     MainFrame.Position = UDim2.new(0.5, -newW/2, 0.5, -newH/2)
 
-    -- ปรับขนาดตัวหนังสือทุกตัวตามสเกลเปอร์เซ็นต์
     for _, item in ipairs(textLabelData) do
         if item.Obj and item.Obj.Parent then
             item.Obj.TextSize = math.clamp(math.floor(item.BaseSize * currentScale), 8, 30)
@@ -433,7 +432,7 @@ for _, item in ipairs(colorList) do
     end)
 end
 
--- 3. ฟังก์ชันใส่ ID รูปภาพ Roblox พื้นหลัง UI
+-- 3. ฟังก์ชันใส่ ID รูปภาพ Roblox พื้นหลัง UI (แก้ไขระบบแปลง ID อัตโนมัติให้ภาพขึ้น)
 local BgIdFrame = Instance.new("Frame", UIPage)
 BgIdFrame.Size = UDim2.new(1, 0, 0, 50)
 BgIdFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
@@ -468,8 +467,10 @@ BgIdInput.FocusLost:Connect(function(enterPressed)
         if textId == "" then
             BgImage.Image = ""
         else
-            if tonumber(textId) then
-                BgImage.Image = "rbxassetid://" .. textId
+            -- ตรวจสอบและแปลงเลขไอดีเป็นรูปแบบ rbxassetid:// ทันทีเมื่อกด Enter
+            local cleanId = textId:match("%d+")
+            if cleanId then
+                BgImage.Image = "rbxassetid://" .. cleanId
             else
                 BgImage.Image = textId
             end
