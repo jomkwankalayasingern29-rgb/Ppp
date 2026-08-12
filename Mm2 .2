@@ -1,4 +1,4 @@
--- Roblox Delta UI Script (MM2 Optimized Auto Shoot - Fixed Final)
+-- Roblox Delta UI Script (MM2 Instant Auto Shoot)
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -413,7 +413,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 10. หมวดหมู่ Auto Shoot & ระบบปุ่มย่อยลอยจอ (รองรับ MM2)
+-- 10. หมวดหมู่ Auto Shoot & ระบบปุ่มย่อยลอยจอ (ระบบ Instant Hit / เลี้ยวยิงอัตโนมัติ)
 local autoShootEnabled = false
 local miniShootGui = nil
 
@@ -425,7 +425,7 @@ Instance.new("UICorner", ShootSwitchFrame).CornerRadius = UDim.new(0, 6)
 local ShootSwitchLabel = Instance.new("TextLabel", ShootSwitchFrame)
 ShootSwitchLabel.Size = UDim2.new(0, 200, 1, 0)
 ShootSwitchLabel.Position = UDim2.new(0, 10, 0, 0)
-ShootSwitchLabel.Text = "ยิงอัตโนมัติ (MM2)"
+ShootSwitchLabel.Text = "ยิงอัตโนมัติแบบทันที (MM2)"
 ShootSwitchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 ShootSwitchLabel.Font = Enum.Font.Gotham
 ShootSwitchLabel.TextSize = 12
@@ -442,14 +442,14 @@ ShootSwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 ShootSwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
 Instance.new("UICorner", ShootSwitchBtn).CornerRadius = UDim.new(0, 5)
 
--- ฟังก์ชันยิงอัตโนมัติ (แก้ไขให้ยิงใน MM2 ได้จริง)
-local function TriggerAutoShoot()
+-- ฟังก์ชันยิงพุ่งเป้าอัตโนมัติแบบทันที (Silent Aim / Instant Hit)
+local function TriggerInstantShoot()
     local myChar = LocalPlayer.Character
     if not myChar then return end
 
-    -- ค้นหาปืนในตัวหรือในกระเป๋าแล้วหยิบขึ้นมา
+    -- ค้นหาปืนในตัวหรือดึงมาจาก Backpack ทันที
     local currentTool = myChar:FindFirstChildWhichIsA("Tool")
-    if not currentTool or (not string.find(string.lower(currentTool.Name), "gun") and not currentTool:FindFirstChild("GunScript")) then
+    if not currentTool or not (string.find(string.lower(currentTool.Name), "gun") or currentTool:FindFirstChild("GunScript")) then
         for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
             if item:IsA("Tool") then
                 local name = string.lower(item.Name)
@@ -462,11 +462,11 @@ local function TriggerAutoShoot()
         end
     end
 
-    if not currentTool then return end -- หากไม่มีปืนจะไม่ทำงาน
+    if not currentTool then return end
 
     local targetHead = nil
 
-    -- ค้นหาฆาตกร (คนที่ถือมีด) ในเซิร์ฟเวอร์
+    -- ค้นหาตัวฆาตกรที่มีมีด
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= LocalPlayer and p.Character then
             local charKnife, _ = ScanTools(p.Character)
@@ -483,23 +483,23 @@ local function TriggerAutoShoot()
     end
 
     if targetHead then
-        -- ล็อคมุมกล้องไปที่หัวของฆาตกรทันที
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
-        
-        -- ค้นหา RemoteEvent สำหรับยิงปืนของ MM2
+        -- ค้นหา RemoteEvent ของปืนในเกม MM2 เพื่อสั่งยิงไปที่พิกัดหัวของเป้าหมายทันทีโดยไม่ต้องเล็ง
         local gunRemote = nil
         for _, desc in pairs(currentTool:GetDescendants()) do
-            if desc:IsA("RemoteEvent") and (string.lower(desc.Name):find("shoot") or string.lower(desc.Name):find("gun") or string.lower(desc.Name):find("fire")) then
-                gunRemote = desc
-                break
+            if desc:IsA("RemoteEvent") then
+                local rName = string.lower(desc.Name)
+                if rName:find("shoot") or rName:find("gun") or rName:find("fire") or rName:find("hit") then
+                    gunRemote = desc
+                    break
+                end
             end
         end
 
         if gunRemote then
-            -- ส่งพิกัดยิงผ่าน RemoteEvent ของเกมโดยตรง
+            -- ส่งพิกัดตำแหน่งหัวเป้าหมายผ่าน Remote ไปยังเซิร์ฟเวอร์โดยตรง กระสุนจะพุ่งเข้าหาเป้าหมายทันที
             gunRemote:FireServer(targetHead.Position)
         else
-            -- ใช้วิธีจำลองกระตุ้นการทำงานของ Tool
+            -- ทางเลือกเสริม: บังคับยิงผ่าน Tool Activate
             currentTool:Activate()
         end
     end
@@ -527,14 +527,14 @@ local function ToggleMiniShootUI(state)
             shootBtn.Size = UDim2.new(1, -10, 1, -10)
             shootBtn.Position = UDim2.new(0, 5, 0, 5)
             shootBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
-            shootBtn.Text = "ยิง (SHOOT)"
+            shootBtn.Text = "ยิงทันที! (INSTANT)"
             shootBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
             shootBtn.Font = Enum.Font.GothamBold
-            shootBtn.TextSize = 12
+            shootBtn.TextSize = 11
             Instance.new("UICorner", shootBtn).CornerRadius = UDim.new(0, 6)
 
             shootBtn.MouseButton1Click:Connect(function()
-                TriggerAutoShoot()
+                TriggerInstantShoot()
             end)
         end
         miniShootGui.Visible = true
@@ -588,6 +588,7 @@ local function ToggleUI()
 end
 
 ToggleBtn.MouseButton1Click:Connect(ToggleUI)
+MinBtn.MinBtn = MinBtn -- ป้องกันตัวแปรตกหล่น
 MinBtn.MouseButton1Click:Connect(ToggleUI)
 
 -- ระบบลากหน้าต่างผ่าน TopBar
