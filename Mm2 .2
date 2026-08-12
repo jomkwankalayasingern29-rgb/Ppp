@@ -1,4 +1,4 @@
--- Roblox Delta UI Script (MM2 with Theme Color, Text Color & Background Image)
+-- Roblox Delta UI Script (MM2 with Soft Colors Dropdown Menu)
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -50,7 +50,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, baseWidth, 0, baseHeight)
 MainFrame.Position = UDim2.new(0.5, -baseWidth/2, 0.5, -baseHeight/2)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 28) -- โทนสีเข้มสบายตา
 MainFrame.ClipsDescendants = true
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
@@ -68,14 +68,14 @@ BgImage.ScaleType = Enum.ScaleType.Slice
 BgImage.ZIndex = 0
 
 local MainStroke = Instance.new("UIStroke", MainFrame)
-MainStroke.Color = Color3.fromRGB(255, 255, 255)
+MainStroke.Color = Color3.fromRGB(60, 60, 70)
 MainStroke.Thickness = 1.5
 
 -- 4. TopBar ด้านบน
 local TopBar = Instance.new("Frame", MainFrame)
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 35)
-TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+TopBar.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
 TopBar.BorderSizePixel = 0
 TopBar.BackgroundTransparency = 1 - currentAlpha
 
@@ -83,7 +83,7 @@ local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 200, 1, 0)
 TitleText.Position = UDim2.new(0, 12, 0, 0)
 TitleText.Text = "DELTA HUB"
-TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.TextColor3 = Color3.fromRGB(220, 220, 220)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 14
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
@@ -94,9 +94,9 @@ table.insert(allTextLabels, TitleText)
 local MinBtn = Instance.new("TextButton", TopBar)
 MinBtn.Size = UDim2.new(0, 28, 0, 28)
 MinBtn.Position = UDim2.new(1, -65, 0, 3.5)
-MinBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MinBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
 MinBtn.Text = "-"
-MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
 MinBtn.Font = Enum.Font.GothamBold
 MinBtn.TextSize = 16
 Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
@@ -123,7 +123,7 @@ local Sidebar = Instance.new("Frame", MainFrame)
 Sidebar.Name = "Sidebar"
 Sidebar.Size = UDim2.new(0, 120, 1, -35)
 Sidebar.Position = UDim2.new(0, 0, 0, 35)
-Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
 Sidebar.BorderSizePixel = 0
 Sidebar.BackgroundTransparency = 1 - currentAlpha
 
@@ -148,9 +148,9 @@ local tabs = {}
 local function CreateTab(name)
     local TabBtn = Instance.new("TextButton", Sidebar)
     TabBtn.Size = UDim2.new(1, 0, 0, 32)
-    TabBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
     TabBtn.Text = name
-    TabBtn.TextColor3 = Color3.fromRGB(160, 160, 160)
+    TabBtn.TextColor3 = Color3.fromRGB(170, 170, 180)
     TabBtn.Font = Enum.Font.GothamMedium
     TabBtn.TextSize = 13
     Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
@@ -178,12 +178,12 @@ local function CreateTab(name)
     TabBtn.MouseButton1Click:Connect(function()
         for _, t in pairs(tabs) do
             t.Page.Visible = false
-            t.Btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-            t.Btn.TextColor3 = Color3.fromRGB(160, 160, 160)
+            t.Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+            t.Btn.TextColor3 = Color3.fromRGB(170, 170, 180)
         end
         Page.Visible = true
-        TabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-        TabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TabBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+        TabBtn.TextColor3 = Color3.fromRGB(240, 240, 255)
     end)
 
     return Page
@@ -197,21 +197,21 @@ local AutoShootPage = CreateTab("Auto Shoot")
 
 -- เปิดหมวดหมู่ UI เป็นหน้าแรก
 tabs["UI"].Page.Visible = true
-tabs["UI"].Btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-tabs["UI"].Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+tabs["UI"].Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+tabs["UI"].Btn.TextColor3 = Color3.fromRGB(240, 240, 255)
 
 -- 7. ระบบสร้าง Slider คอมโพเนนต์
 local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffix, callback)
     local SliderFrame = Instance.new("Frame", parent)
     SliderFrame.Size = UDim2.new(1, 0, 0, 50)
-    SliderFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
     Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
 
     local Label = Instance.new("TextLabel", SliderFrame)
     Label.Size = UDim2.new(0.6, 0, 0, 20)
     Label.Position = UDim2.new(0, 10, 0, 6)
     Label.Text = titleText
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.TextColor3 = Color3.fromRGB(220, 220, 220)
     Label.Font = Enum.Font.Gotham
     Label.TextSize = 12
     Label.TextXAlignment = Enum.TextXAlignment.Left
@@ -222,7 +222,7 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
     ValueLabel.Size = UDim2.new(0.3, 0, 0, 20)
     ValueLabel.Position = UDim2.new(0.67, 0, 0, 6)
     ValueLabel.Text = tostring(defaultVal) .. suffix
-    ValueLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    ValueLabel.TextColor3 = Color3.fromRGB(170, 170, 180)
     ValueLabel.Font = Enum.Font.GothamBold
     ValueLabel.TextSize = 12
     ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
@@ -232,13 +232,13 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
     local SliderBar = Instance.new("Frame", SliderFrame)
     SliderBar.Size = UDim2.new(1, -20, 0, 8)
     SliderBar.Position = UDim2.new(0, 10, 0, 32)
-    SliderBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
     SliderBar.BorderSizePixel = 0
     Instance.new("UICorner", SliderBar).CornerRadius = UDim.new(1, 0)
 
     local SliderFill = Instance.new("Frame", SliderBar)
     SliderFill.Size = UDim2.new((defaultVal - minVal)/(maxVal - minVal), 0, 1, 0)
-    SliderFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SliderFill.BackgroundColor3 = Color3.fromRGB(120, 140, 220)
     SliderFill.BorderSizePixel = 0
     Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
 
@@ -290,109 +290,140 @@ CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 
     MainFrame.Position = UDim2.new(0.5, -newW/2, 0.5, -newH/2)
 end)
 
--- --- ฟังก์ชันเพิ่มเติมในหมวดหมู่ UI (สี UI, สีข้อความ, รูปภาพ Roblox ID 12 สีครบถ้วน) ---
+-- --- ฟังก์ชันเพิ่มเติมในหมวดหมู่ UI (สี UI, สีข้อความ, รูปภาพ Roblox ID 13 สีโทนพาสเทล/สบายตา รวมสีดำ) ---
 
--- รายการ 12 สีมาตรฐาน
+-- รายการ 13 สี (ปรับโทนให้นุ่มนวล ไม่แสบตา และเพิ่มสีดำ)
 local colorList = {
-    Color3.fromRGB(255, 50, 50),   -- 1. แดง
-    Color3.fromRGB(255, 128, 0),  -- 2. ส้ม
-    Color3.fromRGB(255, 255, 0),  -- 3. เหลือง
-    Color3.fromRGB(50, 255, 50),   -- 4. เขียว
-    Color3.fromRGB(0, 255, 128),  -- 5. เขียวมิ้นต์
-    Color3.fromRGB(0, 255, 255),  -- 6. ฟ้า
-    Color3.fromRGB(50, 128, 255),  -- 7. น้ำเงิน
-    Color3.fromRGB(128, 0, 255),  -- 8. ม่วง
-    Color3.fromRGB(255, 0, 255),  -- 9. ชมพูบานเย็น
-    Color3.fromRGB(255, 192, 203),-- 10. ชมพูอ่อน
-    Color3.fromRGB(200, 200, 200),-- 11. เทา
-    Color3.fromRGB(255, 255, 255) -- 12. ขาว
+    {Name = "1. สีดำ (Black)", Color = Color3.fromRGB(20, 20, 22)},
+    {Name = "2. สีเทานุ่ม (Soft Gray)", Color = Color3.fromRGB(70, 70, 80)},
+    {Name = "3. สีแดงพาสเทล (Soft Red)", Color = Color3.fromRGB(180, 80, 80)},
+    {Name = "4. สีส้มละมุน (Soft Orange)", Color = Color3.fromRGB(200, 120, 60)},
+    {Name = "5. สีเหลืองนวล (Soft Yellow)", Color = Color3.fromRGB(190, 170, 70)},
+    {Name = "6. สีเขียวชา (Sage Green)", Color = Color3.fromRGB(80, 140, 100)},
+    {Name = "7. สีฟ้าอมเขียว (Mint Blue)", Color = Color3.fromRGB(70, 140, 140)},
+    {Name = "8. สีฟ้าพาสเทล (Soft Sky)", Color = Color3.fromRGB(70, 110, 180)},
+    {Name = "9. สีน้ำเงินกรม (Navy Blue)", Color = Color3.fromRGB(40, 50, 80)},
+    {Name = "10. สีม่วงอมเทา (Soft Purple)", Color = Color3.fromRGB(110, 80, 140)},
+    {Name = "11. สีชมพูกุหลาบ (Rose Pink)", Color = Color3.fromRGB(170, 90, 120)},
+    {Name = "12. สีครีมเบจ (Warm Cream)", Color = Color3.fromRGB(190, 170, 150)},
+    {Name = "13. สีขาวนวล (Soft White)", Color = Color3.fromRGB(220, 220, 230)}
 }
 
--- 1. ฟังก์ชันเลือกสี UI (Theme Color - 12 สี)
-local ThemeColorFrame = Instance.new("Frame", UIPage)
-ThemeColorFrame.Size = UDim2.new(1, 0, 0, 85)
-ThemeColorFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-Instance.new("UICorner", ThemeColorFrame).CornerRadius = UDim.new(0, 6)
+-- 1. ฟังก์ชัน Dropdown เลือกสี UI (Theme Colors)
+local ThemeDropFrame = Instance.new("Frame", UIPage)
+ThemeDropFrame.Size = UDim2.new(1, 0, 0, 45)
+ThemeDropFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+ThemeDropFrame.ClipsDescendants = true
+Instance.new("UICorner", ThemeDropFrame).CornerRadius = UDim.new(0, 6)
 
-local ThemeLabel = Instance.new("TextLabel", ThemeColorFrame)
-ThemeLabel.Size = UDim2.new(1, -16, 0, 25)
-ThemeLabel.Position = UDim2.new(0, 10, 0, 5)
-ThemeLabel.Text = "เลือกสี UI (Theme Colors - 12 สี)"
-ThemeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-ThemeLabel.Font = Enum.Font.GothamBold
-ThemeLabel.TextSize = 12
-ThemeLabel.TextXAlignment = Enum.TextXAlignment.Left
-ThemeLabel.BackgroundTransparency = 1
-table.insert(allTextLabels, ThemeLabel)
+local ThemeDropBtn = Instance.new("TextButton", ThemeDropFrame)
+ThemeDropBtn.Size = UDim2.new(1, 0, 0, 45)
+ThemeDropBtn.BackgroundTransparency = 1
+ThemeDropBtn.Text = "  🎨 เลือกสีธีม UI (คลิกเพื่อเปิด/ปิด)"
+ThemeDropBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+ThemeDropBtn.Font = Enum.Font.GothamBold
+ThemeDropBtn.TextSize = 12
+ThemeDropBtn.TextXAlignment = Enum.TextXAlignment.Left
+table.insert(allTextLabels, ThemeDropBtn)
 
-local ThemeGrid = Instance.new("ScrollingFrame", ThemeColorFrame)
-ThemeGrid.Size = UDim2.new(1, -16, 0, 48)
-ThemeGrid.Position = UDim2.new(0, 8, 0, 32)
-ThemeGrid.BackgroundTransparency = 1
-ThemeGrid.CanvasSize = UDim2.new(0, 420, 0, 0)
-ThemeGrid.ScrollBarThickness = 2
-ThemeGrid.BorderSizePixel = 0
+local ThemeScroll = Instance.new("ScrollingFrame", ThemeDropFrame)
+ThemeScroll.Size = UDim2.new(1, -16, 0, 150)
+ThemeScroll.Position = UDim2.new(0, 8, 0, 48)
+ThemeScroll.BackgroundTransparency = 1
+ThemeScroll.CanvasSize = UDim2.new(0, 0, 0, 13 * 34)
+ThemeScroll.ScrollBarThickness = 3
+ThemeScroll.BorderSizePixel = 0
 
-local GridLay1 = Instance.new("UIListLayout", ThemeGrid)
-GridLay1.FillDirection = Enum.FillDirection.Horizontal
-GridLay1.SortOrder = Enum.SortOrder.LayoutOrder
-GridLay1.Padding = UDim.new(0, 6)
+local DropLay1 = Instance.new("UIListLayout", ThemeScroll)
+DropLay1.SortOrder = Enum.SortOrder.LayoutOrder
+DropLay1.Padding = UDim.new(0, 4)
 
-for i, col in ipairs(colorList) do
-    local colorBtn = Instance.new("TextButton", ThemeGrid)
-    colorBtn.Size = UDim2.new(0, 28, 0, 28)
-    colorBtn.BackgroundColor3 = col
-    colorBtn.Text = ""
-    Instance.new("UICorner", colorBtn).CornerRadius = UDim.new(1, 0)
-    
-    colorBtn.MouseButton1Click:Connect(function()
-        MainFrame.BackgroundColor3 = col
-        TopBar.BackgroundColor3 = Color3.new(col.R * 0.8, col.G * 0.8, col.B * 0.8)
-        Sidebar.BackgroundColor3 = Color3.new(col.R * 0.7, col.G * 0.7, col.B * 0.7)
+local themeOpen = false
+ThemeDropFrame.Size = UDim2.new(1, 0, 0, 45)
+
+ThemeDropBtn.MouseButton1Click:Connect(function()
+    themeOpen = not themeOpen
+    if themeOpen then
+        ThemeDropFrame:TweenSize(UDim2.new(1, 0, 0, 205), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+    else
+        ThemeDropFrame:TweenSize(UDim2.new(1, 0, 0, 45), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+    end
+end)
+
+for _, item in ipairs(colorList) do
+    local cBtn = Instance.new("TextButton", ThemeScroll)
+    cBtn.Size = UDim2.new(1, -4, 0, 30)
+    cBtn.BackgroundColor3 = item.Color
+    cBtn.Text = "  " .. item.Name
+    cBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    cBtn.Font = Enum.Font.GothamMedium
+    cBtn.TextSize = 11
+    cBtn.TextXAlignment = Enum.TextXAlignment.Left
+    Instance.new("UICorner", cBtn).CornerRadius = UDim.new(0, 5)
+
+    cBtn.MouseButton1Click:Connect(function()
+        MainFrame.BackgroundColor3 = item.Color
+        TopBar.BackgroundColor3 = Color3.new(item.Color.R * 0.85, item.Color.G * 0.85, item.Color.B * 0.85)
+        Sidebar.BackgroundColor3 = Color3.new(item.Color.R * 0.75, item.Color.G * 0.75, item.Color.B * 0.75)
     end)
 end
 
--- 2. ฟังก์ชันเลือกสีข้อความ UI (Text Color - 12 สี)
-local TextColorFrame = Instance.new("Frame", UIPage)
-TextColorFrame.Size = UDim2.new(1, 0, 0, 85)
-TextColorFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-Instance.new("UICorner", TextColorFrame).CornerRadius = UDim.new(0, 6)
+-- 2. ฟังก์ชัน Dropdown เลือกสีข้อความ (Text Colors)
+local TextDropFrame = Instance.new("Frame", UIPage)
+TextDropFrame.Size = UDim2.new(1, 0, 0, 45)
+TextDropFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+TextDropFrame.ClipsDescendants = true
+Instance.new("UICorner", TextDropFrame).CornerRadius = UDim.new(0, 6)
 
-local TextLabelTitle = Instance.new("TextLabel", TextColorFrame)
-TextLabelTitle.Size = UDim2.new(1, -16, 0, 25)
-TextLabelTitle.Position = UDim2.new(0, 10, 0, 5)
-TextLabelTitle.Text = "เลือกสีข้อความ UI (Text Colors - 12 สี)"
-TextLabelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextLabelTitle.Font = Enum.Font.GothamBold
-TextLabelTitle.TextSize = 12
-TextLabelTitle.TextXAlignment = Enum.TextXAlignment.Left
-TextLabelTitle.BackgroundTransparency = 1
-table.insert(allTextLabels, TextLabelTitle)
+local TextDropBtn = Instance.new("TextButton", TextDropFrame)
+TextDropBtn.Size = UDim2.new(1, 0, 0, 45)
+TextDropBtn.BackgroundTransparency = 1
+TextDropBtn.Text = "  ✍ เลือกสีข้อความ UI (คลิกเพื่อเปิด/ปิด)"
+TextDropBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+TextDropBtn.Font = Enum.Font.GothamBold
+TextDropBtn.TextSize = 12
+TextDropBtn.TextXAlignment = Enum.TextXAlignment.Left
+table.insert(allTextLabels, TextDropBtn)
 
-local TextGrid = Instance.new("ScrollingFrame", TextColorFrame)
-TextGrid.Size = UDim2.new(1, -16, 0, 48)
-TextGrid.Position = UDim2.new(0, 8, 0, 32)
-TextGrid.BackgroundTransparency = 1
-TextGrid.CanvasSize = UDim2.new(0, 420, 0, 0)
-TextGrid.ScrollBarThickness = 2
-TextGrid.BorderSizePixel = 0
+local TextScroll = Instance.new("ScrollingFrame", TextDropFrame)
+TextScroll.Size = UDim2.new(1, -16, 0, 150)
+TextScroll.Position = UDim2.new(0, 8, 0, 48)
+TextScroll.BackgroundTransparency = 1
+TextScroll.CanvasSize = UDim2.new(0, 0, 0, 13 * 34)
+TextScroll.ScrollBarThickness = 3
+TextScroll.BorderSizePixel = 0
 
-local GridLay2 = Instance.new("UIListLayout", TextGrid)
-GridLay2.FillDirection = Enum.FillDirection.Horizontal
-GridLay2.SortOrder = Enum.SortOrder.LayoutOrder
-GridLay2.Padding = UDim.new(0, 6)
+local DropLay2 = Instance.new("UIListLayout", TextScroll)
+DropLay2.SortOrder = Enum.SortOrder.LayoutOrder
+DropLay2.Padding = UDim.new(0, 4)
 
-for i, col in ipairs(colorList) do
-    local textColBtn = Instance.new("TextButton", TextGrid)
-    textColBtn.Size = UDim2.new(0, 28, 0, 28)
-    textColBtn.BackgroundColor3 = col
-    textColBtn.Text = ""
-    Instance.new("UICorner", textColBtn).CornerRadius = UDim.new(1, 0)
-    
-    textColBtn.MouseButton1Click:Connect(function()
+local textOpen = false
+TextDropFrame.Size = UDim2.new(1, 0, 0, 45)
+
+TextDropBtn.MouseButton1Click:Connect(function()
+    textOpen = not textOpen
+    if textOpen then
+        TextDropFrame:TweenSize(UDim2.new(1, 0, 0, 205), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+    else
+        TextDropFrame:TweenSize(UDim2.new(1, 0, 0, 45), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+    end
+end)
+
+for _, item in ipairs(colorList) do
+    local tBtn = Instance.new("TextButton", TextScroll)
+    tBtn.Size = UDim2.new(1, -4, 0, 30)
+    tBtn.BackgroundColor3 = item.Color
+    tBtn.Text = "  " .. item.Name
+    tBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tBtn.Font = Enum.Font.GothamMedium
+    tBtn.TextSize = 11
+    tBtn.TextXAlignment = Enum.TextXAlignment.Left
+    Instance.new("UICorner", tBtn).CornerRadius = UDim.new(0, 5)
+
+    tBtn.MouseButton1Click:Connect(function()
         for _, txtObj in pairs(allTextLabels) do
             if txtObj and txtObj.Parent then
-                txtObj.TextColor3 = col
+                txtObj.TextColor3 = item.Color
             end
         end
     end)
@@ -401,14 +432,14 @@ end
 -- 3. ฟังก์ชันใส่ ID รูปภาพ Roblox พื้นหลัง UI
 local BgIdFrame = Instance.new("Frame", UIPage)
 BgIdFrame.Size = UDim2.new(1, 0, 0, 50)
-BgIdFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+BgIdFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
 Instance.new("UICorner", BgIdFrame).CornerRadius = UDim.new(0, 6)
 
 local BgIdTitle = Instance.new("TextLabel", BgIdFrame)
 BgIdTitle.Size = UDim2.new(0.4, 0, 1, 0)
 BgIdTitle.Position = UDim2.new(0, 10, 0, 0)
 BgIdTitle.Text = "Roblox Image ID"
-BgIdTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+BgIdTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
 BgIdTitle.Font = Enum.Font.Gotham
 BgIdTitle.TextSize = 12
 BgIdTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -418,10 +449,10 @@ table.insert(allTextLabels, BgIdTitle)
 local BgIdInput = Instance.new("TextBox", BgIdFrame)
 BgIdInput.Size = UDim2.new(0.55, 0, 0, 30)
 BgIdInput.Position = UDim2.new(0.43, 0, 0.5, -15)
-BgIdInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+BgIdInput.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 BgIdInput.Text = ""
 BgIdInput.PlaceholderText = "กรอกเลข ID เช่น 6031094691"
-BgIdInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+BgIdInput.TextColor3 = Color3.fromRGB(240, 240, 240)
 BgIdInput.Font = Enum.Font.Gotham
 BgIdInput.TextSize = 11
 Instance.new("UICorner", BgIdInput).CornerRadius = UDim.new(0, 5)
@@ -432,7 +463,6 @@ BgIdInput.FocusLost:Connect(function(enterPressed)
         if textId == "" then
             BgImage.Image = ""
         else
-            -- ตรวจสอบหากผู้ใช้พิมพ์แค่ตัวเลข ให้แปลงเป็นรูปแบบ Asset ของ Roblox อัตโนมัติ
             if tonumber(textId) then
                 BgImage.Image = "rbxassetid://" .. textId
             else
@@ -462,14 +492,14 @@ end)
 local noclipEnabled = false
 local NoclipFrame = Instance.new("Frame", PlayerPage)
 NoclipFrame.Size = UDim2.new(1, 0, 0, 45)
-NoclipFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+NoclipFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
 Instance.new("UICorner", NoclipFrame).CornerRadius = UDim.new(0, 6)
 
 local NoclipLabel = Instance.new("TextLabel", NoclipFrame)
 NoclipLabel.Size = UDim2.new(0, 200, 1, 0)
 NoclipLabel.Position = UDim2.new(0, 10, 0, 0)
 NoclipLabel.Text = "เปิดทะลุกำแพง (Noclip)"
-NoclipLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoclipLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 NoclipLabel.Font = Enum.Font.Gotham
 NoclipLabel.TextSize = 12
 NoclipLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -482,16 +512,16 @@ NoclipBtn.Position = UDim2.new(1, -88, 0.5, -13)
 NoclipBtn.Font = Enum.Font.GothamBold
 NoclipBtn.TextSize = 11
 NoclipBtn.Text = "ปิด (OFF)"
-NoclipBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-NoclipBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+NoclipBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+NoclipBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
 Instance.new("UICorner", NoclipBtn).CornerRadius = UDim.new(0, 5)
 table.insert(allTextLabels, NoclipBtn)
 
 NoclipBtn.MouseButton1Click:Connect(function()
     noclipEnabled = not noclipEnabled
     NoclipBtn.Text = noclipEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    NoclipBtn.BackgroundColor3 = noclipEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(60, 60, 60)
-    NoclipBtn.TextColor3 = noclipEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+    NoclipBtn.BackgroundColor3 = noclipEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    NoclipBtn.TextColor3 = noclipEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
 end)
 
 RunService.Stepped:Connect(function()
@@ -512,14 +542,14 @@ local espEnabled = false
 
 local SwitchFrame = Instance.new("Frame", ESPPage)
 SwitchFrame.Size = UDim2.new(1, 0, 0, 45)
-SwitchFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+SwitchFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
 Instance.new("UICorner", SwitchFrame).CornerRadius = UDim.new(0, 6)
 
 local SwitchLabel = Instance.new("TextLabel", SwitchFrame)
 SwitchLabel.Size = UDim2.new(0, 200, 1, 0)
 SwitchLabel.Position = UDim2.new(0, 10, 0, 0)
 SwitchLabel.Text = "เปิดใช้งาน ESP ไฮไลท์ตัวละคร"
-SwitchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+SwitchLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 SwitchLabel.Font = Enum.Font.Gotham
 SwitchLabel.TextSize = 12
 SwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -532,22 +562,22 @@ SwitchBtn.Position = UDim2.new(1, -88, 0.5, -13)
 SwitchBtn.Font = Enum.Font.GothamBold
 SwitchBtn.TextSize = 11
 SwitchBtn.Text = "ปิด (OFF)"
-SwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-SwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+SwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+SwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
 Instance.new("UICorner", SwitchBtn).CornerRadius = UDim.new(0, 5)
 table.insert(allTextLabels, SwitchBtn)
 
 -- กล่องอธิบายสี ESP
 local InfoBox = Instance.new("Frame", ESPPage)
 InfoBox.Size = UDim2.new(1, 0, 0, 75)
-InfoBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+InfoBox.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
 Instance.new("UICorner", InfoBox).CornerRadius = UDim.new(0, 6)
 
 local InfoText = Instance.new("TextLabel", InfoBox)
 InfoText.Size = UDim2.new(1, -16, 1, 0)
 InfoText.Position = UDim2.new(0, 10, 0, 0)
 InfoText.Text = "คำอธิบายสีไฮไลท์และชื่อ:\n• สีแดง = ถือ/มีมีดในตัว (Knife)\n• สีฟ้า = ถือ/มีปืนในตัว (Gun)\n• สีเขียว = คนปกติ"
-InfoText.TextColor3 = Color3.fromRGB(180, 180, 180)
+InfoText.TextColor3 = Color3.fromRGB(180, 180, 190)
 InfoText.Font = Enum.Font.Gotham
 InfoText.TextSize = 11
 InfoText.TextYAlignment = Enum.TextYAlignment.Center
@@ -589,8 +619,8 @@ end
 SwitchBtn.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
     SwitchBtn.Text = espEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    SwitchBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(60, 60, 60)
-    SwitchBtn.TextColor3 = espEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+    SwitchBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    SwitchBtn.TextColor3 = espEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
     
     if not espEnabled then
         ClearAllHighlights()
@@ -620,12 +650,12 @@ RunService.RenderStepped:Connect(function()
                 local hasKnife = charKnife or packKnife
                 local hasGun = charGun or packGun
 
-                local color = Color3.fromRGB(50, 255, 50) -- เขียว (ปกติ)
+                local color = Color3.fromRGB(80, 200, 100) -- เขียว (ปกติ)
 
                 if hasKnife then
-                    color = Color3.fromRGB(255, 50, 50) -- แดง (มีด)
+                    color = Color3.fromRGB(220, 80, 80) -- แดง (มีด)
                 elseif hasGun then
-                    color = Color3.fromRGB(50, 160, 255) -- ฟ้า (ปืน)
+                    color = Color3.fromRGB(80, 150, 220) -- ฟ้า (ปืน)
                 end
 
                 -- ไฮไลต์ตัวละคร (Highlight)
@@ -663,14 +693,14 @@ local miniShootGui = nil
 
 local ShootSwitchFrame = Instance.new("Frame", AutoShootPage)
 ShootSwitchFrame.Size = UDim2.new(1, 0, 0, 45)
-ShootSwitchFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+ShootSwitchFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
 Instance.new("UICorner", ShootSwitchFrame).CornerRadius = UDim.new(0, 6)
 
 local ShootSwitchLabel = Instance.new("TextLabel", ShootSwitchFrame)
 ShootSwitchLabel.Size = UDim2.new(0, 200, 1, 0)
 ShootSwitchLabel.Position = UDim2.new(0, 10, 0, 0)
 ShootSwitchLabel.Text = "ยิงอัตโนมัติแบบทันที (MM2)"
-ShootSwitchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ShootSwitchLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 ShootSwitchLabel.Font = Enum.Font.Gotham
 ShootSwitchLabel.TextSize = 12
 ShootSwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -683,8 +713,8 @@ ShootSwitchBtn.Position = UDim2.new(1, -88, 0.5, -13)
 ShootSwitchBtn.Font = Enum.Font.GothamBold
 ShootSwitchBtn.TextSize = 11
 ShootSwitchBtn.Text = "ปิด (OFF)"
-ShootSwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-ShootSwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+ShootSwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+ShootSwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
 Instance.new("UICorner", ShootSwitchBtn).CornerRadius = UDim.new(0, 5)
 table.insert(allTextLabels, ShootSwitchBtn)
 
@@ -759,20 +789,20 @@ local function ToggleMiniShootUI(state)
             miniShootGui.Name = "MiniShootUI"
             miniShootGui.Size = UDim2.new(0, 110, 0, 50)
             miniShootGui.Position = UDim2.new(0.8, 0, 0.5, -25)
-            miniShootGui.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            miniShootGui.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
             miniShootGui.Active = true
             miniShootGui.Draggable = true
             miniShootGui.Parent = ScreenGui
             Instance.new("UICorner", miniShootGui).CornerRadius = UDim.new(0, 8)
 
             local stroke = Instance.new("UIStroke", miniShootGui)
-            stroke.Color = Color3.fromRGB(255, 50, 50)
+            stroke.Color = Color3.fromRGB(220, 80, 80)
             stroke.Thickness = 1.5
 
             local shootBtn = Instance.new("TextButton", miniShootGui)
             shootBtn.Size = UDim2.new(1, -10, 1, -10)
             shootBtn.Position = UDim2.new(0, 5, 0, 5)
-            shootBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+            shootBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
             shootBtn.Text = "ยิงทันที! (INSTANT)"
             shootBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
             shootBtn.Font = Enum.Font.GothamBold
@@ -795,8 +825,8 @@ end
 ShootSwitchBtn.MouseButton1Click:Connect(function()
     autoShootEnabled = not autoShootEnabled
     ShootSwitchBtn.Text = autoShootEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    ShootSwitchBtn.BackgroundColor3 = autoShootEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(60, 60, 60)
-    ShootSwitchBtn.TextColor3 = autoShootEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+    ShootSwitchBtn.BackgroundColor3 = autoShootEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    ShootSwitchBtn.TextColor3 = autoShootEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
     
     ToggleMiniShootUI(autoShootEnabled)
 end)
