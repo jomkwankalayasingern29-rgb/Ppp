@@ -1,4 +1,4 @@
--- Roblox Delta UI Script (MM2 Working Auto Shoot)
+-- Roblox Delta UI Script (MM2 with Tools Tab: Click TP)
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -189,9 +189,10 @@ local function CreateTab(name)
     return Page
 end
 
--- หมวดหมู่ (UI, ตัวละคร, ESP, Auto Shoot)
+-- หมวดหมู่ (UI, ตัวละคร, เครื่องมือ, ESP, Auto Shoot)
 local UIPage = CreateTab("UI")
 local PlayerPage = CreateTab("ตัวละคร")
+local ToolPage = CreateTab("เครื่องมือ")
 local ESPPage = CreateTab("ESP")
 local AutoShootPage = CreateTab("Auto Shoot")
 
@@ -531,6 +532,50 @@ RunService.Stepped:Connect(function()
     end
 end)
 
+-- --- 8.5 หมวดหมู่เครื่องมือ: ระบบคลิกวาร์ป (Click TP Tool) ---
+local ToolFrame = Instance.new("Frame", ToolPage)
+ToolFrame.Size = UDim2.new(1, 0, 0, 45)
+ToolFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", ToolFrame).CornerRadius = UDim.new(0, 6)
+
+local ToolLabel = Instance.new("TextLabel", ToolFrame)
+ToolLabel.Size = UDim2.new(0, 200, 1, 0)
+ToolLabel.Position = UDim2.new(0, 10, 0, 0)
+ToolLabel.Text = "รับไอเทมคลิกวาร์ป (Click TP)"
+ToolLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+ToolLabel.Font = Enum.Font.Gotham
+ToolLabel.TextSize = 12
+ToolLabel.TextXAlignment = Enum.TextXAlignment.Left
+ToolLabel.BackgroundTransparency = 1
+table.insert(allTextLabels, ToolLabel)
+
+local GetToolBtn = Instance.new("TextButton", ToolFrame)
+GetToolBtn.Size = UDim2.new(0, 80, 0, 26)
+GetToolBtn.Position = UDim2.new(1, -88, 0.5, -13)
+GetToolBtn.Font = Enum.Font.GothamBold
+GetToolBtn.TextSize = 11
+GetToolBtn.Text = "รับไอเทม"
+GetToolBtn.BackgroundColor3 = Color3.fromRGB(80, 110, 180)
+GetToolBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", GetToolBtn).CornerRadius = UDim.new(0, 5)
+table.insert(allTextLabels, GetToolBtn)
+
+GetToolBtn.MouseButton1Click:Connect(function()
+    local mouse = LocalPlayer:GetMouse()
+    local tool = Instance.new("Tool")
+    tool.Name = "Click TP Tool"
+    tool.RequiresHandle = false
+    tool.Parent = LocalPlayer.Backpack
+
+    tool.Activated:Connect(function()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local targetPos = mouse.Hit.Position + Vector3.new(0, 3, 0)
+            char.HumanoidRootPart.CFrame = CFrame.new(targetPos)
+        end
+    end)
+end)
+
 -- 9. หมวดหมู่ ESP: สวิตช์ภาษาไทย
 local espEnabled = false
 
@@ -714,7 +759,6 @@ local function TriggerMM2Shoot()
     local myChar = LocalPlayer.Character
     if not myChar then return end
 
-    -- ค้นหาปืนในตัวละครหรือดึงมาจาก Backpack
     local gunTool = myChar:FindFirstChild("Gun") or myChar:FindFirstChildWhichIsA("Tool")
     if not gunTool or (not string.find(string.lower(gunTool.Name), "gun") and not gunTool:FindFirstChild("GunScript") and not gunTool:FindFirstChild("Shoot")) then
         for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
@@ -731,7 +775,6 @@ local function TriggerMM2Shoot()
 
     if not gunTool then return end
 
-    -- ค้นหาตำแหน่งหัวของฆาตกร
     local targetHead = nil
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= LocalPlayer and p.Character then
@@ -749,7 +792,6 @@ local function TriggerMM2Shoot()
     end
 
     if targetHead then
-        -- ค้นหา RemoteEvent ภายในปืนของ MM2
         local remote = nil
         for _, desc in pairs(gunTool:GetDescendants()) do
             if desc:IsA("RemoteEvent") then
@@ -762,10 +804,8 @@ local function TriggerMM2Shoot()
         end
 
         if remote then
-            -- ส่งพิกัดเป้าหมายผ่าน RemoteEvent หลักของปืน MM2
             remote:FireServer(targetHead.Position)
         else
-            -- กรณีไม่เจอ Remote ให้จำลองการกดคลิกยิงผ่านเมาส์/Tool Activate
             gunTool.Parent = myChar
             if gunTool:FindFirstChild("Handle") then
                 local shootEvent = gunTool:FindFirstChildWhichIsA("RemoteEvent")
