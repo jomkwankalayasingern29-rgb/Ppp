@@ -1,4 +1,4 @@
--- Roblox Delta UI Script (MM2 with Fully Working Roblox Image ID Loader)
+-- Roblox Delta UI Script (MM2 Final Fixed Auto Shoot)
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -432,7 +432,7 @@ for _, item in ipairs(colorList) do
     end)
 end
 
--- 3. ฟังก์ชันใส่ ID รูปภาพ Roblox พื้นหลัง UI (ปรับปรุงระบบดึง Asset ID รูปภาพโดยตรงให้รองรับทุกรูปแบบ)
+-- 3. ฟังก์ชันใส่ ID รูปภาพ Roblox พื้นหลัง UI
 local BgIdFrame = Instance.new("Frame", UIPage)
 BgIdFrame.Size = UDim2.new(1, 0, 0, 50)
 BgIdFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
@@ -467,10 +467,8 @@ BgIdInput.FocusLost:Connect(function(enterPressed)
         if textId == "" then
             BgImage.Image = ""
         else
-            -- ดึงเฉพาะตัวเลขจากข้อความที่พิมพ์เข้ามา
             local cleanId = textId:match("%d+")
             if cleanId then
-                -- ลองใช้รูปแบบ Asset Direct URL เพื่อให้โหลดภาพติดแน่นอนผ่าน Executor
                 BgImage.Image = "http://www.roblox.com/asset/?id=" .. cleanId
             else
                 BgImage.Image = textId
@@ -735,7 +733,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 10. หมวดหมู่ Auto Shoot & ระบบปุ่มย่อยลอยจอ (ระบบ MM2 Fix ยิงออกจริง)
+-- 10. หมวดหมู่ Auto Shoot & ระบบปุ่มย่อยลอยจอ (ระบบ MM2 Fix ยิงออกจริงแบบบังคับถือ Tool และใช้ Remote หลัก)
 local autoShootEnabled = false
 local miniShootGui = nil
 
@@ -766,27 +764,32 @@ ShootSwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
 Instance.new("UICorner", ShootSwitchBtn).CornerRadius = UDim.new(0, 5)
 table.insert(textLabelData, {Obj = ShootSwitchBtn, BaseSize = 11})
 
--- ฟังก์ชันยิงปืน MM2 ที่แก้ไขให้เรียกใช้ผ่าน Tool / Remote ทะลุกำแพง/เข้าเป้าทันที
+-- ฟังก์ชันดึงและบังคับยิงปืนใน MM2 อย่างแม่นยำ
 local function TriggerMM2Shoot()
     local myChar = LocalPlayer.Character
     if not myChar then return end
 
-    local gunTool = myChar:FindFirstChild("Gun") or myChar:FindFirstChildWhichIsA("Tool")
-    if not gunTool or (not string.find(string.lower(gunTool.Name), "gun") and not gunTool:FindFirstChild("GunScript") and not gunTool:FindFirstChild("Shoot")) then
+    -- ค้นหาปืนในตัวละครหรือหยิบจาก Backpack มาถือไว้
+    local gunTool = myChar:FindFirstChild("Gun")
+    if not gunTool then
         for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
-            if item:IsA("Tool") then
-                local name = string.lower(item.Name)
-                if string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or item:FindFirstChild("Gun") then
-                    item.Parent = myChar
-                    gunTool = item
-                    break
-                end
+            if item:IsA("Tool") and (string.lower(item.Name):find("gun") or item:FindFirstChild("GunScript") or item:FindFirstChild("Shoot")) then
+                item.Parent = myChar
+                gunTool = item
+                task.wait(0.1) -- รอให้ตัวละครถือปืนเรียบร้อย
+                break
             end
         end
     end
 
+    if not gunTool then
+        -- ค้นหา Tool ชิ้นแรกสุดเผื่อชื่อปืนถูกเปลี่ยน
+        gunTool = myChar:FindFirstChildWhichIsA("Tool")
+    end
+
     if not gunTool then return end
 
+    -- ค้นหาหัวของฆาตกรเป้าหมาย
     local targetHead = nil
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= LocalPlayer and p.Character then
@@ -804,31 +807,21 @@ local function TriggerMM2Shoot()
     end
 
     if targetHead then
+        -- ค้นหา RemoteEvent สำหรับยิงปืนในตัวปืนของ MM2
         local remote = nil
         for _, desc in pairs(gunTool:GetDescendants()) do
             if desc:IsA("RemoteEvent") then
-                local rName = string.lower(desc.Name)
-                if rName:find("shoot") or rName:find("gun") or rName:find("fire") or rName:find("hit") or rName:find("create") then
-                    remote = desc
-                    break
-                end
+                remote = desc
+                break
             end
         end
 
         if remote then
             remote:FireServer(targetHead.Position)
         else
+            -- หากไม่พบรีโมทโดยตรง ให้ใช้ฟังก์ชัน Activate และจำลองคลิก
             gunTool.Parent = myChar
-            if gunTool:FindFirstChild("Handle") then
-                local shootEvent = gunTool:FindFirstChildWhichIsA("RemoteEvent")
-                if shootEvent then
-                    shootEvent:FireServer(targetHead.Position)
-                else
-                    gunTool:Activate()
-                end
-            else
-                gunTool:Activate()
-            end
+            gunTool:Activate()
         end
     end
 end
@@ -890,7 +883,7 @@ local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirecti
 local function ToggleUI()
     isOpen = not isOpen
     if isOpen then
-    MainFrame.Visible = true
+        MainFrame.Visible = true
         MainFrame.Size = UDim2.new(0, 40, 0, 40)
         MainFrame.Position = ToggleBtn.Position
         MainFrame.BackgroundTransparency = 1
