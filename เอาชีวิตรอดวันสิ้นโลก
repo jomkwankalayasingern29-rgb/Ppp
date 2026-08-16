@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.10: UI & SYSTEM ONLY ]] --
+-- [[ HJ1JK v1.11: UI & REQUESTED FEATURES ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -9,9 +9,10 @@ local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Camera = Workspace.CurrentCamera
 
 -- ลบ UI เก่ากันบั๊กทับซ้อนทั้งหมด
-local oldUIs = {"HJ1JK_Gui", "HJ1JK_LoadingUI", "HJ1JK_NotifGui", "HJ1JK_FloatGui", "D_Icon", "FOV_Circle"}
+local oldUIs = {"HJ1JK_Gui", "HJ1JK_LoadingUI", "HJ1JK_NotifGui", "HJ1JK_FloatGui", "D_Icon"}
 for _, uiName in ipairs(oldUIs) do
     if PlayerGui:FindFirstChild(uiName) then
         pcall(function() PlayerGui[uiName]:Destroy() end)
@@ -154,7 +155,7 @@ local ConfirmTitle = Instance.new("TextLabel")
 ConfirmTitle.Size = UDim2.new(1, 0, 0, 40)
 ConfirmTitle.Position = UDim2.new(0, 0, 0, 10)
 ConfirmTitle.BackgroundTransparency = 1
-ConfirmTitle.Text = "คุณต้องการลบ UI นี้หรือไม่?"
+ConfirmTitle.Text = "คุณต้องการปิดใช้งาน UI หรือไม่?"
 ConfirmTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 ConfirmTitle.TextSize = 13
 ConfirmTitle.Font = Enum.Font.GothamBold
@@ -187,7 +188,7 @@ NoButton.ZIndex = 12
 NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
--- TopBar (แถบด้านบนสำหรับลากและปิด/ย่อ)
+-- TopBar
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 28)
@@ -207,7 +208,7 @@ Title.Name = "Title"
 Title.Size = UDim2.new(0, 150, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "HJ1JK v1.4.14"
+Title.Text = "HJ1JK v1.11"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextTransparency = 1
@@ -277,9 +278,10 @@ local function createTab(name)
     return Tab
 end
 
-local Tab1 = createTab("Tab1")
-Tab1.Visible = true
-local Tab2 = createTab("Tab2")
+local EpsTab = createTab("EpsTab")
+EpsTab.Visible = true
+local ToolTab = createTab("ToolTab")
+local MovementTab = createTab("MovementTab")
 
 local CenterLine = Instance.new("Frame")
 CenterLine.Size = UDim2.new(0, 1, 1, 0)
@@ -319,25 +321,400 @@ local function createCategoryBtn(text)
     return Btn
 end
 
-local CatBtn1 = createCategoryBtn("หมวดหมู่ที่ 1")
-CatBtn1.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-CatBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
-local CatBtn2 = createCategoryBtn("หมวดหมู่ที่ 2")
+local EpsCategoryBtn = createCategoryBtn("หมวดหมู่ ESP")
+EpsCategoryBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+EpsCategoryBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+local ToolCategoryBtn = createCategoryBtn("เครื่องมือ")
+local MovementCategoryBtn = createCategoryBtn("การเคลื่อนไหว")
 
-CatBtn1.MouseButton1Click:Connect(function()
-    Tab1.Visible = true; Tab2.Visible = false
-    CatBtn1.BackgroundColor3 = Color3.fromRGB(40, 40, 40); CatBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CatBtn2.BackgroundColor3 = Color3.fromRGB(25, 25, 25); CatBtn2.TextColor3 = Color3.fromRGB(180, 180, 180)
+local function switchTab(activeTab, activeBtn)
+    local tabs = {EpsTab, ToolTab, MovementTab}
+    local btns = {EpsCategoryBtn, ToolCategoryBtn, MovementCategoryBtn}
+    
+    for _, tab in ipairs(tabs) do tab.Visible = (tab == activeTab) end
+    for _, btn in ipairs(btns) do
+        btn.BackgroundColor3 = (btn == activeBtn) and Color3.fromRGB(40, 40, 40) or Color3.fromRGB(25, 25, 25)
+        btn.TextColor3 = (btn == activeBtn) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+    end
+end
+
+EpsCategoryBtn.MouseButton1Click:Connect(function() switchTab(EpsTab, EpsCategoryBtn) end)
+ToolCategoryBtn.MouseButton1Click:Connect(function() switchTab(ToolTab, ToolCategoryBtn) end)
+MovementCategoryBtn.MouseButton1Click:Connect(function() switchTab(MovementTab, MovementCategoryBtn) end)
+
+-- UI Builders Helpers
+local allTextLabels = {}
+local allButtons = {}
+local allSliders = {}
+
+local function createHeader(text, parentTab)
+    local HeaderLabel = Instance.new("TextLabel")
+    HeaderLabel.Size = UDim2.new(0, 260, 0, 16)
+    HeaderLabel.BackgroundTransparency = 1
+    HeaderLabel.Text = text
+    HeaderLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    HeaderLabel.Font = Enum.Font.GothamBold
+    HeaderLabel.TextSize = 10
+    HeaderLabel.TextTransparency = 1
+    HeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    HeaderLabel.Parent = parentTab
+    table.insert(allTextLabels, HeaderLabel)
+end
+
+local function createToggle(name, labelText, parentTab)
+    local Frame = Instance.new("Frame")
+    Frame.Name = name .. "Frame"
+    Frame.Size = UDim2.new(0, 260, 0, 26)
+    Frame.BackgroundTransparency = 1
+    Frame.Parent = parentTab
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(0, 180, 1, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = labelText
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 11
+    Label.TextTransparency = 1
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = Frame
+    table.insert(allTextLabels, Label)
+
+    local Button = Instance.new("TextButton")
+    Button.Name = name .. "Button"
+    Button.Size = UDim2.new(0, 48, 0, 22)
+    Button.Position = UDim2.new(1, -55, 0, 2)
+    Button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    Button.BackgroundTransparency = 1
+    Button.Text = "ปิด"
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.Font = Enum.Font.GothamBold
+    Button.TextSize = 10
+    Button.TextTransparency = 1
+    Button.Parent = Frame
+    table.insert(allButtons, Button)
+
+    local Corner = Instance.new("UICorner"); Corner.CornerRadius = UDim.new(0, 4); Corner.Parent = Button
+    return Button
+end
+
+local function createSlider(labelText, parentTab)
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 260, 0, 40)
+    Frame.BackgroundTransparency = 1
+    Frame.Parent = parentTab
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, 0, 0, 16)
+    Label.BackgroundTransparency = 1
+    Label.Text = labelText
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 11
+    Label.TextTransparency = 1
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = Frame
+    table.insert(allTextLabels, Label)
+
+    local Back = Instance.new("Frame")
+    Back.Size = UDim2.new(0, 245, 0, 5)
+    Back.Position = UDim2.new(0, 0, 0, 24)
+    Back.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Back.BackgroundTransparency = 1
+    Back.BorderSizePixel = 0
+    Back.Parent = Frame
+    table.insert(allSliders, Back)
+
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 14, 0, 14)
+    Btn.Position = UDim2.new(0, 0, 0, -4.5)
+    Btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.BackgroundTransparency = 1
+    Btn.Text = ""
+    Btn.Parent = Back
+    table.insert(allSliders, Btn)
+
+    local BtnCorner = Instance.new("UICorner"); BtnCorner.CornerRadius = UDim.new(1, 0); BtnCorner.Parent = Btn
+    return Back, Btn, Label
+end
+
+-- สร้างเมนูในแท็บ EPS
+createHeader(">> ระบบ EPS สิ่งของ & ตัวละคร <<", EpsTab)
+local EpsItemToggle = createToggle("EpsItem", "ESP เห็นสิ่งของ", EpsTab)
+local EpsNpcToggle = createToggle("EpsNpc", "ESP เห็น NPC", EpsTab)
+local EpsZombieToggle = createToggle("EpsZombie", "ESP เห็นซอมบี้", EpsTab)
+
+-- สร้างเมนูในแท็บเครื่องมือ
+createHeader(">> ฟังก์ชันเครื่องมือพิเศษ <<", ToolTab)
+local InstantPickupToggle = createToggle("InstantPickup", "เก็บของทันที (อัตโนมัติ)", ToolTab)
+
+local GiveToolFrame = Instance.new("Frame")
+GiveToolFrame.Size = UDim2.new(0, 260, 0, 35)
+GiveToolFrame.BackgroundTransparency = 1
+GiveToolFrame.Parent = ToolTab
+
+local GiveToolBtn = Instance.new("TextButton")
+GiveToolBtn.Size = UDim2.new(0, 200, 0, 28)
+GiveToolBtn.Position = UDim2.new(0, 0, 0, 4)
+GiveToolBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 120)
+GiveToolBtn.BackgroundTransparency = 1
+GiveToolBtn.Text = "รับอุปกรณ์กดแล้ววาร์ป (Click Teleport)"
+GiveToolBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+GiveToolBtn.Font = Enum.Font.GothamBold
+GiveToolBtn.TextSize = 10
+GiveToolBtn.TextTransparency = 1
+GiveToolBtn.Parent = GiveToolFrame
+table.insert(allButtons, GiveToolBtn)
+local GiveToolCorner = Instance.new("UICorner"); GiveToolCorner.CornerRadius = UDim.new(0, 4); GiveToolCorner.Parent = GiveToolBtn
+
+-- สร้างเมนูในแท็บการเคลื่อนไหว (เลื่อน 1 - 1000)
+createHeader(">> ระบบปรับแต่งการเคลื่อนไหว (1 - 1000) <<", MovementTab)
+local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", MovementTab)
+local WalkSpeedBack, WalkSpeedBtn, WalkSpeedLabel = createSlider("ความเร็ว (WalkSpeed): 16", MovementTab)
+
+local EnableJumpToggle = createToggle("EnableJump", "เปิดใช้งานกระโดดสูง", MovementTab)
+local JumpPowerBack, JumpPowerBtn, JumpPowerLabel = createSlider("กระโดดสูง (JumpPower): 50", MovementTab)
+
+local InfJumpToggle = createToggle("InfJump", "กระโดดไม่จำกัด (Infinite Jump)", MovementTab)
+
+-- =============================================================================
+-- 4. ระบบการทำงานเบื้องหลัง (Backend Logic)
+-- =============================================================================
+local Config = {
+    EpsItem = false,
+    EpsNpc = false,
+    EpsZombie = false,
+    InstantPickup = false,
+    EnableSpeed = false,
+    EnableJump = false,
+    InfJump = false
+}
+
+local CurrentWalkSpeed = 16
+local CurrentJumpPower = 50
+
+-- ฟังก์ชันอัปเดตแจ้งเตือนปุ่มสวิตช์
+local function updateVisuals(btn, state, funcName)
+    btn.BackgroundColor3 = state and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    btn.Text = state and "เปิด" or "ปิด"
+    showNotification((state and 'เปิดใช้งาน "' or 'ปิดใช้งาน "') .. funcName .. '"', state)
+end
+
+EpsItemToggle.MouseButton1Click:Connect(function()
+    Config.EpsItem = not Config.EpsItem
+    updateVisuals(EpsItemToggle, Config.EpsItem, "ESP เห็นสิ่งของ")
 end)
 
-CatBtn2.MouseButton1Click:Connect(function()
-    Tab1.Visible = false; Tab2.Visible = true
-    CatBtn2.BackgroundColor3 = Color3.fromRGB(40, 40, 40); CatBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CatBtn1.BackgroundColor3 = Color3.fromRGB(25, 25, 25); CatBtn1.TextColor3 = Color3.fromRGB(180, 180, 180)
+EpsNpcToggle.MouseButton1Click:Connect(function()
+    Config.EpsNpc = not Config.EpsNpc
+    updateVisuals(EpsNpcToggle, Config.EpsNpc, "ESP เห็น NPC")
+end)
+
+EpsZombieToggle.MouseButton1Click:Connect(function()
+    Config.EpsZombie = not Config.EpsZombie
+    updateVisuals(EpsZombieToggle, Config.EpsZombie, "ESP เห็นซอมบี้")
+end)
+
+InstantPickupToggle.MouseButton1Click:Connect(function()
+    Config.InstantPickup = not Config.InstantPickup
+    updateVisuals(InstantPickupToggle, Config.InstantPickup, "เก็บของทันที")
+end)
+
+EnableSpeedToggle.MouseButton1Click:Connect(function()
+    Config.EnableSpeed = not Config.EnableSpeed
+    updateVisuals(EnableSpeedToggle, Config.EnableSpeed, "วิ่งเร็ว")
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = Config.EnableSpeed and CurrentWalkSpeed or 16
+    end
+end)
+
+EnableJumpToggle.MouseButton1Click:Connect(function()
+    Config.EnableJump = not Config.EnableJump
+    updateVisuals(EnableJumpToggle, Config.EnableJump, "กระโดดสูง")
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.UseJumpPower = true
+        LocalPlayer.Character.Humanoid.JumpPower = Config.EnableJump and CurrentJumpPower or 50
+    end
+end)
+
+InfJumpToggle.MouseButton1Click:Connect(function()
+    Config.InfJump = not Config.InfJump
+    updateVisuals(InfJumpToggle, Config.InfJump, "กระโดดไม่จำกัด")
+end)
+
+-- Infinite Jump Listener
+UserInputService.JumpRequest:Connect(function()
+    if Config.InfJump then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChildOfClass("Humanoid") then
+            char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- ระบบรีเซ็ตสถานะเมื่อเกิดใหม่
+LocalPlayer.CharacterAdded:Connect(function(char)
+    local hum = char:WaitForChild("Humanoid", 5)
+    if hum then
+        if Config.EnableSpeed then hum.WalkSpeed = CurrentWalkSpeed end
+        if Config.EnableJump then hum.UseJumpPower = true; hum.JumpPower = CurrentJumpPower end
+    end
+end)
+
+-- ระบบให้เครื่องมือคลิกวาร์ป
+GiveToolBtn.MouseButton1Click:Connect(function()
+    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+    local character = LocalPlayer.Character
+    if not backpack or not character then return end
+    if backpack:FindFirstChild("ClickTeleportTool") or character:FindFirstChild("ClickTeleportTool") then
+        showNotification("คุณมีไอเท็มนี้อยู่ในกระเป๋าแล้ว!", false)
+        return
+    end
+
+    local tool = Instance.new("Tool")
+    tool.Name = "ClickTeleportTool"
+    tool.RequiresHandle = true
+    local handle = Instance.new("Part")
+    handle.Name = "Handle"
+    handle.Size = Vector3.new(1, 1, 3)
+    handle.BrickColor = BrickColor.new("Bright red")
+    handle.Parent = tool
+    local mesh = Instance.new("SpecialMesh")
+    mesh.MeshType = Enum.MeshType.Wedge
+    mesh.Parent = handle
+
+    tool.Activated:Connect(function()
+        local mouse = LocalPlayer:GetMouse()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3, 0))
+            showNotification("วาร์ปไปยังตำแหน่งที่คลิกสำเร็จ!", true)
+        end
+    end)
+    tool.Parent = backpack
+    showNotification("รับอุปกรณ์คลิกวาร์ปสำเร็จ!", true)
+end)
+
+-- ระบบลูปการทำงาน ESP, เก็บของอัตโนมัติ
+task.spawn(function()
+    while task.wait(0.3) do
+        if not ScreenGui.Parent then break end
+
+        -- ESP สิ่งของ (ProximityPrompt หรือ Handle ของ Drop Item)
+        if Config.EpsItem then
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if (obj:IsA("ProximityPrompt") or obj.Name == "Handle" or obj:IsA("TouchTransmitter")) and not obj:IsDescendantOf(LocalPlayer.Character) then
+                    local part = obj.Parent
+                    if part and part:IsA("BasePart") then
+                        local highlight = part:FindFirstChild("HJ1JK_ItemESP") or Instance.new("Highlight")
+                        highlight.Name = "HJ1JK_ItemESP"
+                        highlight.FillColor = Color3.fromRGB(255, 215, 0)
+                        highlight.FillTransparency = 0.4
+                        highlight.OutlineTransparency = 0
+                        highlight.Parent = part
+                    end
+                end
+            end
+        else
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj.Name == "HJ1JK_ItemESP" then obj:Destroy() end
+            end
+        end
+
+        -- ESP เห็น NPC
+        if Config.EpsNpc then
+            for _, desc in ipairs(Workspace:GetChildren()) do
+                if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then
+                    local nameLower = string.lower(desc.Name)
+                    if not string.find(nameLower, "zombie") then
+                        local ncham = desc:FindFirstChild("HJ1JK_NpcESP") or Instance.new("Highlight")
+                        ncham.Name = "HJ1JK_NpcESP"
+                        ncham.FillColor = Color3.fromRGB(0, 200, 255)
+                        ncham.FillTransparency = 0.5
+                        ncham.Parent = desc
+                    end
+                end
+            end
+        else
+            for _, desc in ipairs(Workspace:GetChildren()) do
+                if desc:IsA("Model") and desc:FindFirstChild("HJ1JK_NpcESP") then desc.HJ1JK_NpcESP:Destroy() end
+            end
+        end
+
+        -- ESP เห็นซอมบี้
+        if Config.EpsZombie then
+            for _, desc in ipairs(Workspace:GetDescendants()) do
+                if desc:IsA("Model") and desc:FindFirstChild("Humanoid") then
+                    local nameLower = string.lower(desc.Name)
+                    if string.find(nameLower, "zombie") or string.find(nameLower, "infected") or string.find(nameLower, "undead") then
+                        local zcham = desc:FindFirstChild("HJ1JK_ZombieESP") or Instance.new("Highlight")
+                        zcham.Name = "HJ1JK_ZombieESP"
+                        zcham.FillColor = Color3.fromRGB(255, 50, 50)
+                        zcham.FillTransparency = 0.4
+                        zcham.Parent = desc
+                    end
+                end
+            end
+        else
+            for _, desc in ipairs(Workspace:GetDescendants()) do
+                if desc:IsA("Model") and desc:FindFirstChild("HJ1JK_ZombieESP") then desc.HJ1JK_ZombieESP:Destroy() end
+            end
+        end
+
+        -- ระบบเก็บของทันที (Instant Pickup)
+        if Config.InstantPickup and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local myPos = LocalPlayer.Character.HumanoidRootPart.Position
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("ProximityPrompt") then
+                    if (obj.Parent.Position - myPos).Magnitude <= (obj.MaxActivationDistance + 5) then
+                        fireproximityprompt(obj)
+                    end
+                end
+            end
+        end
+    end
 end)
 
 -- =============================================================================
--- 4. ไอคอนเปิดหน้าต่างเมื่อย่อ (Minimized Icon) & โลโก้ลอย (Floating UI)
+-- 5. ระบบ Sliders (ความเร็ว และ กระโดดสูง 1 - 1000)
+-- =============================================================================
+local walkSpeedDragging, jumpPowerDragging = false, false
+
+WalkSpeedBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then walkSpeedDragging = true end end)
+JumpPowerBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then jumpPowerDragging = true end end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
+        walkSpeedDragging = false; jumpPowerDragging = false
+    end 
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if walkSpeedDragging then
+            local percentage = math.clamp((input.Position.X - WalkSpeedBack.AbsolutePosition.X) / WalkSpeedBack.AbsoluteSize.X, 0, 1)
+            WalkSpeedBtn.Position = UDim2.new(percentage, -7, 0, -4.5)
+            CurrentWalkSpeed = math.floor(1 + (percentage * 999)) -- ตั้งค่าสเกล 1 ถึง 1000
+            WalkSpeedLabel.Text = "ความเร็ว (WalkSpeed): " .. CurrentWalkSpeed
+            if Config.EnableSpeed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid.WalkSpeed = CurrentWalkSpeed
+            end
+        end
+        if jumpPowerDragging then
+            local percentage = math.clamp((input.Position.X - JumpPowerBack.AbsolutePosition.X) / JumpPowerBack.AbsoluteSize.X, 0, 1)
+            JumpPowerBtn.Position = UDim2.new(percentage, -7, 0, -4.5)
+            CurrentJumpPower = math.floor(1 + (percentage * 999)) -- ตั้งค่าสเกล 1 ถึง 1000
+            JumpPowerLabel.Text = "กระโดดสูง (JumpPower): " .. CurrentJumpPower
+            if Config.EnableJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid.UseJumpPower = true
+                LocalPlayer.Character.Humanoid.JumpPower = CurrentJumpPower
+            end
+        end
+    end
+end)
+
+-- =============================================================================
+-- 6. ระบบควบคุม UI และการแสดงผลหน้าต่างหลัก
 -- =============================================================================
 local D_Icon = Instance.new("TextButton")
 D_Icon.Size = UDim2.new(0, 40, 0, 40)
@@ -353,52 +730,7 @@ local D_Corner, D_Stroke = Instance.new("UICorner"), Instance.new("UIStroke")
 D_Corner.CornerRadius = UDim.new(0, 6); D_Corner.Parent = D_Icon
 D_Stroke.Color = Color3.fromRGB(255, 255, 255); D_Stroke.Thickness = 1.2; D_Stroke.Parent = D_Icon
 
--- Floating UI (สวิตช์ลอยบนจอ)
-local FloatGui = Instance.new("ScreenGui")
-FloatGui.Name = "HJ1JK_FloatGui"
-FloatGui.ResetOnSpawn = false
-FloatGui.Parent = PlayerGui
-
-local FloatFrame = Instance.new("Frame")
-FloatFrame.Name = "FloatFrame"
-FloatFrame.Size = UDim2.new(0, 160, 0, 75)
-FloatFrame.Position = UDim2.new(0, 15, 0, 70)
-FloatFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-FloatFrame.BorderSizePixel = 0
-FloatFrame.Active = true
-FloatFrame.Draggable = true
-FloatFrame.Parent = FloatGui
-
-local FloatCorner = Instance.new("UICorner"); FloatCorner.CornerRadius = UDim.new(0, 6); FloatCorner.Parent = FloatFrame
-local FloatStroke = Instance.new("UIStroke"); FloatStroke.Color = Color3.fromRGB(255, 255, 255); FloatStroke.Thickness = 1.2; FloatStroke.Parent = FloatFrame
-
-local FloatCategoryBtn = Instance.new("TextButton")
-FloatCategoryBtn.Size = UDim2.new(1, -10, 0, 20)
-FloatCategoryBtn.Position = UDim2.new(0, 5, 0, 6)
-FloatCategoryBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-FloatCategoryBtn.BorderSizePixel = 0
-FloatCategoryBtn.Text = "หมวดหมู่: ตัวอย่าง"
-FloatCategoryBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-FloatCategoryBtn.TextSize = 10
-FloatCategoryBtn.Font = Enum.Font.GothamBold
-FloatCategoryBtn.Parent = FloatFrame
-local FloatCatCorner = Instance.new("UICorner"); FloatCatCorner.CornerRadius = UDim.new(0, 4); FloatCatCorner.Parent = FloatCategoryBtn
-
-local FloatToggleBtn = Instance.new("TextButton")
-FloatToggleBtn.Size = UDim2.new(1, -10, 0, 24)
-FloatToggleBtn.Position = UDim2.new(0, 5, 0, 36)
-FloatToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-FloatToggleBtn.BorderSizePixel = 0
-FloatToggleBtn.Text = "ปิด"
-FloatToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-FloatToggleBtn.TextSize = 11
-FloatToggleBtn.Font = Enum.Font.GothamBold
-FloatToggleBtn.Parent = FloatFrame
-local FloatTogCorner = Instance.new("UICorner"); FloatTogCorner.CornerRadius = UDim.new(0, 4); FloatTogCorner.Parent = FloatToggleBtn
-
--- =============================================================================
--- 5. ระบบควบคุมหน้าต่าง (Dragging, Minimize, Loading Screen)
--- =============================================================================
+-- Loading Screen Animation
 local LoadingGui = Instance.new("ScreenGui")
 LoadingGui.Name = "HJ1JK_LoadingUI"
 LoadingGui.ResetOnSpawn = false
@@ -416,7 +748,7 @@ local LoadStroke = Instance.new("UIStroke"); LoadStroke.Color = Color3.fromRGB(2
 local LoadText = Instance.new("TextLabel")
 LoadText.Size = UDim2.new(1, 0, 1, 0)
 LoadText.BackgroundTransparency = 1
-LoadText.Text = "กำลังโหลด..."
+LoadText.Text = "กำลังโหลดระบบ..."
 LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 13
 LoadText.Font = Enum.Font.GothamBold
@@ -426,7 +758,7 @@ task.spawn(function()
     local tweenUp = TweenService:Create(LoadFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -110, 0.5, -25)})
     tweenUp:Play(); tweenUp.Completed:Wait()
     task.wait(1)
-    LoadText.Text = "โหลดสคริปต์เสร็จแล้ว!"
+    LoadText.Text = "โหลดเสร็จสิ้น!"
     LoadText.TextColor3 = Color3.fromRGB(100, 255, 100)
     task.wait(0.8)
     copyToClipboard(DiscordLink)
@@ -445,15 +777,16 @@ task.spawn(function()
     TweenService:Create(Title, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
     TweenService:Create(CloseButton, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
     TweenService:Create(MinimizeButton, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+
+    for _, lbl in ipairs(allTextLabels) do TweenService:Create(lbl, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play() end
+    for _, btn in ipairs(allButtons) do 
+        TweenService:Create(btn, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0, BackgroundTransparency = 0}):Play()
+    end
+    for _, sld in ipairs(allSliders) do TweenService:Create(sld, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play() end
 end)
 
 -- Dragging & Minimize Logic
 local dragging, dragInput, dragStart, startPos
-local function update(input)
-    local delta = input.Position - dragStart
-    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
-
 TopBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true; dragStart = input.Position; startPos = MainFrame.Position
@@ -461,15 +794,18 @@ TopBar.InputBegan:Connect(function(input)
     end
 end)
 TopBar.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
-UserInputService.InputChanged:Connect(function(input) if input == dragInput and dragging then update(input) end end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
 
-local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 local isMinimized = false
-
 local function minimizeUI()
     if isMinimized or ConfirmOverlay.Visible then return end
     isMinimized = true
-    local minimizeTween = TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 420, 0, 0), BackgroundTransparency = 1})
+    local minimizeTween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 420, 0, 0), BackgroundTransparency = 1})
     minimizeTween:Play()
     minimizeTween.Completed:Connect(function()
         if isMinimized then
@@ -483,18 +819,17 @@ local function maximizeUI()
     if not isMinimized then return end
     isMinimized = false
     D_Icon.Visible = false; MainFrame.Visible = true; MainFrame.BackgroundTransparency = 0
-    TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 420, 0, 300)}):Play()
+    TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 420, 0, 300)}):Play()
 end
 
 MinimizeButton.MouseButton1Click:Connect(minimizeUI)
 D_Icon.MouseButton1Click:Connect(maximizeUI)
 CloseButton.MouseButton1Click:Connect(function() if not isMinimized then ConfirmOverlay.Visible = true end end)
 NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
-
 YesButton.MouseButton1Click:Connect(function()
     local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 420, 0, 0), BackgroundTransparency = 1})
     closeTween:Play()
     closeTween.Completed:Connect(function() 
-        ScreenGui:Destroy(); NotifGui:Destroy(); FloatGui:Destroy(); D_Icon:Destroy()
+        ScreenGui:Destroy(); NotifGui:Destroy(); D_Icon:Destroy()
     end)
 end)
