@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.11: UI & REQUESTED FEATURES ]] --
+-- [[ HJ1JK v1.12: FIXED ESP & INSTANT PICKUP ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -208,7 +208,7 @@ Title.Name = "Title"
 Title.Size = UDim2.new(0, 150, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "HJ1JK v1.11"
+Title.Text = "HJ1JK v1.12"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextTransparency = 1
@@ -446,7 +446,7 @@ local EpsZombieToggle = createToggle("EpsZombie", "ESP เห็นซอมบ�
 
 -- สร้างเมนูในแท็บเครื่องมือ
 createHeader(">> ฟังก์ชันเครื่องมือพิเศษ <<", ToolTab)
-local InstantPickupToggle = createToggle("InstantPickup", "เก็บของทันที (อัตโนมัติ)", ToolTab)
+local InstantPickupToggle = createToggle("InstantPickup", "เก็บของทันที (0 วินาที)", ToolTab)
 
 local GiveToolFrame = Instance.new("Frame")
 GiveToolFrame.Size = UDim2.new(0, 260, 0, 35)
@@ -478,7 +478,7 @@ local JumpPowerBack, JumpPowerBtn, JumpPowerLabel = createSlider("กระโ�
 local InfJumpToggle = createToggle("InfJump", "กระโดดไม่จำกัด (Infinite Jump)", MovementTab)
 
 -- =============================================================================
--- 4. ระบบการทำงานเบื้องหลัง (Backend Logic)
+-- 4. ระบบการทำงานเบื้องหลัง (Backend Logic - แก้ไขการตรวจจับเกมเอาชีวิตรอด)
 -- =============================================================================
 local Config = {
     EpsItem = false,
@@ -493,7 +493,6 @@ local Config = {
 local CurrentWalkSpeed = 16
 local CurrentJumpPower = 50
 
--- ฟังก์ชันอัปเดตแจ้งเตือนปุ่มสวิตช์
 local function updateVisuals(btn, state, funcName)
     btn.BackgroundColor3 = state and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
     btn.Text = state and "เปิด" or "ปิด"
@@ -532,8 +531,9 @@ EnableJumpToggle.MouseButton1Click:Connect(function()
     Config.EnableJump = not Config.EnableJump
     updateVisuals(EnableJumpToggle, Config.EnableJump, "กระโดดสูง")
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.UseJumpPower = true
-        LocalPlayer.Character.Humanoid.JumpPower = Config.EnableJump and CurrentJumpPower or 50
+        local humanoid = LocalPlayer.Character.Humanoid
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = Config.EnableJump and CurrentJumpPower or 50
     end
 end)
 
@@ -552,7 +552,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ระบบรีเซ็ตสถานะเมื่อเกิดใหม่
+-- ระบบรักษาสถิติเมื่อรีสawn
 LocalPlayer.CharacterAdded:Connect(function(char)
     local hum = char:WaitForChild("Humanoid", 5)
     if hum then
@@ -561,7 +561,7 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
--- ระบบให้เครื่องมือคลิกวาร์ป
+-- แจกไอเท็มคลิกวาร์ป
 GiveToolBtn.MouseButton1Click:Connect(function()
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
     local character = LocalPlayer.Character
@@ -595,23 +595,23 @@ GiveToolBtn.MouseButton1Click:Connect(function()
     showNotification("รับอุปกรณ์คลิกวาร์ปสำเร็จ!", true)
 end)
 
--- ระบบลูปการทำงาน ESP, เก็บของอัตโนมัติ
+-- ลูปการทำงานหลัก (ESP และระบบ 0 วินาทีแบบครอบคลุมเกมเอาชีวิตรอด)
 task.spawn(function()
-    while task.wait(0.3) do
+    while task.wait(0.2) do
         if not ScreenGui.Parent then break end
 
-        -- ESP สิ่งของ (ProximityPrompt หรือ Handle ของ Drop Item)
+        -- 1. ESP สิ่งของ (ครอบคลุมทั้ง ProximityPrompt, พาร์ทไอเท็มดรอป, และเครื่องมือในแมพ)
         if Config.EpsItem then
             for _, obj in ipairs(Workspace:GetDescendants()) do
-                if (obj:IsA("ProximityPrompt") or obj.Name == "Handle" or obj:IsA("TouchTransmitter")) and not obj:IsDescendantOf(LocalPlayer.Character) then
-                    local part = obj.Parent
-                    if part and part:IsA("BasePart") then
-                        local highlight = part:FindFirstChild("HJ1JK_ItemESP") or Instance.new("Highlight")
+                if (obj:IsA("ProximityPrompt") or obj.Name == "Handle" or obj:IsA("Tool") or obj:IsA("TouchTransmitter")) and not obj:IsDescendantOf(LocalPlayer.Character) then
+                    local targetPart = obj:IsA("ProximityPrompt") and obj.Parent or (obj:IsA("Tool") and obj:FindFirstChild("Handle") or obj)
+                    if targetPart and targetPart:IsA("BasePart") then
+                        local highlight = targetPart:FindFirstChild("HJ1JK_ItemESP") or Instance.new("Highlight")
                         highlight.Name = "HJ1JK_ItemESP"
-                        highlight.FillColor = Color3.fromRGB(255, 215, 0)
+                        highlight.FillColor = Color3.fromRGB(255, 215, 0) -- สีทองสำหรับไอเท็ม
                         highlight.FillTransparency = 0.4
                         highlight.OutlineTransparency = 0
-                        highlight.Parent = part
+                        highlight.Parent = targetPart
                     end
                 end
             end
@@ -621,35 +621,35 @@ task.spawn(function()
             end
         end
 
-        -- ESP เห็น NPC
+        -- 2. ESP เห็น NPC (มนุษย์/ผู้รอดชีวิตอื่นๆ ที่ไม่ใช่ผู้เล่นหลักและไม่ใช่ซอมบี้)
         if Config.EpsNpc then
-            for _, desc in ipairs(Workspace:GetChildren()) do
+            for _, desc in ipairs(Workspace:GetDescendants()) do
                 if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then
                     local nameLower = string.lower(desc.Name)
-                    if not string.find(nameLower, "zombie") then
+                    if not string.find(nameLower, "zombie") and not string.find(nameLower, "infected") and not string.find(nameLower, "undead") then
                         local ncham = desc:FindFirstChild("HJ1JK_NpcESP") or Instance.new("Highlight")
                         ncham.Name = "HJ1JK_NpcESP"
-                        ncham.FillColor = Color3.fromRGB(0, 200, 255)
+                        ncham.FillColor = Color3.fromRGB(0, 200, 255) -- สีฟ้าสำหรับ NPC
                         ncham.FillTransparency = 0.5
                         ncham.Parent = desc
                     end
                 end
             end
         else
-            for _, desc in ipairs(Workspace:GetChildren()) do
+            for _, desc in ipairs(Workspace:GetDescendants()) do
                 if desc:IsA("Model") and desc:FindFirstChild("HJ1JK_NpcESP") then desc.HJ1JK_NpcESP:Destroy() end
             end
         end
 
-        -- ESP เห็นซอมบี้
+        -- 3. ESP เห็นซอมบี้ (ตรวจสอบคำว่า zombie, infected, undead, mutant ฯลฯ)
         if Config.EpsZombie then
             for _, desc in ipairs(Workspace:GetDescendants()) do
                 if desc:IsA("Model") and desc:FindFirstChild("Humanoid") then
                     local nameLower = string.lower(desc.Name)
-                    if string.find(nameLower, "zombie") or string.find(nameLower, "infected") or string.find(nameLower, "undead") then
+                    if string.find(nameLower, "zombie") or string.find(nameLower, "infected") or string.find(nameLower, "undead") or string.find(nameLower, "mutant") then
                         local zcham = desc:FindFirstChild("HJ1JK_ZombieESP") or Instance.new("Highlight")
                         zcham.Name = "HJ1JK_ZombieESP"
-                        zcham.FillColor = Color3.fromRGB(255, 50, 50)
+                        zcham.FillColor = Color3.fromRGB(255, 50, 50) -- สีแดงสำหรับซอมบี้
                         zcham.FillTransparency = 0.4
                         zcham.Parent = desc
                     end
@@ -661,13 +661,12 @@ task.spawn(function()
             end
         end
 
-        -- ระบบเก็บของทันที (Instant Pickup)
-        if Config.InstantPickup and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local myPos = LocalPlayer.Character.HumanoidRootPart.Position
+        -- 4. ระบบเก็บของทันที (ปรับ HoldDuration เป็น 0 วินาที เพื่อให้กดทีเดียวเก็บได้เลย)
+        if Config.InstantPickup then
             for _, obj in ipairs(Workspace:GetDescendants()) do
                 if obj:IsA("ProximityPrompt") then
-                    if (obj.Parent.Position - myPos).Magnitude <= (obj.MaxActivationDistance + 5) then
-                        fireproximityprompt(obj)
+                    if obj.HoldDuration > 0 then
+                        obj.HoldDuration = 0
                     end
                 end
             end
@@ -694,7 +693,7 @@ UserInputService.InputChanged:Connect(function(input)
         if walkSpeedDragging then
             local percentage = math.clamp((input.Position.X - WalkSpeedBack.AbsolutePosition.X) / WalkSpeedBack.AbsoluteSize.X, 0, 1)
             WalkSpeedBtn.Position = UDim2.new(percentage, -7, 0, -4.5)
-            CurrentWalkSpeed = math.floor(1 + (percentage * 999)) -- ตั้งค่าสเกล 1 ถึง 1000
+            CurrentWalkSpeed = math.floor(1 + (percentage * 999))
             WalkSpeedLabel.Text = "ความเร็ว (WalkSpeed): " .. CurrentWalkSpeed
             if Config.EnableSpeed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
                 LocalPlayer.Character.Humanoid.WalkSpeed = CurrentWalkSpeed
@@ -703,7 +702,7 @@ UserInputService.InputChanged:Connect(function(input)
         if jumpPowerDragging then
             local percentage = math.clamp((input.Position.X - JumpPowerBack.AbsolutePosition.X) / JumpPowerBack.AbsoluteSize.X, 0, 1)
             JumpPowerBtn.Position = UDim2.new(percentage, -7, 0, -4.5)
-            CurrentJumpPower = math.floor(1 + (percentage * 999)) -- ตั้งค่าสเกล 1 ถึง 1000
+            CurrentJumpPower = math.floor(1 + (percentage * 999))
             JumpPowerLabel.Text = "กระโดดสูง (JumpPower): " .. CurrentJumpPower
             if Config.EnableJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
                 LocalPlayer.Character.Humanoid.UseJumpPower = true
@@ -829,7 +828,6 @@ NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end
 YesButton.MouseButton1Click:Connect(function()
     local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 420, 0, 0), BackgroundTransparency = 1})
     closeTween:Play()
-    closeTween.Completed:Connect(function() 
-        ScreenGui:Destroy(); NotifGui:Destroy(); D_Icon:Destroy()
-    end)
+    closeTween.Completed:Wait()
+    ScreenGui:Destroy(); NotifGui:Destroy(); D_Icon:Destroy()
 end)
