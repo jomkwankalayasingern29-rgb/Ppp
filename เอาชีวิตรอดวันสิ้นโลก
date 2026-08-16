@@ -1,0 +1,500 @@
+-- [[ HJ1JK v1.10: UI & SYSTEM ONLY ]] --
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ลบ UI เก่ากันบั๊กทับซ้อนทั้งหมด
+local oldUIs = {"HJ1JK_Gui", "HJ1JK_LoadingUI", "HJ1JK_NotifGui", "HJ1JK_FloatGui", "D_Icon", "FOV_Circle"}
+for _, uiName in ipairs(oldUIs) do
+    if PlayerGui:FindFirstChild(uiName) then
+        pcall(function() PlayerGui[uiName]:Destroy() end)
+    end
+end
+
+local DiscordLink = "https://discord.gg/bvZ3aGHcW"
+
+local function copyToClipboard(text)
+    if setclipboard then setclipboard(text) elseif toclipboard then toclipboard(text) end
+end
+
+-- =============================================================================
+-- 1. หน้าต่างแจ้งเตือน (Notification System)
+-- =============================================================================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "HJ1JK_Gui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+local NotifGui = Instance.new("ScreenGui")
+NotifGui.Name = "HJ1JK_NotifGui"
+NotifGui.ResetOnSpawn = false
+NotifGui.Parent = PlayerGui
+
+local NotifContainer = Instance.new("Frame")
+NotifContainer.Name = "NotifContainer"
+NotifContainer.Size = UDim2.new(0, 240, 1, 0)
+NotifContainer.Position = UDim2.new(1, -250, 0, 0)
+NotifContainer.BackgroundTransparency = 1
+NotifContainer.Parent = NotifGui
+
+local NotifLayout = Instance.new("UIListLayout")
+NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
+NotifLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+NotifLayout.Padding = UDim.new(0, 8)
+NotifLayout.Parent = NotifContainer
+
+local NotifPadding = Instance.new("UIPadding")
+NotifPadding.PaddingBottom = UDim.new(0, 15)
+NotifPadding.Parent = NotifContainer
+
+local function showNotification(text, isEnabled)
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, 0, 0, 50)
+    card.Position = UDim2.new(1, 40, 0, 0)
+    card.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    card.BorderSizePixel = 0
+    card.Parent = NotifContainer
+
+    local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 6); corner.Parent = card
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = isEnabled and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(255, 50, 50)
+    stroke.Thickness = 1.2
+    stroke.Parent = card
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -16, 0, 30)
+    lbl.Position = UDim2.new(0, 8, 0, 4)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextSize = 11
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextWrapped = true
+    lbl.Parent = card
+
+    local barBack = Instance.new("Frame")
+    barBack.Size = UDim2.new(1, -16, 0, 3)
+    barBack.Position = UDim2.new(0, 8, 1, -8)
+    barBack.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    barBack.BorderSizePixel = 0
+    barBack.Parent = card
+    local barCorner = Instance.new("UICorner"); barCorner.CornerRadius = UDim.new(1, 0); barCorner.Parent = barBack
+
+    local barFill = Instance.new("Frame")
+    barFill.Size = UDim2.new(1, 0, 1, 0)
+    barFill.BackgroundColor3 = isEnabled and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(255, 50, 50)
+    barFill.BorderSizePixel = 0
+    barFill.Parent = barBack
+    local barFillCorner = Instance.new("UICorner"); barFillCorner.CornerRadius = UDim.new(1, 0); barFillCorner.Parent = barFill
+
+    task.spawn(function()
+        local tweenIn = TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)})
+        tweenIn:Play()
+        tweenIn.Completed:Wait()
+        local tweenBar = TweenService:Create(barFill, TweenInfo.new(2.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2.new(0, 0, 1, 0)})
+        tweenBar:Play()
+        tweenBar.Completed:Wait()
+        local tweenOut = TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 40, 0, 0)})
+        tweenOut:Play()
+        tweenOut.Completed:Wait()
+        card:Destroy()
+    end)
+end
+
+-- =============================================================================
+-- 2. หน้าต่างหลัก (MainFrame & Confirm Overlay)
+-- =============================================================================
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 420, 0, 300) 
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BorderSizePixel = 0
+MainFrame.BackgroundTransparency = 1 
+MainFrame.Visible = false
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(255, 255, 255)
+MainStroke.Thickness = 1.2
+MainStroke.Transparency = 1
+MainStroke.Parent = MainFrame
+
+local MainCorner = Instance.new("UICorner"); MainCorner.CornerRadius = UDim.new(0, 6); MainCorner.Parent = MainFrame
+
+-- Overlay ยืนยันการปิด
+local ConfirmOverlay = Instance.new("Frame")
+ConfirmOverlay.Name = "ConfirmOverlay"
+ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
+ConfirmOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ConfirmOverlay.BackgroundTransparency = 0.5
+ConfirmOverlay.Visible = false
+ConfirmOverlay.ZIndex = 10
+ConfirmOverlay.Parent = MainFrame
+
+local ConfirmBox = Instance.new("Frame")
+ConfirmBox.Size = UDim2.new(0, 260, 0, 120)
+ConfirmBox.Position = UDim2.new(0.5, -130, 0.5, -60)
+ConfirmBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ConfirmBox.BorderSizePixel = 0
+ConfirmBox.ZIndex = 11
+ConfirmBox.Parent = ConfirmOverlay
+local ConfirmCorner = Instance.new("UICorner"); ConfirmCorner.CornerRadius = UDim.new(0, 6); ConfirmCorner.Parent = ConfirmBox
+local ConfirmStroke = Instance.new("UIStroke"); ConfirmStroke.Color = Color3.fromRGB(255, 255, 255); ConfirmStroke.Thickness = 1.2; ConfirmStroke.Parent = ConfirmBox
+
+local ConfirmTitle = Instance.new("TextLabel")
+ConfirmTitle.Size = UDim2.new(1, 0, 0, 40)
+ConfirmTitle.Position = UDim2.new(0, 0, 0, 10)
+ConfirmTitle.BackgroundTransparency = 1
+ConfirmTitle.Text = "คุณต้องการลบ UI นี้หรือไม่?"
+ConfirmTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ConfirmTitle.TextSize = 13
+ConfirmTitle.Font = Enum.Font.GothamBold
+ConfirmTitle.ZIndex = 12
+ConfirmTitle.Parent = ConfirmBox
+
+local YesButton = Instance.new("TextButton")
+YesButton.Size = UDim2.new(0, 100, 0, 32)
+YesButton.Position = UDim2.new(0, 20, 1, -42)
+YesButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+YesButton.Text = "ใช่"
+YesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+YesButton.TextSize = 12
+YesButton.Font = Enum.Font.GothamBold
+YesButton.BorderSizePixel = 0
+YesButton.ZIndex = 12
+YesButton.Parent = ConfirmBox
+local YesCorner = Instance.new("UICorner"); YesCorner.CornerRadius = UDim.new(0, 4); YesCorner.Parent = YesButton
+
+local NoButton = Instance.new("TextButton")
+NoButton.Size = UDim2.new(0, 100, 0, 32)
+NoButton.Position = UDim2.new(1, -120, 1, -42)
+NoButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+NoButton.Text = "ไม่ใช่"
+NoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoButton.TextSize = 12
+NoButton.Font = Enum.Font.GothamBold
+NoButton.BorderSizePixel = 0
+NoButton.ZIndex = 12
+NoButton.Parent = ConfirmBox
+local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
+
+-- TopBar (แถบด้านบนสำหรับลากและปิด/ย่อ)
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 28)
+TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopLine = Instance.new("Frame")
+TopLine.Size = UDim2.new(1, 0, 0, 1)
+TopLine.Position = UDim2.new(0, 0, 1, -1)
+TopLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TopLine.BorderSizePixel = 0
+TopLine.Parent = TopBar
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(0, 150, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "HJ1JK v1.4.14"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 13
+Title.TextTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 28, 0, 28)
+CloseButton.Position = UDim2.new(1, -28, 0, 0)
+CloseButton.BackgroundTransparency = 1
+CloseButton.Text = "✕"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 13
+CloseButton.TextTransparency = 1
+CloseButton.Font = Enum.Font.Gotham
+CloseButton.Parent = TopBar
+
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Size = UDim2.new(0, 28, 0, 28)
+MinimizeButton.Position = UDim2.new(1, -56, 0, 0)
+MinimizeButton.BackgroundTransparency = 1
+MinimizeButton.Text = "─"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 11
+MinimizeButton.TextTransparency = 1
+MinimizeButton.Font = Enum.Font.Gotham
+MinimizeButton.Parent = TopBar
+
+-- =============================================================================
+-- 3. ระบบแท็บและหมวดหมู่ (Tabs & Categories)
+-- =============================================================================
+local Content = Instance.new("Frame")
+Content.Name = "Content"
+Content.Size = UDim2.new(1, 0, 1, -28)
+Content.Position = UDim2.new(0, 0, 0, 28)
+Content.BackgroundTransparency = 1
+Content.Parent = MainFrame
+
+local function createTab(name)
+    local Tab = Instance.new("ScrollingFrame")
+    Tab.Name = name
+    Tab.Size = UDim2.new(0, 285, 1, 0)
+    Tab.BackgroundTransparency = 1
+    Tab.CanvasSize = UDim2.new(0, 0, 0, 0) 
+    Tab.ScrollBarThickness = 3
+    Tab.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+    Tab.Visible = false
+    Tab.Parent = Content
+    
+    local Layout = Instance.new("UIListLayout")
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.Padding = UDim.new(0, 8)
+    Layout.Parent = Tab
+    
+    local Padding = Instance.new("UIPadding")
+    Padding.PaddingTop = UDim.new(0, 8)
+    Padding.PaddingLeft = UDim.new(0, 10)
+    Padding.Parent = Tab
+
+    Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Tab.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 20)
+    end)
+
+    return Tab
+end
+
+local Tab1 = createTab("Tab1")
+Tab1.Visible = true
+local Tab2 = createTab("Tab2")
+
+local CenterLine = Instance.new("Frame")
+CenterLine.Size = UDim2.new(0, 1, 1, 0)
+CenterLine.Position = UDim2.new(0, 285, 0, 0)
+CenterLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+CenterLine.BorderSizePixel = 0
+CenterLine.Parent = Content
+
+local RightCategories = Instance.new("Frame")
+RightCategories.Name = "RightCategories"
+RightCategories.Size = UDim2.new(1, -286, 1, 0)
+RightCategories.Position = UDim2.new(0, 286, 0, 0)
+RightCategories.BackgroundTransparency = 1
+RightCategories.Parent = Content
+
+local RightLayout = Instance.new("UIListLayout")
+RightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+RightLayout.Padding = UDim.new(0, 5)
+RightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+RightLayout.Parent = RightCategories
+
+local RightPadding = Instance.new("UIPadding")
+RightPadding.PaddingTop = UDim.new(0, 6)
+RightPadding.Parent = RightCategories
+
+local function createCategoryBtn(text)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 120, 0, 25)
+    Btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Btn.Text = text
+    Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 10
+    Btn.BorderSizePixel = 0
+    Btn.Parent = RightCategories
+    local Corner = Instance.new("UICorner"); Corner.CornerRadius = UDim.new(0, 4); Corner.Parent = Btn
+    return Btn
+end
+
+local CatBtn1 = createCategoryBtn("หมวดหมู่ที่ 1")
+CatBtn1.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+CatBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
+local CatBtn2 = createCategoryBtn("หมวดหมู่ที่ 2")
+
+CatBtn1.MouseButton1Click:Connect(function()
+    Tab1.Visible = true; Tab2.Visible = false
+    CatBtn1.BackgroundColor3 = Color3.fromRGB(40, 40, 40); CatBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CatBtn2.BackgroundColor3 = Color3.fromRGB(25, 25, 25); CatBtn2.TextColor3 = Color3.fromRGB(180, 180, 180)
+end)
+
+CatBtn2.MouseButton1Click:Connect(function()
+    Tab1.Visible = false; Tab2.Visible = true
+    CatBtn2.BackgroundColor3 = Color3.fromRGB(40, 40, 40); CatBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CatBtn1.BackgroundColor3 = Color3.fromRGB(25, 25, 25); CatBtn1.TextColor3 = Color3.fromRGB(180, 180, 180)
+end)
+
+-- =============================================================================
+-- 4. ไอคอนเปิดหน้าต่างเมื่อย่อ (Minimized Icon) & โลโก้ลอย (Floating UI)
+-- =============================================================================
+local D_Icon = Instance.new("TextButton")
+D_Icon.Size = UDim2.new(0, 40, 0, 40)
+D_Icon.Position = UDim2.new(0, 15, 0, 15)
+D_Icon.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+D_Icon.Text = "D"
+D_Icon.TextColor3 = Color3.fromRGB(255, 255, 255)
+D_Icon.TextSize = 18
+D_Icon.Font = Enum.Font.GothamBold
+D_Icon.Visible = false
+D_Icon.Parent = ScreenGui
+local D_Corner, D_Stroke = Instance.new("UICorner"), Instance.new("UIStroke")
+D_Corner.CornerRadius = UDim.new(0, 6); D_Corner.Parent = D_Icon
+D_Stroke.Color = Color3.fromRGB(255, 255, 255); D_Stroke.Thickness = 1.2; D_Stroke.Parent = D_Icon
+
+-- Floating UI (สวิตช์ลอยบนจอ)
+local FloatGui = Instance.new("ScreenGui")
+FloatGui.Name = "HJ1JK_FloatGui"
+FloatGui.ResetOnSpawn = false
+FloatGui.Parent = PlayerGui
+
+local FloatFrame = Instance.new("Frame")
+FloatFrame.Name = "FloatFrame"
+FloatFrame.Size = UDim2.new(0, 160, 0, 75)
+FloatFrame.Position = UDim2.new(0, 15, 0, 70)
+FloatFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+FloatFrame.BorderSizePixel = 0
+FloatFrame.Active = true
+FloatFrame.Draggable = true
+FloatFrame.Parent = FloatGui
+
+local FloatCorner = Instance.new("UICorner"); FloatCorner.CornerRadius = UDim.new(0, 6); FloatCorner.Parent = FloatFrame
+local FloatStroke = Instance.new("UIStroke"); FloatStroke.Color = Color3.fromRGB(255, 255, 255); FloatStroke.Thickness = 1.2; FloatStroke.Parent = FloatFrame
+
+local FloatCategoryBtn = Instance.new("TextButton")
+FloatCategoryBtn.Size = UDim2.new(1, -10, 0, 20)
+FloatCategoryBtn.Position = UDim2.new(0, 5, 0, 6)
+FloatCategoryBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+FloatCategoryBtn.BorderSizePixel = 0
+FloatCategoryBtn.Text = "หมวดหมู่: ตัวอย่าง"
+FloatCategoryBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatCategoryBtn.TextSize = 10
+FloatCategoryBtn.Font = Enum.Font.GothamBold
+FloatCategoryBtn.Parent = FloatFrame
+local FloatCatCorner = Instance.new("UICorner"); FloatCatCorner.CornerRadius = UDim.new(0, 4); FloatCatCorner.Parent = FloatCategoryBtn
+
+local FloatToggleBtn = Instance.new("TextButton")
+FloatToggleBtn.Size = UDim2.new(1, -10, 0, 24)
+FloatToggleBtn.Position = UDim2.new(0, 5, 0, 36)
+FloatToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+FloatToggleBtn.BorderSizePixel = 0
+FloatToggleBtn.Text = "ปิด"
+FloatToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatToggleBtn.TextSize = 11
+FloatToggleBtn.Font = Enum.Font.GothamBold
+FloatToggleBtn.Parent = FloatFrame
+local FloatTogCorner = Instance.new("UICorner"); FloatTogCorner.CornerRadius = UDim.new(0, 4); FloatTogCorner.Parent = FloatToggleBtn
+
+-- =============================================================================
+-- 5. ระบบควบคุมหน้าต่าง (Dragging, Minimize, Loading Screen)
+-- =============================================================================
+local LoadingGui = Instance.new("ScreenGui")
+LoadingGui.Name = "HJ1JK_LoadingUI"
+LoadingGui.ResetOnSpawn = false
+LoadingGui.Parent = PlayerGui
+
+local LoadFrame = Instance.new("Frame")
+LoadFrame.Size = UDim2.new(0, 220, 0, 50)
+LoadFrame.Position = UDim2.new(0.5, -110, 1, 10) 
+LoadFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+LoadFrame.BorderSizePixel = 0
+LoadFrame.Parent = LoadingGui
+local LoadCorner = Instance.new("UICorner"); LoadCorner.CornerRadius = UDim.new(0, 6); LoadCorner.Parent = LoadFrame
+local LoadStroke = Instance.new("UIStroke"); LoadStroke.Color = Color3.fromRGB(255, 255, 255); LoadStroke.Thickness = 1.2; LoadStroke.Parent = LoadFrame
+
+local LoadText = Instance.new("TextLabel")
+LoadText.Size = UDim2.new(1, 0, 1, 0)
+LoadText.BackgroundTransparency = 1
+LoadText.Text = "กำลังโหลด..."
+LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoadText.TextSize = 13
+LoadText.Font = Enum.Font.GothamBold
+LoadText.Parent = LoadFrame
+
+task.spawn(function()
+    local tweenUp = TweenService:Create(LoadFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -110, 0.5, -25)})
+    tweenUp:Play(); tweenUp.Completed:Wait()
+    task.wait(1)
+    LoadText.Text = "โหลดสคริปต์เสร็จแล้ว!"
+    LoadText.TextColor3 = Color3.fromRGB(100, 255, 100)
+    task.wait(0.8)
+    copyToClipboard(DiscordLink)
+    LoadText.Text = "คัดลอกลิงก์ดิสคอร์ดสำเร็จ!"
+    LoadText.TextColor3 = Color3.fromRGB(100, 180, 255)
+    task.wait(0.8)
+    local fadeOut = TweenService:Create(LoadFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1})
+    TweenService:Create(LoadStroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 1}):Play()
+    TweenService:Create(LoadText, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+    fadeOut:Play(); fadeOut.Completed:Wait()
+    LoadingGui:Destroy()
+
+    MainFrame.Visible = true
+    TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+    TweenService:Create(MainStroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 0}):Play()
+    TweenService:Create(Title, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+    TweenService:Create(CloseButton, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+    TweenService:Create(MinimizeButton, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+end)
+
+-- Dragging & Minimize Logic
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true; dragStart = input.Position; startPos = MainFrame.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    end
+end)
+TopBar.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
+UserInputService.InputChanged:Connect(function(input) if input == dragInput and dragging then update(input) end end)
+
+local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+local isMinimized = false
+
+local function minimizeUI()
+    if isMinimized or ConfirmOverlay.Visible then return end
+    isMinimized = true
+    local minimizeTween = TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 420, 0, 0), BackgroundTransparency = 1})
+    minimizeTween:Play()
+    minimizeTween.Completed:Connect(function()
+        if isMinimized then
+            MainFrame.Visible = false; D_Icon.Visible = true; D_Icon.Size = UDim2.new(0, 0, 0, 0)
+            TweenService:Create(D_Icon, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+        end
+    end)
+end
+
+local function maximizeUI()
+    if not isMinimized then return end
+    isMinimized = false
+    D_Icon.Visible = false; MainFrame.Visible = true; MainFrame.BackgroundTransparency = 0
+    TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 420, 0, 300)}):Play()
+end
+
+MinimizeButton.MouseButton1Click:Connect(minimizeUI)
+D_Icon.MouseButton1Click:Connect(maximizeUI)
+CloseButton.MouseButton1Click:Connect(function() if not isMinimized then ConfirmOverlay.Visible = true end end)
+NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
+
+YesButton.MouseButton1Click:Connect(function()
+    local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 420, 0, 0), BackgroundTransparency = 1})
+    closeTween:Play()
+    closeTween.Completed:Connect(function() 
+        ScreenGui:Destroy(); NotifGui:Destroy(); FloatGui:Destroy(); D_Icon:Destroy()
+    end)
+end)
