@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.15: OPTIMIZED SURVIVAL ESP & SPEED FIX ]] --
+-- [[ HJ1JK v1.16: SMOOTH ESP & SURVIVAL ITEMS FIX ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -24,10 +24,12 @@ local function copyToClipboard(text)
     if setclipboard then setclipboard(text) elseif toclipboard then toclipboard(text) end
 end
 
+-- พจนานุกรมแปลชื่อไอเท็มวันสิ้นโลกเป็นภาษาไทย
 local ThaiItemNames = {
-    ["fuel"] = "น้ำมัน", ["gasoline"] = "น้ำมันเบนซิน", ["oil"] = "น้ำมันเครื่อง", ["gas"] = "น้ำมัน", ["fuelcan"] = "ถังน้ำมัน",
-    ["battery"] = "แบตเตอรี่", ["power"] = "แบตเตอรี่", ["wood"] = "ไม้", ["metal"] = "เหล็ก", ["scrap"] = "เศษเหล็ก",
-    ["stone"] = "หิน", ["cloth"] = "ผ้า", ["rope"] = "เชือก", ["toolbox"] = "กล่องเครื่องมือ", ["key"] = "กุญแจ",
+    ["fuel"] = "ถังน้ำมัน", ["gasoline"] = "น้ำมันเบนซิน", ["oil"] = "น้ำมันเครื่อง", ["gas"] = "น้ำมัน", ["fuelcan"] = "ถังน้ำมัน",
+    ["battery"] = "แบตเตอรี่", ["accu"] = "แบตเตอรี่", ["power"] = "แบตเตอรี่สำรอง",
+    ["wood"] = "ท่อนไม้", ["metal"] = "เศษเหล็ก", ["scrap"] = "เศษเหล็ก", ["stone"] = "ก้อนหิน",
+    ["cloth"] = "ผ้า", ["rope"] = "เชือก", ["toolbox"] = "กล่องเครื่องมือ", ["key"] = "กุญแจ",
     ["food"] = "อาหาร", ["water"] = "น้ำดื่ม", ["can"] = "อาหารกระป๋อง", ["canned"] = "อาหารกระป๋อง",
     ["apple"] = "แอปเปิ้ล", ["meat"] = "เนื้อสัตว์", ["bandage"] = "ผ้าพันแผล", ["medkit"] = "ชุดปฐมพยาบาล",
     ["ammo"] = "กระสุน", ["bullet"] = "กระสุน", ["gun"] = "ปืน", ["pistol"] = "ปืนพก", ["rifle"] = "ปืนไรเฟิล"
@@ -218,7 +220,7 @@ Title.Name = "Title"
 Title.Size = UDim2.new(0, 150, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "HJ1JK v1.15"
+Title.Text = "HJ1JK v1.16"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextTransparency = 1
@@ -481,7 +483,7 @@ local JumpPowerBack, JumpPowerBtn, JumpPowerLabel = createSlider("กระโ�
 local InfJumpToggle = createToggle("InfJump", "กระโดดไม่จำกัด (Infinite Jump)", MovementTab)
 
 -- =============================================================================
--- 5. ระบบการทำงานเบื้องหลัง (Backend Logic)
+-- 5. ระบบการทำงานเบื้องหลัง (Backend Logic - ปรับแต่งรอบการทำงานไม่ให้แลค)
 -- =============================================================================
 local Config = {
     EpsItem = false,
@@ -554,7 +556,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ระบบบล็อกความเร็วไม่ให้โดนปืนหรืออาวุธรีเซ็ตกลับค่าเดิม
+-- ล็อกความเร็วไม่ให้ปืนรีเซ็ต
 RunService.Stepped:Connect(function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
@@ -610,66 +612,67 @@ GiveToolBtn.MouseButton1Click:Connect(function()
     showNotification("รับอุปกรณ์คลิกวาร์ปสำเร็จ!", true)
 end)
 
--- ลูป ESP ที่ถูกปรับปรุงให้ไม่แลคและกรองรถออก
+-- ปรับแต่งลูป ESP ไม่ให้หน่วง/แลค และกรองเฉพาะไอเท็มน้ำมัน/แบตเตอรี่/อาหารจริง ๆ
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(1) do -- ขยายเวลาลูปเป็น 1 วินาที เพื่อไม่ให้เครื่องกระตุก
         if not ScreenGui.Parent then break end
 
-        -- 1. ESP สิ่งของ / อาหาร / น้ำมัน / แบตเตอรี่ / กระสุน (กรองรถออก ป้องกันพาร์ทรถติดไฮไลท์)
+        -- 1. ESP สิ่งของ / เชื้อเพลิง / แบตเตอรี่ (กรองรถและฉากออก)
         if Config.EpsItem then
             for _, obj in ipairs(Workspace:GetDescendants()) do
                 if not obj:IsDescendantOf(LocalPlayer.Character) then
-                    local isItemTarget = false
-                    local targetPart = nil
+                    local isItem = false
+                    local partTarget = nil
 
                     if obj:IsA("ProximityPrompt") then
-                        -- ป้องกันไม่ให้จับ Prompt ที่อยู่บนรถหรือประตูรถ
-                        local model = obj.Parent and obj.Parent.Parent
-                        if not (model and (string.find(string.lower(model.Name), "car") or string.find(string.lower(model.Name), "vehicle") or string.find(string.lower(model.Name), "truck"))) then
-                            isItemTarget = true
-                            targetPart = obj.Parent
+                        local parentModel = obj.Parent and obj.Parent.Parent
+                        local promptText = string.lower(obj.ActionText)
+                        local parentName = parentModel and string.lower(parentModel.Name) or ""
+                        
+                        -- เช็คคำสั่งเก็บของ หรือชื่อไอเท็มที่จับต้องได้
+                        if string.find(promptText, "take") or string.find(promptText, "pickup") or string.find(promptText, "เก็บ") or string.find(parentName, "fuel") or string.find(parentName, "battery") or string.find(parentName, "item") then
+                            if not (string.find(parentName, "car") or string.find(parentName, "vehicle") or string.find(parentName, "door")) then
+                                isItem = true
+                                partTarget = obj.Parent
+                            end
                         end
-                    elseif obj:IsA("Tool") then
-                        isItemTarget = true
-                        targetPart = obj:FindFirstChild("Handle") or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
                     elseif obj:IsA("BasePart") then
-                        local nameLower = string.lower(obj.Name)
-                        -- ค้นหาเฉพาะคำที่เป็นไอเท็ม น้ำมัน แบตเตอรี่ หรือกล่องสเบียง
-                        if (string.find(nameLower, "fuel") or string.find(nameLower, "gas") or string.find(nameLower, "oil") or string.find(nameLower, "battery") or string.find(nameLower, "item") or string.find(nameLower, "loot") or string.find(nameLower, "drop") or string.find(nameLower, "ammo") or string.find(nameLower, "food") or string.find(nameLower, "can")) and not string.find(nameLower, "car") then
-                            isItemTarget = true
-                            targetPart = obj
+                        local nLower = string.lower(obj.Name)
+                        -- ค้นหาเฉพาะชื่อชิ้นส่วนที่เป็นถังน้ำมัน แบตเตอรี่ หรือกล่องไอเท็ม
+                        if (string.find(nLower, "fuel") or string.find(nLower, "gas") or string.find(nLower, "oil") or string.find(nLower, "battery") or string.find(nLower, "loot") or string.find(nLower, "ammo") or string.find(nLower, "can")) and not string.find(nLower, "car") and not string.find(nLower, "road") then
+                            isItem = true
+                            partTarget = obj
                         end
                     end
 
-                    if isItemTarget and targetPart and targetPart:IsA("BasePart") then
-                        local highlight = targetPart:FindFirstChild("HJ1JK_ItemESP") or Instance.new("Highlight")
-                        highlight.Name = "HJ1JK_ItemESP"
-                        highlight.FillColor = Color3.fromRGB(255, 215, 0)
-                        highlight.FillTransparency = 0.4
-                        highlight.OutlineTransparency = 0
-                        highlight.Parent = targetPart
+                    if isItem and partTarget and partTarget:IsA("BasePart") then
+                        local hl = partTarget:FindFirstChild("HJ1JK_ItemESP") or Instance.new("Highlight")
+                        hl.Name = "HJ1JK_ItemESP"
+                        hl.FillColor = Color3.fromRGB(255, 215, 0)
+                        hl.FillTransparency = 0.4
+                        hl.OutlineTransparency = 0
+                        hl.Parent = partTarget
 
-                        local billboard = targetPart:FindFirstChild("HJ1JK_ItemText") or Instance.new("BillboardGui")
-                        billboard.Name = "HJ1JK_ItemText"
-                        billboard.Size = UDim2.new(0, 140, 0, 40)
-                        billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-                        billboard.AlwaysOnTop = true
-                        billboard.Parent = targetPart
+                        local bb = partTarget:FindFirstChild("HJ1JK_ItemText") or Instance.new("BillboardGui")
+                        bb.Name = "HJ1JK_ItemText"
+                        bb.Size = UDim2.new(0, 140, 0, 40)
+                        bb.StudsOffset = Vector3.new(0, 2.5, 0)
+                        bb.AlwaysOnTop = true
+                        bb.Parent = partTarget
 
-                        local textLabel = billboard:FindFirstChild("TextLabel") or Instance.new("TextLabel")
-                        if not billboard:FindFirstChild("TextLabel") then
-                            textLabel.Size = UDim2.new(1, 0, 1, 0)
-                            textLabel.BackgroundTransparency = 1
-                            textLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
-                            textLabel.TextSize = 12
-                            textLabel.Font = Enum.Font.GothamBold
-                            textLabel.TextStrokeTransparency = 0.2
-                            textLabel.Parent = billboard
+                        local tx = bb:FindFirstChild("TextLabel") or Instance.new("TextLabel")
+                        if not bb:FindFirstChild("TextLabel") then
+                            tx.Size = UDim2.new(1, 0, 1, 0)
+                            tx.BackgroundTransparency = 1
+                            tx.TextColor3 = Color3.fromRGB(255, 255, 100)
+                            tx.TextSize = 12
+                            tx.Font = Enum.Font.GothamBold
+                            tx.TextStrokeTransparency = 0.2
+                            tx.Parent = bb
                         end
 
-                        local rawName = obj:IsA("ProximityPrompt") and obj.ActionText or (obj:IsA("Tool") and obj.Name or targetPart.Name)
-                        if rawName == "" or rawName == "Handle" then rawName = targetPart.Name end
-                        textLabel.Text = "📦 " .. getThaiItemName(rawName)
+                        local originalName = obj:IsA("ProximityPrompt") and obj.ActionText or partTarget.Name
+                        tx.Text = "📦 " .. getThaiItemName(originalName)
                     end
                 end
             end
@@ -679,7 +682,7 @@ task.spawn(function()
             end
         end
 
-        -- 2. ESP เห็น NPC
+        -- 2. ESP NPC
         if Config.EpsNpc then
             for _, desc in ipairs(Workspace:GetDescendants()) do
                 if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then
@@ -699,7 +702,7 @@ task.spawn(function()
             end
         end
 
-        -- 3. ESP เห็นซอมบี้
+        -- 3. ESP ซอมบี้
         if Config.EpsZombie then
             for _, desc in ipairs(Workspace:GetDescendants()) do
                 if desc:IsA("Model") and desc:FindFirstChild("Humanoid") then
