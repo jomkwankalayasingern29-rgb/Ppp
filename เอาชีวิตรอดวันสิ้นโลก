@@ -1,4 +1,4 @@
--- [[ HJ1JK v1.12: FIXED ESP & INSTANT PICKUP ]] --
+-- [[ HJ1JK v1.13: FIXED ITEMS ESP & THAI LABELS ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -26,7 +26,39 @@ local function copyToClipboard(text)
 end
 
 -- =============================================================================
--- 1. หน้าต่างแจ้งเตือน (Notification System)
+-- 1. พจนานุกรมแปลชื่อไอเท็มเป็นภาษาไทย (Item Name Translation Dictionary)
+-- =============================================================================
+local ThaiItemNames = {
+    -- อาหารและเครื่องดื่ม
+    ["food"] = "อาหาร", ["water"] = "น้ำดื่ม", ["can"] = "อาหารกระป๋อง", ["canned"] = "อาหารกระป๋อง",
+    ["apple"] = "แอปเปิ้ล", ["meat"] = "เนื้อสัตว์", ["bandage"] = "ผ้าพันแผล", ["medkit"] = "ชุดปฐมพยาบาล",
+    ["medicine"] = "ยา", ["pills"] = "ยาเม็ด", ["drink"] = "เครื่องดื่ม", ["cola"] = "โคล่า",
+    
+    -- กระสุนและอาวุธ
+    ["ammo"] = "กระสุน", ["bullet"] = "กระสุน", ["gun"] = "ปืน", ["rifle"] = "ปืนไรフル",
+    ["pistol"] = "ปืนพก", ["shotgun"] = "ปืนลูกซอง", ["knife"] = "มีด", ["axe"] = "ขวาน",
+    ["bat"] = "ไม้เบสบอล", ["sword"] = "ดาบ", ["ammo box"] = "กล่องกระสุน",
+    
+    -- ทรัพยากรและเชื้อเพลิง
+    ["fuel"] = "น้ำมัน", ["gasoline"] = "น้ำมันเบนซิน", ["oil"] = "น้ำมันเครื่อง",
+    ["wood"] = "ไม้", ["metal"] = "เหล็ก", ["scrap"] = "เศษเหล็ก", ["stone"] = "หิน",
+    ["cloth"] = "ผ้า", ["rope"] = "เชือก", ["battery"] = "แบตเตอรี่", ["toolbox"] = "กล่องเครื่องมือ",
+    ["key"] = "กุญแจ", ["card"] = "คีย์การ์ด", ["backpack"] = "กระเป๋าเป้"
+}
+
+local function getThaiItemName(engName)
+    local lowerName = string.lower(engName)
+    for engKey, thaiVal in pairs(ThaiItemNames) do
+        if string.find(lowerName, engKey) then
+            return thaiVal
+        end
+    end
+    -- ถ้าไม่เจอในคีย์เวิร์ด ให้ส่งชื่อเดิมกลับไปแต่ปรับให้ดูง่ายขึ้น
+    return engName
+end
+
+-- =============================================================================
+-- 2. หน้าต่างแจ้งเตือน (Notification System)
 -- =============================================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "HJ1JK_Gui"
@@ -110,7 +142,7 @@ local function showNotification(text, isEnabled)
 end
 
 -- =============================================================================
--- 2. หน้าต่างหลัก (MainFrame & Confirm Overlay)
+-- 3. หน้าต่างหลัก (MainFrame)
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -208,7 +240,7 @@ Title.Name = "Title"
 Title.Size = UDim2.new(0, 150, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "HJ1JK v1.12"
+Title.Text = "HJ1JK v1.13"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextTransparency = 1
@@ -241,7 +273,7 @@ MinimizeButton.Font = Enum.Font.Gotham
 MinimizeButton.Parent = TopBar
 
 -- =============================================================================
--- 3. ระบบแท็บและหมวดหมู่ (Tabs & Categories)
+-- 4. ระบบแท็บและหมวดหมู่ (Tabs & Categories)
 -- =============================================================================
 local Content = Instance.new("Frame")
 Content.Name = "Content"
@@ -342,7 +374,6 @@ EpsCategoryBtn.MouseButton1Click:Connect(function() switchTab(EpsTab, EpsCategor
 ToolCategoryBtn.MouseButton1Click:Connect(function() switchTab(ToolTab, ToolCategoryBtn) end)
 MovementCategoryBtn.MouseButton1Click:Connect(function() switchTab(MovementTab, MovementCategoryBtn) end)
 
--- UI Builders Helpers
 local allTextLabels = {}
 local allButtons = {}
 local allSliders = {}
@@ -438,13 +469,11 @@ local function createSlider(labelText, parentTab)
     return Back, Btn, Label
 end
 
--- สร้างเมนูในแท็บ EPS
 createHeader(">> ระบบ EPS สิ่งของ & ตัวละคร <<", EpsTab)
-local EpsItemToggle = createToggle("EpsItem", "ESP เห็นสิ่งของ", EpsTab)
+local EpsItemToggle = createToggle("EpsItem", "ESP เห็นสิ่งของ (พร้อมชื่อไทย)", EpsTab)
 local EpsNpcToggle = createToggle("EpsNpc", "ESP เห็น NPC", EpsTab)
 local EpsZombieToggle = createToggle("EpsZombie", "ESP เห็นซอมบี้", EpsTab)
 
--- สร้างเมนูในแท็บเครื่องมือ
 createHeader(">> ฟังก์ชันเครื่องมือพิเศษ <<", ToolTab)
 local InstantPickupToggle = createToggle("InstantPickup", "เก็บของทันที (0 วินาที)", ToolTab)
 
@@ -467,7 +496,6 @@ GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolCorner = Instance.new("UICorner"); GiveToolCorner.CornerRadius = UDim.new(0, 4); GiveToolCorner.Parent = GiveToolBtn
 
--- สร้างเมนูในแท็บการเคลื่อนไหว (เลื่อน 1 - 1000)
 createHeader(">> ระบบปรับแต่งการเคลื่อนไหว (1 - 1000) <<", MovementTab)
 local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", MovementTab)
 local WalkSpeedBack, WalkSpeedBtn, WalkSpeedLabel = createSlider("ความเร็ว (WalkSpeed): 16", MovementTab)
@@ -478,7 +506,7 @@ local JumpPowerBack, JumpPowerBtn, JumpPowerLabel = createSlider("กระโ�
 local InfJumpToggle = createToggle("InfJump", "กระโดดไม่จำกัด (Infinite Jump)", MovementTab)
 
 -- =============================================================================
--- 4. ระบบการทำงานเบื้องหลัง (Backend Logic - แก้ไขการตรวจจับเกมเอาชีวิตรอด)
+-- 5. ระบบการทำงานเบื้องหลัง (Backend Logic - รองรับ ESP สิ่งของ + ป้ายชื่อไทย)
 -- =============================================================================
 local Config = {
     EpsItem = false,
@@ -542,7 +570,6 @@ InfJumpToggle.MouseButton1Click:Connect(function()
     updateVisuals(InfJumpToggle, Config.InfJump, "กระโดดไม่จำกัด")
 end)
 
--- Infinite Jump Listener
 UserInputService.JumpRequest:Connect(function()
     if Config.InfJump then
         local char = LocalPlayer.Character
@@ -552,7 +579,6 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ระบบรักษาสถิติเมื่อรีสawn
 LocalPlayer.CharacterAdded:Connect(function(char)
     local hum = char:WaitForChild("Humanoid", 5)
     if hum then
@@ -561,7 +587,6 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
--- แจกไอเท็มคลิกวาร์ป
 GiveToolBtn.MouseButton1Click:Connect(function()
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
     local character = LocalPlayer.Character
@@ -595,33 +620,59 @@ GiveToolBtn.MouseButton1Click:Connect(function()
     showNotification("รับอุปกรณ์คลิกวาร์ปสำเร็จ!", true)
 end)
 
--- ลูปการทำงานหลัก (ESP และระบบ 0 วินาทีแบบครอบคลุมเกมเอาชีวิตรอด)
+-- ลูปการทำงานหลัก (ESP, ป้ายชื่อภาษาไทย, และระบบ 0 วินาที)
 task.spawn(function()
     while task.wait(0.2) do
         if not ScreenGui.Parent then break end
 
-        -- 1. ESP สิ่งของ (ครอบคลุมทั้ง ProximityPrompt, พาร์ทไอเท็มดรอป, และเครื่องมือในแมพ)
+        -- 1. ESP สิ่งของ และ ป้ายชื่อภาษาไทย
         if Config.EpsItem then
             for _, obj in ipairs(Workspace:GetDescendants()) do
-                if (obj:IsA("ProximityPrompt") or obj.Name == "Handle" or obj:IsA("Tool") or obj:IsA("TouchTransmitter")) and not obj:IsDescendantOf(LocalPlayer.Character) then
+                -- ตรวจจับไอเท็ม, กล่องของ, ProximityPrompt หรือวัตถุในแมพเอาชีวิตรอด
+                if (obj:IsA("ProximityPrompt") or obj.Name == "Handle" or obj:IsA("Tool") or obj:IsA("TouchTransmitter") or obj.Name == "Item" or obj.Name == "Drop" or obj.Name == "Loot") and not obj:IsDescendantOf(LocalPlayer.Character) then
                     local targetPart = obj:IsA("ProximityPrompt") and obj.Parent or (obj:IsA("Tool") and obj:FindFirstChild("Handle") or obj)
                     if targetPart and targetPart:IsA("BasePart") then
+                        -- Highligh กล่อง/พาร์ท
                         local highlight = targetPart:FindFirstChild("HJ1JK_ItemESP") or Instance.new("Highlight")
                         highlight.Name = "HJ1JK_ItemESP"
-                        highlight.FillColor = Color3.fromRGB(255, 215, 0) -- สีทองสำหรับไอเท็ม
+                        highlight.FillColor = Color3.fromRGB(255, 215, 0) -- สีทอง
                         highlight.FillTransparency = 0.4
                         highlight.OutlineTransparency = 0
                         highlight.Parent = targetPart
+
+                        -- BillboardGui สำหรับแสดงชื่อภาษาไทย
+                        local billboard = targetPart:FindFirstChild("HJ1JK_ItemText") or Instance.new("BillboardGui")
+                        billboard.Name = "HJ1JK_ItemText"
+                        billboard.Size = UDim2.new(0, 120, 0, 35)
+                        billboard.StudsOffset = Vector3.new(0, 2, 0)
+                        billboard.AlwaysOnTop = true
+                        billboard.Parent = targetPart
+
+                        local textLabel = billboard:FindFirstChild("TextLabel") or Instance.new("TextLabel")
+                        if not billboard:FindFirstChild("TextLabel") then
+                            textLabel.Size = UDim2.new(1, 0, 1, 0)
+                            textLabel.BackgroundTransparency = 1
+                            textLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
+                            textLabel.TextSize = 11
+                            textLabel.Font = Enum.Font.GothamBold
+                            textLabel.TextStrokeTransparency = 0.3
+                            textLabel.Parent = billboard
+                        end
+
+                        -- แปลงชื่อเป็นภาษาไทย
+                        local rawName = obj.Name == "ProximityPrompt" and obj.ActionText or obj.Parent.Name
+                        if rawName == "" or rawName == "Handle" then rawName = obj.Name end
+                        textLabel.Text = "📦 " .. getThaiItemName(rawName)
                     end
                 end
             end
         else
             for _, obj in ipairs(Workspace:GetDescendants()) do
-                if obj.Name == "HJ1JK_ItemESP" then obj:Destroy() end
+                if obj.Name == "HJ1JK_ItemESP" or obj.Name == "HJ1JK_ItemText" then obj:Destroy() end
             end
         end
 
-        -- 2. ESP เห็น NPC (มนุษย์/ผู้รอดชีวิตอื่นๆ ที่ไม่ใช่ผู้เล่นหลักและไม่ใช่ซอมบี้)
+        -- 2. ESP เห็น NPC
         if Config.EpsNpc then
             for _, desc in ipairs(Workspace:GetDescendants()) do
                 if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then
@@ -629,7 +680,7 @@ task.spawn(function()
                     if not string.find(nameLower, "zombie") and not string.find(nameLower, "infected") and not string.find(nameLower, "undead") then
                         local ncham = desc:FindFirstChild("HJ1JK_NpcESP") or Instance.new("Highlight")
                         ncham.Name = "HJ1JK_NpcESP"
-                        ncham.FillColor = Color3.fromRGB(0, 200, 255) -- สีฟ้าสำหรับ NPC
+                        ncham.FillColor = Color3.fromRGB(0, 200, 255)
                         ncham.FillTransparency = 0.5
                         ncham.Parent = desc
                     end
@@ -641,7 +692,7 @@ task.spawn(function()
             end
         end
 
-        -- 3. ESP เห็นซอมบี้ (ตรวจสอบคำว่า zombie, infected, undead, mutant ฯลฯ)
+        -- 3. ESP เห็นซอมบี้
         if Config.EpsZombie then
             for _, desc in ipairs(Workspace:GetDescendants()) do
                 if desc:IsA("Model") and desc:FindFirstChild("Humanoid") then
@@ -649,7 +700,7 @@ task.spawn(function()
                     if string.find(nameLower, "zombie") or string.find(nameLower, "infected") or string.find(nameLower, "undead") or string.find(nameLower, "mutant") then
                         local zcham = desc:FindFirstChild("HJ1JK_ZombieESP") or Instance.new("Highlight")
                         zcham.Name = "HJ1JK_ZombieESP"
-                        zcham.FillColor = Color3.fromRGB(255, 50, 50) -- สีแดงสำหรับซอมบี้
+                        zcham.FillColor = Color3.fromRGB(255, 50, 50)
                         zcham.FillTransparency = 0.4
                         zcham.Parent = desc
                     end
@@ -661,7 +712,7 @@ task.spawn(function()
             end
         end
 
-        -- 4. ระบบเก็บของทันที (ปรับ HoldDuration เป็น 0 วินาที เพื่อให้กดทีเดียวเก็บได้เลย)
+        -- 4. ระบบเก็บของทันที (0 วินาที)
         if Config.InstantPickup then
             for _, obj in ipairs(Workspace:GetDescendants()) do
                 if obj:IsA("ProximityPrompt") then
@@ -675,7 +726,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- 5. ระบบ Sliders (ความเร็ว และ กระโดดสูง 1 - 1000)
+-- 6. ระบบ Sliders (ความเร็ว และ กระโดดสูง 1 - 1000)
 -- =============================================================================
 local walkSpeedDragging, jumpPowerDragging = false, false
 
@@ -713,7 +764,7 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- =============================================================================
--- 6. ระบบควบคุม UI และการแสดงผลหน้าต่างหลัก
+-- 7. ระบบควบคุม UI และการแสดงผลหน้าต่างหลัก
 -- =============================================================================
 local D_Icon = Instance.new("TextButton")
 D_Icon.Size = UDim2.new(0, 40, 0, 40)
@@ -729,7 +780,6 @@ local D_Corner, D_Stroke = Instance.new("UICorner"), Instance.new("UIStroke")
 D_Corner.CornerRadius = UDim.new(0, 6); D_Corner.Parent = D_Icon
 D_Stroke.Color = Color3.fromRGB(255, 255, 255); D_Stroke.Thickness = 1.2; D_Stroke.Parent = D_Icon
 
--- Loading Screen Animation
 local LoadingGui = Instance.new("ScreenGui")
 LoadingGui.Name = "HJ1JK_LoadingUI"
 LoadingGui.ResetOnSpawn = false
@@ -784,7 +834,6 @@ task.spawn(function()
     for _, sld in ipairs(allSliders) do TweenService:Create(sld, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play() end
 end)
 
--- Dragging & Minimize Logic
 local dragging, dragInput, dragStart, startPos
 TopBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
