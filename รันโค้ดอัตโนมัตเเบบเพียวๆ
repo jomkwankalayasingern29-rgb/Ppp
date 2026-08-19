@@ -9,7 +9,7 @@ screenGui.Parent = playerGui
 
 -- ตัวกรอบหลัก (Main Frame)
 local frame = Instance.new("Frame")
-local DiscordLink = "https://discord.gg/bvZ3aGHcW"
+local DiscordLink = "https://discord.gg/Ugssja4wqQ"
 frame.Size = UDim2.new(0, 260, 0, 180)
 frame.Position = UDim2.new(0.1, 0, 0.1, 0)
 frame.BackgroundColor3 = Color3.fromRGB(37, 37, 38)
