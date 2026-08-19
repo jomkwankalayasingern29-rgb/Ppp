@@ -96,12 +96,12 @@ createButton("Btn100", "×100", 0.68, 0.32, Color3.fromRGB(14, 99, 156), functio
 createButton("Btn1000", "×1000", 0.68, 0.32, Color3.fromRGB(14, 99, 156), function() runCode(1000) end)
 createButton("Btn10000", "×10000", 0.68, 0.32, Color3.fromRGB(14, 99, 156), function() runCode(10000) end)
 
--- ส่วนระบบ Auto (เปิด-ปิด ดีเลย์ 0.1 วิ)
+-- ส่วนระบบ Auto (เปิด-ปิด ดีเลย์ 0.01 วิ)
 local autoLabel = Instance.new("TextLabel")
 autoLabel.Size = UDim2.new(0, 120, 0, 25)
 autoLabel.Position = UDim2.new(0, 10, 0, 138)
 autoLabel.BackgroundTransparency = 1
-autoLabel.Text = "Auto (0.1s):"
+autoLabel.Text = "Auto (0.01s):"
 autoLabel.TextColor3 = Color3.fromRGB(212, 212, 212)
 autoLabel.TextSize = 12
 autoLabel.Font = Enum.Font.SourceSans
@@ -129,11 +129,11 @@ autoButton.MouseButton1Click:Connect(function()
 		autoButton.Text = "ปิด"
 		autoButton.BackgroundColor3 = Color3.fromRGB(209, 105, 105)
 		
-		-- Task ลูปทำงานทุกๆ 0.1 วินาที
+		-- Task ลูปทำงานทุกๆ 0.01 วินาที
 		task.spawn(function()
 			while isAutoRunning do
 				runCode(1)
-				task.wait(0.1)
+				task.wait(0.01)
 			end
 		end)
 	else
