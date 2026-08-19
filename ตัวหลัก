@@ -20,7 +20,7 @@ for _, uiName in ipairs(oldUIs) do
     end
 end
 
-local DiscordLink = "https://discord.gg/bvZ3aGHcW"
+local DiscordLink = "https://discord.gg/Ugssja4wqQ"
 
 local function copyToClipboard(text)
     if setclipboard then setclipboard(text) elseif toclipboard then toclipboard(text) end
