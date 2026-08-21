@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.16: STABLE EXECUTION & FIX VERSION ]] --
+-- [[ GKHub v1.4.17: SECURE EXECUTION UPDATE ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -25,7 +25,9 @@ end
 local DiscordLink = "https://discord.gg/Ugssja4wqQ"
 
 local function copyToClipboard(text)
-    if setclipboard then setclipboard(text) elseif toclipboard then toclipboard(text) end
+    pcall(function()
+        if setclipboard then setclipboard(text) elseif toclipboard then toclipboard(text) end
+    end)
 end
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -779,11 +781,10 @@ ExecBtnFrame.Parent = AutoExecTab
 local ExecBtnFrameCorner = Instance.new("UICorner"); ExecBtnFrameCorner.CornerRadius = UDim.new(0, 4); ExecBtnFrameCorner.Parent = ExecBtnFrame
 
 local function executeCodeString(codeStr, times)
-    if codeStr == "" then
+    if not codeStr or codeStr == "" then
         showNotification("ไม่มีโค้ดให้รัน!", false)
         return
     end
-    -- แก้ไขให้ใช้ pcall ครอบ loadstring ป้องกัน Error เด้ง
     local successLoad, func = pcall(function()
         return loadstring(codeStr)
     end)
@@ -844,7 +845,7 @@ task.spawn(function()
     end
 end)
 
--- ช่องสคริปต์ย่อย 1-5 พร้อมระบบเซฟโค้ด ตั้งชื่อแยกอิสระ
+-- ช่องสคริปต์ย่อย 1-5 พร้อมระบบเซฟโค้ด ตั้งชื่อแยกอิสระ และการรัน
 local subLoopStates = {false, false, false, false, false}
 
 for i = 1, 5 do
