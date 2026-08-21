@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.18: FIXED 2D ESP UPDATE ]] --
+-- [[ GKHub v1.4.18: FIXED 2D ESP UPDATE & OPTIMIZED ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -379,9 +379,9 @@ local function createCategoryButton(name, targetTab)
     return btn
 end
 
-local btn1 = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
-btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
+local btnMainTab = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
+btnMainTab.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+btnMainTab.TextColor3 = Color3.fromRGB(255, 255, 255)
 
 createCategoryButton("ระบบล็อกเป้า", AimbotTab)
 createCategoryButton("ระบบ ESP & Chams", EspTab)
@@ -659,14 +659,14 @@ local NpcEsp2DToggle = createToggle("NpcEsp2D", "เปิดใช้งาน 
 createHeader(">> ความเร็วผู้เล่น <<", SpeedTab)
 local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", SpeedTab)
 local CurrentWalkSpeed = 16
-local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput, SetWalkSpeedFunc = createSliderWithInputAndSync("ความเร็ว (16 - 800):", 16, 800, 16, SpeedTab, function(val)
+local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput = createSliderWithInputAndSync("ความเร็ว (16 - 800):", 16, 800, 16, SpeedTab, function(val)
     CurrentWalkSpeed = val
 end)
 
 createHeader(">> กระโดดสูงผู้เล่น <<", SpeedTab)
 local EnableJumpToggle = createToggle("EnableJump", "เปิดใช้งานกระโดดสูง", SpeedTab)
 local CurrentJumpPower = 50
-local JumpPowerBack, JumpPowerBtn, JumpPowerInput, SetJumpPowerFunc = createSliderWithInputAndSync("กระโดดสูง (50 - 500):", 50, 500, 50, SpeedTab, function(val)
+local JumpPowerBack, JumpPowerBtn, JumpPowerInput = createSliderWithInputAndSync("กระโดดสูง (50 - 500):", 50, 500, 50, SpeedTab, function(val)
     CurrentJumpPower = val
 end)
 
@@ -699,7 +699,7 @@ local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาค�
 createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", ToolTab)
 local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
 local HitboxConfig = { Enabled = false, Size = 1 }
-local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInputAndSync("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
+local HitboxBack, HitboxBtn, HitboxInput = createSliderWithInputAndSync("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
     HitboxConfig.Size = val
 end)
 
@@ -803,25 +803,25 @@ end
 local btnW = 110
 local btnH = 22
 
-local btn1 = Instance.new("TextButton")
-btn1.Size = UDim2.new(0, btnW, 0, btnH); btn1.Position = UDim2.new(0, 6, 0, 6); btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1.Text = "รัน ×1"; btn1.TextColor3 = Color3.fromRGB(255,255,255); btn1.Font = Enum.Font.GothamBold; btn1.TextSize = 9; btn1.Parent = ExecBtnFrame
-Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 3)
-btn1.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1) end)
+local execBtn1 = Instance.new("TextButton")
+execBtn1.Size = UDim2.new(0, btnW, 0, btnH); execBtn1.Position = UDim2.new(0, 6, 0, 6); execBtn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); execBtn1.Text = "รัน ×1"; execBtn1.TextColor3 = Color3.fromRGB(255,255,255); execBtn1.Font = Enum.Font.GothamBold; execBtn1.TextSize = 9; execBtn1.Parent = ExecBtnFrame
+Instance.new("UICorner", execBtn1).CornerRadius = UDim.new(0, 3)
+execBtn1.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1) end)
 
-local btn10 = Instance.new("TextButton")
-btn10.Size = UDim2.new(0, btnW, 0, btnH); btn10.Position = UDim2.new(1, -116, 0, 6); btn10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn10.Text = "รัน ×10"; btn10.TextColor3 = Color3.fromRGB(255,255,255); btn10.Font = Enum.Font.GothamBold; btn10.TextSize = 9; btn10.Parent = ExecBtnFrame
-Instance.new("UICorner", btn10).CornerRadius = UDim.new(0, 3)
-btn10.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 10) end)
+local execBtn10 = Instance.new("TextButton")
+execBtn10.Size = UDim2.new(0, btnW, 0, btnH); execBtn10.Position = UDim2.new(1, -116, 0, 6); execBtn10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); execBtn10.Text = "รัน ×10"; execBtn10.TextColor3 = Color3.fromRGB(255,255,255); execBtn10.Font = Enum.Font.GothamBold; execBtn10.TextSize = 9; execBtn10.Parent = ExecBtnFrame
+Instance.new("UICorner", execBtn10).CornerRadius = UDim.new(0, 3)
+execBtn10.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 10) end)
 
-local btn100 = Instance.new("TextButton")
-btn100.Size = UDim2.new(0, btnW, 0, btnH); btn100.Position = UDim2.new(0, 6, 0, 32); btn100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100.Text = "รัน ×100"; btn100.TextColor3 = Color3.fromRGB(255,255,255); btn100.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
-Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
-btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
+local execBtn100 = Instance.new("TextButton")
+execBtn100.Size = UDim2.new(0, btnW, 0, btnH); execBtn100.Position = UDim2.new(0, 6, 0, 32); execBtn100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); execBtn100.Text = "รัน ×100"; execBtn100.TextColor3 = Color3.fromRGB(255,255,255); execBtn100.Font = Enum.Font.GothamBold; execBtn100.TextSize = 9; execBtn100.Parent = ExecBtnFrame
+Instance.new("UICorner", execBtn100).CornerRadius = UDim.new(0, 3)
+execBtn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
-local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
-Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
-btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
+local execBtn1000 = Instance.new("TextButton")
+execBtn1000.Size = UDim2.new(0, btnW, 0, btnH); execBtn1000.Position = UDim2.new(1, -116, 0, 32); execBtn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); execBtn1000.Text = "รัน ×1000"; execBtn1000.TextColor3 = Color3.fromRGB(255,255,255); execBtn1000.Font = Enum.Font.GothamBold; execBtn1000.TextSize = 9; execBtn1000.Parent = ExecBtnFrame
+Instance.new("UICorner", execBtn1000).CornerRadius = UDim.new(0, 3)
+execBtn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
 createHeader(">> ระบบรันโค้ดอัตโนมัติ (0.01s) <<", AutoExecTab)
 local AutoLoopToggle = createToggle("AutoLoop", "รันโค้ดอัตโนมัติ (ความเร็ว 0.01)", AutoExecTab)
@@ -845,7 +845,6 @@ task.spawn(function()
     end
 end)
 
--- ช่องสคริปต์ย่อย 1-5 พร้อมระบบเซฟโค้ด ตั้งชื่อแยกอิสระ และการรัน
 local subLoopStates = {false, false, false, false, false}
 
 for i = 1, 5 do
@@ -930,8 +929,8 @@ for i = 1, 5 do
     local sBtnW = 52
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
-    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1716,7 +1715,6 @@ task.spawn(function()
     end
 end)
 
--- แก้ไขระบบ 2D ESP (Square และ Line) ให้ตรวจสอบและเรนเดอร์อย่างถูกต้องสมบูรณ์
 local Active2D = {}
 local function removeDrawingObject(model)
     if Active2D[model] then
