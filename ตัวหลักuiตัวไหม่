@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.11: COMPLETE UPDATE ]] --
+-- [[ GKHub v1.4.12: FINAL FIXED VERSION ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -116,7 +116,7 @@ local function showNotification(text, isEnabled)
     end)
 end
 
--- หน้าต่างโหลดสคริปต์ (Loading Screen)
+-- หน้าต่างโหลดสคริปต์
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
 LoadFrame.Size = UDim2.new(0, 300, 0, 65)
@@ -354,6 +354,7 @@ local function createContainer(name)
     return container
 end
 
+-- สร้างหน้าต่างคอนเทนเนอร์หมวดหมู่ทั้งหมด
 local MainFuncTab = createContainer("ฟังก์ชั่นหลัก")
 local AimbotTab = createContainer("ระบบล็อกเป้า")
 local EspTab = createContainer("ระบบ ESP & Chams")
@@ -389,8 +390,11 @@ local function createCategoryButton(name, targetTab)
     return btn
 end
 
+-- สร้างปุ่มเมนูด้านซ้าย
 local btn1 = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
 btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
+
 createCategoryButton("ระบบล็อกเป้า", AimbotTab)
 createCategoryButton("ระบบ ESP & Chams", EspTab)
 createCategoryButton("ความเร็ว & กระโดด", SpeedTab)
@@ -610,7 +614,7 @@ local function createSlider(labelText, parentTab)
     return Back, Btn, Label
 end
 
--- สร้าง UI เมนูย่อยในหมวดหมู่ "ฟังก์ชั่นหลัก"
+-- สร้างเมนูย่อยในหมวดหมู่ "ฟังก์ชั่นหลัก"
 createHeader(">> คอมมิวนิตี้ <<", MainFuncTab)
 local DiscordFrame = Instance.new("Frame")
 DiscordFrame.Size = UDim2.new(0.92, 0, 0, 36)
@@ -635,6 +639,7 @@ DiscordBtn.MouseButton1Click:Connect(function()
     showNotification("คัดลอกลิงก์ Discord สำเร็จ!", true)
 end)
 
+-- เติมฟังก์ชันในหมวดหมู่อื่นๆ
 createHeader(">> ฟังก์ชั่นพิเศษ <<", AimbotTab)
 local FullLockToggle = createToggle("FullLock", "ล็อกหัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
 local FullLockTorsoToggle = createToggle("FullLockTorso", "ล็อกตัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
@@ -664,12 +669,14 @@ local NpcEsp2DToggle = createToggle("NpcEsp2D", "เปิดใช้งาน 
 
 createHeader(">> ความเร็วผู้เล่น <<", SpeedTab)
 local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", SpeedTab)
+local CurrentWalkSpeed = 16
 local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput, SetWalkSpeedFunc = createSliderWithInput("ความเร็ว (16 - 800):", 16, 800, 16, SpeedTab, function(val)
     CurrentWalkSpeed = val
 end)
 
 createHeader(">> กระโดดสูงผู้เล่น <<", SpeedTab)
 local EnableJumpToggle = createToggle("EnableJump", "เปิดใช้งานกระโดดสูง", SpeedTab)
+local CurrentJumpPower = 50
 local JumpPowerBack, JumpPowerBtn, JumpPowerInput, SetJumpPowerFunc = createSliderWithInput("กระโดดสูง (50 - 500):", 50, 500, 50, SpeedTab, function(val)
     CurrentJumpPower = val
 end)
@@ -702,6 +709,7 @@ local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาค�
 
 createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", ToolTab)
 local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
+local HitboxConfig = { Enabled = false, Size = 1 }
 local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInput("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
     HitboxConfig.Size = val
 end)
@@ -832,7 +840,7 @@ Run1Btn.MouseButton1Click:Connect(function() executeUserCode(1) end)
 Run10Btn.MouseButton1Click:Connect(function() executeUserCode(10) end)
 Run100Btn.MouseButton1Click:Connect(function() executeUserCode(100) end)
 
--- ตัวแปรสถานะฟังก์ชันหลัก
+-- ตัวแปรทำงานฟังก์ชัน
 local AutoTpBackConfig = { Enabled = false }
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
@@ -906,9 +914,7 @@ task.spawn(function()
     end
 end)
 
-local HitboxConfig = { Enabled = false, Size = 1 }
 local OriginalSizes = {}
-
 HitboxToggle.MouseButton1Click:Connect(function()
     HitboxConfig.Enabled = not HitboxConfig.Enabled
     HitboxToggle.BackgroundColor3 = HitboxConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
@@ -1291,8 +1297,6 @@ local LockConfig = {
 local WallCheckEnabled = false
 local FOV_Radius = 100
 local LockSpeed = 50 
-local CurrentWalkSpeed = 16
-local CurrentJumpPower = 50
 
 local function updateFOV(radius)
     FOV_Radius = radius
@@ -1391,8 +1395,8 @@ ResetBtn.MouseButton1Click:Connect(function()
     CurrentJumpPower = 50
     WalkSpeedInput.Text = "16"
     JumpPowerInput.Text = "50"
-    WalkSpeedBtn.Position = UDim2.new(0, -6, 0, -4)
-    JumpPowerBtn.Position = UDim2.new(0, -6, 0, -4)
+    WalkSpeedBtn.Position = UDim2.new(0, 0, 0, -4)
+    JumpPowerBtn.Position = UDim2.new(0, 0, 0, -4)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         local humanoid = LocalPlayer.Character.Humanoid
         humanoid.WalkSpeed = 16
@@ -1519,7 +1523,7 @@ task.spawn(function()
     end
 end)
 
--- แก้ไขระบบ 2D ESP ให้ทำงานสมบูรณ์
+-- แก้ไขระบบ 2D ESP ให้ทำงานอย่างสมบูรณ์แบบ
 local Active2D = {}
 local function removeDrawingObject(model)
     if Active2D[model] then
