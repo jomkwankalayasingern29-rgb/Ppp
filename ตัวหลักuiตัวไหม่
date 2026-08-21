@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.12: FINAL FIXED VERSION ]] --
+-- [[ GKHub v1.4.13: ULTIMATE UPDATE ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -12,7 +12,6 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
 local oldUIs = {"CustomScriptUI", "GKHub_Gui", "HJ1JK_Gui", "HJ1JK_LoadingUI", "HJ1JK_NotifGui", "D_Icon", "FOV_Circle"}
 for _, uiName in ipairs(oldUIs) do
     if CoreGui:FindFirstChild(uiName) then
@@ -29,13 +28,11 @@ local function copyToClipboard(text)
     if setclipboard then setclipboard(text) elseif toclipboard then toclipboard(text) end
 end
 
--- สร้าง ScreenGui หลัก
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- ระบบ Notification
 local NotifContainer = Instance.new("Frame")
 NotifContainer.Name = "NotifContainer"
 NotifContainer.Size = UDim2.new(0, 240, 1, 0)
@@ -116,7 +113,6 @@ local function showNotification(text, isEnabled)
     end)
 end
 
--- หน้าต่างโหลดสคริปต์
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
 LoadFrame.Size = UDim2.new(0, 300, 0, 65)
@@ -144,7 +140,6 @@ LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 14
 LoadText.Parent = LoadFrame
 
--- หน้าต่าง UI หลัก
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 440, 0, 310)
@@ -166,7 +161,6 @@ MainStroke.Color = Color3.fromRGB(0, 162, 255)
 MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
--- ป๊อปอัพยืนยันการปิด
 local ConfirmOverlay = Instance.new("Frame")
 ConfirmOverlay.Name = "ConfirmOverlay"
 ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
@@ -223,7 +217,6 @@ NoButton.ZIndex = 12
 NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
--- แถบหัวข้อด้านบน (TopBar)
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
@@ -241,7 +234,6 @@ FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 FixTopBar.BorderSizePixel = 0
 FixTopBar.Parent = TopBar
 
--- โลโก้ตัว "G"
 local LogoG = Instance.new("TextLabel")
 LogoG.Size = UDim2.new(0, 20, 0, 20)
 LogoG.Position = UDim2.new(0, 8, 0, 4)
@@ -263,7 +255,6 @@ TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- ปุ่มปิด (X)
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
 CloseButton.Position = UDim2.new(1, -26, 0, 2)
@@ -274,7 +265,6 @@ CloseButton.TextColor3 = Color3.fromRGB(220, 60, 60)
 CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
 
--- ปุ่มย่อหน้าต่าง (-)
 local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
 MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
@@ -285,7 +275,6 @@ MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
 MinimizeButton.TextSize = 14
 MinimizeButton.Parent = TopBar
 
--- ฝั่งซ้าย: เมนูหมวดหมู่
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
@@ -309,7 +298,6 @@ local LeftPadding = Instance.new("UIPadding")
 LeftPadding.PaddingTop = UDim.new(0, 5)
 LeftPadding.Parent = LeftSide
 
--- ฝั่งขวา: รายละเอียดฟังก์ชัน
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.66, 0, 1, -34)
 RightSide.Position = UDim2.new(0.33, 0, 0, 30)
@@ -354,7 +342,6 @@ local function createContainer(name)
     return container
 end
 
--- สร้างหน้าต่างคอนเทนเนอร์หมวดหมู่ทั้งหมด
 local MainFuncTab = createContainer("ฟังก์ชั่นหลัก")
 local AimbotTab = createContainer("ระบบล็อกเป้า")
 local EspTab = createContainer("ระบบ ESP & Chams")
@@ -390,7 +377,6 @@ local function createCategoryButton(name, targetTab)
     return btn
 end
 
--- สร้างปุ่มเมนูด้านซ้าย
 local btn1 = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
 btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
 btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -471,7 +457,7 @@ local function createToggle(name, labelText, parentTab)
     return Button
 end
 
-local function createSliderWithInput(labelText, minVal, maxVal, defaultVal, parentTab, callback)
+local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVal, parentTab, callback)
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0.92, 0, 0, 48)
     Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -539,7 +525,7 @@ local function createSliderWithInput(labelText, minVal, maxVal, defaultVal, pare
     BtnCorner.CornerRadius = UDim.new(1, 0)
     BtnCorner.Parent = Btn
 
-    local function updateValue(val)
+    local function applyValue(val)
         val = math.clamp(val, minVal, maxVal)
         InputBox.Text = tostring(val)
         local percentage = (val - minVal) / (maxVal - minVal)
@@ -547,16 +533,16 @@ local function createSliderWithInput(labelText, minVal, maxVal, defaultVal, pare
         if callback then callback(val) end
     end
 
-    InputBox.FocusLost:Connect(function(enterPressed)
+    InputBox.FocusLost:Connect(function()
         local num = tonumber(InputBox.Text)
         if num then
-            updateValue(math.floor(num))
+            applyValue(math.floor(num))
         else
-            updateValue(defaultVal)
+            applyValue(defaultVal)
         end
     end)
 
-    return Back, Btn, InputBox, updateValue
+    return Back, Btn, InputBox, applyValue
 end
 
 local function createSlider(labelText, parentTab)
@@ -564,7 +550,7 @@ local function createSlider(labelText, parentTab)
     Frame.Size = UDim2.new(0.92, 0, 0, 42)
     Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     Frame.BorderSizePixel = 0
-    Frame.Parent = parentTab
+    Parent = parentTab
 
     local Corner = Instance.new("UICorner")
     Corner.CornerRadius = UDim.new(0, 4)
@@ -614,7 +600,7 @@ local function createSlider(labelText, parentTab)
     return Back, Btn, Label
 end
 
--- สร้างเมนูย่อยในหมวดหมู่ "ฟังก์ชั่นหลัก"
+-- หมวดหมู่: ฟังก์ชั่นหลัก
 createHeader(">> คอมมิวนิตี้ <<", MainFuncTab)
 local DiscordFrame = Instance.new("Frame")
 DiscordFrame.Size = UDim2.new(0.92, 0, 0, 36)
@@ -639,7 +625,6 @@ DiscordBtn.MouseButton1Click:Connect(function()
     showNotification("คัดลอกลิงก์ Discord สำเร็จ!", true)
 end)
 
--- เติมฟังก์ชันในหมวดหมู่อื่นๆ
 createHeader(">> ฟังก์ชั่นพิเศษ <<", AimbotTab)
 local FullLockToggle = createToggle("FullLock", "ล็อกหัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
 local FullLockTorsoToggle = createToggle("FullLockTorso", "ล็อกตัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
@@ -670,14 +655,14 @@ local NpcEsp2DToggle = createToggle("NpcEsp2D", "เปิดใช้งาน 
 createHeader(">> ความเร็วผู้เล่น <<", SpeedTab)
 local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", SpeedTab)
 local CurrentWalkSpeed = 16
-local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput, SetWalkSpeedFunc = createSliderWithInput("ความเร็ว (16 - 800):", 16, 800, 16, SpeedTab, function(val)
+local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput, SetWalkSpeedFunc = createSliderWithInputAndSync("ความเร็ว (16 - 800):", 16, 800, 16, SpeedTab, function(val)
     CurrentWalkSpeed = val
 end)
 
 createHeader(">> กระโดดสูงผู้เล่น <<", SpeedTab)
 local EnableJumpToggle = createToggle("EnableJump", "เปิดใช้งานกระโดดสูง", SpeedTab)
 local CurrentJumpPower = 50
-local JumpPowerBack, JumpPowerBtn, JumpPowerInput, SetJumpPowerFunc = createSliderWithInput("กระโดดสูง (50 - 500):", 50, 500, 50, SpeedTab, function(val)
+local JumpPowerBack, JumpPowerBtn, JumpPowerInput, SetJumpPowerFunc = createSliderWithInputAndSync("กระโดดสูง (50 - 500):", 50, 500, 50, SpeedTab, function(val)
     CurrentJumpPower = val
 end)
 
@@ -710,7 +695,7 @@ local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาค�
 createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", ToolTab)
 local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
 local HitboxConfig = { Enabled = false, Size = 1 }
-local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInput("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
+local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInputAndSync("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
     HitboxConfig.Size = val
 end)
 
@@ -749,9 +734,10 @@ GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
 
+-- หมวดหมู่: รันโค้ดอัตโนมัติ พร้อมส่วนขยาย (รันสคริปต์อัตโนมัติ - 1 ถึง 5)
 createHeader(">> ใส่โค้ดที่ต้องการรัน <<", AutoExecTab)
 local CodeBoxFrame = Instance.new("Frame")
-CodeBoxFrame.Size = UDim2.new(0.92, 0, 0, 95)
+CodeBoxFrame.Size = UDim2.new(0.92, 0, 0, 85)
 CodeBoxFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 CodeBoxFrame.BorderSizePixel = 0
 CodeBoxFrame.Parent = AutoExecTab
@@ -782,35 +768,13 @@ CodeTextBox.TextYAlignment = Enum.TextYAlignment.Top
 CodeTextBox.Parent = CodeBoxFrame
 table.insert(allTextLabels, CodeTextBox)
 
-createHeader(">> เลือกจำนวนครั้งที่ต้องการรันทีเดียว <<", AutoExecTab)
+createHeader(">> เลือกจำนวนครั้งที่ต้องการรัน <<", AutoExecTab)
 local ExecBtnFrame = Instance.new("Frame")
-ExecBtnFrame.Size = UDim2.new(0.92, 0, 0, 34)
+ExecBtnFrame.Size = UDim2.new(0.92, 0, 0, 32)
 ExecBtnFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 ExecBtnFrame.BorderSizePixel = 0
 ExecBtnFrame.Parent = AutoExecTab
 local ExecBtnFrameCorner = Instance.new("UICorner"); ExecBtnFrameCorner.CornerRadius = UDim.new(0, 4); ExecBtnFrameCorner.Parent = ExecBtnFrame
-
-local function createExecButton(name, text, posX, width)
-    local btn = Instance.new("TextButton")
-    btn.Name = name
-    btn.Size = UDim2.new(0, width, 0, 24)
-    btn.Position = UDim2.new(0, posX, 0.5, -12)
-    btn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 10
-    btn.Parent = ExecBtnFrame
-    table.insert(allButtons, btn)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 3)
-    corner.Parent = btn
-    return btn
-end
-
-local Run1Btn = createExecButton("Run1", "รัน ×1", 6, 115)
-local Run10Btn = createExecButton("Run10", "รัน ×10", 126, 115)
-local Run100Btn = createExecButton("Run100", "รัน ×100", 246, 115)
 
 local function executeUserCode(times)
     local code = CodeTextBox.Text
@@ -836,11 +800,139 @@ local function executeUserCode(times)
     showNotification("รันโค้ดสำเร็จ " .. successCount .. " / " .. times .. " ครั้ง!", true)
 end
 
-Run1Btn.MouseButton1Click:Connect(function() executeUserCode(1) end)
-Run10Btn.MouseButton1Click:Connect(function() executeUserCode(10) end)
-Run100Btn.MouseButton1Click:Connect(function() executeUserCode(100) end)
+local btnW = 55
+local btn1 = Instance.new("TextButton")
+btn1.Size = UDim2.new(0, btnW, 0, 22); btn1.Position = UDim2.new(0, 4, 0.5, -11); btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1.Text = "รัน ×1"; btn1.TextColor3 = Color3.fromRGB(255,255,255); btn1.Font = Enum.Font.GothamBold; btn1.TextSize = 9; btn1.Parent = ExecBtnFrame
+Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 3)
+btn1.MouseButton1Click:Connect(function() executeUserCode(1) end)
 
--- ตัวแปรทำงานฟังก์ชัน
+local btn10 = Instance.new("TextButton")
+btn10.Size = UDim2.new(0, btnW, 0, 22); btn10.Position = UDim2.new(0, 63, 0.5, -11); btn10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn10.Text = "รัน ×10"; btn10.TextColor3 = Color3.fromRGB(255,255,255); btn10.Font = Enum.Font.GothamBold; btn10.TextSize = 9; btn10.Parent = ExecBtnFrame
+Instance.new("UICorner", btn10).CornerRadius = UDim.new(0, 3)
+btn10.MouseButton1Click:Connect(function() executeUserCode(10) end)
+
+local btn100 = Instance.new("TextButton")
+btn100.Size = UDim2.new(0, btnW, 0, 22); btn100.Position = UDim2.new(0, 122, 0.5, -11); btn100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100.Text = "รัน ×100"; btn100.TextColor3 = Color3.fromRGB(255,255,255); btn100.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
+Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
+btn100.MouseButton1Click:Connect(function() executeUserCode(100) end)
+
+local btn1000 = Instance.new("TextButton")
+btn1000.Size = UDim2.new(0, btnW, 0, 22); btn1000.Position = UDim2.new(0, 181, 0.5, -11); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn1000.Parent = ExecBtnFrame
+Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
+btn1000.MouseButton1Click:Connect(function() executeUserCode(1000) end)
+
+createHeader(">> ระบบรันโค้ดอัตโนมัติ (0.01s) <<", AutoExecTab)
+local AutoLoopToggle = createToggle("AutoLoop", "รันโค้ดอัตโนมัติ (ความเร็ว 0.01)", AutoExecTab)
+local isLoopingCode = false
+AutoLoopToggle.MouseButton1Click:Connect(function()
+    isLoopingCode = not isLoopingCode
+    AutoLoopToggle.BackgroundColor3 = isLoopingCode and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    AutoLoopToggle.Text = isLoopingCode and "เปิด" or "ปิด"
+    showNotification(isLoopingCode and "เริ่มรันโค้ดอัตโนมัติแล้ว" : "หยุดรันโค้ดอัตโนมัติแล้ว", isLoopingCode)
+end)
+
+task.spawn(function()
+    while task.wait(0.01) do
+        if isLoopingCode then
+            local code = CodeTextBox.Text
+            if code ~= "" then
+                local func = loadstring(code)
+                if func then
+                    pcall(func)
+                end
+            end
+        end
+    end
+end)
+
+-- สร้างเมนูย่อยพับได้: รันสคริปต์อัตโนมัติ - 1 ถึง 5
+for i = 1, 5 do
+    local dropHeader = Instance.new("Frame")
+    dropHeader.Size = UDim2.new(0.92, 0, 0, 28)
+    dropHeader.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    dropHeader.BorderSizePixel = 0
+    dropHeader.Parent = AutoExecTab
+    Instance.new("UICorner", dropHeader).CornerRadius = UDim.new(0, 4)
+
+    local dropTitle = Instance.new("TextLabel")
+    dropTitle.Size = UDim2.new(1, -30, 1, 0)
+    dropTitle.Position = UDim2.new(0, 8, 0, 0)
+    dropTitle.BackgroundTransparency = 1
+    dropTitle.Text = "รันสคริปต์อัตโนมัติ-" .. i
+    dropTitle.TextColor3 = Color3.fromRGB(0, 162, 255)
+    dropTitle.Font = Enum.Font.GothamBold
+    dropTitle.TextSize = 10
+    dropTitle.TextXAlignment = Enum.TextXAlignment.Left
+    dropTitle.Parent = dropHeader
+
+    local foldBtn = Instance.new("TextButton")
+    foldBtn.Size = UDim2.new(0, 24, 0, 24)
+    foldBtn.Position = UDim2.new(1, -26, 0.5, -12)
+    foldBtn.BackgroundTransparency = 1
+    foldBtn.Text = "v"
+    foldBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
+    foldBtn.Font = Enum.Font.GothamBold
+    foldBtn.TextSize = 12
+    foldBtn.Parent = dropHeader
+
+    local dropContent = Instance.new("Frame")
+    dropContent.Size = UDim2.new(0.92, 0, 0, 75)
+    dropContent.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    dropContent.BorderSizePixel = 0
+    dropContent.Visible = false
+    dropContent.Parent = AutoExecTab
+    Instance.new("UICorner", dropContent).CornerRadius = UDim.new(0, 4)
+
+    local subBox = Instance.new("TextBox")
+    subBox.Size = UDim2.new(1, -10, 0, 45)
+    subBox.Position = UDim2.new(0, 5, 0, 5)
+    subBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+    subBox.BorderSizePixel = 0
+    subBox.MultiLine = true
+    subBox.PlaceholderText = "-- สคริปต์ช่องที่ " .. i .. "..."
+    subBox.Text = ""
+    subBox.TextColor3 = Color3.fromRGB(240, 240, 240)
+    subBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+    subBox.TextSize = 9
+    subBox.Font = Enum.Font.Code
+    subBox.TextXAlignment = Enum.TextXAlignment.Left
+    subBox.TextYAlignment = Enum.TextYAlignment.Top
+    subBox.Parent = dropContent
+    Instance.new("UICorner", subBox).CornerRadius = UDim.new(0, 3)
+
+    local subExec = Instance.new("TextButton")
+    subExec.Size = UDim2.new(1, -10, 0, 18)
+    subExec.Position = UDim2.new(0, 5, 1, -22)
+    subExec.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+    subExec.Text = "รันสคริปต์นี้ทันที"
+    subExec.TextColor3 = Color3.fromRGB(255, 255, 255)
+    subExec.Font = Enum.Font.GothamBold
+    subExec.TextSize = 9
+    subExec.Parent = dropContent
+    Instance.new("UICorner", subExec).CornerRadius = UDim.new(0, 3)
+
+    subExec.MouseButton1Click:Connect(function()
+        local sCode = subBox.Text
+        if sCode ~= "" then
+            local f, e = loadstring(sCode)
+            if f then
+                pcall(f)
+                showNotification("รันสคริปต์อัตโนมัติ-" .. i .. " สำเร็จ!", true)
+            else
+                showNotification("สคริปต์-" .. i .. " ผิดพลาด: " .. tostring(e), false)
+            end
+        end
+    end)
+
+    local isFolded = false
+    foldBtn.MouseButton1Click:Connect(function()
+        isFolded = not isFolded
+        dropContent.Visible = not isFolded
+        foldBtn.Text = isFolded and "v" or "^"
+    end)
+end
+
+-- ตัวแปรการทำงานระบบหลัก
 local AutoTpBackConfig = { Enabled = false }
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
@@ -1233,7 +1325,6 @@ local FOV_Corner, FOV_Stroke = Instance.new("UICorner"), Instance.new("UIStroke"
 FOV_Corner.CornerRadius = UDim.new(1, 0); FOV_Corner.Parent = FOV_Circle
 FOV_Stroke.Color = Color3.fromRGB(0, 162, 255); FOV_Stroke.Thickness = 1; FOV_Stroke.Parent = FOV_Circle
 
--- Loading sequence
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
@@ -1523,7 +1614,6 @@ task.spawn(function()
     end
 end)
 
--- แก้ไขระบบ 2D ESP ให้ทำงานอย่างสมบูรณ์แบบ
 local Active2D = {}
 local function removeDrawingObject(model)
     if Active2D[model] then
