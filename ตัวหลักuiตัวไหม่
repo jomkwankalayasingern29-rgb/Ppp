@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.13: ULTIMATE UPDATE ]] --
+-- [[ GKHub v1.4.14: PERFECT ALIGNMENT UPDATE ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -525,9 +525,11 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     BtnCorner.CornerRadius = UDim.new(1, 0)
     BtnCorner.Parent = Btn
 
-    local function applyValue(val)
+    local function applyValue(val, updateInput)
         val = math.clamp(val, minVal, maxVal)
-        InputBox.Text = tostring(val)
+        if updateInput then
+            InputBox.Text = tostring(val)
+        end
         local percentage = (val - minVal) / (maxVal - minVal)
         Btn.Position = UDim2.new(percentage, -6, 0, -4)
         if callback then callback(val) end
@@ -536,9 +538,9 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     InputBox.FocusLost:Connect(function()
         local num = tonumber(InputBox.Text)
         if num then
-            applyValue(math.floor(num))
+            applyValue(math.floor(num), true)
         else
-            applyValue(defaultVal)
+            applyValue(defaultVal, true)
         end
     end)
 
@@ -550,7 +552,7 @@ local function createSlider(labelText, parentTab)
     Frame.Size = UDim2.new(0.92, 0, 0, 42)
     Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     Frame.BorderSizePixel = 0
-    Parent = parentTab
+    Frame.Parent = parentTab
 
     local Corner = Instance.new("UICorner")
     Corner.CornerRadius = UDim.new(0, 4)
@@ -734,7 +736,7 @@ GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
 
--- หมวดหมู่: รันโค้ดอัตโนมัติ พร้อมส่วนขยาย (รันสคริปต์อัตโนมัติ - 1 ถึง 5)
+-- หมวดหมู่: รันโค้ดอัตโนมัติ
 createHeader(">> ใส่โค้ดที่ต้องการรัน <<", AutoExecTab)
 local CodeBoxFrame = Instance.new("Frame")
 CodeBoxFrame.Size = UDim2.new(0.92, 0, 0, 85)
@@ -770,7 +772,7 @@ table.insert(allTextLabels, CodeTextBox)
 
 createHeader(">> เลือกจำนวนครั้งที่ต้องการรัน <<", AutoExecTab)
 local ExecBtnFrame = Instance.new("Frame")
-ExecBtnFrame.Size = UDim2.new(0.92, 0, 0, 32)
+ExecBtnFrame.Size = UDim2.new(0.92, 0, 0, 60)
 ExecBtnFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 ExecBtnFrame.BorderSizePixel = 0
 ExecBtnFrame.Parent = AutoExecTab
@@ -800,24 +802,27 @@ local function executeUserCode(times)
     showNotification("รันโค้ดสำเร็จ " .. successCount .. " / " .. times .. " ครั้ง!", true)
 end
 
-local btnW = 55
+-- จัดเรียงปุ่มรัน x1, x10, x100, x1000 แบบ 2x2 ป้องกันการทับซ้อน
+local btnW = 110
+local btnH = 22
+
 local btn1 = Instance.new("TextButton")
-btn1.Size = UDim2.new(0, btnW, 0, 22); btn1.Position = UDim2.new(0, 4, 0.5, -11); btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1.Text = "รัน ×1"; btn1.TextColor3 = Color3.fromRGB(255,255,255); btn1.Font = Enum.Font.GothamBold; btn1.TextSize = 9; btn1.Parent = ExecBtnFrame
+btn1.Size = UDim2.new(0, btnW, 0, btnH); btn1.Position = UDim2.new(0, 6, 0, 6); btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1.Text = "รัน ×1"; btn1.TextColor3 = Color3.fromRGB(255,255,255); btn1.Font = Enum.Font.GothamBold; btn1.TextSize = 9; btn1.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 3)
 btn1.MouseButton1Click:Connect(function() executeUserCode(1) end)
 
 local btn10 = Instance.new("TextButton")
-btn10.Size = UDim2.new(0, btnW, 0, 22); btn10.Position = UDim2.new(0, 63, 0.5, -11); btn10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn10.Text = "รัน ×10"; btn10.TextColor3 = Color3.fromRGB(255,255,255); btn10.Font = Enum.Font.GothamBold; btn10.TextSize = 9; btn10.Parent = ExecBtnFrame
+btn10.Size = UDim2.new(0, btnW, 0, btnH); btn10.Position = UDim2.new(1, -116, 0, 6); btn10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn10.Text = "รัน ×10"; btn10.TextColor3 = Color3.fromRGB(255,255,255); btn10.Font = Enum.Font.GothamBold; btn10.TextSize = 9; btn10.Parent = ExecBtnFrame
 Instance.new("UICorner", btn10).CornerRadius = UDim.new(0, 3)
 btn10.MouseButton1Click:Connect(function() executeUserCode(10) end)
 
 local btn100 = Instance.new("TextButton")
-btn100.Size = UDim2.new(0, btnW, 0, 22); btn100.Position = UDim2.new(0, 122, 0.5, -11); btn100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100.Text = "รัน ×100"; btn100.TextColor3 = Color3.fromRGB(255,255,255); btn100.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
+btn100.Size = UDim2.new(0, btnW, 0, btnH); btn100.Position = UDim2.new(0, 6, 0, 32); btn100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100.Text = "รัน ×100"; btn100.TextColor3 = Color3.fromRGB(255,255,255); btn100.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
 Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeUserCode(100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, 22); btn1000.Position = UDim2.new(0, 181, 0.5, -11); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn1000.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn1000.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeUserCode(1000) end)
 
@@ -828,7 +833,7 @@ AutoLoopToggle.MouseButton1Click:Connect(function()
     isLoopingCode = not isLoopingCode
     AutoLoopToggle.BackgroundColor3 = isLoopingCode and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
     AutoLoopToggle.Text = isLoopingCode and "เปิด" or "ปิด"
-    showNotification(isLoopingCode and "เริ่มรันโค้ดอัตโนมัติแล้ว" : "หยุดรันโค้ดอัตโนมัติแล้ว", isLoopingCode)
+    showNotification(isLoopingCode and "เริ่มรันโค้ดอัตโนมัติแล้ว" or "หยุดรันโค้ดอัตโนมัติแล้ว", isLoopingCode)
 end)
 
 task.spawn(function()
@@ -924,7 +929,7 @@ for i = 1, 5 do
         end
     end)
 
-    local isFolded = false
+    local isFolded = true
     foldBtn.MouseButton1Click:Connect(function()
         isFolded = not isFolded
         dropContent.Visible = not isFolded
@@ -932,7 +937,7 @@ for i = 1, 5 do
     end)
 end
 
--- ตัวแปรการทำงานระบบหลัก
+-- ตัวแปรทำงานฟังก์ชัน
 local AutoTpBackConfig = { Enabled = false }
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
@@ -1527,21 +1532,21 @@ UserInputService.InputChanged:Connect(function(input)
         end
         if walkSpeedDragging then
             local percentage = math.clamp((input.Position.X - WalkSpeedBack.AbsolutePosition.X) / WalkSpeedBack.AbsoluteSize.X, 0, 1)
-            WalkSpeedBtn.Position = UDim2.new(percentage, -6, 0, -4)
             CurrentWalkSpeed = math.floor(16 + (percentage * (800 - 16)))
             WalkSpeedInput.Text = tostring(CurrentWalkSpeed)
+            WalkSpeedBtn.Position = UDim2.new(percentage, -6, 0, -4)
         end
         if jumpPowerDragging then
             local percentage = math.clamp((input.Position.X - JumpPowerBack.AbsolutePosition.X) / JumpPowerBack.AbsoluteSize.X, 0, 1)
-            JumpPowerBtn.Position = UDim2.new(percentage, -6, 0, -4)
             CurrentJumpPower = math.floor(50 + (percentage * (500 - 50)))
             JumpPowerInput.Text = tostring(CurrentJumpPower)
+            JumpPowerBtn.Position = UDim2.new(percentage, -6, 0, -4)
         end
         if hitboxDragging then
             local percentage = math.clamp((input.Position.X - HitboxBack.AbsolutePosition.X) / HitboxBack.AbsoluteSize.X, 0, 1)
-            HitboxBtn.Position = UDim2.new(percentage, -6, 0, -4)
             HitboxConfig.Size = math.floor(1 + (percentage * 999))
             HitboxInput.Text = tostring(HitboxConfig.Size)
+            HitboxBtn.Position = UDim2.new(percentage, -6, 0, -4)
         end
         if cooldownDragging then
             local percentage = math.clamp((input.Position.X - CooldownBack.AbsolutePosition.X) / CooldownBack.AbsoluteSize.X, 0, 1)
@@ -1550,6 +1555,43 @@ UserInputService.InputChanged:Connect(function(input)
             local textDesc = (CooldownConfig.Time == 0) and " (ไม่มีดีเลย์)" or ""
             CooldownLabel.Text = "เวลาคูลดาวน์: " .. CooldownConfig.Time .. " วิ" .. textDesc
         end
+    end
+end)
+
+-- Synchronize slider position when typing in input boxes
+WalkSpeedInput.FocusLost:Connect(function()
+    local num = tonumber(WalkSpeedInput.Text)
+    if num then
+        CurrentWalkSpeed = math.clamp(math.floor(num), 16, 800)
+        WalkSpeedInput.Text = tostring(CurrentWalkSpeed)
+        local percentage = (CurrentWalkSpeed - 16) / (800 - 16)
+        WalkSpeedBtn.Position = UDim2.new(percentage, -6, 0, -4)
+    else
+        WalkSpeedInput.Text = tostring(CurrentWalkSpeed)
+    end
+end)
+
+JumpPowerInput.FocusLost:Connect(function()
+    local num = tonumber(JumpPowerInput.Text)
+    if num then
+        CurrentJumpPower = math.clamp(math.floor(num), 50, 500)
+        JumpPowerInput.Text = tostring(CurrentJumpPower)
+        local percentage = (CurrentJumpPower - 50) / (500 - 50)
+        JumpPowerBtn.Position = UDim2.new(percentage, -6, 0, -4)
+    else
+        JumpPowerInput.Text = tostring(CurrentJumpPower)
+    end
+end)
+
+HitboxInput.FocusLost:Connect(function()
+    local num = tonumber(HitboxInput.Text)
+    if num then
+        HitboxConfig.Size = math.clamp(math.floor(num), 1, 1000)
+        HitboxInput.Text = tostring(HitboxConfig.Size)
+        local percentage = (HitboxConfig.Size - 1) / (1000 - 1)
+        HitboxBtn.Position = UDim2.new(percentage, -6, 0, -4)
+    else
+        HitboxInput.Text = tostring(HitboxConfig.Size)
     end
 end)
 
