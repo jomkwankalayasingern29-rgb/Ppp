@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.18: FIXED 2D ESP UPDATE & OPTIMIZED ]] --
+-- [[ GKHub v1.4.18: FIXED 2D ESP UPDATE ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -379,9 +379,9 @@ local function createCategoryButton(name, targetTab)
     return btn
 end
 
-local btnMainTab = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
-btnMainTab.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-btnMainTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+local btn1 = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
+btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
 
 createCategoryButton("ระบบล็อกเป้า", AimbotTab)
 createCategoryButton("ระบบ ESP & Chams", EspTab)
@@ -659,14 +659,14 @@ local NpcEsp2DToggle = createToggle("NpcEsp2D", "เปิดใช้งาน 
 createHeader(">> ความเร็วผู้เล่น <<", SpeedTab)
 local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", SpeedTab)
 local CurrentWalkSpeed = 16
-local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput = createSliderWithInputAndSync("ความเร็ว (16 - 800):", 16, 800, 16, SpeedTab, function(val)
+local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput, SetWalkSpeedFunc = createSliderWithInputAndSync("ความเร็ว (16 - 800):", 16, 800, 16, SpeedTab, function(val)
     CurrentWalkSpeed = val
 end)
 
 createHeader(">> กระโดดสูงผู้เล่น <<", SpeedTab)
 local EnableJumpToggle = createToggle("EnableJump", "เปิดใช้งานกระโดดสูง", SpeedTab)
 local CurrentJumpPower = 50
-local JumpPowerBack, JumpPowerBtn, JumpPowerInput = createSliderWithInputAndSync("กระโดดสูง (50 - 500):", 50, 500, 50, SpeedTab, function(val)
+local JumpPowerBack, JumpPowerBtn, JumpPowerInput, SetJumpPowerFunc = createSliderWithInputAndSync("กระโดดสูง (50 - 500):", 50, 500, 50, SpeedTab, function(val)
     CurrentJumpPower = val
 end)
 
@@ -699,7 +699,7 @@ local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาค�
 createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", ToolTab)
 local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
 local HitboxConfig = { Enabled = false, Size = 1 }
-local HitboxBack, HitboxBtn, HitboxInput = createSliderWithInputAndSync("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
+local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInputAndSync("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
     HitboxConfig.Size = val
 end)
 
@@ -803,25 +803,25 @@ end
 local btnW = 110
 local btnH = 22
 
-local execBtn1 = Instance.new("TextButton")
-execBtn1.Size = UDim2.new(0, btnW, 0, btnH); execBtn1.Position = UDim2.new(0, 6, 0, 6); execBtn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); execBtn1.Text = "รัน ×1"; execBtn1.TextColor3 = Color3.fromRGB(255,255,255); execBtn1.Font = Enum.Font.GothamBold; execBtn1.TextSize = 9; execBtn1.Parent = ExecBtnFrame
-Instance.new("UICorner", execBtn1).CornerRadius = UDim.new(0, 3)
-execBtn1.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1) end)
+local btn1 = Instance.new("TextButton")
+btn1.Size = UDim2.new(0, btnW, 0, btnH); btn1.Position = UDim2.new(0, 6, 0, 6); btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1.Text = "รัน ×1"; btn1.TextColor3 = Color3.fromRGB(255,255,255); btn1.Font = Enum.Font.GothamBold; btn1.TextSize = 9; btn1.Parent = ExecBtnFrame
+Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 3)
+btn1.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1) end)
 
-local execBtn10 = Instance.new("TextButton")
-execBtn10.Size = UDim2.new(0, btnW, 0, btnH); execBtn10.Position = UDim2.new(1, -116, 0, 6); execBtn10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); execBtn10.Text = "รัน ×10"; execBtn10.TextColor3 = Color3.fromRGB(255,255,255); execBtn10.Font = Enum.Font.GothamBold; execBtn10.TextSize = 9; execBtn10.Parent = ExecBtnFrame
-Instance.new("UICorner", execBtn10).CornerRadius = UDim.new(0, 3)
-execBtn10.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 10) end)
+local btn10 = Instance.new("TextButton")
+btn10.Size = UDim2.new(0, btnW, 0, btnH); btn10.Position = UDim2.new(1, -116, 0, 6); btn10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn10.Text = "รัน ×10"; btn10.TextColor3 = Color3.fromRGB(255,255,255); btn10.Font = Enum.Font.GothamBold; btn10.TextSize = 9; btn10.Parent = ExecBtnFrame
+Instance.new("UICorner", btn10).CornerRadius = UDim.new(0, 3)
+btn10.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 10) end)
 
-local execBtn100 = Instance.new("TextButton")
-execBtn100.Size = UDim2.new(0, btnW, 0, btnH); execBtn100.Position = UDim2.new(0, 6, 0, 32); execBtn100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); execBtn100.Text = "รัน ×100"; execBtn100.TextColor3 = Color3.fromRGB(255,255,255); execBtn100.Font = Enum.Font.GothamBold; execBtn100.TextSize = 9; execBtn100.Parent = ExecBtnFrame
-Instance.new("UICorner", execBtn100).CornerRadius = UDim.new(0, 3)
-execBtn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
+local btn100 = Instance.new("TextButton")
+btn100.Size = UDim2.new(0, btnW, 0, btnH); btn100.Position = UDim2.new(0, 6, 0, 32); btn100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100.Text = "รัน ×100"; btn100.TextColor3 = Color3.fromRGB(255,255,255); btn100.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
+Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
+btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
-local execBtn1000 = Instance.new("TextButton")
-execBtn1000.Size = UDim2.new(0, btnW, 0, btnH); execBtn1000.Position = UDim2.new(1, -116, 0, 32); execBtn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); execBtn1000.Text = "รัน ×1000"; execBtn1000.TextColor3 = Color3.fromRGB(255,255,255); execBtn1000.Font = Enum.Font.GothamBold; execBtn1000.TextSize = 9; execBtn1000.Parent = ExecBtnFrame
-Instance.new("UICorner", execBtn1000).CornerRadius = UDim.new(0, 3)
-execBtn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
+local btn1000 = Instance.new("TextButton")
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
+Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
+btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
 createHeader(">> ระบบรันโค้ดอัตโนมัติ (0.01s) <<", AutoExecTab)
 local AutoLoopToggle = createToggle("AutoLoop", "รันโค้ดอัตโนมัติ (ความเร็ว 0.01)", AutoExecTab)
@@ -929,8 +929,8 @@ for i = 1, 5 do
     local sBtnW = 52
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
-    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -997,7 +997,6 @@ for i = 1, 5 do
     end)
 end
 
--- ฟังก์ชันการทำงานหลักอื่นๆ
 local AutoTpBackConfig = { Enabled = false }
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
@@ -1715,6 +1714,7 @@ task.spawn(function()
     end
 end)
 
+-- ระบบ 2D ESP (Square และ Line) ที่ปรับปรุงใหม่ให้รองรับผู้เล่นและ NPC สมบูรณ์แบบ
 local Active2D = {}
 local function removeDrawingObject(model)
     if Active2D[model] then
@@ -1733,14 +1733,18 @@ RunService.RenderStepped:Connect(function()
     end
 
     for model, _ in pairs(Active2D) do
-        if not model or not model.Parent or not model:FindFirstChild("Humanoid") or model.Humanoid.Health <= 0 then removeDrawingObject(model) end
+        if not model or not model.Parent or not model:FindFirstChild("Humanoid") or model.Humanoid.Health <= 0 then 
+            removeDrawingObject(model) 
+        end
     end
 
     local function drawESP(model, isNpc)
-        if (isNpc and not LockConfig.NpcEsp2D) or (not isNpc and not LockConfig.PlayerEsp2D) then 
+        local isEnabled = isNpc and LockConfig.NpcEsp2D or (not isNpc and LockConfig.PlayerEsp2D)
+        if not isEnabled then 
             removeDrawingObject(model)
             return 
         end
+
         if not Active2D[model] and Drawing then
             local successBox, box = pcall(function() return Drawing.new("Square") end)
             local successTracer, tracer = pcall(function() return Drawing.new("Line") end)
@@ -1752,28 +1756,31 @@ RunService.RenderStepped:Connect(function()
         end
         
         local hrp = model:FindFirstChild("HumanoidRootPart")
-        local head = model:FindFirstChild("Head")
+        local head = model:FindFirstChild("Head") or model:FindFirstChild("UpperTorso")
         local data = Active2D[model]
         
         if hrp and head and data and data.Box and data.Tracer then
             local hrpPos, hrpOnScreen = Camera:WorldToViewportPoint(hrp.Position)
-            local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+            local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.8, 0))
             local legPos, legOnScreen = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
             
             if hrpOnScreen or headOnScreen or legOnScreen then
-                local col = isVisible(hrp, model) and (isNpc and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(0, 255, 100)) or (isNpc and Color3.fromRGB(0, 80, 200) or Color3.fromRGB(240, 240, 240))
-                data.Box.Color = col; data.Tracer.Color = col
+                local visible = isVisible(hrp, model)
+                local col = visible and (isNpc and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(0, 255, 100)) or (isNpc and Color3.fromRGB(0, 80, 200) or Color3.fromRGB(220, 60, 60))
+                
+                data.Box.Color = col
+                data.Tracer.Color = col
                 
                 local height = math.abs(headPos.Y - legPos.Y)
-                local width = height * 0.6
+                local width = height * 0.55
                 
                 data.Box.Size = Vector2.new(width, height)
                 data.Box.Position = Vector2.new(hrpPos.X - width / 2, headPos.Y)
-                data.Box.Visible = (LockConfig.PlayerEsp2D and not isNpc) or (LockConfig.NpcEsp2D and isNpc)
+                data.Box.Visible = true
                 
                 data.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                data.Tracer.To = Vector2.new(hrpPos.X, hrpPos.Y)
-                data.Tracer.Visible = (LockConfig.PlayerEsp2D and not isNpc) or (LockConfig.NpcEsp2D and isNpc)
+                data.Tracer.To = Vector2.new(hrpPos.X, legPos.Y)
+                data.Tracer.Visible = true
             else
                 data.Box.Visible = false
                 data.Tracer.Visible = false
@@ -1785,10 +1792,16 @@ RunService.RenderStepped:Connect(function()
     end
 
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then drawESP(player.Character, false) end
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then 
+            drawESP(player.Character, false) 
+        end
     end
     for _, desc in ipairs(Workspace:GetDescendants()) do
-        if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then drawESP(desc, true) end
+        if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then 
+            if desc:FindFirstChild("HumanoidRootPart") then
+                drawESP(desc, true) 
+            end
+        end
     end
 end)
 
