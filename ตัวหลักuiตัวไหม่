@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.15: ADVANCED MULTI-SCRIPT SAVE SYSTEM ]] --
+-- [[ GKHub v1.4.16: STABLE EXECUTION & FIX VERSION ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -736,7 +736,7 @@ GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
 
--- หมวดหมู่: รันโค้ดอัตโนมัติ (หลัก)
+-- หมวดหมู่: รันโค้ดอัตโนมัติ
 createHeader(">> ใส่โค้ดที่ต้องการรัน <<", AutoExecTab)
 local CodeBoxFrame = Instance.new("Frame")
 CodeBoxFrame.Size = UDim2.new(0.92, 0, 0, 85)
@@ -783,9 +783,12 @@ local function executeCodeString(codeStr, times)
         showNotification("ไม่มีโค้ดให้รัน!", false)
         return
     end
-    local func, err = loadstring(codeStr)
-    if not func then
-        showNotification("โค้ดผิดพลาด: " .. tostring(err), false)
+    -- แก้ไขให้ใช้ pcall ครอบ loadstring ป้องกัน Error เด้ง
+    local successLoad, func = pcall(function()
+        return loadstring(codeStr)
+    end)
+    if not successLoad or not func then
+        showNotification("โค้ดมีข้อผิดพลาดทางไวยากรณ์!", false)
         return
     end
     local successCount = 0
@@ -834,14 +837,14 @@ task.spawn(function()
         if isLoopingCode then
             local code = CodeTextBox.Text
             if code ~= "" then
-                local func = loadstring(code)
-                if func then pcall(func) end
+                local success, func = pcall(function() return loadstring(code) end)
+                if success and func then pcall(func) end
             end
         end
     end
 end)
 
--- สถานะการทำงานระบบย่อย 1-5 พร้อมระบบเซฟโค้ด ตั้งชื่อได้ ล้าง คัดลอก รัน และออโต้ 0.01s แยกอิสระ
+-- ช่องสคริปต์ย่อย 1-5 พร้อมระบบเซฟโค้ด ตั้งชื่อแยกอิสระ
 local subLoopStates = {false, false, false, false, false}
 
 for i = 1, 5 do
@@ -874,7 +877,6 @@ for i = 1, 5 do
     foldBtn.TextSize = 12
     foldBtn.Parent = dropHeader
 
-    -- ปรับขนาด DropContent ให้รองรับเครื่องมือครบถ้วน
     local dropContent = Instance.new("Frame")
     dropContent.Size = UDim2.new(0.92, 0, 0, 175)
     dropContent.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -900,7 +902,6 @@ for i = 1, 5 do
     subBox.Parent = dropContent
     Instance.new("UICorner", subBox).CornerRadius = UDim.new(0, 3)
 
-    -- ปุ่มฟังก์ชันย่อย: เซฟ, ล้าง, คัดลอก
     local actionRow = Instance.new("Frame")
     actionRow.Size = UDim2.new(1, -10, 0, 20)
     actionRow.Position = UDim2.new(0, 5, 0, 60)
@@ -919,7 +920,6 @@ for i = 1, 5 do
     copyBtn.Size = UDim2.new(0.32, 0, 1, 0); copyBtn.Position = UDim2.new(0.68, 0, 0, 0); copyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80); copyBtn.Text = "คัดลอกโค้ด"; copyBtn.TextColor3 = Color3.fromRGB(255,255,255); copyBtn.Font = Enum.Font.GothamBold; copyBtn.TextSize = 8; copyBtn.Parent = actionRow
     Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 3)
 
-    -- ปุ่มรันขนาดเล็กแบบ x1, x10, x100, x1000
     local subExecRow = Instance.new("Frame")
     subExecRow.Size = UDim2.new(1, -10, 0, 20)
     subExecRow.Position = UDim2.new(0, 5, 0, 85)
@@ -932,7 +932,6 @@ for i = 1, 5 do
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
     local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
-    -- สวิตช์รันออโต้ช่องนี้ความเร็ว 0.01s
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
     subAutoRow.Position = UDim2.new(0, 5, 0, 112)
@@ -975,17 +974,16 @@ for i = 1, 5 do
         subLoopStates[i] = not subLoopStates[i]
         autoBtn.BackgroundColor3 = subLoopStates[i] and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
         autoBtn.Text = subLoopStates[i] and "เปิด" or "ปิด"
-        showNotification(subLoopStates[i] and "เริ่มออโต้รันช่อง " .. i : "หยุดออโต้รันช่อง " .. i, subLoopStates[i])
+        showNotification(subLoopStates[i] and "เริ่มออโต้รันช่อง " .. i or "หยุดออโต้รันช่อง " .. i, subLoopStates[i])
     end)
 
-    -- Task รันออโต้แยกอิสระ 0.01s สำหรับแต่ละช่อง
     task.spawn(function()
         while task.wait(0.01) do
             if subLoopStates[i] then
                 local code = subBox.Text
                 if code ~= "" then
-                    local f = loadstring(code)
-                    if f then pcall(f) end
+                    local success, f = pcall(function() return loadstring(code) end)
+                    if success and f then pcall(f) end
                 end
             end
         end
@@ -999,7 +997,7 @@ for i = 1, 5 do
     end)
 end
 
--- ตัวแปรทำงานฟังก์ชันหลักอื่นๆ
+-- ฟังก์ชันการทำงานหลักอื่นๆ
 local AutoTpBackConfig = { Enabled = false }
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
