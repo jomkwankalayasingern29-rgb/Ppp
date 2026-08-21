@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.17: SECURE EXECUTION UPDATE ]] --
+-- [[ GKHub v1.4.18: FIXED 2D ESP UPDATE ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -1716,6 +1716,7 @@ task.spawn(function()
     end
 end)
 
+-- แก้ไขระบบ 2D ESP (Square และ Line) ให้ตรวจสอบและเรนเดอร์อย่างถูกต้องสมบูรณ์
 local Active2D = {}
 local function removeDrawingObject(model)
     if Active2D[model] then
@@ -1751,22 +1752,37 @@ RunService.RenderStepped:Connect(function()
                 Active2D[model] = {Box = box, Tracer = tracer}
             end
         end
+        
         local hrp = model:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            local hrpPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-            local data = Active2D[model]
-            if data and data.Box and data.Tracer then
+        local head = model:FindFirstChild("Head")
+        local data = Active2D[model]
+        
+        if hrp and head and data and data.Box and data.Tracer then
+            local hrpPos, hrpOnScreen = Camera:WorldToViewportPoint(hrp.Position)
+            local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+            local legPos, legOnScreen = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
+            
+            if hrpOnScreen or headOnScreen or legOnScreen then
                 local col = isVisible(hrp, model) and (isNpc and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(0, 255, 100)) or (isNpc and Color3.fromRGB(0, 80, 200) or Color3.fromRGB(240, 240, 240))
                 data.Box.Color = col; data.Tracer.Color = col
-                if onScreen then
-                    local scale = 1 / (hrpPos.Z * math.tan(math.rad(Camera.FieldOfView * 0.5))) * 1000
-                    local w, h = scale * 0.7, scale * 1.1
-                    data.Box.Size = Vector2.new(w, h); data.Box.Position = Vector2.new(hrpPos.X - w/2, hrpPos.Y - h/2); data.Box.Visible = true
-                    data.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y); data.Tracer.To = Vector2.new(hrpPos.X, hrpPos.Y + h/2); data.Tracer.Visible = true
-                else
-                    data.Box.Visible = false; data.Tracer.Visible = false
-                end
+                
+                local height = math.abs(headPos.Y - legPos.Y)
+                local width = height * 0.6
+                
+                data.Box.Size = Vector2.new(width, height)
+                data.Box.Position = Vector2.new(hrpPos.X - width / 2, headPos.Y)
+                data.Box.Visible = (LockConfig.PlayerEsp2D and not isNpc) or (LockConfig.NpcEsp2D and isNpc)
+                
+                data.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                data.Tracer.To = Vector2.new(hrpPos.X, hrpPos.Y)
+                data.Tracer.Visible = (LockConfig.PlayerEsp2D and not isNpc) or (LockConfig.NpcEsp2D and isNpc)
+            else
+                data.Box.Visible = false
+                data.Tracer.Visible = false
             end
+        elseif data and data.Box and data.Tracer then
+            data.Box.Visible = false
+            data.Tracer.Visible = false
         end
     end
 
@@ -1869,7 +1885,7 @@ YesButton.MouseButton1Click:Connect(function()
             char.HumanoidRootPart.Size = origSize
             char.HumanoidRootPart.Transparency = 1
             char.HumanoidRootPart.Material = Enum.Material.Plastic
-            char.HumanoidRootPart.CanCollide = true
+            char.CanCollide = true
         end
     end
     OriginalSizes = {}
