@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.10: AUTO-TELEPORT BEHIND TARGET VERSION ]] --
+-- [[ GKHub v1.4.11: COMPLETE UPDATE ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -13,7 +13,7 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
 -- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
-local oldUIs = {"CustomScriptUI", "HJ1JK_Gui", "HJ1JK_LoadingUI", "HJ1JK_NotifGui", "D_Icon", "FOV_Circle"}
+local oldUIs = {"CustomScriptUI", "GKHub_Gui", "HJ1JK_Gui", "HJ1JK_LoadingUI", "HJ1JK_NotifGui", "D_Icon", "FOV_Circle"}
 for _, uiName in ipairs(oldUIs) do
     if CoreGui:FindFirstChild(uiName) then
         pcall(function() CoreGui[uiName]:Destroy() end)
@@ -354,6 +354,7 @@ local function createContainer(name)
     return container
 end
 
+local MainFuncTab = createContainer("ฟังก์ชั่นหลัก")
 local AimbotTab = createContainer("ระบบล็อกเป้า")
 local EspTab = createContainer("ระบบ ESP & Chams")
 local SpeedTab = createContainer("ความเร็ว & กระโดด")
@@ -388,14 +389,15 @@ local function createCategoryButton(name, targetTab)
     return btn
 end
 
-local btn1 = createCategoryButton("ระบบล็อกเป้า", AimbotTab)
+local btn1 = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
 btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+createCategoryButton("ระบบล็อกเป้า", AimbotTab)
 createCategoryButton("ระบบ ESP & Chams", EspTab)
 createCategoryButton("ความเร็ว & กระโดด", SpeedTab)
 createCategoryButton("เครื่องมือ & FPS", ToolTab)
 createCategoryButton("รันโค้ดอัตโนมัติ", AutoExecTab)
 
-AimbotTab.Visible = true
+MainFuncTab.Visible = true
 
 LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     LeftSide.CanvasSize = UDim2.new(0, 0, 0, LeftLayout.AbsoluteContentSize.Y + 20)
@@ -465,6 +467,94 @@ local function createToggle(name, labelText, parentTab)
     return Button
 end
 
+local function createSliderWithInput(labelText, minVal, maxVal, defaultVal, parentTab, callback)
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0.92, 0, 0, 48)
+    Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Frame.BorderSizePixel = 0
+    Frame.Parent = parentTab
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 4)
+    Corner.Parent = Frame
+
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Color = Color3.fromRGB(40, 40, 40)
+    Stroke.Thickness = 1
+    Stroke.Parent = Frame
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(0.65, -8, 0, 18)
+    Label.Position = UDim2.new(0, 8, 0, 4)
+    Label.BackgroundTransparency = 1
+    Label.Text = labelText
+    Label.TextColor3 = Color3.fromRGB(240, 240, 240)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 10
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = Frame
+    table.insert(allTextLabels, Label)
+
+    local InputBox = Instance.new("TextBox")
+    InputBox.Size = UDim2.new(0, 55, 0, 20)
+    InputBox.Position = UDim2.new(1, -63, 0, 4)
+    InputBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    InputBox.BorderSizePixel = 0
+    InputBox.Text = tostring(defaultVal)
+    InputBox.TextColor3 = Color3.fromRGB(0, 162, 255)
+    InputBox.Font = Enum.Font.GothamBold
+    InputBox.TextSize = 10
+    InputBox.Parent = Frame
+    table.insert(allTextLabels, InputBox)
+
+    local InputCorner = Instance.new("UICorner")
+    InputCorner.CornerRadius = UDim.new(0, 3)
+    InputCorner.Parent = InputBox
+
+    local Back = Instance.new("Frame")
+    Back.Size = UDim2.new(1, -16, 0, 4)
+    Back.Position = UDim2.new(0, 8, 0, 34)
+    Back.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Back.BorderSizePixel = 0
+    Back.Parent = Frame
+    table.insert(allSliders, Back)
+
+    local BackCorner = Instance.new("UICorner")
+    BackCorner.CornerRadius = UDim.new(1, 0)
+    BackCorner.Parent = Back
+
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 12, 0, 12)
+    Btn.Position = UDim2.new(0, 0, 0, -4)
+    Btn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+    Btn.Text = ""
+    Btn.Parent = Back
+    table.insert(allSliders, Btn)
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(1, 0)
+    BtnCorner.Parent = Btn
+
+    local function updateValue(val)
+        val = math.clamp(val, minVal, maxVal)
+        InputBox.Text = tostring(val)
+        local percentage = (val - minVal) / (maxVal - minVal)
+        Btn.Position = UDim2.new(percentage, -6, 0, -4)
+        if callback then callback(val) end
+    end
+
+    InputBox.FocusLost:Connect(function(enterPressed)
+        local num = tonumber(InputBox.Text)
+        if num then
+            updateValue(math.floor(num))
+        else
+            updateValue(defaultVal)
+        end
+    end)
+
+    return Back, Btn, InputBox, updateValue
+end
+
 local function createSlider(labelText, parentTab)
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0.92, 0, 0, 42)
@@ -520,8 +610,32 @@ local function createSlider(labelText, parentTab)
     return Back, Btn, Label
 end
 
--- สร้าง UI เมนูย่อย
-createHeader(">> ฟังก์ชันพิเศษ <<", AimbotTab)
+-- สร้าง UI เมนูย่อยในหมวดหมู่ "ฟังก์ชั่นหลัก"
+createHeader(">> คอมมิวนิตี้ <<", MainFuncTab)
+local DiscordFrame = Instance.new("Frame")
+DiscordFrame.Size = UDim2.new(0.92, 0, 0, 36)
+DiscordFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+DiscordFrame.BorderSizePixel = 0
+DiscordFrame.Parent = MainFuncTab
+local DiscordCorner = Instance.new("UICorner"); DiscordCorner.CornerRadius = UDim.new(0, 4); DiscordCorner.Parent = DiscordFrame
+
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Size = UDim2.new(1, -12, 0, 26)
+DiscordBtn.Position = UDim2.new(0, 6, 0.5, -13)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+DiscordBtn.Text = "คัดลอกลิงก์ Discord"
+DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.TextSize = 10
+DiscordBtn.Parent = DiscordFrame
+local DiscordBtnCorner = Instance.new("UICorner"); DiscordBtnCorner.CornerRadius = UDim.new(0, 3); DiscordBtnCorner.Parent = DiscordBtn
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    copyToClipboard(DiscordLink)
+    showNotification("คัดลอกลิงก์ Discord สำเร็จ!", true)
+end)
+
+createHeader(">> ฟังก์ชั่นพิเศษ <<", AimbotTab)
 local FullLockToggle = createToggle("FullLock", "ล็อกหัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
 local FullLockTorsoToggle = createToggle("FullLockTorso", "ล็อกตัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
 local FullLockTorsoWallCheckToggle = createToggle("FullLockTorsoWallCheck", "ไม่ล็อกตัวหลังกำแพง", AimbotTab)
@@ -550,11 +664,15 @@ local NpcEsp2DToggle = createToggle("NpcEsp2D", "เปิดใช้งาน 
 
 createHeader(">> ความเร็วผู้เล่น <<", SpeedTab)
 local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", SpeedTab)
-local WalkSpeedBack, WalkSpeedBtn, WalkSpeedLabel = createSlider("ความเร็ว: 16 (ปกติ)", SpeedTab)
+local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput, SetWalkSpeedFunc = createSliderWithInput("ความเร็ว (16 - 800):", 16, 800, 16, SpeedTab, function(val)
+    CurrentWalkSpeed = val
+end)
 
 createHeader(">> กระโดดสูงผู้เล่น <<", SpeedTab)
 local EnableJumpToggle = createToggle("EnableJump", "เปิดใช้งานกระโดดสูง", SpeedTab)
-local JumpPowerBack, JumpPowerBtn, JumpPowerLabel = createSlider("กระโดดสูง: 50 (ปกติ)", SpeedTab)
+local JumpPowerBack, JumpPowerBtn, JumpPowerInput, SetJumpPowerFunc = createSliderWithInput("กระโดดสูง (50 - 500):", 50, 500, 50, SpeedTab, function(val)
+    CurrentJumpPower = val
+end)
 
 local ResetFrame = Instance.new("Frame")
 ResetFrame.Size = UDim2.new(0.92, 0, 0, 32)
@@ -584,7 +702,9 @@ local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาค�
 
 createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", ToolTab)
 local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
-local HitboxBack, HitboxBtn, HitboxLabel = createSlider("ขนาดฮิดบล็อก: 1 (ปกติ)", ToolTab)
+local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInput("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
+    HitboxConfig.Size = val
+end)
 
 createHeader(">> ระบบภาพดินน้ำมัน (Plastic) <<", ToolTab)
 local ClayGraphicsToggle = createToggle("ClayGraphics", "เปิดใช้งานภาพดินน้ำมัน", ToolTab)
@@ -712,7 +832,7 @@ Run1Btn.MouseButton1Click:Connect(function() executeUserCode(1) end)
 Run10Btn.MouseButton1Click:Connect(function() executeUserCode(10) end)
 Run100Btn.MouseButton1Click:Connect(function() executeUserCode(100) end)
 
--- ฟังก์ชันการทำงานหลักของสคริปต์
+-- ตัวแปรสถานะฟังก์ชันหลัก
 local AutoTpBackConfig = { Enabled = false }
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
@@ -880,7 +1000,6 @@ ClayGraphicsToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- แก้ไขระบบ FPS Boost / ลบเอฟเฟค / แก้แลคให้ทำงานได้จริงและครอบคลุม
 local SelectiveFpsEnabled = false
 local optimizedParts = {}
 
@@ -1182,30 +1301,6 @@ local function updateFOV(radius)
 end
 updateFOV(FOV_Radius)
 
-local function updateWalkSpeedUI(speed)
-    CurrentWalkSpeed = speed
-    local multiplier = speed / 16
-    local multText = string.format(" (x%.1f)", multiplier)
-    if speed == 16 then multText = " (ปกติ)" end
-    WalkSpeedLabel.Text = "ความเร็ว: " .. math.floor(speed) .. multText
-    
-    local percentage = math.clamp((speed - 16) / (800 - 16), 0, 1)
-    WalkSpeedBtn.Position = UDim2.new(percentage, -6, 0, -4)
-end
-updateWalkSpeedUI(CurrentWalkSpeed)
-
-local function updateJumpPowerUI(jump)
-    CurrentJumpPower = jump
-    local multiplier = jump / 50
-    local multText = string.format(" (x%.1f)", multiplier)
-    if jump == 50 then multText = " (ปกติ)" end
-    JumpPowerLabel.Text = "กระโดดสูง: " .. math.floor(jump) .. multText
-    
-    local percentage = math.clamp((jump - 50) / (500 - 50), 0, 1)
-    JumpPowerBtn.Position = UDim2.new(percentage, -6, 0, -4)
-end
-updateJumpPowerUI(CurrentJumpPower)
-
 local function updateVisuals(btn, state, funcName)
     btn.BackgroundColor3 = state and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
     btn.Text = state and "เปิด" or "ปิด"
@@ -1292,8 +1387,12 @@ EnableJumpToggle.MouseButton1Click:Connect(function()
 end)
 
 ResetBtn.MouseButton1Click:Connect(function()
-    updateWalkSpeedUI(16)
-    updateJumpPowerUI(50)
+    CurrentWalkSpeed = 16
+    CurrentJumpPower = 50
+    WalkSpeedInput.Text = "16"
+    JumpPowerInput.Text = "50"
+    WalkSpeedBtn.Position = UDim2.new(0, -6, 0, -4)
+    JumpPowerBtn.Position = UDim2.new(0, -6, 0, -4)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         local humanoid = LocalPlayer.Character.Humanoid
         humanoid.WalkSpeed = 16
@@ -1334,48 +1433,24 @@ UserInputService.InputChanged:Connect(function(input)
         if walkSpeedDragging then
             local percentage = math.clamp((input.Position.X - WalkSpeedBack.AbsolutePosition.X) / WalkSpeedBack.AbsoluteSize.X, 0, 1)
             WalkSpeedBtn.Position = UDim2.new(percentage, -6, 0, -4)
-            
-            local newSpeed = 16 + (percentage * (800 - 16))
-            CurrentWalkSpeed = math.floor(newSpeed)
-            
-            local multiplier = CurrentWalkSpeed / 16
-            local multText = string.format(" (x%.1f)", multiplier)
-            if CurrentWalkSpeed == 16 then multText = " (ปกติ)" end
-            WalkSpeedLabel.Text = "ความเร็ว: " .. CurrentWalkSpeed .. multText
-            
-            if LockConfig.EnableSpeed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                LocalPlayer.Character.Humanoid.WalkSpeed = CurrentWalkSpeed
-            end
+            CurrentWalkSpeed = math.floor(16 + (percentage * (800 - 16)))
+            WalkSpeedInput.Text = tostring(CurrentWalkSpeed)
         end
         if jumpPowerDragging then
             local percentage = math.clamp((input.Position.X - JumpPowerBack.AbsolutePosition.X) / JumpPowerBack.AbsoluteSize.X, 0, 1)
             JumpPowerBtn.Position = UDim2.new(percentage, -6, 0, -4)
-            
-            local newJump = 50 + (percentage * (500 - 50))
-            CurrentJumpPower = math.floor(newJump)
-            
-            local multiplier = CurrentJumpPower / 50
-            local multText = string.format(" (x%.1f)", multiplier)
-            if CurrentJumpPower == 50 then multText = " (ปกติ)" end
-            JumpPowerLabel.Text = "กระโดดสูง: " .. CurrentJumpPower .. multText
-            
-            if LockConfig.EnableJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                LocalPlayer.Character.Humanoid.UseJumpPower = true
-                LocalPlayer.Character.Humanoid.JumpPower = CurrentJumpPower
-            end
+            CurrentJumpPower = math.floor(50 + (percentage * (500 - 50)))
+            JumpPowerInput.Text = tostring(CurrentJumpPower)
         end
         if hitboxDragging then
             local percentage = math.clamp((input.Position.X - HitboxBack.AbsolutePosition.X) / HitboxBack.AbsoluteSize.X, 0, 1)
             HitboxBtn.Position = UDim2.new(percentage, -6, 0, -4)
-            
             HitboxConfig.Size = math.floor(1 + (percentage * 999))
-            local textDesc = (HitboxConfig.Size == 1) and " (ปกติ)" or ((HitboxConfig.Size >= 1000) and " (ทั้งแมพ!)" or "")
-            HitboxLabel.Text = "ขนาดฮิดบล็อก: " .. HitboxConfig.Size .. textDesc
+            HitboxInput.Text = tostring(HitboxConfig.Size)
         end
         if cooldownDragging then
             local percentage = math.clamp((input.Position.X - CooldownBack.AbsolutePosition.X) / CooldownBack.AbsoluteSize.X, 0, 1)
             CooldownBtn.Position = UDim2.new(percentage, -6, 0, -4)
-            
             CooldownConfig.Time = math.floor((percentage * 5) * 10) / 10
             local textDesc = (CooldownConfig.Time == 0) and " (ไม่มีดีเลย์)" or ""
             CooldownLabel.Text = "เวลาคูลดาวน์: " .. CooldownConfig.Time .. " วิ" .. textDesc
@@ -1444,6 +1519,7 @@ task.spawn(function()
     end
 end)
 
+-- แก้ไขระบบ 2D ESP ให้ทำงานสมบูรณ์
 local Active2D = {}
 local function removeDrawingObject(model)
     if Active2D[model] then
@@ -1466,18 +1542,24 @@ RunService.RenderStepped:Connect(function()
     end
 
     local function drawESP(model, isNpc)
-        if (isNpc and not LockConfig.NpcEsp2D) or (not isNpc and not LockConfig.PlayerEsp2D) then removeDrawingObject(model); return end
+        if (isNpc and not LockConfig.NpcEsp2D) or (not isNpc and not LockConfig.PlayerEsp2D) then 
+            removeDrawingObject(model)
+            return 
+        end
         if not Active2D[model] and Drawing then
-            local box, tracer = Drawing.new("Square"), Drawing.new("Line")
-            box.Visible = false; box.Thickness = 1.2; box.Filled = false
-            tracer.Visible = false; tracer.Thickness = 1.2
-            Active2D[model] = {Box = box, Tracer = tracer}
+            local successBox, box = pcall(function() return Drawing.new("Square") end)
+            local successTracer, tracer = pcall(function() return Drawing.new("Line") end)
+            if successBox and successTracer then
+                box.Visible = false; box.Thickness = 1.2; box.Filled = false
+                tracer.Visible = false; tracer.Thickness = 1.2
+                Active2D[model] = {Box = box, Tracer = tracer}
+            end
         end
         local hrp = model:FindFirstChild("HumanoidRootPart")
         if hrp then
             local hrpPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
             local data = Active2D[model]
-            if data then
+            if data and data.Box and data.Tracer then
                 local col = isVisible(hrp, model) and (isNpc and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(0, 255, 100)) or (isNpc and Color3.fromRGB(0, 80, 200) or Color3.fromRGB(240, 240, 240))
                 data.Box.Color = col; data.Tracer.Color = col
                 if onScreen then
