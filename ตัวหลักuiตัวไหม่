@@ -1,4 +1,4 @@
--- [[ GKHob & ตัวหลัก: AUTO-TELEPORT BEHIND TARGET VERSION (NEW UI) ]] --
+-- [[ GKHub v1.4.10: AUTO-TELEPORT BEHIND TARGET VERSION ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -35,7 +35,7 @@ ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- ระบบ Notification (รองรับดีไซน์ใหม่)
+-- ระบบ Notification
 local NotifContainer = Instance.new("Frame")
 NotifContainer.Name = "NotifContainer"
 NotifContainer.Size = UDim2.new(0, 240, 1, 0)
@@ -116,7 +116,7 @@ local function showNotification(text, isEnabled)
     end)
 end
 
--- ==================== หน้าต่างแจ้งเตือนสถานะตอนเริ่ม (Loading Screen) ====================
+-- หน้าต่างโหลดสคริปต์ (Loading Screen)
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
 LoadFrame.Size = UDim2.new(0, 300, 0, 65)
@@ -144,7 +144,7 @@ LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 14
 LoadText.Parent = LoadFrame
 
--- ==================== หน้าต่าง UI หลัก ====================
+-- หน้าต่าง UI หลัก
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 440, 0, 310)
@@ -166,7 +166,7 @@ MainStroke.Color = Color3.fromRGB(0, 162, 255)
 MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
--- Overlay ยืนยันการปิด
+-- ป๊อปอัพยืนยันการปิด
 local ConfirmOverlay = Instance.new("Frame")
 ConfirmOverlay.Name = "ConfirmOverlay"
 ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
@@ -257,13 +257,13 @@ TitleLabel.Size = UDim2.new(1, -80, 1, 0)
 TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "HJ1JK v1.4.10 | Blue Theme"
+TitleLabel.Text = "GKHub | Main Script"
 TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- ปุ่มปิด UI (X)
+-- ปุ่มปิด (X)
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
 CloseButton.Position = UDim2.new(1, -26, 0, 2)
@@ -274,7 +274,7 @@ CloseButton.TextColor3 = Color3.fromRGB(220, 60, 60)
 CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
 
--- ปุ่มย่อหน้าต่าง (-) / เปิดขยาย (+)
+-- ปุ่มย่อหน้าต่าง (-)
 local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
 MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
@@ -285,7 +285,7 @@ MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
 MinimizeButton.TextSize = 14
 MinimizeButton.Parent = TopBar
 
--- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
+-- ฝั่งซ้าย: เมนูหมวดหมู่
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
@@ -309,7 +309,7 @@ local LeftPadding = Instance.new("UIPadding")
 LeftPadding.PaddingTop = UDim.new(0, 5)
 LeftPadding.Parent = LeftSide
 
--- ==================== ฝั่งขวา: ฟังก์ชัน ====================
+-- ฝั่งขวา: รายละเอียดฟังก์ชัน
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.66, 0, 1, -34)
 RightSide.Position = UDim2.new(0.33, 0, 0, 30)
@@ -354,14 +354,12 @@ local function createContainer(name)
     return container
 end
 
--- สร้างคอนเทนเนอร์สำหรับแต่ละหมวดหมู่
 local AimbotTab = createContainer("ระบบล็อกเป้า")
 local EspTab = createContainer("ระบบ ESP & Chams")
 local SpeedTab = createContainer("ความเร็ว & กระโดด")
 local ToolTab = createContainer("เครื่องมือ & FPS")
 local AutoExecTab = createContainer("รันโค้ดอัตโนมัติ")
 
--- ฟังก์ชันสร้างปุ่มหมวดหมู่ทางซ้าย
 local categoryButtons = {}
 local function createCategoryButton(name, targetTab)
     local btn = Instance.new("TextButton")
@@ -403,7 +401,6 @@ LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     LeftSide.CanvasSize = UDim2.new(0, 0, 0, LeftLayout.AbsoluteContentSize.Y + 20)
 end)
 
--- ฟังก์ชันเสริมสำหรับการสร้างองค์ประกอบ UI ภายในหมวดหมู่
 local allTextLabels = {}
 local allButtons = {}
 local allSliders = {}
@@ -523,7 +520,7 @@ local function createSlider(labelText, parentTab)
     return Back, Btn, Label
 end
 
--- ==================== บรรจุฟังก์ชันลงในแต่ละแท็บ ====================
+-- สร้าง UI เมนูย่อย
 createHeader(">> ฟังก์ชันพิเศษ <<", AimbotTab)
 local FullLockToggle = createToggle("FullLock", "ล็อกหัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
 local FullLockTorsoToggle = createToggle("FullLockTorso", "ล็อกตัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
@@ -542,7 +539,6 @@ local WallCheckButton = createToggle("WallCheck", "ไม่ล็อกตั�
 local SliderBack, SliderBtn, SliderLabel = createSlider("FOV: 100", AimbotTab)
 local SpeedBack, SpeedBtn, SpeedLabel = createSlider("ความเร็วดูด: 50", AimbotTab)
 
--- แท็บ ESP
 createHeader(">> ระบบมองทะลุสีทึบ (Chams) <<", EspTab)
 local PlayerEspChamsToggle = createToggle("PlayerEspChams", "เปิดใช้งานมองทะลุกำแพง (คน)", EspTab)
 local NpcEspChamsToggle = createToggle("NpcEspChams", "เปิดใช้งานมองทะลุกำแพง (NPC)", EspTab)
@@ -552,7 +548,6 @@ local MasterEsp2DToggle = createToggle("MasterEsp2D", "เปิดใช้ง�
 local PlayerEsp2DToggle = createToggle("PlayerEsp2D", "เปิดใช้งาน 2D ESP + เส้น (คน)", EspTab)
 local NpcEsp2DToggle = createToggle("NpcEsp2D", "เปิดใช้งาน 2D ESP + เส้น (NPC)", EspTab)
 
--- แท็บความเร็ว & กระโดด
 createHeader(">> ความเร็วผู้เล่น <<", SpeedTab)
 local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", SpeedTab)
 local WalkSpeedBack, WalkSpeedBtn, WalkSpeedLabel = createSlider("ความเร็ว: 16 (ปกติ)", SpeedTab)
@@ -580,7 +575,6 @@ ResetBtn.Parent = ResetFrame
 table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
 
--- แท็บเครื่องมือ & FPS
 createHeader(">> ออโต้เทเลพอร์ต <<", ToolTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด", ToolTab)
 
@@ -627,7 +621,6 @@ GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
 
--- แท็บรันโค้ดอัตโนมัติ
 createHeader(">> ใส่โค้ดที่ต้องการรัน <<", AutoExecTab)
 local CodeBoxFrame = Instance.new("Frame")
 CodeBoxFrame.Size = UDim2.new(0.92, 0, 0, 95)
@@ -719,9 +712,7 @@ Run1Btn.MouseButton1Click:Connect(function() executeUserCode(1) end)
 Run10Btn.MouseButton1Click:Connect(function() executeUserCode(10) end)
 Run100Btn.MouseButton1Click:Connect(function() executeUserCode(100) end)
 
--- =============================================================================
--- ระบบฟังก์ชันหลักทั้งหมดของสคริปต์
--- =============================================================================
+-- ฟังก์ชันการทำงานหลักของสคริปต์
 local AutoTpBackConfig = { Enabled = false }
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
@@ -889,6 +880,7 @@ ClayGraphicsToggle.MouseButton1Click:Connect(function()
     end
 end)
 
+-- แก้ไขระบบ FPS Boost / ลบเอฟเฟค / แก้แลคให้ทำงานได้จริงและครอบคลุม
 local SelectiveFpsEnabled = false
 local optimizedParts = {}
 
@@ -901,16 +893,18 @@ local function optimizeLaggyObjects()
                     optimizedParts[obj] = {
                         CanCollide = obj.CanCollide,
                         Transparency = obj.Transparency,
-                        CastShadow = obj.CastShadow
+                        CastShadow = obj.CastShadow,
+                        Material = obj.Material
                     }
                 end
                 pcall(function()
                     obj.CanCollide = false
                     obj.CastShadow = false
                     obj.Transparency = 1
+                    obj.Material = Enum.Material.SmoothPlastic
                 end)
             end
-        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
+        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Explosion") then
             pcall(function()
                 obj.Enabled = false
             end)
@@ -925,6 +919,7 @@ local function restoreLaggyObjects()
                 obj.CanCollide = data.CanCollide
                 obj.Transparency = data.Transparency
                 obj.CastShadow = data.CastShadow
+                obj.Material = data.Material
             end)
         end
     end
@@ -983,7 +978,7 @@ local effectConnection = nil
 local function clearEffectsInObject(parentObj)
     for _, obj in ipairs(parentObj:GetDescendants()) do
         if obj:IsA("ParticleEmitter") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Explosion") or obj:IsA("Beam") or obj:IsA("Trail") then
-            pcall(function() obj:Destroy() end)
+            pcall(function() obj.Enabled = false end)
         end
     end
 end
@@ -1001,7 +996,7 @@ FpsBoostToggle.MouseButton1Click:Connect(function()
         effectConnection = Workspace.DescendantAdded:Connect(function(obj)
             if FpsBoostEnabled and (obj:IsA("ParticleEmitter") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Explosion") or obj:IsA("Beam") or obj:IsA("Trail")) then
                 task.spawn(function()
-                    pcall(function() obj:Destroy() end)
+                    pcall(function() obj.Enabled = false end)
                 end)
             end
         end)
@@ -1113,9 +1108,7 @@ local FOV_Corner, FOV_Stroke = Instance.new("UICorner"), Instance.new("UIStroke"
 FOV_Corner.CornerRadius = UDim.new(1, 0); FOV_Corner.Parent = FOV_Circle
 FOV_Stroke.Color = Color3.fromRGB(0, 162, 255); FOV_Stroke.Thickness = 1; FOV_Stroke.Parent = FOV_Circle
 
--- =============================================================================
--- Loading Sequence & Animation
--- =============================================================================
+-- Loading sequence
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
@@ -1146,7 +1139,6 @@ task.spawn(function()
     expandTween:Play()
 end)
 
--- Minimize Button Logic
 local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
@@ -1170,9 +1162,6 @@ CloseButton.MouseButton1Click:Connect(function()
 end)
 NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
 
--- =============================================================================
--- ค่าตัวแปรระบบล็อกและสไลเดอร์
--- =============================================================================
 local LockConfig = {
     FullLock = false, FullLockTorso = false, FullLockTorsoWallCheck = false, PlayerHead = false, PlayerTorso = false, NPCHead = false, NPCTorso = false,
     PlayerEspChams = false, NpcEspChams = false,
@@ -1430,27 +1419,27 @@ task.spawn(function()
         if LockConfig.PlayerEspChams then
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-                    local cham = player.Character:FindFirstChild("HJ1JK_Cham") or Instance.new("Highlight")
-                    cham.Name = "HJ1JK_Cham"; cham.FillTransparency = 0.5; cham.OutlineTransparency = 0; cham.OutlineColor = Color3.fromRGB(255, 255, 255); cham.Parent = player.Character
+                    local cham = player.Character:FindFirstChild("GKHub_Cham") or Instance.new("Highlight")
+                    cham.Name = "GKHub_Cham"; cham.FillTransparency = 0.5; cham.OutlineTransparency = 0; cham.OutlineColor = Color3.fromRGB(255, 255, 255); cham.Parent = player.Character
                     cham.FillColor = isVisible(player.Character.HumanoidRootPart, player.Character) and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(220, 60, 60)
                 else
-                    if player.Character and player.Character:FindFirstChild("HJ1JK_Cham") then player.Character.HJ1JK_Cham:Destroy() end
+                    if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end
                 end
             end
         else
-            for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("HJ1JK_Cham") then player.Character.HJ1JK_Cham:Destroy() end end
+            for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end end
         end
 
         if LockConfig.NpcEspChams then
             for _, desc in ipairs(Workspace:GetDescendants()) do
                 if desc:IsA("Model") and desc:FindFirstChild("HumanoidRootPart") and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then
-                    local ncham = desc:FindFirstChild("HJ1JK_NpcCham") or Instance.new("Highlight")
-                    ncham.Name = "HJ1JK_NpcCham"; ncham.FillTransparency = 0.5; ncham.OutlineTransparency = 0; ncham.OutlineColor = Color3.fromRGB(255, 255, 255); ncham.Parent = desc
+                    local ncham = desc:FindFirstChild("GKHub_NpcCham") or Instance.new("Highlight")
+                    ncham.Name = "GKHub_NpcCham"; ncham.FillTransparency = 0.5; ncham.OutlineTransparency = 0; ncham.OutlineColor = Color3.fromRGB(255, 255, 255); ncham.Parent = desc
                     ncham.FillColor = isVisible(desc.HumanoidRootPart, desc) and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(0, 80, 200)
                 end
             end
         else
-            for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("HJ1JK_NpcCham") then desc.HJ1JK_NpcCham:Destroy() end end
+            for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("GKHub_NpcCham") then desc.GKHub_NpcCham:Destroy() end end
         end
     end
 end)
@@ -1625,8 +1614,8 @@ YesButton.MouseButton1Click:Connect(function()
         humanoid.JumpPower = 50
     end
 
-    for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("HJ1JK_Cham") then player.Character.HJ1JK_Cham:Destroy() end end
-    for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("HJ1JK_NpcCham") then desc.HJ1JK_NpcCham:Destroy() end end
+    for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end end
+    for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("GKHub_NpcCham") then desc.GKHub_NpcCham:Destroy() end end
 
     local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 440, 0, 0), BackgroundTransparency = 1})
     closeTween:Play()
