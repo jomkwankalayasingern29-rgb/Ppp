@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & AUTO FARM MODULE (FIXED FOR DELTA EXECUTOR)
+-- GKHub & grow a maji (FIXED FOR DELTA EXECUTOR)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -201,7 +201,7 @@ TitleLabel.Size = UDim2.new(1, -80, 1, 0)
 TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "GKHub Auto Farm"
+TitleLabel.Text = "GKHub & grow a maji"
 TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -395,7 +395,7 @@ end
 -- =============================================================================
 -- Precise Auto-Teleport Collection Feature for Token Mushroom (Filtered)
 -- =============================================================================
-createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", function(state)
+createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
     activeFunctions.autoFarm = state
     if state then
         autoFarmCoroutine = task.spawn(function()
