@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (FIXED + AUTO PLANT LOCKER)
+-- GKHub & grow a maji (FIXED UI HEIGHT & AUTO SCROLL)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -90,12 +90,12 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. Main Window Frame
+-- 2. Main Window Frame (Increased Height to 300)
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 380, 0, 260)
-MainFrame.Position = UDim2.new(0.5, -190, 0.5, -130)
+MainFrame.Size = UDim2.new(0, 380, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -190, 0.5, -150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -262,7 +262,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
         TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
     else
         MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 260)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 300)}):Play()
     end
 end)
 
@@ -632,7 +632,7 @@ task.spawn(function()
 
     local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     local expandTween = TweenService:Create(MainFrame, info, {
-        Size = UDim2.new(0, 380, 0, 260),
+        Size = UDim2.new(0, 380, 0, 300),
         BackgroundTransparency = 0
     })
     expandTween:Play()
