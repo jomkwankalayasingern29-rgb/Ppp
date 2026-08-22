@@ -1,5 +1,5 @@
 -- =============================================================================
--- HJ1JK : MOBILE FPS BOOSTER (NEW UI THEME + FULL FUNCTIONS)
+-- GKHob: FPS + ภาษาไทย (NEW UI THEME + FULL FUNCTIONS)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
