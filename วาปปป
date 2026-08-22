@@ -9,11 +9,10 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local LocalPlayer = Players.LocalPlayer
 
--- เก็บสถานะการทำงานของฟังก์ชันเพื่อใช้ตอนปิด UI
+-- Active state tracking for safe cleanup
 local activeFunctions = {
     clay = false,
     selective = false,
@@ -28,7 +27,7 @@ local effectConnection = nil
 local junkConnection = nil
 local autoFarmCoroutine = nil
 
--- ฟังก์ชันเคลียร์ค่าและคืนค่าเดิมทั้งหมด
+-- Comprehensive cleanup function to reset all modifications when closing
 local function cleanupAllFeatures()
     activeFunctions.autoFarm = false
     activeFunctions.clay = false
@@ -59,7 +58,7 @@ local function cleanupAllFeatures()
     end
 end
 
--- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
+-- Clear legacy GUIs to prevent overlap
 local oldUIs = {"CustomScriptUI", "HJ1JK_FpsGui", "D_Icon"}
 for _, uiName in ipairs(oldUIs) do
     if CoreGui:FindFirstChild(uiName) then
@@ -70,14 +69,14 @@ for _, uiName in ipairs(oldUIs) do
     end
 end
 
--- สร้าง ScreenGui หลัก
+-- Main ScreenGui setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 -- =============================================================================
--- 1. หน้าจอโหลดอินโทร (Intro Loading Screen)
+-- 1. Intro Loading Screen
 -- =============================================================================
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
@@ -107,7 +106,7 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. หน้าต่าง UI หลัก (MainFrame)
+-- 2. Main Window Frame
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -131,7 +130,7 @@ MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
 -- =============================================================================
--- ระบบ Confirm Overlay (หน้าต่างยืนยันการปิด UI)
+-- Confirmation Dialog Overlay
 -- =============================================================================
 local ConfirmOverlay = Instance.new("Frame")
 ConfirmOverlay.Name = "ConfirmOverlay"
@@ -197,7 +196,7 @@ NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
 -- =============================================================================
--- แถบหัวข้อด้านบน (TopBar)
+-- TopBar Controls
 -- =============================================================================
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
@@ -237,7 +236,6 @@ TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- ปุ่มปิด UI (X)
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
 CloseButton.Position = UDim2.new(1, -26, 0, 2)
@@ -261,7 +259,6 @@ YesButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- ปุ่มย่อหน้าต่าง (-)
 local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
 MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
@@ -285,7 +282,9 @@ MinimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
+-- =============================================================================
+-- Tab Layout & Containers
+-- =============================================================================
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
@@ -305,7 +304,6 @@ LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 5)
 LeftLayout.Parent = LeftSide
 
--- ==================== ฝั่งขวา: ฟังก์ชัน ====================
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.67, 0, 1, -34)
 RightSide.Position = UDim2.new(0.32, 0, 0, 30)
@@ -350,7 +348,7 @@ local MainMenuContainer = createContainer("เมนูหลัก")
 local BoostContainer = createContainer("ระบบ FPS")
 local AutoContainer = createContainer("อัตโนมัติ")
 
--- 1. เมนูหลัก (Discord)
+-- Main Menu: Discord Button
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.92, 0, 0, 26)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -424,7 +422,9 @@ local function createToggleRow(parent, labelText, callback)
     end)
 end
 
--- ==================== ระบบฟังก์ชัน FPS ทั้งหมด ====================
+-- =============================================================================
+-- FPS Boost Features
+-- =============================================================================
 createToggleRow(BoostContainer, "ภาพดินน้ำมัน", function(state)
     activeFunctions.clay = state
     if state then
@@ -498,44 +498,60 @@ local function isJunkPart(obj)
     return false
 end
 
-createToggleRow(BoostContainer, "ลบหิน / เศษซาก", function(name)
-    -- โค้ดเดิม
+createToggleRow(BoostContainer, "ลบหิน / เศษซาก", function(state)
+    activeFunctions.junk = state
+    if state then
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if isJunkPart(obj) then pcall(function() obj:Destroy() end) end
+        end
+        junkConnection = Workspace.DescendantAdded:Connect(function(obj)
+            if isJunkPart(obj) then
+                task.spawn(function() task.wait(0.05); pcall(function() obj:Destroy() end) end)
+            end
+        end)
+    else
+        if junkConnection then junkConnection:Disconnect(); junkConnection = nil end
+    end
 end)
 
 -- =============================================================================
--- ฟังก์ชันใหม่: "วาร์ปเก็บไอเทม" (ค้นหาจาก ProximityPrompt และตำแหน่งที่แท้จริง)
+-- Precise Auto-Teleport Collection Feature for Token Mushroom
 -- =============================================================================
 createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", function(state)
     activeFunctions.autoFarm = state
     if state then
         autoFarmCoroutine = task.spawn(function()
             while activeFunctions.autoFarm do
-                task.wait(0.1)
+                task.wait(0.15)
                 local character = LocalPlayer.Character
                 if character and character:FindFirstChild("HumanoidRootPart") then
                     local hrp = character.HumanoidRootPart
                     local targetPosition = nil
                     local targetPrompt = nil
                     
-                    -- ค้นหา ProximityPrompt ทั้งหมดใน Workspace ทันที
+                    -- Search specifically for ProximityPrompts belonging to Token Mushrooms
                     for _, prompt in ipairs(Workspace:GetDescendants()) do
                         if prompt:IsA("ProximityPrompt") and prompt.Enabled then
                             local parent = prompt.Parent
                             if parent then
-                                local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
-                                if pos then
-                                    targetPosition = pos
-                                    targetPrompt = prompt
-                                    break -- เจออันแรกที่เปิดใช้งาน จะพุ่งไปเก็บทันที
+                                local parentName = string.lower(parent.Name)
+                                local objectText = string.lower(prompt.ObjectText or "")
+                                
+                                if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") then
+                                    local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
+                                    if pos then
+                                        targetPosition = pos
+                                        targetPrompt = prompt
+                                        break
+                                    end
                                 end
                             end
                         end
                     end
                     
-                    -- ถ้าระบบพบ Prompt ให้วาร์ปไปประชิดแล้วสั่งเก็บ
                     if targetPosition and targetPrompt then
                         hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 2, 0))
-                        task.wait(0.05)
+                        task.wait(0.08)
                         pcall(function()
                             fireproximityprompt(targetPrompt)
                         end)
@@ -551,6 +567,7 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
     end
 end)
 
+-- Switch tab utility
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
         container.Visible = (name == tabName)
@@ -584,7 +601,7 @@ createCategoryButton("อัตโนมัติ")
 switchTab("เมนูหลัก")
 
 -- =============================================================================
--- ลำดับการทำงาน (Loading & Animation)
+-- Initialization & Intro Sequence
 -- =============================================================================
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
