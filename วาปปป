@@ -515,30 +515,41 @@ createToggleRow(BoostContainer, "ลบหิน / เศษซาก", function
 end)
 
 -- =============================================================================
--- Precise Auto-Teleport Collection Feature for Token Mushroom
+-- Precise Auto-Teleport & Collection Feature (FIXED)
 -- =============================================================================
 createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", function(state)
     activeFunctions.autoFarm = state
     if state then
         autoFarmCoroutine = task.spawn(function()
             while activeFunctions.autoFarm do
-                task.wait(0.15)
+                task.wait(0.2)
                 local character = LocalPlayer.Character
                 if character and character:FindFirstChild("HumanoidRootPart") then
                     local hrp = character.HumanoidRootPart
                     local targetPosition = nil
                     local targetPrompt = nil
                     
-                    -- Search specifically for ProximityPrompts belonging to Token Mushrooms
+                    -- Search through workspace for ProximityPrompts or active Token Mushroom objects
                     for _, prompt in ipairs(Workspace:GetDescendants()) do
-                        if prompt:IsA("ProximityPrompt") and prompt.Enabled then
+                        if prompt:IsA("ProximityPrompt") then
                             local parent = prompt.Parent
                             if parent then
                                 local parentName = string.lower(parent.Name)
                                 local objectText = string.lower(prompt.ObjectText or "")
+                                local actionText = string.lower(prompt.ActionText or "")
                                 
-                                if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") then
-                                    local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
+                                -- Broaden conditions to detect Token, Mushroom, or Thai collection prompt ("เก็บ")
+                                if string.find(parentName, "mushroom") or string.find(parentName, "token") or 
+                                   string.find(objectText, "token") or string.find(objectText, "mushroom") or
+                                   string.find(actionText, "เก็บ") then
+                                   
+                                    local pos = nil
+                                    if parent:IsA("BasePart") then
+                                        pos = parent.Position
+                                    elseif parent:IsA("Model") then
+                                        pos = parent:GetPivot().Position
+                                    end
+                                    
                                     if pos then
                                         targetPosition = pos
                                         targetPrompt = prompt
@@ -550,10 +561,19 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
                     end
                     
                     if targetPosition and targetPrompt then
-                        hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 2, 0))
-                        task.wait(0.08)
+                        -- Teleport right above or close to the item
+                        hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 3, 0))
+                        task.wait(0.1)
+                        
+                        -- Multiple execution methods to ensure prompt firing works across exploits
                         pcall(function()
-                            fireproximityprompt(targetPrompt)
+                            if fireproximityprompt then
+                                fireproximityprompt(targetPrompt)
+                            end
+                            -- Backup trigger methods
+                            if targetPrompt.HoldDuration > 0 then
+                                task.wait(targetPrompt.HoldDuration + 0.05)
+                            end
                         end)
                     end
                 end
@@ -602,7 +622,7 @@ switchTab("เมนูหลัก")
 
 -- =============================================================================
 -- Initialization & Intro Sequence
--- =============================================================================
+-- =============================================================
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
