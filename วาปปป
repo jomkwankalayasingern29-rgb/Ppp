@@ -87,7 +87,7 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. Main Window Frame (ขยายความสูงเป็น 260 เพื่อรองรับปุ่มทั้งหมด)
+-- 2. Main Window Frame
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -290,6 +290,7 @@ RightSide.Size = UDim2.new(0.67, 0, 1, -34)
 RightSide.Position = UDim2.new(0.32, 0, 0, 30)
 RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 RightSide.BorderSizePixel = 0
+RightSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
 RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 RightSide.ScrollBarThickness = 2
 RightSide.Parent = MainFrame
@@ -306,7 +307,6 @@ local function createContainer(name)
     container.Size = UDim2.new(1, 0, 1, 0)
     container.BackgroundTransparency = 1
     container.BorderSizePixel = 0
-    -- ใช้ AutomaticCanvasSize เพื่อขยายความสูงตามปุ่มอัตโนมัติ
     container.AutomaticCanvasSize = Enum.AutomaticSize.Y
     container.CanvasSize = UDim2.new(0, 0, 0, 0)
     container.ScrollBarThickness = 2
