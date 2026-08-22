@@ -303,7 +303,8 @@ local function createContainer(name)
     container.Size = UDim2.new(1, 0, 1, 0)
     container.BackgroundTransparency = 1
     container.BorderSizePixel = 0
-    container.CanvasSize = UDim2.new(0, 0, 0, 150)
+    -- ขยายพื้นที่ CanvasSize ให้เพียงพอสำหรับปุ่มทั้งหมด (ป้องกันปุ่มตกขอบ)
+    container.CanvasSize = UDim2.new(0, 0, 0, 180)
     container.ScrollBarThickness = 2
     container.Visible = false
     container.Parent = RightSide
@@ -311,7 +312,7 @@ local function createContainer(name)
     local layout = Instance.new("UIListLayout")
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 5)
+    layout.Padding = UDim.new(0, 6)
     layout.Parent = container
 
     local padding = Instance.new("UIPadding")
