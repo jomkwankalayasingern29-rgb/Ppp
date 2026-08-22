@@ -1,5 +1,5 @@
 -- =============================================================================
--- ฟังก์ชันใหม่: "วาร์ปเก็บไอเทม" (เจาะจงเฉพาะชื่อ "Token Mushroom" เท่านั้น)
+-- ฟังก์ชันใหม่: "วาร์ปเก็บไอเทม" (เช็คเฉพาะ ProximityPrompt ที่เป็น Token Mushroom เท่านั้น)
 -- =============================================================================
 createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", function(state)
     activeFunctions.autoFarm = state
@@ -15,20 +15,16 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
                     
                     local shortestDist = math.huge
                     
-                    -- ค้นหาเฉพาะ ProximityPrompt ที่อยู่ใน Object ชื่อ "Token Mushroom" หรือใกล้เคียง
+                    -- วนลูปหาเฉพาะ ProximityPrompt ที่ Object Text หรือ Parent มีคำว่า Token Mushroom จริงๆ
                     for _, desc in ipairs(Workspace:GetDescendants()) do
                         if desc:IsA("ProximityPrompt") and desc.Enabled then
                             local parentObj = desc.Parent
                             if parentObj then
-                                local parentNameLower = string.lower(parentObj.Name)
-                                local actionTextLower = string.lower(desc.ActionText or "")
-                                local objectTextLower = string.lower(desc.ObjectText or "")
+                                local objectText = string.lower(desc.ObjectText or "")
+                                local parentName = string.lower(parentObj.Name or "")
                                 
-                                -- เช็คชื่อหรือข้อความว่าตรงกับไอเทมเก็บเห็ด Token Mushroom หรือไม่
-                                if string.find(parentNameLower, "token mushroom") or 
-                                   string.find(objectTextLower, "token mushroom") or 
-                                   string.find(actionTextLower, "เก็บ") then
-                                    
+                                -- เช็คเฉพาะชื่อ Token Mushroom หรือคำที่เกี่ยวข้องกับเห็ดนี้โดยตรง ห้ามมีคำว่าร้านค้าหรือปุ่มอื่นปะปน
+                                if string.find(objectText, "token mushroom") or string.find(parentName, "token mushroom") then
                                     local partPos = parentObj:IsA("BasePart") and parentObj.Position or parentObj:GetPivot().Position
                                     local dist = (hrp.Position - partPos).Magnitude
                                     if dist < shortestDist then
@@ -41,7 +37,7 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
                         end
                     end
                     
-                    -- ถ้าเจอไอเทมเฉพาะเจาะจงนี้เท่านั้น ถึงจะวาร์ปไปเก็บ
+                    -- ถ้าเจอเฉพาะเจาะจงถึงจะวาร์ปไป ถ้าไม่เจอจะยืนเฉยๆ
                     if targetPosition and targetProximity then
                         hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 3, 0))
                         task.wait(0.15)
@@ -49,7 +45,6 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
                             fireproximityprompt(targetProximity)
                         end)
                     end
-                    -- ถ้าไม่เจอไอเทมชื่อนี้ ตัวละครจะยืนอยู่เฉยๆ ไม่เดินไปไหนเลย
                 end
             end
         end)
