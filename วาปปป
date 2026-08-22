@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (FIXED UI HEIGHT & AUTO SCROLL)
+-- GKHub & grow a maji (FIXED TAB VISIBILITY & AUTO START)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -90,7 +90,7 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. Main Window Frame (Increased Height to 300)
+-- 2. Main Window Frame
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -599,7 +599,8 @@ end
 createCategoryButton("เมนูหลัก")
 createCategoryButton("อัตโนมัติ")
 
-switchTab("เมนูหลัก")
+-- เปลี่ยนให้เปิดหน้า "อัตโนมัติ" เป็นค่าเริ่มต้นตอนรันสคริปต์
+switchTab("อัตโนมัติ")
 
 -- =============================================================================
 -- Initialization & Intro Sequence
