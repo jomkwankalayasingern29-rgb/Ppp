@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (FIXED UI TABS & ALL FUNCTIONS)
+-- GKHub & grow a maji (ADDED MysteryStickTree & ALL FUNCTIONS)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -15,6 +15,7 @@ local LocalPlayer = Players.LocalPlayer
 local activeFunctions = {
     autoFarm = false,
     autoBuyMikiTree = false,
+    autoBuyMysteryStickTree = false, -- เพิ่มตัวแปรสถานะ
     autoBuyPcx150 = false,
     autoBuyPlantMover = false,
     autoBuyPlantLocker = false
@@ -22,6 +23,7 @@ local activeFunctions = {
 
 local autoFarmCoroutine = nil
 local autoBuyMikiTreeCoroutine = nil
+local autoBuyMysteryStickTreeCoroutine = nil
 local autoBuyPcx150Coroutine = nil
 local autoBuyPlantMoverCoroutine = nil
 local autoBuyPlantLockerCoroutine = nil
@@ -95,7 +97,7 @@ MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Visible = false -- จะเปิดให้เห็นหลังโหลดเสร็จ
+MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
@@ -108,7 +110,7 @@ MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
 -- =============================================================================
--- Confirmation Dialog Overlay (หน้าต่างยืนยันตอนปิด)
+-- Confirmation Dialog Overlay
 -- =============================================================================
 local ConfirmOverlay = Instance.new("Frame")
 ConfirmOverlay.Name = "ConfirmOverlay"
@@ -174,7 +176,7 @@ NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
 -- =============================================================================
--- TopBar Controls (แถบบนสุด)
+-- TopBar Controls
 -- =============================================================================
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
@@ -261,7 +263,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
 end)
 
 -- =============================================================================
--- Tab Layout & Containers (แท็บซ้าย-ขวา)
+-- Tab Layout & Containers
 -- =============================================================================
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
@@ -405,7 +407,7 @@ local function createToggleRow(parent, labelText, callback)
 end
 
 -- =============================================================================
--- Features Registration (ฟังก์ชันทั้งหมด)
+-- Features Registration
 -- =============================================================================
 
 -- 1. ฟาร์มอีเวนต์อัตโนมัติ
@@ -465,7 +467,7 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
 end)
 
 -- 2. ซื้อเมล็ด MikiTree
-createToggleRow(AutoContainer, "ซื้อเมล็ดMikiTree", function(state)
+createToggleRow(AutoContainer, "ซื้อเมล็ด MikiTree", function(state)
     activeFunctions.autoBuyMikiTree = state
     if state then
         autoBuyMikiTreeCoroutine = task.spawn(function()
@@ -484,8 +486,31 @@ createToggleRow(AutoContainer, "ซื้อเมล็ดMikiTree", function(s
     end
 end)
 
--- 3. ซื้อ Pcx150 อัตโนมัติ
-createToggleRow(AutoContainer, "ซื้อPcx150อัตโนมัติ", function(state)
+-- 3. ซื้อเมล็ด MysteryStickTree (เพิ่มใหม่ตามที่ขอ)
+createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", function(state)
+    activeFunctions.autoBuyMysteryStickTree = state
+    if state then
+        autoBuyMysteryStickTreeCoroutine = task.spawn(function()
+            local args = {
+                "MysteryStickTree"
+            }
+            while activeFunctions.autoBuyMysteryStickTree do
+                task.wait(0.2)
+                pcall(function()
+                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer(unpack(args))
+                end)
+            end
+        end)
+    else
+        if autoBuyMysteryStickTreeCoroutine then
+            task.cancel(autoBuyMysteryStickTreeCoroutine)
+            autoBuyMysteryStickTreeCoroutine = nil
+        end
+    end
+end)
+
+-- 4. ซื้อ Pcx150 อัตโนมัติ
+createToggleRow(AutoContainer, "ซื้อ Pcx150 อัตโนมัติ", function(state)
     activeFunctions.autoBuyPcx150 = state
     if state then
         autoBuyPcx150Coroutine = task.spawn(function()
@@ -504,7 +529,7 @@ createToggleRow(AutoContainer, "ซื้อPcx150อัตโนมัติ", 
     end
 end)
 
--- 4. ซื้อจอบอัตโนมัติ
+-- 5. ซื้อจอบอัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ", function(state)
     activeFunctions.autoBuyPlantMover = state
     if state then
@@ -524,7 +549,7 @@ createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ
     end
 end)
 
--- 5. ซื้อตัวล็อกอัตโนมัติ
+-- 6. ซื้อตัวล็อกอัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโนมัติ", function(state)
     activeFunctions.autoBuyPlantLocker = state
     if state then
@@ -574,7 +599,7 @@ end
 createCategoryButton("เมนูหลัก")
 createCategoryButton("อัตโนมัติ")
 
--- กำหนดให้หน้าแรกเปิดที่ "อัตโนมัติ" ทันที
+-- เปิดหน้าแรกที่ "อัตโนมัติ" ทันที
 switchTab("อัตโนมัติ")
 
 -- =============================================================================
@@ -603,7 +628,6 @@ task.spawn(function()
 
     LoadFrame:Destroy()
 
-    -- แสดงผล MainFrame ออกมา
     MainFrame.Visible = true
     MainFrame.BackgroundTransparency = 1
     MainFrame.Size = UDim2.new(0, 320, 0, 190)
