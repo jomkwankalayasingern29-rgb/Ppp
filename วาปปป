@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & FPS + AUTO FARM MODULE (FIXED TELEPORT & PROXIMITY)
+-- GKHub & FPS + AUTO FARM MODULE (EXCLUDING SHOP / TARGETING MUSHROOM ONLY)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -515,7 +515,7 @@ createToggleRow(BoostContainer, "ลบหิน / เศษซาก", function
 end)
 
 -- =============================================================================
--- Precise Auto-Teleport & Collection Feature (FIXED)
+-- Precise Auto-Teleport & Collection Feature (EXCLUDING SHOP / MUSHROOM ONLY)
 -- =============================================================================
 createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", function(state)
     activeFunctions.autoFarm = state
@@ -529,31 +529,44 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
                     local targetPosition = nil
                     local targetPrompt = nil
                     
-                    -- Search through workspace for ProximityPrompts or active Token Mushroom objects
+                    -- Search through workspace for ProximityPrompts
                     for _, prompt in ipairs(Workspace:GetDescendants()) do
-                        if prompt:IsA("ProximityPrompt") then
+                        if prompt:IsA("ProximityPrompt") and prompt.Enabled then
                             local parent = prompt.Parent
                             if parent then
                                 local parentName = string.lower(parent.Name)
                                 local objectText = string.lower(prompt.ObjectText or "")
                                 local actionText = string.lower(prompt.ActionText or "")
+                                local fullName = parentName .. " " .. objectText .. " " .. actionText
                                 
-                                -- Broaden conditions to detect Token, Mushroom, or Thai collection prompt ("เก็บ")
-                                if string.find(parentName, "mushroom") or string.find(parentName, "token") or 
-                                   string.find(objectText, "token") or string.find(objectText, "mushroom") or
-                                   string.find(actionText, "เก็บ") then
-                                   
-                                    local pos = nil
-                                    if parent:IsA("BasePart") then
-                                        pos = parent.Position
-                                    elseif parent:IsA("Model") then
-                                        pos = parent:GetPivot().Position
-                                    end
-                                    
-                                    if pos then
-                                        targetPosition = pos
-                                        targetPrompt = prompt
-                                        break
+                                -- 1. GUARD CLAUSE: Strict Blacklist for Shop / Store / Sell to prevent visiting shops
+                                local isShop = string.find(fullName, "shop") or 
+                                             string.find(fullName, "store") or 
+                                             string.find(fullName, "sell") or 
+                                             string.find(parentName, "merchant") or
+                                             string.find(parentName, "buy")
+                                
+                                if not isShop then
+                                    -- 2. TARGET MATCHING: Must specifically be related to Token Mushroom or collection
+                                    local isTokenMushroom = string.find(parentName, "mushroom") or 
+                                                           string.find(parentName, "token") or 
+                                                           string.find(objectText, "mushroom") or 
+                                                           string.find(objectText, "token") or
+                                                           (string.find(objectText, "token mushroom"))
+                                                           
+                                    if isTokenMushroom then
+                                        local pos = nil
+                                        if parent:IsA("BasePart") then
+                                            pos = parent.Position
+                                        elseif parent:IsA("Model") then
+                                            pos = parent:GetPivot().Position
+                                        end
+                                        
+                                        if pos then
+                                            targetPosition = pos
+                                            targetPrompt = prompt
+                                            break
+                                        end
                                     end
                                 end
                             end
@@ -565,12 +578,11 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
                         hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 3, 0))
                         task.wait(0.1)
                         
-                        -- Multiple execution methods to ensure prompt firing works across exploits
+                        -- Execute prompt action
                         pcall(function()
                             if fireproximityprompt then
                                 fireproximityprompt(targetPrompt)
                             end
-                            -- Backup trigger methods
                             if targetPrompt.HoldDuration > 0 then
                                 task.wait(targetPrompt.HoldDuration + 0.05)
                             end
@@ -622,7 +634,7 @@ switchTab("เมนูหลัก")
 
 -- =============================================================================
 -- Initialization & Intro Sequence
--- =============================================================
+-- =============================================================================
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
