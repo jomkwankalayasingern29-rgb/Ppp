@@ -9,7 +9,6 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -36,13 +35,11 @@ local function cleanupAllFeatures()
     activeFunctions.effects = false
     activeFunctions.junk = false
 
-    -- 1. คืนค่าวัสดุเดิม (ภาพดินน้ำมัน)
     for obj, mat in pairs(originalMaterials) do
         if obj and obj.Parent then pcall(function() obj.Material = mat end) end
     end
     originalMaterials = {}
 
-    -- 2. คืนค่าชิ้นส่วนที่ซ่อน (แก้แลคเฉพาะจุด)
     for obj, data in pairs(optimizedParts) do
         if obj and obj.Parent then
             pcall(function() obj.CanCollide = data.CanCollide; obj.Transparency = data.Transparency; obj.CastShadow = data.CastShadow end)
@@ -50,13 +47,11 @@ local function cleanupAllFeatures()
     end
     optimizedParts = {}
 
-    -- 3. ตัดการเชื่อมต่อเอฟเฟค
     if effectConnection then
         effectConnection:Disconnect()
         effectConnection = nil
     end
 
-    -- 4. ตัดการเชื่อมต่อเศษซาก
     if junkConnection then
         junkConnection:Disconnect()
         junkConnection = nil
@@ -261,7 +256,7 @@ NoButton.MouseButton1Click:Connect(function()
 end)
 
 YesButton.MouseButton1Click:Connect(function()
-    cleanupAllFeatures() -- ทำความสะอาดและปิดฟังก์ชันทั้งหมดก่อนลบ UI
+    cleanupAllFeatures()
     ScreenGui:Destroy()
 end)
 
@@ -350,7 +345,6 @@ local function createContainer(name)
     return container
 end
 
--- สร้างหน้าหมวดหมู่
 local MainMenuContainer = createContainer("เมนูหลัก")
 local BoostContainer = createContainer("ระบบ FPS")
 local AutoContainer = createContainer("อัตโนมัติ")
@@ -378,7 +372,6 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- ฟังก์ชันสร้างปุ่ม Toggle
 local function createToggleRow(parent, labelText, callback)
     local RowFrame = Instance.new("Frame")
     RowFrame.Size = UDim2.new(0.92, 0, 0, 28)
@@ -521,7 +514,7 @@ createToggleRow(BoostContainer, "ลบหิน / เศษซาก", function
 end)
 
 -- =============================================================================
--- ฟังก์ชันใหม่: "วาร์ปไปเก็บไอเทมอัตโนมัติ" ในหมวด "อัตโนมัติ"
+-- ฟังก์ชันใหม่: "วาร์ปเก็บไอเทม" (โฟกัสเฉพาะ ProximityPrompt ตามรูปภาพ)
 -- =============================================================================
 createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", function(state)
     activeFunctions.autoFarm = state
@@ -534,10 +527,9 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
                     local hrp = character.HumanoidRootPart
                     local targetPosition = nil
                     local targetProximity = nil
-                    local targetButton = nil
                     
-                    -- 1. ค้นหา ProximityPrompt (หากเป็นไอเทมที่ใช้ระบบ Prompt ใกล้ๆ)
                     local shortestDist = math.huge
+                    -- ค้นหาเฉพาะ ProximityPrompt ที่เปิดใช้งานอยู่ (เช่น ไอเทมเก็บเห็ด / Token ตามรูป)
                     for _, desc in ipairs(Workspace:GetDescendants()) do
                         if desc:IsA("ProximityPrompt") and desc.Enabled then
                             local parentPart = desc.Parent
@@ -553,59 +545,15 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
                         end
                     end
                     
-                    -- 2. ค้นหาไอเทมหรือปุ่มกดใน 3D (เช่น TouchInterest หรือ Prompt ที่ขึ้นมาบนหน้าจอ UI)
-                    if not targetPosition then
-                        for _, desc in ipairs(Workspace:GetDescendants()) do
-                            if desc:IsA("TouchTransmitter") then
-                                local part = desc.Parent
-                                if part and part:IsA("BasePart") then
-                                    local dist = (hrp.Position - part.Position).Magnitude
-                                    if dist < shortestDist then
-                                        shortestDist = dist
-                                        targetPosition = part.Position
-                                    end
-                                end
-                            end
-                        end
-                    end
-
-                    -- ทำการวาร์ปและกดเก็บ
-                    if targetPosition then
-                        -- วาร์ปไปหาไอเทม (ปรับตำแหน่งสูงขึ้นนิดหน่อยกันจมพื้น)
+                    -- ถ้าเจอไอเทม ให้วาร์ปไปหาและกดเก็บ
+                    if targetPosition and targetProximity then
                         hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 3, 0))
                         task.wait(0.15)
-                        
-                        -- ถ้ามี ProximityPrompt ให้สั่ง Trigger อัตโนมัติ
-                        if targetProximity then
-                            pcall(function()
-                                fireproximityprompt(targetProximity)
-                            end)
-                        end
-                    else
-                        -- 3. ค้นหาปุ่ม UI บนหน้าจอหากเกมใช้ระบบปุ่มกด UI เด้งขึ้นมา
-                        for _, guiObj in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
-                            if (guiObj:IsA("TextButton") or guiObj:IsA("ImageButton")) and guiObj.Visible and guiObj.AbsoluteSize.X > 0 then
-                                local textLower = string.lower(guiObj.Name .. (guiObj:IsA("TextButton") and guiObj.Text or ""))
-                                if string.find(textLower, "collect") or string.find(textLower, "pickup") or string.find(textLower, "claim") or string.find(textLower, "รับ") or string.find(textLower, "เก็บ") then
-                                    targetButton = guiObj
-                                    break
-                                end
-                            end
-                        end
-                        
-                        if targetButton then
-                            pcall(function()
-                                -- จำลองการคลิกปุ่ม UI อัตโนมัติ
-                                local pos = targetButton.AbsolutePosition
-                                local size = targetButton.AbsoluteSize
-                                local clickX = pos.X + size.X / 2
-                                local clickY = pos.Y + size.Y / 2
-                                VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
-                                task.wait(0.05)
-                                VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
-                            end)
-                        end
+                        pcall(function()
+                            fireproximityprompt(targetProximity)
+                        end)
                     end
+                    -- ถ้าไม่เจอไอเทมเลย ตัวละครจะไม่ทำอะไรและยืนอยู่เฉยๆ ตามที่ต้องการ
                 end
             end
         end)
@@ -617,14 +565,12 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
     end
 end)
 
--- ฟังก์ชันสลับหมวดหมู่
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
         container.Visible = (name == tabName)
     end
 end
 
--- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย
 local function createCategoryButton(name)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 26)
@@ -649,14 +595,12 @@ createCategoryButton("เมนูหลัก")
 createCategoryButton("ระบบ FPS")
 createCategoryButton("อัตโนมัติ")
 
--- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก"
 switchTab("เมนูหลัก")
 
 -- =============================================================================
 -- ลำดับการทำงาน (Loading & Animation)
 -- =============================================================================
 task.spawn(function()
-    -- 1. กำลังโหลด... (2 วินาที)
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
     while tick() - startTime < 2 do
@@ -666,11 +610,9 @@ task.spawn(function()
         end
     end
     
-    -- 2. ดาวน์โหลดเสร็จแล้ว (1 วินาที)
     LoadText.Text = "ดาวน์โหลดเสร็จแล้ว!"
     task.wait(1)
     
-    -- 3. คัดลอกลิงก์ Discord อัตโนมัติ (1 วินาที)
     LoadText.Text = "คัดลอกลิ้งดิสสำเร็จแล้ว!"
     pcall(function()
         if setclipboard then
@@ -679,10 +621,8 @@ task.spawn(function()
     end)
     task.wait(1)
     
-    -- 4. ลบหน้าจอโหลดทิ้ง
     LoadFrame:Destroy()
     
-    -- 5. แสดงหน้าต่างหลักขึ้นมาพร้อมอนิเมชั่นขยาย
     MainFrame.Visible = true
     MainFrame.Size = UDim2.new(0, 320, 0, 180)
     
