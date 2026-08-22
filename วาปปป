@@ -1,39 +1,52 @@
 -- =============================================================================
--- GKHub & AUTO FARM MODULE (FIXED TELEPORT & PROXIMITY)
+-- GKHub & AUTO FARM MODULE (FIXED FOR DELTA EXECUTOR)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
-​local Players = game:GetService("Players")
+
+local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
-​local LocalPlayer = Players.LocalPlayer
-​-- Active state tracking for safe cleanup
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Active state tracking for safe cleanup
 local activeFunctions = {
-autoFarm = false
+    autoFarm = false
 }
-​local autoFarmCoroutine = nil
-​-- Comprehensive cleanup function to reset all modifications when closing
+
+local autoFarmCoroutine = nil
+
+-- Comprehensive cleanup function to reset all modifications when closing
 local function cleanupAllFeatures()
-activeFunctions.autoFarm = false
+    activeFunctions.autoFarm = false
 end
-​-- Clear legacy GUIs to prevent overlap
+
+-- Clear legacy GUIs to prevent overlap
 local oldUIs = {"CustomScriptUI", "HJ1JK_FpsGui", "D_Icon"}
 for _, uiName in ipairs(oldUIs) do
-if CoreGui:FindFirstChild(uiName) then
-pcall(function() CoreGui[uiName]:Destroy() end)
+    if CoreGui:FindFirstChild(uiName) then
+        pcall(function() CoreGui[uiName]:Destroy() end)
+    end
+    if LocalPlayer.PlayerGui:FindFirstChild(uiName) then
+        pcall(function() LocalPlayer.PlayerGui[uiName]:Destroy() end)
+    end
 end
-if LocalPlayer.PlayerGui:FindFirstChild(uiName) then
-pcall(function() LocalPlayer.PlayerGui[uiName]:Destroy() end)
-end
-end
-​-- Main ScreenGui setup
+
+-- Main ScreenGui setup (Fallback to PlayerGui if CoreGui is restricted on Delta)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
-ScreenGui.Parent = CoreGui
+pcall(function()
+    ScreenGui.Parent = CoreGui
+end)
+if not ScreenGui.Parent then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-​-- =============================================================================
+
+-- =============================================================================
 -- 1. Intro Loading Screen
 -- =============================================================================
 local LoadFrame = Instance.new("Frame")
@@ -43,14 +56,17 @@ LoadFrame.Position = UDim2.new(0.5, -150, 0.5, -32)
 LoadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 LoadFrame.BorderSizePixel = 0
 LoadFrame.Parent = ScreenGui
-​local LoadCorner = Instance.new("UICorner")
+
+local LoadCorner = Instance.new("UICorner")
 LoadCorner.CornerRadius = UDim.new(0, 8)
 LoadCorner.Parent = LoadFrame
-​local LoadStroke = Instance.new("UIStroke")
+
+local LoadStroke = Instance.new("UIStroke")
 LoadStroke.Color = Color3.fromRGB(0, 162, 255)
 LoadStroke.Thickness = 1.5
 LoadStroke.Parent = LoadFrame
-​local LoadText = Instance.new("TextLabel")
+
+local LoadText = Instance.new("TextLabel")
 LoadText.Name = "LoadText"
 LoadText.Size = UDim2.new(1, 0, 1, 0)
 LoadText.BackgroundTransparency = 1
@@ -59,7 +75,8 @@ LoadText.Text = "กำลังโหลด"
 LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
-​-- =============================================================================
+
+-- =============================================================================
 -- 2. Main Window Frame
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
@@ -73,14 +90,17 @@ MainFrame.Draggable = true
 MainFrame.Visible = false
 MainFrame.BackgroundTransparency = 1
 MainFrame.Parent = ScreenGui
-​local MainCorner = Instance.new("UICorner")
+
+local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 8)
 MainCorner.Parent = MainFrame
-​local MainStroke = Instance.new("UIStroke")
+
+local MainStroke = Instance.new("UIStroke")
 MainStroke.Color = Color3.fromRGB(0, 162, 255)
 MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
-​-- =============================================================================
+
+-- =============================================================================
 -- Confirmation Dialog Overlay
 -- =============================================================================
 local ConfirmOverlay = Instance.new("Frame")
@@ -91,21 +111,25 @@ ConfirmOverlay.BackgroundTransparency = 0.5
 ConfirmOverlay.Visible = false
 ConfirmOverlay.ZIndex = 10
 ConfirmOverlay.Parent = MainFrame
-​local ConfirmBox = Instance.new("Frame")
+
+local ConfirmBox = Instance.new("Frame")
 ConfirmBox.Size = UDim2.new(0, 240, 0, 110)
 ConfirmBox.Position = UDim2.new(0.5, -120, 0.5, -55)
 ConfirmBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 ConfirmBox.BorderSizePixel = 0
 ConfirmBox.ZIndex = 11
 ConfirmBox.Parent = ConfirmOverlay
-​local ConfirmCorner = Instance.new("UICorner")
+
+local ConfirmCorner = Instance.new("UICorner")
 ConfirmCorner.CornerRadius = UDim.new(0, 6)
 ConfirmCorner.Parent = ConfirmBox
-​local ConfirmStroke = Instance.new("UIStroke")
+
+local ConfirmStroke = Instance.new("UIStroke")
 ConfirmStroke.Color = Color3.fromRGB(0, 162, 255)
 ConfirmStroke.Thickness = 1.2
 ConfirmStroke.Parent = ConfirmBox
-​local ConfirmTitle = Instance.new("TextLabel")
+
+local ConfirmTitle = Instance.new("TextLabel")
 ConfirmTitle.Size = UDim2.new(1, 0, 0, 35)
 ConfirmTitle.Position = UDim2.new(0, 0, 0, 10)
 ConfirmTitle.BackgroundTransparency = 1
@@ -115,7 +139,8 @@ ConfirmTitle.TextSize = 12
 ConfirmTitle.Font = Enum.Font.GothamBold
 ConfirmTitle.ZIndex = 12
 ConfirmTitle.Parent = ConfirmBox
-​local YesButton = Instance.new("TextButton")
+
+local YesButton = Instance.new("TextButton")
 YesButton.Size = UDim2.new(0, 90, 0, 30)
 YesButton.Position = UDim2.new(0, 20, 1, -40)
 YesButton.BackgroundColor3 = Color3.fromRGB(50, 180, 80)
@@ -127,7 +152,8 @@ YesButton.BorderSizePixel = 0
 YesButton.ZIndex = 12
 YesButton.Parent = ConfirmBox
 local YesCorner = Instance.new("UICorner"); YesCorner.CornerRadius = UDim.new(0, 4); YesCorner.Parent = YesButton
-​local NoButton = Instance.new("TextButton")
+
+local NoButton = Instance.new("TextButton")
 NoButton.Size = UDim2.new(0, 90, 0, 30)
 NoButton.Position = UDim2.new(1, -110, 1, -40)
 NoButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
@@ -139,7 +165,8 @@ NoButton.BorderSizePixel = 0
 NoButton.ZIndex = 12
 NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
-​-- =============================================================================
+
+-- =============================================================================
 -- TopBar Controls
 -- =============================================================================
 local TopBar = Instance.new("Frame")
@@ -147,16 +174,19 @@ TopBar.Size = UDim2.new(1, 0, 0, 28)
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
-​local TopBarCorner = Instance.new("UICorner")
+
+local TopBarCorner = Instance.new("UICorner")
 TopBarCorner.CornerRadius = UDim.new(0, 8)
 TopBarCorner.Parent = TopBar
-​local FixTopBar = Instance.new("Frame")
+
+local FixTopBar = Instance.new("Frame")
 FixTopBar.Size = UDim2.new(1, 0, 0, 5)
 FixTopBar.Position = UDim2.new(0, 0, 1, -5)
 FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 FixTopBar.BorderSizePixel = 0
 FixTopBar.Parent = TopBar
-​local LogoG = Instance.new("TextLabel")
+
+local LogoG = Instance.new("TextLabel")
 LogoG.Size = UDim2.new(0, 20, 0, 20)
 LogoG.Position = UDim2.new(0, 8, 0, 4)
 LogoG.BackgroundTransparency = 1
@@ -165,7 +195,8 @@ LogoG.Text = "⚡"
 LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
 LogoG.TextSize = 14
 LogoG.Parent = TopBar
-​local TitleLabel = Instance.new("TextLabel")
+
+local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -80, 1, 0)
 TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
@@ -175,7 +206,8 @@ TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
-​local CloseButton = Instance.new("TextButton")
+
+local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
 CloseButton.Position = UDim2.new(1, -26, 0, 2)
 CloseButton.BackgroundTransparency = 1
@@ -184,17 +216,21 @@ CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.fromRGB(220, 60, 60)
 CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
-​CloseButton.MouseButton1Click:Connect(function()
-ConfirmOverlay.Visible = true
+
+CloseButton.MouseButton1Click:Connect(function()
+    ConfirmOverlay.Visible = true
 end)
-​NoButton.MouseButton1Click:Connect(function()
-ConfirmOverlay.Visible = false
+
+NoButton.MouseButton1Click:Connect(function()
+    ConfirmOverlay.Visible = false
 end)
-​YesButton.MouseButton1Click:Connect(function()
-cleanupAllFeatures()
-ScreenGui:Destroy()
+
+YesButton.MouseButton1Click:Connect(function()
+    cleanupAllFeatures()
+    ScreenGui:Destroy()
 end)
-​local MinimizeButton = Instance.new("TextButton")
+
+local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
 MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
 MinimizeButton.BackgroundTransparency = 1
@@ -203,19 +239,21 @@ MinimizeButton.Text = "-"
 MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
 MinimizeButton.TextSize = 14
 MinimizeButton.Parent = TopBar
-​local isMinimized = false
+
+local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
-if ConfirmOverlay.Visible then return end
-isMinimized = not isMinimized
-if isMinimized then
-MinimizeButton.Text = "+"
-TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
-else
-MinimizeButton.Text = "-"
-TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 230)}):Play()
-end
+    if ConfirmOverlay.Visible then return end
+    isMinimized = not isMinimized
+    if isMinimized then
+        MinimizeButton.Text = "+"
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
+    else
+        MinimizeButton.Text = "-"
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 230)}):Play()
+    end
 end)
-​-- =============================================================================
+
+-- =============================================================================
 -- Tab Layout & Containers
 -- =============================================================================
 local LeftSide = Instance.new("ScrollingFrame")
@@ -226,15 +264,18 @@ LeftSide.BorderSizePixel = 0
 LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 LeftSide.ScrollBarThickness = 2
 LeftSide.Parent = MainFrame
-​local LeftCorner = Instance.new("UICorner")
+
+local LeftCorner = Instance.new("UICorner")
 LeftCorner.CornerRadius = UDim.new(0, 5)
 LeftCorner.Parent = LeftSide
-​local LeftLayout = Instance.new("UIListLayout")
+
+local LeftLayout = Instance.new("UIListLayout")
 LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 5)
 LeftLayout.Parent = LeftSide
-​local RightSide = Instance.new("ScrollingFrame")
+
+local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.67, 0, 1, -34)
 RightSide.Position = UDim2.new(0.32, 0, 0, 30)
 RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
@@ -242,34 +283,42 @@ RightSide.BorderSizePixel = 0
 RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 RightSide.ScrollBarThickness = 2
 RightSide.Parent = MainFrame
-​local RightCorner = Instance.new("UICorner")
+
+local RightCorner = Instance.new("UICorner")
 RightCorner.CornerRadius = UDim.new(0, 5)
 RightCorner.Parent = RightSide
-​local FunctionContainers = {}
-​local function createContainer(name)
-local container = Instance.new("ScrollingFrame")
-container.Name = name
-container.Size = UDim2.new(1, 0, 1, 0)
-container.BackgroundTransparency = 1
-container.BorderSizePixel = 0
-container.CanvasSize = UDim2.new(0, 0, 0, 120)
-container.ScrollBarThickness = 2
-container.Visible = false
-container.Parent = RightSide
-​local layout = Instance.new("UIListLayout")
-layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Padding = UDim.new(0, 5)
-layout.Parent = container
-​local padding = Instance.new("UIPadding")
-padding.PaddingTop = UDim.new(0, 5)
-padding.Parent = container
-​FunctionContainers[name] = container
-return container
+
+local FunctionContainers = {}
+
+local function createContainer(name)
+    local container = Instance.new("ScrollingFrame")
+    container.Name = name
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.BorderSizePixel = 0
+    container.CanvasSize = UDim2.new(0, 0, 0, 120)
+    container.ScrollBarThickness = 2
+    container.Visible = false
+    container.Parent = RightSide
+
+    local layout = Instance.new("UIListLayout")
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 5)
+    layout.Parent = container
+
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 5)
+    padding.Parent = container
+
+    FunctionContainers[name] = container
+    return container
 end
-​local MainMenuContainer = createContainer("เมนูหลัก")
+
+local MainMenuContainer = createContainer("เมนูหลัก")
 local AutoContainer = createContainer("อัตโนมัติ")
-​-- Main Menu: Discord Button
+
+-- Main Menu: Discord Button
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.92, 0, 0, 26)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -279,167 +328,196 @@ DiscordBtn.Text = "คัดลอกลิงก์ Discord"
 DiscordBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
 DiscordBtn.TextSize = 10
 DiscordBtn.Parent = MainMenuContainer
-​local DiscordBtnCorner = Instance.new("UICorner")
+
+local DiscordBtnCorner = Instance.new("UICorner")
 DiscordBtnCorner.CornerRadius = UDim.new(0, 4)
 DiscordBtnCorner.Parent = DiscordBtn
-​DiscordBtn.MouseButton1Click:Connect(function()
-pcall(function()
-if setclipboard then
-setclipboard("https://discord.gg/Ugssja4wqQ")
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        if setclipboard then
+            setclipboard("https://discord.gg/Ugssja4wqQ")
+        end
+    end)
+end)
+
+local function createToggleRow(parent, labelText, callback)
+    local RowFrame = Instance.new("Frame")
+    RowFrame.Size = UDim2.new(0.92, 0, 0, 28)
+    RowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    RowFrame.BorderSizePixel = 0
+    RowFrame.Parent = parent
+
+    local RowCorner = Instance.new("UICorner")
+    RowCorner.CornerRadius = UDim.new(0, 4)
+    RowCorner.Parent = RowFrame
+
+    local RowStroke = Instance.new("UIStroke")
+    RowStroke.Color = Color3.fromRGB(0, 162, 255)
+    RowStroke.Thickness = 1
+    RowStroke.Parent = RowFrame
+
+    local RowLabel = Instance.new("TextLabel")
+    RowLabel.Size = UDim2.new(0.65, 0, 1, 0)
+    RowLabel.Position = UDim2.new(0, 6, 0, 0)
+    RowLabel.BackgroundTransparency = 1
+    RowLabel.Font = Enum.Font.GothamBold
+    RowLabel.Text = labelText
+    RowLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+    RowLabel.TextSize = 9
+    RowLabel.TextXAlignment = Enum.TextXAlignment.Left
+    RowLabel.Parent = RowFrame
+
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(0, 45, 0, 18)
+    ToggleBtn.Position = UDim2.new(1, -49, 0.5, -9)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    ToggleBtn.BorderSizePixel = 0
+    ToggleBtn.Font = Enum.Font.GothamBold
+    ToggleBtn.Text = "ปิด"
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleBtn.TextSize = 9
+    ToggleBtn.Parent = RowFrame
+
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(0, 3)
+    ToggleCorner.Parent = ToggleBtn
+
+    local state = false
+    ToggleBtn.MouseButton1Click:Connect(function()
+        state = not state
+        ToggleBtn.BackgroundColor3 = state and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
+        ToggleBtn.Text = state and "เปิด" or "ปิด"
+        callback(state)
+    end)
 end
-end)
-end)
-​local function createToggleRow(parent, labelText, callback)
-local RowFrame = Instance.new("Frame")
-RowFrame.Size = UDim2.new(0.92, 0, 0, 28)
-RowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-RowFrame.BorderSizePixel = 0
-RowFrame.Parent = parent
-​local RowCorner = Instance.new("UICorner")
-RowCorner.CornerRadius = UDim.new(0, 4)
-RowCorner.Parent = RowFrame
-​local RowStroke = Instance.new("UIStroke")
-RowStroke.Color = Color3.fromRGB(0, 162, 255)
-RowStroke.Thickness = 1
-RowStroke.Parent = RowFrame
-​local RowLabel = Instance.new("TextLabel")
-RowLabel.Size = UDim2.new(0.65, 0, 1, 0)
-RowLabel.Position = UDim2.new(0, 6, 0, 0)
-RowLabel.BackgroundTransparency = 1
-RowLabel.Font = Enum.Font.GothamBold
-RowLabel.Text = labelText
-RowLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
-RowLabel.TextSize = 9
-RowLabel.TextXAlignment = Enum.TextXAlignment.Left
-RowLabel.Parent = RowFrame
-​local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0, 45, 0, 18)
-ToggleBtn.Position = UDim2.new(1, -49, 0.5, -9)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-ToggleBtn.BorderSizePixel = 0
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.Text = "ปิด"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 9
-ToggleBtn.Parent = RowFrame
-​local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0, 3)
-ToggleCorner.Parent = ToggleBtn
-​local state = false
-ToggleBtn.MouseButton1Click:Connect(function()
-state = not state
-ToggleBtn.BackgroundColor3 = state and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-ToggleBtn.Text = state and "เปิด" or "ปิด"
-callback(state)
-end)
-end
-​-- =============================================================================
+
+-- =============================================================================
 -- Precise Auto-Teleport Collection Feature for Token Mushroom (Filtered)
 -- =============================================================================
 createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", function(state)
-activeFunctions.autoFarm = state
-if state then
-autoFarmCoroutine = task.spawn(function()
-while activeFunctions.autoFarm do
-task.wait(0.15)
-local character = LocalPlayer.Character
-if character and character:FindFirstChild("HumanoidRootPart") then
-local hrp = character.HumanoidRootPart
-local targetPosition = nil
-local targetPrompt = nil
-​-- Search specifically for ProximityPrompts belonging to Token Mushrooms
-for _, prompt in ipairs(Workspace:GetDescendants()) do
-if prompt:IsA("ProximityPrompt") and prompt.Enabled then
-local parent = prompt.Parent
-if parent then
-local parentName = string.lower(parent.Name)
-local objectText = string.lower(prompt.ObjectText or "")
-​-- ป้องกันคำว่า "shop" และ "ค้นหา"
-if not string.find(parentName, "shop") and not string.find(objectText, "shop") and
-not string.find(parentName, "ค้นหา") and not string.find(objectText, "ค้นหา") then
-​if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") then
-local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
-if pos then
-targetPosition = pos
-targetPrompt = prompt
-break
-end
-end
-end
-end
-end
-end
-​if targetPosition and targetPrompt then
-hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 2, 0))
-task.wait(0.08)
-pcall(function()
-fireproximityprompt(targetPrompt)
+    activeFunctions.autoFarm = state
+    if state then
+        autoFarmCoroutine = task.spawn(function()
+            while activeFunctions.autoFarm do
+                task.wait(0.15)
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = character.HumanoidRootPart
+                    local targetPosition = nil
+                    local targetPrompt = nil
+
+                    -- Search specifically for ProximityPrompts belonging to Token Mushrooms
+                    for _, prompt in ipairs(Workspace:GetDescendants()) do
+                        if prompt:IsA("ProximityPrompt") and prompt.Enabled then
+                            local parent = prompt.Parent
+                            if parent then
+                                local parentName = string.lower(parent.Name)
+                                local objectText = string.lower(prompt.ObjectText or "")
+
+                                if not string.find(parentName, "shop") and not string.find(objectText, "shop") and
+                                   not string.find(parentName, "ค้นหา") and not string.find(objectText, "ค้นหา") then
+                                    
+                                    if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") then
+                                        local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
+                                        if pos then
+                                            targetPosition = pos
+                                            targetPrompt = prompt
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    if targetPosition and targetPrompt then
+                        hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 2, 0))
+                        task.wait(0.08)
+                        pcall(function()
+                            if fireproximityprompt then
+                                fireproximityprompt(targetPrompt)
+                            else
+                                fireproximityprompt(targetPrompt)
+                            end
+                        end)
+                    end
+                end
+            end
+        end)
+    else
+        if autoFarmCoroutine then
+            task.cancel(autoFarmCoroutine)
+            autoFarmCoroutine = nil
+        end
+    end
 end)
-end
-end
-end
-end)
-else
-if autoFarmCoroutine then
-task.cancel(autoFarmCoroutine)
-autoFarmCoroutine = nil
-end
-end
-end)
-​-- Switch tab utility
+
+-- Switch tab utility
 local function switchTab(tabName)
-for name, container in pairs(FunctionContainers) do
-container.Visible = (name == tabName)
+    for name, container in pairs(FunctionContainers) do
+        container.Visible = (name == tabName)
+    end
 end
+
+local function createCategoryButton(name)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 26)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.Gotham
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(240, 240, 240)
+    btn.TextSize = 10
+    btn.Parent = LeftSide
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        switchTab(name)
+    end)
 end
-​local function createCategoryButton(name)
-local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0.9, 0, 0, 26)
-btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-btn.BorderSizePixel = 0
-btn.Font = Enum.Font.Gotham
-btn.Text = name
-btn.TextColor3 = Color3.fromRGB(240, 240, 240)
-btn.TextSize = 10
-btn.Parent = LeftSide
-​local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 4)
-corner.Parent = btn
-​btn.MouseButton1Click:Connect(function()
-switchTab(name)
-end)
-end
-​createCategoryButton("เมนูหลัก")
+
+createCategoryButton("เมนูหลัก")
 createCategoryButton("อัตโนมัติ")
-​switchTab("เมนูหลัก")
-​-- =============================================================================
+
+switchTab("เมนูหลัก")
+
+-- =============================================================================
 -- Initialization & Intro Sequence
 -- =============================================================================
 task.spawn(function()
-local dots = {"", ".", "..", "..."}
-local startTime = tick()
-while tick() - startTime < 2 do
-for _, d in ipairs(dots) do
-LoadText.Text = "กำลังโหลด" .. d
-task.wait(0.3)
-end
-end
-​LoadText.Text = "ดาวน์โหลดเสร็จแล้ว!"
-task.wait(1)
-​LoadText.Text = "คัดลอกลิ้งดิสสำเร็จแล้ว!"
-pcall(function()
-if setclipboard then
-setclipboard("https://discord.gg/Ugssja4wqQ")
-end
-end)
-task.wait(1)
-​LoadFrame:Destroy()
-​MainFrame.Visible = true
-MainFrame.Size = UDim2.new(0, 320, 0, 180)
-​local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-local expandTween = TweenService:Create(MainFrame, info, {
-Size = UDim2.new(0, 380, 0, 230),
-BackgroundTransparency = 0
-})
-expandTween:Play()
+    local dots = {"", ".", "..", "..."}
+    local startTime = tick()
+    while tick() - startTime < 2 do
+        for _, d in ipairs(dots) do
+            LoadText.Text = "กำลังโหลด" .. d
+            task.wait(0.3)
+        end
+    end
+
+    LoadText.Text = "ดาวน์โหลดเสร็จแล้ว!"
+    task.wait(1)
+
+    LoadText.Text = "คัดลอกลิ้งดิสสำเร็จแล้ว!"
+    pcall(function()
+        if setclipboard then
+            setclipboard("https://discord.gg/Ugssja4wqQ")
+        end
+    end)
+    task.wait(1)
+
+    LoadFrame:Destroy()
+
+    MainFrame.Visible = true
+    MainFrame.Size = UDim2.new(0, 320, 0, 180)
+
+    local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local expandTween = TweenService:Create(MainFrame, info, {
+        Size = UDim2.new(0, 380, 0, 230),
+        BackgroundTransparency = 0
+    })
+    expandTween:Play()
 end)
