@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & FPS + AUTO FARM & AUTO SELL MODULE
+-- GKHub & FPS + AUTO FARM & AUTO SELL (DIRECT 0.1s LOOP)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -601,27 +601,17 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
 end)
 
 -- =============================================================================
--- Auto Sell Feature (Speed 0.1)
+-- Direct Auto Sell Loop (Speed 0.1s - No Toggle Required)
 -- =============================================================================
-createToggleRow(AutoContainer, "ขายไอเทมทั้งหมดอัตโนมัติ", function(state)
-    activeFunctions.autoSell = state
-    if state then
-        autoSellCoroutine = task.spawn(function()
-            local requestSell = ReplicatedStorage:WaitForChild("RequestSell", 5)
-            while activeFunctions.autoSell do
-                if requestSell then
-                    pcall(function()
-                        requestSell:InvokeServer("sellAll")
-                    end)
-                end
-                task.wait(0.1) -- ความเร็วในการขาย 0.1 วินาที
-            end
-        end)
-    else
-        if autoSellCoroutine then
-            task.cancel(autoSellCoroutine)
-            autoSellCoroutine = nil
+task.spawn(function()
+    local requestSell = ReplicatedStorage:WaitForChild("RequestSell", 10)
+    while true do
+        if requestSell then
+            pcall(function()
+                requestSell:InvokeServer("sellAll")
+            end)
         end
+        task.wait(0.1)
     end
 end)
 
