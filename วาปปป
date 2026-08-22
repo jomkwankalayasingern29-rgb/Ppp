@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (ORIGINAL UI RESTORED & FIXED)
+-- GKHub & grow a maji (ORIGINAL TABS UI - ALL FUNCTIONS INCLUDED)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -28,7 +28,6 @@ local autoBuyPcx150Coroutine = nil
 local autoBuyPlantMoverCoroutine = nil
 local autoBuyPlantLockerCoroutine = nil
 
--- Comprehensive cleanup function to reset all modifications when closing
 local function cleanupAllFeatures()
     activeFunctions.autoFarm = false
     activeFunctions.autoBuyMikiTree = false
@@ -48,7 +47,7 @@ for _, uiName in ipairs(oldUIs) do
     end
 end
 
--- Main ScreenGui setup (Fallback to PlayerGui if CoreGui is restricted on Delta)
+-- Main ScreenGui setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 pcall(function()
@@ -409,8 +408,10 @@ local function createToggleRow(parent, labelText, callback)
 end
 
 -- =============================================================================
--- Precise Auto-Teleport Collection Feature for Token Mushroom (Filtered)
+-- Features Registration (Added all features to Auto tab)
 -- =============================================================================
+
+-- 1. ฟาร์มอีเวนต์อัตโนมัติ
 createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
     activeFunctions.autoFarm = state
     if state then
@@ -466,9 +467,7 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
     end
 end)
 
--- =============================================================================
--- Auto Purchase MikiTree Feature
--- =============================================================================
+-- 2. ซื้อเมล็ด MikiTree
 createToggleRow(AutoContainer, "ซื้อเมล็ดMikiTree", function(state)
     activeFunctions.autoBuyMikiTree = state
     if state then
@@ -488,9 +487,7 @@ createToggleRow(AutoContainer, "ซื้อเมล็ดMikiTree", function(s
     end
 end)
 
--- =============================================================================
--- Auto Purchase Pcx150 Feature
--- =============================================================================
+-- 3. ซื้อ Pcx150 อัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อPcx150อัตโนมัติ", function(state)
     activeFunctions.autoBuyPcx150 = state
     if state then
@@ -510,9 +507,7 @@ createToggleRow(AutoContainer, "ซื้อPcx150อัตโนมัติ", 
     end
 end)
 
--- =============================================================================
--- Auto Purchase PlantMover Feature
--- =============================================================================
+-- 4. ซื้อจอบอัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ", function(state)
     activeFunctions.autoBuyPlantMover = state
     if state then
@@ -532,9 +527,7 @@ createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ
     end
 end)
 
--- =============================================================================
--- Auto Purchase PlantLocker Feature
--- =============================================================================
+-- 5. ซื้อตัวล็อกอัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโนมัติ", function(state)
     activeFunctions.autoBuyPlantLocker = state
     if state then
@@ -584,7 +577,7 @@ end
 createCategoryButton("เมนูหลัก")
 createCategoryButton("อัตโนมัติ")
 
--- กำหนดให้แท็บ "อัตโนมัติ" แสดงผลขึ้นมาทันทีตั้งแต่เปิดหน้าต่าง
+-- เปิดหน้า "อัตโนมัติ" เป็นหน้าแรกสุดตอนเปิด UI
 switchTab("อัตโนมัติ")
 
 -- =============================================================================
