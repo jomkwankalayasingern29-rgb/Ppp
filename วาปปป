@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (FIXED FOR DELTA EXECUTOR)
+-- GKHub & grow a maji (FIXED + AUTO PLANT LOCKER)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -18,13 +18,15 @@ local activeFunctions = {
     autoFarm = false,
     autoBuyMikiTree = false,
     autoBuyPcx150 = false,
-    autoBuyPlantMover = false
+    autoBuyPlantMover = false,
+    autoBuyPlantLocker = false
 }
 
 local autoFarmCoroutine = nil
 local autoBuyMikiTreeCoroutine = nil
 local autoBuyPcx150Coroutine = nil
 local autoBuyPlantMoverCoroutine = nil
+local autoBuyPlantLockerCoroutine = nil
 
 -- Comprehensive cleanup function to reset all modifications when closing
 local function cleanupAllFeatures()
@@ -32,6 +34,7 @@ local function cleanupAllFeatures()
     activeFunctions.autoBuyMikiTree = false
     activeFunctions.autoBuyPcx150 = false
     activeFunctions.autoBuyPlantMover = false
+    activeFunctions.autoBuyPlantLocker = false
 end
 
 -- Clear legacy GUIs to prevent overlap
@@ -537,6 +540,31 @@ createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ
         if autoBuyPlantMoverCoroutine then
             task.cancel(autoBuyPlantMoverCoroutine)
             autoBuyPlantMoverCoroutine = nil
+        end
+    end
+end)
+
+-- =============================================================================
+-- Auto Purchase PlantLocker Feature (ซื้อตัวล็อกอัตโนมัติ)
+-- =============================================================================
+createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโนมัติ", function(state)
+    activeFunctions.autoBuyPlantLocker = state
+    if state then
+        autoBuyPlantLockerCoroutine = task.spawn(function()
+            while activeFunctions.autoBuyPlantLocker do
+                task.wait(0.2)
+                pcall(function()
+                    local args = {
+                        "PlantLocker"
+                    }
+                    ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer(unpack(args))
+                end)
+            end
+        end)
+    else
+        if autoBuyPlantLockerCoroutine then
+            task.cancel(autoBuyPlantLockerCoroutine)
+            autoBuyPlantLockerCoroutine = nil
         end
     end
 end)
