@@ -1,49 +1,64 @@
 -- =============================================================================
--- GKHub : AUTO FARM + FLIGHT (NOCLIP & ADJUSTABLE SPEED)
+-- GKHub & FPS + AUTO FARM MODULE (FIXED TELEPORT & PROXIMITY)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
 
--- สถานะการทำงานของระบบ
+-- Active state tracking for safe cleanup
 local activeFunctions = {
-    autoFarm = false,
-    flight = false
+    clay = false,
+    selective = false,
+    effects = false,
+    junk = false,
+    autoFarm = false
 }
 
+local originalMaterials = {}
+local optimizedParts = {}
+local effectConnection = nil
+local junkConnection = nil
 local autoFarmCoroutine = nil
-local flightConnection = nil
-local flySpeed = 50 -- ความเร็วในการบิน (สามารถปรับเปลี่ยนได้)
 
--- ฟังก์ชันเคลียร์ค่าเมื่อปิด UI
+-- Comprehensive cleanup function to reset all modifications when closing
 local function cleanupAllFeatures()
     activeFunctions.autoFarm = false
-    activeFunctions.flight = false
+    activeFunctions.clay = false
+    activeFunctions.selective = false
+    activeFunctions.effects = false
+    activeFunctions.junk = false
 
-    if autoFarmCoroutine then
-        task.cancel(autoFarmCoroutine)
-        autoFarmCoroutine = nil
+    for obj, mat in pairs(originalMaterials) do
+        if obj and obj.Parent then pcall(function() obj.Material = mat end) end
+    end
+    originalMaterials = {}
+
+    for obj, data in pairs(optimizedParts) do
+        if obj and obj.Parent then
+            pcall(function() obj.CanCollide = data.CanCollide; obj.Transparency = data.Transparency; obj.CastShadow = data.CastShadow end)
+        end
+    end
+    optimizedParts = {}
+
+    if effectConnection then
+        effectConnection:Disconnect()
+        effectConnection = nil
     end
 
-    if flightConnection then
-        flightConnection:Disconnect()
-        flightConnection = nil
-    end
-
-    local character = LocalPlayer.Character
-    if character and character:FindFirstChild("Humanoid") then
-        character.Humanoid.PlatformStand = false
+    if junkConnection then
+        junkConnection:Disconnect()
+        junkConnection = nil
     end
 end
 
--- เคลียร์ UI เก่า
+-- Clear legacy GUIs to prevent overlap
 local oldUIs = {"CustomScriptUI", "HJ1JK_FpsGui", "D_Icon"}
 for _, uiName in ipairs(oldUIs) do
     if CoreGui:FindFirstChild(uiName) then
@@ -54,14 +69,14 @@ for _, uiName in ipairs(oldUIs) do
     end
 end
 
--- ScreenGui หลัก
+-- Main ScreenGui setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 -- =============================================================================
--- 1. หน้าจอโหลดอินโทร (Intro Loading Screen)
+-- 1. Intro Loading Screen
 -- =============================================================================
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
@@ -91,7 +106,7 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. หน้าต่าง UI หลัก (MainFrame)
+-- 2. Main Window Frame
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -115,7 +130,7 @@ MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
 -- =============================================================================
--- ระบบ Confirm Overlay (หน้าต่างยืนยันการปิด UI)
+-- Confirmation Dialog Overlay
 -- =============================================================================
 local ConfirmOverlay = Instance.new("Frame")
 ConfirmOverlay.Name = "ConfirmOverlay"
@@ -181,7 +196,7 @@ NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
 -- =============================================================================
--- แถบหัวข้อด้านบน (TopBar)
+-- TopBar Controls
 -- =============================================================================
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
@@ -215,7 +230,7 @@ TitleLabel.Size = UDim2.new(1, -80, 1, 0)
 TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "GKHub - Flight & Auto"
+TitleLabel.Text = "GKHub & FPS"
 TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -267,7 +282,9 @@ MinimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
+-- =============================================================================
+-- Tab Layout & Containers
+-- =============================================================================
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
@@ -287,7 +304,6 @@ LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 5)
 LeftLayout.Parent = LeftSide
 
--- ==================== ฝั่งขวา: ฟังก์ชัน ====================
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.67, 0, 1, -34)
 RightSide.Position = UDim2.new(0.32, 0, 0, 30)
@@ -329,9 +345,10 @@ local function createContainer(name)
 end
 
 local MainMenuContainer = createContainer("เมนูหลัก")
+local BoostContainer = createContainer("ระบบ FPS")
 local AutoContainer = createContainer("อัตโนมัติ")
 
--- 1. เมนูหลัก (Discord)
+-- Main Menu: Discord Button
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.92, 0, 0, 26)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -406,7 +423,99 @@ local function createToggleRow(parent, labelText, callback)
 end
 
 -- =============================================================================
--- ฟังก์ชันที่ 1: วาร์ปเก็บไอเทม Token Mushroom อัตโนมัติ
+-- FPS Boost Features
+-- =============================================================================
+createToggleRow(BoostContainer, "ภาพดินน้ำมัน", function(state)
+    activeFunctions.clay = state
+    if state then
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
+                if not originalMaterials[obj] then originalMaterials[obj] = obj.Material end
+                pcall(function() obj.Material = Enum.Material.SmoothPlastic; obj.Reflectance = 0 end)
+            end
+        end
+    else
+        for obj, mat in pairs(originalMaterials) do
+            if obj and obj.Parent then pcall(function() obj.Material = mat end) end
+        end
+        originalMaterials = {}
+    end
+end)
+
+createToggleRow(BoostContainer, "แก้แลคเฉพาะจุด", function(state)
+    activeFunctions.selective = state
+    if state then
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
+                local nameLower = string.lower(obj.Name)
+                if string.find(nameLower, "debris") or string.find(nameLower, "rock") or string.find(nameLower, "stone") or string.find(nameLower, "grass") or string.find(nameLower, "leaf") or string.find(nameLower, "particle") then
+                    if not optimizedParts[obj] then optimizedParts[obj] = {CanCollide = obj.CanCollide, Transparency = obj.Transparency, CastShadow = obj.CastShadow} end
+                    pcall(function() obj.CanCollide = false; obj.CastShadow = false; obj.Transparency = 1 end)
+                end
+            elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
+                pcall(function() obj.Enabled = false end)
+            end
+        end
+    else
+        for obj, data in pairs(optimizedParts) do
+            if obj and obj.Parent then
+                pcall(function() obj.CanCollide = data.CanCollide; obj.Transparency = data.Transparency; obj.CastShadow = data.CastShadow end)
+            end
+        end
+        optimizedParts = {}
+    end
+end)
+
+local function clearEffects(parentObj)
+    for _, obj in ipairs(parentObj:GetDescendants()) do
+        if obj:IsA("ParticleEmitter") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Explosion") or obj:IsA("Beam") or obj:IsA("Trail") then
+            pcall(function() obj:Destroy() end)
+        end
+    end
+end
+
+createToggleRow(BoostContainer, "ลบเอฟเฟค / ควัน", function(state)
+    activeFunctions.effects = state
+    if state then
+        clearEffects(Workspace); clearEffects(Lighting)
+        effectConnection = Workspace.DescendantAdded:Connect(function(obj)
+            if obj:IsA("ParticleEmitter") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Explosion") or obj:IsA("Beam") or obj:IsA("Trail") then
+                task.spawn(function() pcall(function() obj:Destroy() end) end)
+            end
+        end)
+    else
+        if effectConnection then effectConnection:Disconnect(); effectConnection = nil end
+    end
+end)
+
+local function isJunkPart(obj)
+    if obj:IsA("BasePart") then
+        local nameLower = string.lower(obj.Name)
+        if string.find(nameLower, "rock") or string.find(nameLower, "stone") or string.find(nameLower, "debris") or string.find(nameLower, "fx") or string.find(nameLower, "impact") or string.find(nameLower, "dust") or string.find(nameLower, "hit") then
+            if not obj:IsDescendantOf(Players) and obj.Parent ~= Workspace then return true end
+        end
+    end
+    return false
+end
+
+createToggleRow(BoostContainer, "ลบหิน / เศษซาก", function(state)
+    activeFunctions.junk = state
+    if state then
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if isJunkPart(obj) then pcall(function() obj:Destroy() end) end
+        end
+        junkConnection = Workspace.DescendantAdded:Connect(function(obj)
+            if isJunkPart(obj) then
+                task.spawn(function() task.wait(0.05); pcall(function() obj:Destroy() end) end)
+            end
+        end)
+    else
+        if junkConnection then junkConnection:Disconnect(); junkConnection = nil end
+    end
+end)
+
+-- =============================================================================
+-- Precise Auto-Teleport Collection Feature for Token Mushroom
 -- =============================================================================
 createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", function(state)
     activeFunctions.autoFarm = state
@@ -420,6 +529,7 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
                     local targetPosition = nil
                     local targetPrompt = nil
                     
+                    -- Search specifically for ProximityPrompts belonging to Token Mushrooms
                     for _, prompt in ipairs(Workspace:GetDescendants()) do
                         if prompt:IsA("ProximityPrompt") and prompt.Enabled then
                             local parent = prompt.Parent
@@ -457,73 +567,7 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
     end
 end)
 
--- =============================================================================
--- ฟังก์ชันที่ 2: ระบบบินลอยตัวทะลุกำแพง (Fly & Noclip)
--- =============================================================================
-createToggleRow(AutoContainer, "ระบบบินลอยตัว", function(state)
-    activeFunctions.flight = state
-    local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    
-    local hrp = character.HumanoidRootPart
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    
-    if state then
-        if humanoid then humanoid.PlatformStand = true end
-        
-        local bg = Instance.new("BodyGyro")
-        bg.Name = "GK_Gyro"
-        bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-        bg.CFrame = hrp.CFrame
-        bg.Parent = hrp
-        
-        local bv = Instance.new("BodyVelocity")
-        bv.Name = "GK_Velocity"
-        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-        bv.Velocity = Vector3.new(0, 0, 0)
-        bv.Parent = hrp
-        
-        flightConnection = RunService.RenderStepped:Connect(function()
-            if not activeFunctions.flight or not character or not hrp.Parent then return end
-            
-            -- เปิดระบบทะลุกำแพง (Noclip)
-            for _, part in ipairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-            
-            local camera = Workspace.CurrentCamera
-            local moveDir = Vector3.new(0, 0, 0)
-            
-            -- ควบคุมทิศทางตามกล้อง
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then
-                moveDir = moveDir + camera.CFrame.LookVector
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.Down) then
-                moveDir = moveDir - camera.CFrame.LookVector
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.Right) then
-                moveDir = moveDir + camera.CFrame.RightVector
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Left) then
-                moveDir = moveDir - camera.CFrame.RightVector
-            end
-            
-            bv.Velocity = moveDir * flySpeed
-            bg.CFrame = camera.CFrame
-        end)
-    else
-        if humanoid then humanoid.PlatformStand = false end
-        if hrp:FindFirstChild("GK_Gyro") then hrp.GK_Gyro:Destroy() end
-        if hrp:FindFirstChild("GK_Velocity") then hrp.GK_Velocity:Destroy() end
-        if flightConnection then
-            flightConnection:Disconnect()
-            flightConnection = nil
-        end
-    end
-end)
-
+-- Switch tab utility
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
         container.Visible = (name == tabName)
@@ -551,12 +595,13 @@ local function createCategoryButton(name)
 end
 
 createCategoryButton("เมนูหลัก")
+createCategoryButton("ระบบ FPS")
 createCategoryButton("อัตโนมัติ")
 
 switchTab("เมนูหลัก")
 
 -- =============================================================================
--- ลำดับการทำงาน (Loading & Animation)
+-- Initialization & Intro Sequence
 -- =============================================================================
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
