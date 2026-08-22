@@ -9,19 +9,23 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
 
 -- Active state tracking for safe cleanup
 local activeFunctions = {
-    autoFarm = false
+    autoFarm = false,
+    autoBuyMikiTree = false
 }
 
 local autoFarmCoroutine = nil
+local autoBuyMikiTreeCoroutine = nil
 
 -- Comprehensive cleanup function to reset all modifications when closing
 local function cleanupAllFeatures()
     activeFunctions.autoFarm = false
+    activeFunctions.autoBuyMikiTree = false
 end
 
 -- Clear legacy GUIs to prevent overlap
@@ -453,6 +457,31 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
     end
 end)
 
+-- =============================================================================
+-- Auto Purchase MikiTree Feature
+-- =============================================================================
+createToggleRow(AutoContainer, "ซื้อเมล็ดMikiTree", function(state)
+    activeFunctions.autoBuyMikiTree = state
+    if state then
+        autoBuyMikiTreeCoroutine = task.spawn(function()
+            while activeFunctions.autoBuyMikiTree do
+                task.wait(0.2)
+                pcall(function()
+                    local args = {
+                        "MikiTree"
+                    }
+                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer(unpack(args))
+                end)
+            end
+        end)
+    else
+        if autoBuyMikiTreeCoroutine then
+            task.cancel(autoBuyMikiTreeCoroutine)
+            autoBuyMikiTreeCoroutine = nil
+        end
+    end
+end)
+
 -- Switch tab utility
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
@@ -520,30 +549,4 @@ task.spawn(function()
         BackgroundTransparency = 0
     })
     expandTween:Play()
-end)
--- =============================================================================
--- Auto Purchase MikiTree Feature
--- =============================================================================
-local autoBuyMikiTreeCoroutine = nil
-
-createToggleRow(AutoContainer, "ซื้อเมล็ดMikiTree", function(state)
-    activeFunctions.autoBuyMikiTree = state
-    if state then
-        autoBuyMikiTreeCoroutine = task.spawn(function()
-            while activeFunctions.autoBuyMikiTree do
-                task.wait(0.2)
-                pcall(function()
-                    local args = {
-                        "MikiTree"
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("RequestPurchase"):InvokeServer(unpack(args))
-                end)
-            end
-        end)
-    else
-        if autoBuyMikiTreeCoroutine then
-            task.cancel(autoBuyMikiTreeCoroutine)
-            autoBuyMikiTreeCoroutine = nil
-        end
-    end
 end)
