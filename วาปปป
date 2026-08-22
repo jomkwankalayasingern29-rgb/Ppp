@@ -521,3 +521,29 @@ task.spawn(function()
     })
     expandTween:Play()
 end)
+-- =============================================================================
+-- Auto Purchase MikiTree Feature
+-- =============================================================================
+local autoBuyMikiTreeCoroutine = nil
+
+createToggleRow(AutoContainer, "ซื้อเมล็ดMikiTree", function(state)
+    activeFunctions.autoBuyMikiTree = state
+    if state then
+        autoBuyMikiTreeCoroutine = task.spawn(function()
+            while activeFunctions.autoBuyMikiTree do
+                task.wait(0.2)
+                pcall(function()
+                    local args = {
+                        "MikiTree"
+                    }
+                    game:GetService("ReplicatedStorage"):WaitForChild("RequestPurchase"):InvokeServer(unpack(args))
+                end)
+            end
+        end)
+    else
+        if autoBuyMikiTreeCoroutine then
+            task.cancel(autoBuyMikiTreeCoroutine)
+            autoBuyMikiTreeCoroutine = nil
+        end
+    end
+end)
