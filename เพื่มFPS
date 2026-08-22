@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHob: FPS + ภาษาไทย (NEW UI THEME + FULL FUNCTIONS)
+-- GKHub & FPS (NEW UI THEME + CONFIRM CLOSE + FULL CLEANUP)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -11,6 +11,48 @@ local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
+
+-- เก็บสถานะการทำงานของฟังก์ชันเพื่อใช้ตอนปิด UI
+local activeFunctions = {
+    clay = false,
+    selective = false,
+    effects = false,
+    junk = false
+}
+
+local originalMaterials = {}
+local optimizedParts = {}
+local effectConnection = nil
+local junkConnection = nil
+
+-- ฟังก์ชันเคลียร์ค่าและคืนค่าเดิมทั้งหมด
+local function cleanupAllFeatures()
+    -- 1. คืนค่าวัสดุเดิม (ภาพดินน้ำมัน)
+    for obj, mat in pairs(originalMaterials) do
+        if obj and obj.Parent then pcall(function() obj.Material = mat end) end
+    end
+    originalMaterials = {}
+
+    -- 2. คืนค่าชิ้นส่วนที่ซ่อน (แก้แลคเฉพาะจุด)
+    for obj, data in pairs(optimizedParts) do
+        if obj and obj.Parent then
+            pcall(function() obj.CanCollide = data.CanCollide; obj.Transparency = data.Transparency; obj.CastShadow = data.CastShadow end)
+        end
+    end
+    optimizedParts = {}
+
+    -- 3. ตัดการเชื่อมต่อเอฟเฟค
+    if effectConnection then
+        effectConnection:Disconnect()
+        effectConnection = nil
+    end
+
+    -- 4. ตัดการเชื่อมต่อเศษซาก
+    if junkConnection then
+        junkConnection:Disconnect()
+        junkConnection = nil
+    end
+end
 
 -- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
 local oldUIs = {"CustomScriptUI", "HJ1JK_FpsGui", "D_Icon"}
@@ -83,7 +125,75 @@ MainStroke.Color = Color3.fromRGB(0, 162, 255)
 MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
+-- =============================================================================
+-- ระบบ Confirm Overlay (หน้าต่างยืนยันการปิด UI)
+-- =============================================================================
+local ConfirmOverlay = Instance.new("Frame")
+ConfirmOverlay.Name = "ConfirmOverlay"
+ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
+ConfirmOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ConfirmOverlay.BackgroundTransparency = 0.5
+ConfirmOverlay.Visible = false
+ConfirmOverlay.ZIndex = 10
+ConfirmOverlay.Parent = MainFrame
+
+local ConfirmBox = Instance.new("Frame")
+ConfirmBox.Size = UDim2.new(0, 240, 0, 110)
+ConfirmBox.Position = UDim2.new(0.5, -120, 0.5, -55)
+ConfirmBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ConfirmBox.BorderSizePixel = 0
+ConfirmBox.ZIndex = 11
+ConfirmBox.Parent = ConfirmOverlay
+
+local ConfirmCorner = Instance.new("UICorner")
+ConfirmCorner.CornerRadius = UDim.new(0, 6)
+ConfirmCorner.Parent = ConfirmBox
+
+local ConfirmStroke = Instance.new("UIStroke")
+ConfirmStroke.Color = Color3.fromRGB(0, 162, 255)
+ConfirmStroke.Thickness = 1.2
+ConfirmStroke.Parent = ConfirmBox
+
+local ConfirmTitle = Instance.new("TextLabel")
+ConfirmTitle.Size = UDim2.new(1, 0, 0, 35)
+ConfirmTitle.Position = UDim2.new(0, 0, 0, 10)
+ConfirmTitle.BackgroundTransparency = 1
+ConfirmTitle.Text = "คุณต้องการปิด UI นี้หรือไม่?"
+ConfirmTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ConfirmTitle.TextSize = 12
+ConfirmTitle.Font = Enum.Font.GothamBold
+ConfirmTitle.ZIndex = 12
+ConfirmTitle.Parent = ConfirmBox
+
+local YesButton = Instance.new("TextButton")
+YesButton.Size = UDim2.new(0, 90, 0, 30)
+YesButton.Position = UDim2.new(0, 20, 1, -40)
+YesButton.BackgroundColor3 = Color3.fromRGB(50, 180, 80)
+YesButton.Text = "ใช่"
+YesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+YesButton.TextSize = 11
+YesButton.Font = Enum.Font.GothamBold
+YesButton.BorderSizePixel = 0
+YesButton.ZIndex = 12
+YesButton.Parent = ConfirmBox
+local YesCorner = Instance.new("UICorner"); YesCorner.CornerRadius = UDim.new(0, 4); YesCorner.Parent = YesButton
+
+local NoButton = Instance.new("TextButton")
+NoButton.Size = UDim2.new(0, 90, 0, 30)
+NoButton.Position = UDim2.new(1, -110, 1, -40)
+NoButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+NoButton.Text = "ไม่ใช่"
+NoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoButton.TextSize = 11
+NoButton.Font = Enum.Font.GothamBold
+NoButton.BorderSizePixel = 0
+NoButton.ZIndex = 12
+NoButton.Parent = ConfirmBox
+local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
+
+-- =============================================================================
 -- แถบหัวข้อด้านบน (TopBar)
+-- =============================================================================
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
@@ -101,7 +211,6 @@ FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 FixTopBar.BorderSizePixel = 0
 FixTopBar.Parent = TopBar
 
--- โลโก้ตัว "G"
 local LogoG = Instance.new("TextLabel")
 LogoG.Size = UDim2.new(0, 20, 0, 20)
 LogoG.Position = UDim2.new(0, 8, 0, 4)
@@ -117,7 +226,7 @@ TitleLabel.Size = UDim2.new(1, -80, 1, 0)
 TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "HJ1JK - Mobile FPS Booster"
+TitleLabel.Text = "GKHub & FPS"
 TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -135,6 +244,15 @@ CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
 
 CloseButton.MouseButton1Click:Connect(function()
+    ConfirmOverlay.Visible = true
+end)
+
+NoButton.MouseButton1Click:Connect(function()
+    ConfirmOverlay.Visible = false
+end)
+
+YesButton.MouseButton1Click:Connect(function()
+    cleanupAllFeatures() -- ทำความสะอาดและปิดฟังก์ชันทั้งหมดก่อนลบ UI
     ScreenGui:Destroy()
 end)
 
@@ -151,6 +269,7 @@ MinimizeButton.Parent = TopBar
 
 local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
+    if ConfirmOverlay.Visible then return end
     isMinimized = not isMinimized
     if isMinimized then
         MinimizeButton.Text = "+"
@@ -301,9 +420,9 @@ local function createToggleRow(parent, labelText, callback)
     end)
 end
 
--- ==================== ใส่ฟังก์ชัน FPS ทั้งหมดลงในระบบ UI ใหม่ ====================
-local originalMaterials = {}
+-- ==================== ระบบฟังก์ชัน FPS ทั้งหมด ====================
 createToggleRow(BoostContainer, "ภาพดินน้ำมัน", function(state)
+    activeFunctions.clay = state
     if state then
         for _, obj in ipairs(Workspace:GetDescendants()) do
             if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
@@ -319,8 +438,8 @@ createToggleRow(BoostContainer, "ภาพดินน้ำมัน", function
     end
 end)
 
-local optimizedParts = {}
 createToggleRow(BoostContainer, "แก้แลคเฉพาะจุด", function(state)
+    activeFunctions.selective = state
     if state then
         for _, obj in ipairs(Workspace:GetDescendants()) do
             if obj:IsA("BasePart") and not obj:IsDescendantOf(Players) then
@@ -343,7 +462,6 @@ createToggleRow(BoostContainer, "แก้แลคเฉพาะจุด", fu
     end
 end)
 
-local effectConnection = nil
 local function clearEffects(parentObj)
     for _, obj in ipairs(parentObj:GetDescendants()) do
         if obj:IsA("ParticleEmitter") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Explosion") or obj:IsA("Beam") or obj:IsA("Trail") then
@@ -351,7 +469,9 @@ local function clearEffects(parentObj)
         end
     end
 end
+
 createToggleRow(BoostContainer, "ลบเอฟเฟค / ควัน", function(state)
+    activeFunctions.effects = state
     if state then
         clearEffects(Workspace); clearEffects(Lighting)
         effectConnection = Workspace.DescendantAdded:Connect(function(obj)
@@ -364,7 +484,6 @@ createToggleRow(BoostContainer, "ลบเอฟเฟค / ควัน", funct
     end
 end)
 
-local junkConnection = nil
 local function isJunkPart(obj)
     if obj:IsA("BasePart") then
         local nameLower = string.lower(obj.Name)
@@ -374,7 +493,9 @@ local function isJunkPart(obj)
     end
     return false
 end
+
 createToggleRow(BoostContainer, "ลบหิน / เศษซาก", function(state)
+    activeFunctions.junk = state
     if state then
         for _, obj in ipairs(Workspace:GetDescendants()) do
             if isJunkPart(obj) then pcall(function() obj:Destroy() end) end
