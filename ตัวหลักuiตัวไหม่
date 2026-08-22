@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.19: FIXED 2D ESP & INSTANT ACTION UPDATE ]] --
+-- [[ GKHub v1.4.20: ADDED INFINITE JUMP UPDATE ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -670,6 +670,9 @@ local JumpPowerBack, JumpPowerBtn, JumpPowerInput, SetJumpPowerFunc = createSlid
     CurrentJumpPower = val
 end)
 
+createHeader(">> กระโดดไม่จำกัด <<", SpeedTab)
+local InfJumpToggle = createToggle("InfJump", "กระโดดไม่จำกัด", SpeedTab)
+
 local ResetFrame = Instance.new("Frame")
 ResetFrame.Size = UDim2.new(0.92, 0, 0, 32)
 ResetFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -689,7 +692,7 @@ ResetBtn.Parent = ResetFrame
 table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
 
-createHeader(">> กดใช้งานทันที (0 วินาที) <<", ToolTab)
+createHeader(">> กดใช้งานทันที (0 วิ) <<", ToolTab)
 local InstantActionToggle = createToggle("InstantAction", "เปิดใช้งานกดค้างทันที (0 วิ)", ToolTab)
 
 createHeader(">> ออโต้เทเลพอร์ต <<", ToolTab)
@@ -822,7 +825,7 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
@@ -1000,9 +1003,26 @@ for i = 1, 5 do
     end)
 end
 
--- เพิ่มระบบ Instant Action (กดค้าง/ทำอะไรทีละนานๆ ให้เสร็จทันที 0 วิ)
+-- ระบบกระโดดไม่จำกัด (Inf Jump)
+local InfJumpConfig = { Enabled = false }
+InfJumpToggle.MouseButton1Click:Connect(function()
+    InfJumpConfig.Enabled = not InfJumpConfig.Enabled
+    InfJumpToggle.BackgroundColor3 = InfJumpConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    InfJumpToggle.Text = InfJumpConfig.Enabled and "เปิด" or "ปิด"
+    showNotification((InfJumpConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'กระโดดไม่จำกัด', InfJumpConfig.Enabled)
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if InfJumpConfig.Enabled then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChildOfClass("Humanoid") then
+            char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- ระบบ Instant Action (กดค้าง/ทำอะไรทีละนานๆ ให้เสร็จทันที 0 วิ)
 local InstantActionConfig = { Enabled = false }
-local InstantActionToggle = InstantActionToggle -- อ้างอิงตัวแปรปุ่ม
 InstantActionToggle.MouseButton1Click:Connect(function()
     InstantActionConfig.Enabled = not InstantActionConfig.Enabled
     InstantActionToggle.BackgroundColor3 = InstantActionConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
@@ -1916,6 +1936,7 @@ YesButton.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = false
     ClayGraphicsEnabled = false
     InstantActionConfig.Enabled = false
+    InfJumpConfig.Enabled = false
     restoreMaterials()
     restoreLaggyObjects()
     
