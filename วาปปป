@@ -1,39 +1,107 @@
 -- =============================================================================
--- GKHub & grow a maji (SIMPLE SINGLE WINDOW - NO TABS)
+-- GKHub & grow a maji (ORIGINAL UI RESTORED & FIXED)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
 
--- ล้าง UI เก่าทิ้งก่อน
-local oldUIs = {"CustomScriptUI", "HJ1JK_FpsGui", "D_Icon"}
-for _, uiName in ipairs(oldUIs) do
-    if CoreGui:FindFirstChild(uiName) then pcall(function() CoreGui[uiName]:Destroy() end) end
-    if LocalPlayer.PlayerGui:FindFirstChild(uiName) then pcall(function() LocalPlayer.PlayerGui[uiName]:Destroy() end) end
+-- Active state tracking for safe cleanup
+local activeFunctions = {
+    autoFarm = false,
+    autoBuyMikiTree = false,
+    autoBuyPcx150 = false,
+    autoBuyPlantMover = false,
+    autoBuyPlantLocker = false
+}
+
+local autoFarmCoroutine = nil
+local autoBuyMikiTreeCoroutine = nil
+local autoBuyPcx150Coroutine = nil
+local autoBuyPlantMoverCoroutine = nil
+local autoBuyPlantLockerCoroutine = nil
+
+-- Comprehensive cleanup function to reset all modifications when closing
+local function cleanupAllFeatures()
+    activeFunctions.autoFarm = false
+    activeFunctions.autoBuyMikiTree = false
+    activeFunctions.autoBuyPcx150 = false
+    activeFunctions.autoBuyPlantMover = false
+    activeFunctions.autoBuyPlantLocker = false
 end
 
--- สร้าง ScreenGui
+-- Clear legacy GUIs to prevent overlap
+local oldUIs = {"CustomScriptUI", "HJ1JK_FpsGui", "D_Icon"}
+for _, uiName in ipairs(oldUIs) do
+    if CoreGui:FindFirstChild(uiName) then
+        pcall(function() CoreGui[uiName]:Destroy() end)
+    end
+    if LocalPlayer.PlayerGui:FindFirstChild(uiName) then
+        pcall(function() LocalPlayer.PlayerGui[uiName]:Destroy() end)
+    end
+end
+
+-- Main ScreenGui setup (Fallback to PlayerGui if CoreGui is restricted on Delta)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
-pcall(function() ScreenGui.Parent = CoreGui end)
-if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+pcall(function()
+    ScreenGui.Parent = CoreGui
+end)
+if not ScreenGui.Parent then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- สร้างหน้าต่างหลัก
+-- =============================================================================
+-- 1. Intro Loading Screen
+-- =============================================================================
+local LoadFrame = Instance.new("Frame")
+LoadFrame.Name = "LoadFrame"
+LoadFrame.Size = UDim2.new(0, 300, 0, 65)
+LoadFrame.Position = UDim2.new(0.5, -150, 0.5, -32)
+LoadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+LoadFrame.BorderSizePixel = 0
+LoadFrame.Parent = ScreenGui
+
+local LoadCorner = Instance.new("UICorner")
+LoadCorner.CornerRadius = UDim.new(0, 8)
+LoadCorner.Parent = LoadFrame
+
+local LoadStroke = Instance.new("UIStroke")
+LoadStroke.Color = Color3.fromRGB(0, 162, 255)
+LoadStroke.Thickness = 1.5
+LoadStroke.Parent = LoadFrame
+
+local LoadText = Instance.new("TextLabel")
+LoadText.Name = "LoadText"
+LoadText.Size = UDim2.new(1, 0, 1, 0)
+LoadText.BackgroundTransparency = 1
+LoadText.Font = Enum.Font.GothamBold
+LoadText.Text = "กำลังโหลด"
+LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoadText.TextSize = 16
+LoadText.Parent = LoadFrame
+
+-- =============================================================================
+-- 2. Main Window Frame
+-- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 320, 0, 320)
-MainFrame.Position = UDim2.new(0.5, -160, 0.5, -160)
+MainFrame.Size = UDim2.new(0, 380, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -190, 0.5, -150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.Visible = false
+MainFrame.BackgroundTransparency = 1
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
@@ -45,9 +113,77 @@ MainStroke.Color = Color3.fromRGB(0, 162, 255)
 MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
--- หัวข้อด้านบน
+-- =============================================================================
+-- Confirmation Dialog Overlay
+-- =============================================================================
+local ConfirmOverlay = Instance.new("Frame")
+ConfirmOverlay.Name = "ConfirmOverlay"
+ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
+ConfirmOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ConfirmOverlay.BackgroundTransparency = 0.5
+ConfirmOverlay.Visible = false
+ConfirmOverlay.ZIndex = 10
+ConfirmOverlay.Parent = MainFrame
+
+local ConfirmBox = Instance.new("Frame")
+ConfirmBox.Size = UDim2.new(0, 240, 0, 110)
+ConfirmBox.Position = UDim2.new(0.5, -120, 0.5, -55)
+ConfirmBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ConfirmBox.BorderSizePixel = 0
+ConfirmBox.ZIndex = 11
+ConfirmBox.Parent = ConfirmOverlay
+
+local ConfirmCorner = Instance.new("UICorner")
+ConfirmCorner.CornerRadius = UDim.new(0, 6)
+ConfirmCorner.Parent = ConfirmBox
+
+local ConfirmStroke = Instance.new("UIStroke")
+ConfirmStroke.Color = Color3.fromRGB(0, 162, 255)
+ConfirmStroke.Thickness = 1.2
+ConfirmStroke.Parent = ConfirmBox
+
+local ConfirmTitle = Instance.new("TextLabel")
+ConfirmTitle.Size = UDim2.new(1, 0, 0, 35)
+ConfirmTitle.Position = UDim2.new(0, 0, 0, 10)
+ConfirmTitle.BackgroundTransparency = 1
+ConfirmTitle.Text = "คุณต้องการปิด UI นี้หรือไม่?"
+ConfirmTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ConfirmTitle.TextSize = 12
+ConfirmTitle.Font = Enum.Font.GothamBold
+ConfirmTitle.ZIndex = 12
+ConfirmTitle.Parent = ConfirmBox
+
+local YesButton = Instance.new("TextButton")
+YesButton.Size = UDim2.new(0, 90, 0, 30)
+YesButton.Position = UDim2.new(0, 20, 1, -40)
+YesButton.BackgroundColor3 = Color3.fromRGB(50, 180, 80)
+YesButton.Text = "ใช่"
+YesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+YesButton.TextSize = 11
+YesButton.Font = Enum.Font.GothamBold
+YesButton.BorderSizePixel = 0
+YesButton.ZIndex = 12
+YesButton.Parent = ConfirmBox
+local YesCorner = Instance.new("UICorner"); YesCorner.CornerRadius = UDim.new(0, 4); YesCorner.Parent = YesButton
+
+local NoButton = Instance.new("TextButton")
+NoButton.Size = UDim2.new(0, 90, 0, 30)
+NoButton.Position = UDim2.new(1, -110, 1, -40)
+NoButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+NoButton.Text = "ไม่ใช่"
+NoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoButton.TextSize = 11
+NoButton.Font = Enum.Font.GothamBold
+NoButton.BorderSizePixel = 0
+NoButton.ZIndex = 12
+NoButton.Parent = ConfirmBox
+local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
+
+-- =============================================================================
+-- TopBar Controls
+-- =============================================================================
 local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 30)
+TopBar.Size = UDim2.new(1, 0, 0, 28)
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
@@ -56,156 +192,434 @@ local TopBarCorner = Instance.new("UICorner")
 TopBarCorner.CornerRadius = UDim.new(0, 8)
 TopBarCorner.Parent = TopBar
 
+local FixTopBar = Instance.new("Frame")
+FixTopBar.Size = UDim2.new(1, 0, 0, 5)
+FixTopBar.Position = UDim2.new(0, 0, 1, -5)
+FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+FixTopBar.BorderSizePixel = 0
+FixTopBar.Parent = TopBar
+
+local LogoG = Instance.new("TextLabel")
+LogoG.Size = UDim2.new(0, 20, 0, 20)
+LogoG.Position = UDim2.new(0, 8, 0, 4)
+LogoG.BackgroundTransparency = 1
+LogoG.Font = Enum.Font.GothamBold
+LogoG.Text = "⚡"
+LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
+LogoG.TextSize = 14
+LogoG.Parent = TopBar
+
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -40, 1, 0)
-TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.Size = UDim2.new(1, -80, 1, 0)
+TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "⚡ GKHub - รวมฟังก์ชัน"
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.Text = "GKHub & grow a maji"
+TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
-CloseButton.Position = UDim2.new(1, -28, 0, 3)
+CloseButton.Position = UDim2.new(1, -26, 0, 2)
 CloseButton.BackgroundTransparency = 1
 CloseButton.Font = Enum.Font.GothamBold
 CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.fromRGB(220, 60, 60)
-CloseButton.TextSize = 14
+CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
 
 CloseButton.MouseButton1Click:Connect(function()
+    ConfirmOverlay.Visible = true
+end)
+
+NoButton.MouseButton1Click:Connect(function()
+    ConfirmOverlay.Visible = false
+end)
+
+YesButton.MouseButton1Click:Connect(function()
+    cleanupAllFeatures()
     ScreenGui:Destroy()
 end)
 
--- พื้นที่ใส่ปุ่มแบบเลื่อนได้
-local ScrollContainer = Instance.new("ScrollingFrame")
-ScrollContainer.Size = UDim2.new(1, -10, 1, -40)
-ScrollContainer.Position = UDim2.new(0, 5, 0, 35)
-ScrollContainer.BackgroundTransparency = 1
-ScrollContainer.BorderSizePixel = 0
-ScrollContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
-ScrollContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-ScrollContainer.ScrollBarThickness = 4
-ScrollContainer.Parent = MainFrame
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
+MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
+MinimizeButton.BackgroundTransparency = 1
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+MinimizeButton.TextSize = 14
+MinimizeButton.Parent = TopBar
 
-local UIList = Instance.new("UIListLayout")
-UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-UIList.SortOrder = Enum.SortOrder.LayoutOrder
-UIList.Padding = UDim.new(0, 6)
-UIList.Parent = ScrollContainer
+local isMinimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+    if ConfirmOverlay.Visible then return end
+    isMinimized = not isMinimized
+    if isMinimized then
+        MinimizeButton.Text = "+"
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
+    else
+        MinimizeButton.Text = "-"
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 300)}):Play()
+    end
+end)
 
-local UIPad = Instance.new("UIPadding")
-UIPad.PaddingTop = UDim.new(0, 5)
-UIPad.PaddingBottom = UDim.new(0, 10)
-UIPad.Parent = ScrollContainer
+-- =============================================================================
+-- Tab Layout & Containers
+-- =============================================================================
+local LeftSide = Instance.new("ScrollingFrame")
+LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
+LeftSide.Position = UDim2.new(0, 5, 0, 30)
+LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+LeftSide.BorderSizePixel = 0
+LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
+LeftSide.ScrollBarThickness = 2
+LeftSide.Parent = MainFrame
 
--- ฟังก์ชันสร้างปุ่มเปิด/ปิด
-local function createToggle(labelText, callback)
-    local Row = Instance.new("Frame")
-    Row.Size = UDim2.new(0.95, 0, 0, 32)
-    Row.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    Row.BorderSizePixel = 0
-    Row.Parent = ScrollContainer
+local LeftCorner = Instance.new("UICorner")
+LeftCorner.CornerRadius = UDim.new(0, 5)
+LeftCorner.Parent = LeftSide
+
+local LeftLayout = Instance.new("UIListLayout")
+LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+LeftLayout.Padding = UDim.new(0, 5)
+LeftLayout.Parent = LeftSide
+
+local RightSide = Instance.new("ScrollingFrame")
+RightSide.Size = UDim2.new(0.67, 0, 1, -34)
+RightSide.Position = UDim2.new(0.32, 0, 0, 30)
+RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+RightSide.BorderSizePixel = 0
+RightSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
+RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
+RightSide.ScrollBarThickness = 2
+RightSide.Parent = MainFrame
+
+local RightCorner = Instance.new("UICorner")
+RightCorner.CornerRadius = UDim.new(0, 5)
+RightCorner.Parent = RightSide
+
+local FunctionContainers = {}
+
+local function createContainer(name)
+    local container = Instance.new("ScrollingFrame")
+    container.Name = name
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.BorderSizePixel = 0
+    container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    container.CanvasSize = UDim2.new(0, 0, 0, 0)
+    container.ScrollBarThickness = 2
+    container.Visible = false
+    container.Parent = RightSide
+
+    local layout = Instance.new("UIListLayout")
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 6)
+    layout.Parent = container
+
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingBottom = UDim.new(0, 10)
+    padding.Parent = container
+
+    FunctionContainers[name] = container
+    return container
+end
+
+local MainMenuContainer = createContainer("เมนูหลัก")
+local AutoContainer = createContainer("อัตโนมัติ")
+
+-- Main Menu: Discord Button
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Size = UDim2.new(0.92, 0, 0, 26)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+DiscordBtn.BorderSizePixel = 0
+DiscordBtn.Font = Enum.Font.Gotham
+DiscordBtn.Text = "คัดลอกลิงก์ Discord"
+DiscordBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
+DiscordBtn.TextSize = 10
+DiscordBtn.Parent = MainMenuContainer
+
+local DiscordBtnCorner = Instance.new("UICorner")
+DiscordBtnCorner.CornerRadius = UDim.new(0, 4)
+DiscordBtnCorner.Parent = DiscordBtn
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        if setclipboard then
+            setclipboard("https://discord.gg/Ugssja4wqQ")
+        end
+    end)
+end)
+
+local function createToggleRow(parent, labelText, callback)
+    local RowFrame = Instance.new("Frame")
+    RowFrame.Size = UDim2.new(0.92, 0, 0, 28)
+    RowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    RowFrame.BorderSizePixel = 0
+    RowFrame.Parent = parent
 
     local RowCorner = Instance.new("UICorner")
-    RowCorner.CornerRadius = UDim.new(0, 5)
-    RowCorner.Parent = Row
+    RowCorner.CornerRadius = UDim.new(0, 4)
+    RowCorner.Parent = RowFrame
 
     local RowStroke = Instance.new("UIStroke")
     RowStroke.Color = Color3.fromRGB(0, 162, 255)
     RowStroke.Thickness = 1
-    RowStroke.Parent = Row
+    RowStroke.Parent = RowFrame
 
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0.65, 0, 1, 0)
-    Label.Position = UDim2.new(0, 8, 0, 0)
-    Label.BackgroundTransparency = 1
-    Label.Font = Enum.Font.GothamBold
-    Label.Text = labelText
-    Label.TextColor3 = Color3.fromRGB(240, 240, 240)
-    Label.TextSize = 11
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Parent = Row
+    local RowLabel = Instance.new("TextLabel")
+    RowLabel.Size = UDim2.new(0.65, 0, 1, 0)
+    RowLabel.Position = UDim2.new(0, 6, 0, 0)
+    RowLabel.BackgroundTransparency = 1
+    RowLabel.Font = Enum.Font.GothamBold
+    RowLabel.Text = labelText
+    RowLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+    RowLabel.TextSize = 9
+    RowLabel.TextXAlignment = Enum.TextXAlignment.Left
+    RowLabel.Parent = RowFrame
 
-    local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(0, 55, 0, 20)
-    Btn.Position = UDim2.new(1, -60, 0.5, -10)
-    Btn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-    Btn.BorderSizePixel = 0
-    Btn.Font = Enum.Font.GothamBold
-    Btn.Text = "ปิด"
-    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Btn.TextSize = 10
-    Btn.Parent = Row
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(0, 45, 0, 18)
+    ToggleBtn.Position = UDim2.new(1, -49, 0.5, -9)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    ToggleBtn.BorderSizePixel = 0
+    ToggleBtn.Font = Enum.Font.GothamBold
+    ToggleBtn.Text = "ปิด"
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleBtn.TextSize = 9
+    ToggleBtn.Parent = RowFrame
 
-    local BtnCorner = Instance.new("UICorner")
-    BtnCorner.CornerRadius = UDim.new(0, 4)
-    BtnCorner.Parent = Btn
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(0, 3)
+    ToggleCorner.Parent = ToggleBtn
 
-    local active = false
-    Btn.MouseButton1Click:Connect(function()
-        active = not active
-        Btn.BackgroundColor3 = active and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-        Btn.Text = active and "เปิด" or "ปิด"
-        callback(active)
+    local state = false
+    ToggleBtn.MouseButton1Click:Connect(function()
+        state = not state
+        ToggleBtn.BackgroundColor3 = state and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
+        ToggleBtn.Text = state and "เปิด" or "ปิด"
+        callback(state)
     end)
 end
 
--- สร้างปุ่มฟังก์ชันทั้งหมดไว้ที่หน้าแรกทันที
-createToggle("ฟามอีเว้นอัตโนมัติ", function(state)
-    -- โค้ดฟาร์ม
-    while state do
-        task.wait(0.2)
-        local char = LocalPlayer.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            for _, prompt in ipairs(Workspace:GetDescendants()) do
-                if prompt:IsA("ProximityPrompt") and prompt.Enabled then
-                    local parent = prompt.Parent
-                    if parent and (string.find(string.lower(parent.Name), "mushroom") or string.find(string.lower(parent.Name), "token")) then
-                        char.HumanoidRootPart.CFrame = CFrame.new(parent:GetPivot().Position + Vector3.new(0, 2, 0))
-                        task.wait(0.1)
-                        pcall(function() fireproximityprompt(prompt) end)
-                        break
+-- =============================================================================
+-- Precise Auto-Teleport Collection Feature for Token Mushroom (Filtered)
+-- =============================================================================
+createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
+    activeFunctions.autoFarm = state
+    if state then
+        autoFarmCoroutine = task.spawn(function()
+            while activeFunctions.autoFarm do
+                task.wait(0.15)
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = character.HumanoidRootPart
+                    local targetPosition = nil
+                    local targetPrompt = nil
+
+                    for _, prompt in ipairs(Workspace:GetDescendants()) do
+                        if prompt:IsA("ProximityPrompt") and prompt.Enabled then
+                            local parent = prompt.Parent
+                            if parent then
+                                local parentName = string.lower(parent.Name)
+                                local objectText = string.lower(prompt.ObjectText or "")
+
+                                if not string.find(parentName, "shop") and not string.find(objectText, "shop") and
+                                   not string.find(parentName, "ค้นหา") and not string.find(objectText, "ค้นหา") then
+                                    
+                                    if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") then
+                                        local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
+                                        if pos then
+                                            targetPosition = pos
+                                            targetPrompt = prompt
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    if targetPosition and targetPrompt then
+                        hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 2, 0))
+                        task.wait(0.08)
+                        pcall(function()
+                            if fireproximityprompt then
+                                fireproximityprompt(targetPrompt)
+                            end
+                        end)
                     end
                 end
             end
+        end)
+    else
+        if autoFarmCoroutine then
+            task.cancel(autoFarmCoroutine)
+            autoFarmCoroutine = nil
         end
-        if not state then break end
     end
 end)
 
-createToggle("ซื้อเมล็ด MikiTree", function(state)
-    while state do
-        task.wait(0.2)
-        pcall(function() ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("MikiTree") end)
-        if not state then break end
+-- =============================================================================
+-- Auto Purchase MikiTree Feature
+-- =============================================================================
+createToggleRow(AutoContainer, "ซื้อเมล็ดMikiTree", function(state)
+    activeFunctions.autoBuyMikiTree = state
+    if state then
+        autoBuyMikiTreeCoroutine = task.spawn(function()
+            while activeFunctions.autoBuyMikiTree do
+                task.wait(0.2)
+                pcall(function()
+                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("MikiTree")
+                end)
+            end
+        end)
+    else
+        if autoBuyMikiTreeCoroutine then
+            task.cancel(autoBuyMikiTreeCoroutine)
+            autoBuyMikiTreeCoroutine = nil
+        end
     end
 end)
 
-createToggle("ซื้อ Pcx150 อัตโนมัติ", function(state)
-    while state do
-        task.wait(0.2)
-        pcall(function() ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("Pcx150") end)
-        if not state then break end
+-- =============================================================================
+-- Auto Purchase Pcx150 Feature
+-- =============================================================================
+createToggleRow(AutoContainer, "ซื้อPcx150อัตโนมัติ", function(state)
+    activeFunctions.autoBuyPcx150 = state
+    if state then
+        autoBuyPcx150Coroutine = task.spawn(function()
+            while activeFunctions.autoBuyPcx150 do
+                task.wait(0.2)
+                pcall(function()
+                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("Pcx150")
+                end)
+            end
+        end)
+    else
+        if autoBuyPcx150Coroutine then
+            task.cancel(autoBuyPcx150Coroutine)
+            autoBuyPcx150Coroutine = nil
+        end
     end
 end)
 
-createToggle("ซื้อจอบอัตโนมัติ", function(state)
-    while state do
-        task.wait(0.2)
-        pcall(function() ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("PlantMover") end)
-        if not state then break end
+-- =============================================================================
+-- Auto Purchase PlantMover Feature
+-- =============================================================================
+createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ", function(state)
+    activeFunctions.autoBuyPlantMover = state
+    if state then
+        autoBuyPlantMoverCoroutine = task.spawn(function()
+            while activeFunctions.autoBuyPlantMover do
+                task.wait(0.2)
+                pcall(function()
+                    ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("PlantMover")
+                end)
+            end
+        end)
+    else
+        if autoBuyPlantMoverCoroutine then
+            task.cancel(autoBuyPlantMoverCoroutine)
+            autoBuyPlantMoverCoroutine = nil
+        end
     end
 end)
 
-createToggle("ซื้อตัวล็อกอัตโนมัติ", function(state)
-    while state do
-        task.wait(0.2)
-        pcall(function() ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("PlantLocker") end)
-        if not state then break end
+-- =============================================================================
+-- Auto Purchase PlantLocker Feature
+-- =============================================================================
+createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโนมัติ", function(state)
+    activeFunctions.autoBuyPlantLocker = state
+    if state then
+        autoBuyPlantLockerCoroutine = task.spawn(function()
+            while activeFunctions.autoBuyPlantLocker do
+                task.wait(0.2)
+                pcall(function()
+                    ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("PlantLocker")
+                end)
+            end
+        end)
+    else
+        if autoBuyPlantLockerCoroutine then
+            task.cancel(autoBuyPlantLockerCoroutine)
+            autoBuyPlantLockerCoroutine = nil
+        end
     end
+end)
+
+-- Switch tab utility
+local function switchTab(tabName)
+    for name, container in pairs(FunctionContainers) do
+        container.Visible = (name == tabName)
+    end
+end
+
+local function createCategoryButton(name)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 26)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.Gotham
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(240, 240, 240)
+    btn.TextSize = 10
+    btn.Parent = LeftSide
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        switchTab(name)
+    end)
+end
+
+createCategoryButton("เมนูหลัก")
+createCategoryButton("อัตโนมัติ")
+
+-- กำหนดให้แท็บ "อัตโนมัติ" แสดงผลขึ้นมาทันทีตั้งแต่เปิดหน้าต่าง
+switchTab("อัตโนมัติ")
+
+-- =============================================================================
+-- Initialization & Intro Sequence
+-- =============================================================================
+task.spawn(function()
+    local dots = {"", ".", "..", "..."}
+    local startTime = tick()
+    while tick() - startTime < 2 do
+        for _, d in ipairs(dots) do
+            LoadText.Text = "กำลังโหลด" .. d
+            task.wait(0.3)
+        end
+    end
+
+    LoadText.Text = "ดาวน์โหลดเสร็จแล้ว!"
+    task.wait(1)
+
+    LoadText.Text = "คัดลอกลิ้งดิสสำเร็จแล้ว!"
+    pcall(function()
+        if setclipboard then
+            setclipboard("https://discord.gg/Ugssja4wqQ")
+        end
+    end)
+    task.wait(1)
+
+    LoadFrame:Destroy()
+
+    MainFrame.Visible = true
+    MainFrame.Size = UDim2.new(0, 320, 0, 190)
+
+    local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local expandTween = TweenService:Create(MainFrame, info, {
+        Size = UDim2.new(0, 380, 0, 300),
+        BackgroundTransparency = 0
+    })
+    expandTween:Play()
 end)
