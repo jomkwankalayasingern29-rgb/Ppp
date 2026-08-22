@@ -1,13 +1,11 @@
 -- =============================================================================
--- GKHub & grow a maji (ORIGINAL TABS UI - ALL FUNCTIONS INCLUDED)
+-- GKHub & grow a maji (FIXED UI TABS & ALL FUNCTIONS)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
-local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -29,11 +27,9 @@ local autoBuyPlantMoverCoroutine = nil
 local autoBuyPlantLockerCoroutine = nil
 
 local function cleanupAllFeatures()
-    activeFunctions.autoFarm = false
-    activeFunctions.autoBuyMikiTree = false
-    activeFunctions.autoBuyPcx150 = false
-    activeFunctions.autoBuyPlantMover = false
-    activeFunctions.autoBuyPlantLocker = false
+    for k, _ in pairs(activeFunctions) do
+        activeFunctions[k] = false
+    end
 end
 
 -- Clear legacy GUIs to prevent overlap
@@ -83,7 +79,7 @@ LoadText.Name = "LoadText"
 LoadText.Size = UDim2.new(1, 0, 1, 0)
 LoadText.BackgroundTransparency = 1
 LoadText.Font = Enum.Font.GothamBold
-LoadText.Text = "กำลังโหลด"
+LoadText.Text = "กำลังโหลด..."
 LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
@@ -99,8 +95,7 @@ MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Visible = false
-MainFrame.BackgroundTransparency = 1
+MainFrame.Visible = false -- จะเปิดให้เห็นหลังโหลดเสร็จ
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
@@ -113,7 +108,7 @@ MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
 -- =============================================================================
--- Confirmation Dialog Overlay
+-- Confirmation Dialog Overlay (หน้าต่างยืนยันตอนปิด)
 -- =============================================================================
 local ConfirmOverlay = Instance.new("Frame")
 ConfirmOverlay.Name = "ConfirmOverlay"
@@ -179,7 +174,7 @@ NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
 -- =============================================================================
--- TopBar Controls
+-- TopBar Controls (แถบบนสุด)
 -- =============================================================================
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
@@ -266,13 +261,14 @@ MinimizeButton.MouseButton1Click:Connect(function()
 end)
 
 -- =============================================================================
--- Tab Layout & Containers
+-- Tab Layout & Containers (แท็บซ้าย-ขวา)
 -- =============================================================================
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
 LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 LeftSide.BorderSizePixel = 0
+LeftSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
 LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 LeftSide.ScrollBarThickness = 2
 LeftSide.Parent = MainFrame
@@ -287,14 +283,15 @@ LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 5)
 LeftLayout.Parent = LeftSide
 
-local RightSide = Instance.new("ScrollingFrame")
+local LeftPad = Instance.new("UIPadding")
+LeftPad.PaddingTop = UDim.new(0, 5)
+LeftPad.Parent = LeftSide
+
+local RightSide = Instance.new("Frame")
 RightSide.Size = UDim2.new(0.67, 0, 1, -34)
 RightSide.Position = UDim2.new(0.32, 0, 0, 30)
 RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 RightSide.BorderSizePixel = 0
-RightSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
-RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-RightSide.ScrollBarThickness = 2
 RightSide.Parent = MainFrame
 
 local RightCorner = Instance.new("UICorner")
@@ -408,7 +405,7 @@ local function createToggleRow(parent, labelText, callback)
 end
 
 -- =============================================================================
--- Features Registration (Added all features to Auto tab)
+-- Features Registration (ฟังก์ชันทั้งหมด)
 -- =============================================================================
 
 -- 1. ฟาร์มอีเวนต์อัตโนมัติ
@@ -577,7 +574,7 @@ end
 createCategoryButton("เมนูหลัก")
 createCategoryButton("อัตโนมัติ")
 
--- เปิดหน้า "อัตโนมัติ" เป็นหน้าแรกสุดตอนเปิด UI
+-- กำหนดให้หน้าแรกเปิดที่ "อัตโนมัติ" ทันที
 switchTab("อัตโนมัติ")
 
 -- =============================================================================
@@ -586,30 +583,32 @@ switchTab("อัตโนมัติ")
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
-    while tick() - startTime < 2 do
+    while tick() - startTime < 1.5 do
         for _, d in ipairs(dots) do
             LoadText.Text = "กำลังโหลด" .. d
-            task.wait(0.3)
+            task.wait(0.2)
         end
     end
 
     LoadText.Text = "ดาวน์โหลดเสร็จแล้ว!"
-    task.wait(1)
+    task.wait(0.6)
 
-    LoadText.Text = "คัดลอกลิ้งดิสสำเร็จแล้ว!"
+    LoadText.Text = "คัดลอกลิงก์ดิสสำเร็จแล้ว!"
     pcall(function()
         if setclipboard then
             setclipboard("https://discord.gg/Ugssja4wqQ")
         end
     end)
-    task.wait(1)
+    task.wait(0.8)
 
     LoadFrame:Destroy()
 
+    -- แสดงผล MainFrame ออกมา
     MainFrame.Visible = true
+    MainFrame.BackgroundTransparency = 1
     MainFrame.Size = UDim2.new(0, 320, 0, 190)
 
-    local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local info = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     local expandTween = TweenService:Create(MainFrame, info, {
         Size = UDim2.new(0, 380, 0, 300),
         BackgroundTransparency = 0
