@@ -16,16 +16,19 @@ local LocalPlayer = Players.LocalPlayer
 -- Active state tracking for safe cleanup
 local activeFunctions = {
     autoFarm = false,
-    autoBuyMikiTree = false
+    autoBuyMikiTree = false,
+    autoBuyPcx150 = false
 }
 
 local autoFarmCoroutine = nil
 local autoBuyMikiTreeCoroutine = nil
+local autoBuyPcx150Coroutine = nil
 
 -- Comprehensive cleanup function to reset all modifications when closing
 local function cleanupAllFeatures()
     activeFunctions.autoFarm = false
     activeFunctions.autoBuyMikiTree = false
+    activeFunctions.autoBuyPcx150 = false
 end
 
 -- Clear legacy GUIs to prevent overlap
@@ -300,7 +303,7 @@ local function createContainer(name)
     container.Size = UDim2.new(1, 0, 1, 0)
     container.BackgroundTransparency = 1
     container.BorderSizePixel = 0
-    container.CanvasSize = UDim2.new(0, 0, 0, 120)
+    container.CanvasSize = UDim2.new(0, 0, 0, 150)
     container.ScrollBarThickness = 2
     container.Visible = false
     container.Parent = RightSide
@@ -478,6 +481,31 @@ createToggleRow(AutoContainer, "ซื้อเมล็ดMikiTree", function(s
         if autoBuyMikiTreeCoroutine then
             task.cancel(autoBuyMikiTreeCoroutine)
             autoBuyMikiTreeCoroutine = nil
+        end
+    end
+end)
+
+-- =============================================================================
+-- Auto Purchase Pcx150 Feature (ชื่อPcx150อัตโนมัติ)
+-- =============================================================================
+createToggleRow(AutoContainer, "ชื่อPcx150อัตโนมัติ", function(state)
+    activeFunctions.autoBuyPcx150 = state
+    if state then
+        autoBuyPcx150Coroutine = task.spawn(function()
+            while activeFunctions.autoBuyPcx150 do
+                task.wait(0.2)
+                pcall(function()
+                    local args = {
+                        "Pcx150"
+                    }
+                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer(unpack(args))
+                end)
+            end
+        end)
+    else
+        if autoBuyPcx150Coroutine then
+            task.cancel(autoBuyPcx150Coroutine)
+            autoBuyPcx150Coroutine = nil
         end
     end
 end)
