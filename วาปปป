@@ -17,18 +17,21 @@ local LocalPlayer = Players.LocalPlayer
 local activeFunctions = {
     autoFarm = false,
     autoBuyMikiTree = false,
-    autoBuyPcx150 = false
+    autoBuyPcx150 = false,
+    autoBuyPlantMover = false
 }
 
 local autoFarmCoroutine = nil
 local autoBuyMikiTreeCoroutine = nil
 local autoBuyPcx150Coroutine = nil
+local autoBuyPlantMoverCoroutine = nil
 
 -- Comprehensive cleanup function to reset all modifications when closing
 local function cleanupAllFeatures()
     activeFunctions.autoFarm = false
     activeFunctions.autoBuyMikiTree = false
     activeFunctions.autoBuyPcx150 = false
+    activeFunctions.autoBuyPlantMover = false
 end
 
 -- Clear legacy GUIs to prevent overlap
@@ -303,8 +306,8 @@ local function createContainer(name)
     container.Size = UDim2.new(1, 0, 1, 0)
     container.BackgroundTransparency = 1
     container.BorderSizePixel = 0
-    -- ขยายพื้นที่ CanvasSize ให้เพียงพอสำหรับปุ่มทั้งหมด (ป้องกันปุ่มตกขอบ)
-    container.CanvasSize = UDim2.new(0, 0, 0, 180)
+    -- ขยาย CanvasSize เพิ่มขึ้นเพื่อรองรับปุ่มทั้งหมด
+    container.CanvasSize = UDim2.new(0, 0, 0, 220)
     container.ScrollBarThickness = 2
     container.Visible = false
     container.Parent = RightSide
@@ -507,6 +510,31 @@ createToggleRow(AutoContainer, "ชื่อPcx150อัตโนมัติ", 
         if autoBuyPcx150Coroutine then
             task.cancel(autoBuyPcx150Coroutine)
             autoBuyPcx150Coroutine = nil
+        end
+    end
+end)
+
+-- =============================================================================
+-- Auto Purchase PlantMover Feature (ซื้อจอบอัตโนมัติ)
+-- =============================================================================
+createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ", function(state)
+    activeFunctions.autoBuyPlantMover = state
+    if state then
+        autoBuyPlantMoverCoroutine = task.spawn(function()
+            while activeFunctions.autoBuyPlantMover do
+                task.wait(0.2)
+                pcall(function()
+                    local args = {
+                        "PlantMover"
+                    }
+                    ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer(unpack(args))
+                end)
+            end
+        end)
+    else
+        if autoBuyPlantMoverCoroutine then
+            task.cancel(autoBuyPlantMoverCoroutine)
+            autoBuyPlantMoverCoroutine = nil
         end
     end
 end)
