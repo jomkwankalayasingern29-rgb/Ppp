@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.18: FIXED 2D ESP UPDATE ]] --
+-- [[ GKHub v1.4.19: FIXED 2D ESP & INSTANT ACTION UPDATE ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -689,6 +689,9 @@ ResetBtn.Parent = ResetFrame
 table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
 
+createHeader(">> กดใช้งานทันที (0 วินาที) <<", ToolTab)
+local InstantActionToggle = createToggle("InstantAction", "เปิดใช้งานกดค้างทันที (0 วิ)", ToolTab)
+
 createHeader(">> ออโต้เทเลพอร์ต <<", ToolTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด", ToolTab)
 
@@ -819,7 +822,7 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
@@ -996,6 +999,31 @@ for i = 1, 5 do
         foldBtn.Text = isFolded and "v" or "^"
     end)
 end
+
+-- เพิ่มระบบ Instant Action (กดค้าง/ทำอะไรทีละนานๆ ให้เสร็จทันที 0 วิ)
+local InstantActionConfig = { Enabled = false }
+local InstantActionToggle = InstantActionToggle -- อ้างอิงตัวแปรปุ่ม
+InstantActionToggle.MouseButton1Click:Connect(function()
+    InstantActionConfig.Enabled = not InstantActionConfig.Enabled
+    InstantActionToggle.BackgroundColor3 = InstantActionConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    InstantActionToggle.Text = InstantActionConfig.Enabled and "เปิด" or "ปิด"
+    showNotification((InstantActionConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'กดใช้งานทันที (0 วิ)', InstantActionConfig.Enabled)
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if not ScreenGui.Parent then break end
+        if InstantActionConfig.Enabled then
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("ProximityPrompt") then
+                    if obj.HoldDuration > 0 then
+                        obj.HoldDuration = 0
+                    end
+                end
+            end
+        end
+    end
+end)
 
 local AutoTpBackConfig = { Enabled = false }
 AutoTpBackToggle.MouseButton1Click:Connect(function()
@@ -1714,7 +1742,6 @@ task.spawn(function()
     end
 end)
 
--- ระบบ 2D ESP (Square และ Line) ที่ปรับปรุงใหม่ให้รองรับผู้เล่นและ NPC สมบูรณ์แบบ
 local Active2D = {}
 local function removeDrawingObject(model)
     if Active2D[model] then
@@ -1888,6 +1915,7 @@ YesButton.MouseButton1Click:Connect(function()
     CooldownConfig.Enabled = false
     AutoTpBackConfig.Enabled = false
     ClayGraphicsEnabled = false
+    InstantActionConfig.Enabled = false
     restoreMaterials()
     restoreLaggyObjects()
     
