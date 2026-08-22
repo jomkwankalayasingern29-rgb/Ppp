@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & FPS + AUTO FARM MODULE (STRICT TOKEN MUSHROOM ONLY)
+-- GKHub & FPS + AUTO FARM & AUTO SELL MODULE
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -9,6 +9,7 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -18,7 +19,8 @@ local activeFunctions = {
     selective = false,
     effects = false,
     junk = false,
-    autoFarm = false
+    autoFarm = false,
+    autoSell = false
 }
 
 local originalMaterials = {}
@@ -26,10 +28,12 @@ local optimizedParts = {}
 local effectConnection = nil
 local junkConnection = nil
 local autoFarmCoroutine = nil
+local autoSellCoroutine = nil
 
 -- Comprehensive cleanup function to reset all modifications when closing
 local function cleanupAllFeatures()
     activeFunctions.autoFarm = false
+    activeFunctions.autoSell = false
     activeFunctions.clay = false
     activeFunctions.selective = false
     activeFunctions.effects = false
@@ -596,6 +600,31 @@ createToggleRow(AutoContainer, "วาร์ปเก็บไอเทม", fun
     end
 end)
 
+-- =============================================================================
+-- Auto Sell Feature (Speed 0.1)
+-- =============================================================================
+createToggleRow(AutoContainer, "ขายไอเทมทั้งหมดอัตโนมัติ", function(state)
+    activeFunctions.autoSell = state
+    if state then
+        autoSellCoroutine = task.spawn(function()
+            local requestSell = ReplicatedStorage:WaitForChild("RequestSell", 5)
+            while activeFunctions.autoSell do
+                if requestSell then
+                    pcall(function()
+                        requestSell:InvokeServer("sellAll")
+                    end)
+                end
+                task.wait(0.1) -- ความเร็วในการขาย 0.1 วินาที
+            end
+        end)
+    else
+        if autoSellCoroutine then
+            task.cancel(autoSellCoroutine)
+            autoSellCoroutine = nil
+        end
+    end
+end)
+
 -- Switch tab utility
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
@@ -631,7 +660,7 @@ switchTab("เมนูหลัก")
 
 -- =============================================================================
 -- Initialization & Intro Sequence
--- =============================================================
+-- =============================================================================
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
