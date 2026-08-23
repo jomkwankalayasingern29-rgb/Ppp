@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (UPDATED PCX150 & ALL FUNCTIONS)
+-- GKHub & grow a maji (ADDED CropRemover & ALL FUNCTIONS)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -18,7 +18,8 @@ local activeFunctions = {
     autoBuyMysteryStickTree = false,
     autoBuyPcx150 = false,
     autoBuyPlantMover = false,
-    autoBuyPlantLocker = false
+    autoBuyPlantLocker = false,
+    autoBuyCropRemover = false -- เพิ่มตัวแปรสถานะ
 }
 
 local autoFarmCoroutine = nil
@@ -27,6 +28,7 @@ local autoBuyMysteryStickTreeCoroutine = nil
 local autoBuyPcx150Coroutine = nil
 local autoBuyPlantMoverCoroutine = nil
 local autoBuyPlantLockerCoroutine = nil
+local autoBuyCropRemoverCoroutine = nil
 
 local function cleanupAllFeatures()
     for k, _ in pairs(activeFunctions) do
@@ -509,7 +511,7 @@ createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", f
     end
 end)
 
--- 4. ซื้อ PCX150 อัตโนมัติ (อัปเดตใหม่ตามที่ขอ)
+-- 4. ซื้อ PCX150 อัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อ PCX150 อัตโนมัติ", function(state)
     activeFunctions.autoBuyPcx150 = state
     if state then
@@ -568,6 +570,29 @@ createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโน
         if autoBuyPlantLockerCoroutine then
             task.cancel(autoBuyPlantLockerCoroutine)
             autoBuyPlantLockerCoroutine = nil
+        end
+    end
+end)
+
+-- 7. ตัวกำจัดพืชผล (เพิ่มใหม่ตามที่ขอ)
+createToggleRow(AutoContainer, "ตัวกำจัดพืชผล", function(state)
+    activeFunctions.autoBuyCropRemover = state
+    if state then
+        autoBuyCropRemoverCoroutine = task.spawn(function()
+            local args = {
+                "CropRemover"
+            }
+            while activeFunctions.autoBuyCropRemover do
+                task.wait(0.2)
+                pcall(function()
+                    ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer(unpack(args))
+                end)
+            end
+        end)
+    else
+        if autoBuyCropRemoverCoroutine then
+            task.cancel(autoBuyCropRemoverCoroutine)
+            autoBuyCropRemoverCoroutine = nil
         end
     end
 end)
