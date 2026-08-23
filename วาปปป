@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (SMOOTH FARM / NO TELEPORT)
+-- GKHub & grow a maji (STAND STILL / NO MOVEMENT AUTO FARM)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -412,21 +412,17 @@ end
 -- Features Registration
 -- =============================================================================
 
--- 1. ฟาร์มอีเวนต์อัตโนมัติ (แบบเดินไปหาอัตโนมัติ ไม่วาร์ปกระตุก)
+-- 1. ฟาร์มอีเวนต์อัตโนมัติ (ยืนอยู่เฉยๆ แล้วกดเก็บทันที)
 createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
     activeFunctions.autoFarm = state
     if state then
         autoFarmCoroutine = task.spawn(function()
             while activeFunctions.autoFarm do
-                task.wait(0.2)
+                task.wait(0.1)
                 local character = LocalPlayer.Character
-                if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildOfClass("Humanoid") then
-                    local hrp = character.HumanoidRootPart
-                    local humanoid = character:FindFirstChildOfClass("Humanoid")
-                    local targetPosition = nil
-                    local targetPrompt = nil
-
+                if character and character:FindFirstChild("HumanoidRootPart") then
                     for _, prompt in ipairs(Workspace:GetDescendants()) do
+                        if not activeFunctions.autoFarm then break end
                         if prompt:IsA("ProximityPrompt") and prompt.Enabled then
                             local parent = prompt.Parent
                             if parent then
@@ -437,31 +433,15 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
                                    not string.find(parentName, "ค้นหา") and not string.find(objectText, "ค้นหา") then
                                     
                                     if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") then
-                                        local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
-                                        if pos then
-                                            targetPosition = pos
-                                            targetPrompt = prompt
-                                            break
-                                        end
+                                        pcall(function()
+                                            if fireproximityprompt then
+                                                fireproximityprompt(prompt)
+                                            end
+                                        end)
                                     end
                                 end
                             end
                         end
-                    end
-
-                    if targetPosition and targetPrompt then
-                        -- เปลี่ยนจากการวาร์ป เป็นสั่งให้ Humanoid เดินไปหาเป้าหมายอย่างเป็นธรรมชาติ
-                        pcall(function()
-                            humanoid:MoveTo(targetPosition)
-                            -- เช็คระยะว่าใกล้พอที่จะกด ProximityPrompt หรือยัง
-                            local dist = (hrp.Position - targetPosition).Magnitude
-                            if dist <= 12 then
-                                task.wait(0.1)
-                                if fireproximityprompt then
-                                    fireproximityprompt(targetPrompt)
-                                end
-                            end
-                        end)
                     end
                 end
             end
