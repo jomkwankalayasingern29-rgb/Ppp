@@ -1,5 +1,5 @@
-#-- =============================================================================
--- GKHub & grow a maji (ADDED MysteryStickTree & ALL FUNCTIONS)
+-- =============================================================================
+-- GKHub & grow a maji (UPDATED PCX150 & ALL FUNCTIONS)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -15,7 +15,7 @@ local LocalPlayer = Players.LocalPlayer
 local activeFunctions = {
     autoFarm = false,
     autoBuyMikiTree = false,
-    autoBuyMysteryStickTree = false, -- เพิ่มตัวแปรสถานะ
+    autoBuyMysteryStickTree = false,
     autoBuyPcx150 = false,
     autoBuyPlantMover = false,
     autoBuyPlantLocker = false
@@ -486,7 +486,7 @@ createToggleRow(AutoContainer, "ซื้อเมล็ด MikiTree", function(
     end
 end)
 
--- 3. ซื้อเมล็ด MysteryStickTree (เพิ่มใหม่ตามที่ขอ)
+-- 3. ซื้อเมล็ด MysteryStickTree
 createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", function(state)
     activeFunctions.autoBuyMysteryStickTree = state
     if state then
@@ -509,22 +509,25 @@ createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", f
     end
 end)
 
--- 4. ซื้อ Pcx150 อัตโนมัติ
+-- 4. ซื้อ PCX150 อัตโนมัติ (อัปเดตใหม่ตามที่ขอ)
 createToggleRow(AutoContainer, "ซื้อ PCX150 อัตโนมัติ", function(state)
-    activeFunctions.autoBuyPCX150 = state
+    activeFunctions.autoBuyPcx150 = state
     if state then
-        autoBuyPCX150Coroutine = task.spawn(function()
-            while activeFunctions.autoBuyPCX150 do
+        autoBuyPcx150Coroutine = task.spawn(function()
+            local args = {
+                "PCX150"
+            }
+            while activeFunctions.autoBuyPcx150 do
                 task.wait(0.2)
                 pcall(function()
-                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("PCX150")
+                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer(unpack(args))
                 end)
             end
         end)
     else
-        if autoBuyPCX150Coroutine then
-            task.cancel(autoBuyPCX150Coroutine)
-            autoBuyPCX150Coroutine = nil
+        if autoBuyPcx150Coroutine then
+            task.cancel(autoBuyPcx150Coroutine)
+            autoBuyPcx150Coroutine = nil
         end
     end
 end)
