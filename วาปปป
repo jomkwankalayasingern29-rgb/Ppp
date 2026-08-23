@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (FIXED UI & ADDED FRUIT HARVEST FILTER)
+-- GKHub & grow a maji (FIXED WEIGHT PARSING & LOCKED CHECK)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -32,7 +32,7 @@ local autoBuyPlantMoverCoroutine = nil
 local autoBuyPlantLockerCoroutine = nil
 local autoBuyCropRemoverCoroutine = nil
 
--- ตัวแปรเก็บค่าน้ำหนักสูงสุดที่จะเก็บ (ค่าเริ่มต้น 100 ตามที่คุณต้องการ)
+-- ตัวแปรเก็บค่าน้ำหนักสูงสุดที่จะเก็บ (ค่าเริ่มต้น 100)
 local maxFruitWeight = 100
 
 local function cleanupAllFeatures()
@@ -94,7 +94,7 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. Main Window Frame (ขยายความสูงเป็น 380 เพื่อไม่ให้เมนูตกขอบ)
+-- 2. Main Window Frame
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -470,7 +470,7 @@ end
 -- Features Registration
 -- =============================================================================
 
--- 1. ฟาร์มอีเวนต์อัตโนมัติ (ยืนอยู่เฉยๆ แล้วกดเก็บทันที)
+-- 1. ฟาร์มอีเวนต์อัตโนมัติ
 createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
     activeFunctions.autoFarm = state
     if state then
@@ -517,7 +517,7 @@ createTextBoxRow(AutoContainer, "น้ำหนักสูงสุดที�
     maxFruitWeight = val
 end)
 
--- 2. เก็บผลไม้อัตโนมัติ (ตามปุ่ม "เก็บเกี่ยว" ในภาพ)
+-- 2. เก็บผลไม้อัตโนมัติ (กรองน้ำหนักแม่นยำขึ้น + ข้ามตัวที่ล็อกไว้)
 createToggleRow(AutoContainer, "เก็บผลไม้อัตโนมัติ", function(state)
     activeFunctions.autoHarvestFruit = state
     if state then
@@ -529,33 +529,34 @@ createToggleRow(AutoContainer, "เก็บผลไม้อัตโนมั
                     for _, prompt in ipairs(Workspace:GetDescendants()) do
                         if not activeFunctions.autoHarvestFruit then break end
                         if prompt:IsA("ProximityPrompt") and prompt.Enabled then
-                            local objectText = string.lower(prompt.ObjectText or "")
-                            local actionText = string.lower(prompt.ActionText or "")
+                            local objectText = prompt.ObjectText or ""
+                            local actionText = prompt.ActionText or ""
                             local parent = prompt.Parent
 
-                            -- ตรวจสอบคำว่า "เก็บเกี่ยว" หรือ "harvest"
-                            if string.find(objectText, "เก็บเกี่ยว") or string.find(actionText, "เก็บเกี่ยว") or 
-                               string.find(objectText, "harvest") or string.find(actionText, "harvest") then
+                            -- เช็คคำว่า "เก็บเกี่ยว" หรือ "harvest"
+                            if string.find(string.lower(objectText), "เก็บเกี่ยว") or string.find(string.lower(actionText), "เก็บเกี่ยว") or 
+                               string.find(string.lower(objectText), "harvest") or string.find(string.lower(actionText), "harvest") then
                                 
                                 local shouldCollect = true
                                 
                                 if parent then
-                                    -- เช็ค Attribute น้ำหนัก
-                                    local weightVal = parent:GetAttribute("Weight") or parent:GetAttribute("น้ำหนัก")
-                                    if not weightVal and parent.Parent then
-                                        weightVal = parent.Parent:GetAttribute("Weight") or parent.Parent:GetAttribute("น้ำหนัก")
-                                    end
-
-                                    if weightVal and type(weightVal) == "number" then
-                                        if weightVal >= maxFruitWeight then
-                                            shouldCollect = false
-                                        end
+                                    -- ข้ามทันทีถ้ามีสถานะล็อก (Locked)
+                                    if parent:GetAttribute("Locked") == true or parent:GetAttribute("IsLocked") == true then
+                                        shouldCollect = false
                                     else
-                                        -- หากน้ำหนักซ่อนอยู่ในชื่อผลไม้ ให้เช็คตัวเลข
-                                        for word in string.gmatch(parent.Name, "%d+") do
-                                            local num = tonumber(word)
-                                            if num and num > 10 and num > maxFruitWeight then
-                                                shouldCollect = false
+                                        -- ค้นหาตัวเลขน้ำหนักจาก ObjectText เช่น "Robux [53.324 kg]" หรือชื่อ Parent
+                                        local fullText = objectText .. " " .. parent.Name
+                                        
+                                        -- ดึงตัวเลขที่มีจุดทศนิยมได้ เช่น 53.324 หรือ 154
+                                        for numStr in string.gmatch(fullText, "%d+%.?%d*") do
+                                            local weightVal = tonumber(numStr)
+                                            -- กรองตัวเลขอายุขัยหรือตัวเลขที่ไม่ใช่น้ำหนักออก (สมมติน้ำหนักผลไม้อยู่ในช่วงสมเหตุสมผล เช่น มากกว่า 0.1)
+                                            if weightVal and weightVal > 0.5 and weightVal < 10000 then
+                                                -- ถ้าค่าน้ำหนักมากกว่าหรือเท่ากับค่า max ที่ตั้งไว้ ให้ยกเลิกการเก็บ
+                                                if weightVal >= maxFruitWeight then
+                                                    shouldCollect = false
+                                                end
+                                                break -- ใช้ตัวเลขแรกที่เจอซึ่งมักจะเป็นค่าน้ำหนัก
                                             end
                                         end
                                     end
