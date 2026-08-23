@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (FIXED STRICT WEIGHT FILTER)
+-- GKHub & grow a maji (FIXED SYNTAX ERROR & WEIGHT PARSING)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -537,7 +537,7 @@ createToggleRow(AutoContainer, "เก็บผลไม้อัตโนมั
                             if string.find(string.lower(objectText), "เก็บเกี่ยว") or string.find(string.lower(actionText), "เก็บเกี่ยว") or 
                                string.find(string.lower(objectText), "harvest") or string.find(string.lower(actionText), "harvest") then
                                 
-                                local shouldCollect = false -- ค่าเริ่มต้นคือไม่เก็บ จนกว่าจะตรวจสอบน้ำหนักผ่าน
+                                local shouldCollect = false
                                 
                                 if parent then
                                     -- ตรวจสอบว่ามีการล็อกไว้หรือไม่ (ถ้าล็อก ข้ามทันที)
@@ -547,28 +547,25 @@ createToggleRow(AutoContainer, "เก็บผลไม้อัตโนมั
                                     end
 
                                     if not isLocked then
-                                        -- ดึงข้อความทั้งหมดมาค้นหาน้ำหนัก (เช่น "PCX150 [15.342 kg]")
                                         local fullText = objectText .. " " .. parent.Name
                                         
-                                        -- ค้นหาตัวเลขที่อยู่ติดกับคำว่า "kg" หรืออยู่ในรูปแบบน้ำหนัก
                                         local weightFound = nil
                                         for numStr in string.gmatch(fullText, "(%d+%.?%d*)%s*kg") do
                                             weightFound = tonumber(numStr)
                                             break
                                         end
 
-                                        -- ถ้าไม่เจอคำว่า kg ให้ลองหาตัวเลขในวงเล็บ []
                                         if not weightFound then
                                             for numStr in string.gmatch(fullText, "%[(%d+%.?%d*)%]") do
                                                 local val = tonumber(numStr)
-                                                if val and val < 10000 then -- ป้องกันหยิบเลขอื่นที่ไม่ใช่น้ำหนัก
+                                                if val and val < 10000 then
                                                     weightFound = val
                                                     break
                                                 end
                                             end
                                         end
 
-                                        -- เงื่อนไขสำคัญ: ถ้าน้ำหนักน้อยกว่าค่าที่ผู้ใช้กรอก (และหาค่าน้ำหนักเจอ) ถึงจะอนุญาตให้เก็บ
+                                        -- เงื่อนไข: น้ำหนักต้องน้อยกว่าค่า maxFruitWeight ถึงจะเก็บ
                                         if weightFound and weightFound < maxFruitWeight then
                                             shouldCollect = true
                                         end
@@ -727,7 +724,6 @@ local function switchTab(tabName)
 end
 
 local function createCategoryButton(name)
-    val btn = Instance.new("TextButton")
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 26)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
