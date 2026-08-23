@@ -1,4 +1,4 @@
--- =============================================================================
+#-- =============================================================================
 -- GKHub & grow a maji (ADDED MysteryStickTree & ALL FUNCTIONS)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
@@ -510,21 +510,21 @@ createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", f
 end)
 
 -- 4. ซื้อ Pcx150 อัตโนมัติ
-createToggleRow(AutoContainer, "ซื้อ Pcx150 อัตโนมัติ", function(state)
-    activeFunctions.autoBuyPcx150 = state
+createToggleRow(AutoContainer, "ซื้อ PCX150 อัตโนมัติ", function(state)
+    activeFunctions.autoBuyPCX150 = state
     if state then
-        autoBuyPcx150Coroutine = task.spawn(function()
-            while activeFunctions.autoBuyPcx150 do
+        autoBuyPCX150Coroutine = task.spawn(function()
+            while activeFunctions.autoBuyPCX150 do
                 task.wait(0.2)
                 pcall(function()
-                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("Pcx150")
+                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("PCX150")
                 end)
             end
         end)
     else
-        if autoBuyPcx150Coroutine then
-            task.cancel(autoBuyPcx150Coroutine)
-            autoBuyPcx150Coroutine = nil
+        if autoBuyPCX150Coroutine then
+            task.cancel(autoBuyPCX150Coroutine)
+            autoBuyPCX150Coroutine = nil
         end
     end
 end)
