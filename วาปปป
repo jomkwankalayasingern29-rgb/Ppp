@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (FIXED WEIGHT PARSING & LOCKED CHECK)
+-- GKHub & grow a maji (FIXED STRICT WEIGHT FILTER)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -32,8 +32,8 @@ local autoBuyPlantMoverCoroutine = nil
 local autoBuyPlantLockerCoroutine = nil
 local autoBuyCropRemoverCoroutine = nil
 
--- ตัวแปรเก็บค่าน้ำหนักสูงสุดที่จะเก็บ (ค่าเริ่มต้น 100)
-local maxFruitWeight = 100
+-- ตัวแปรเก็บค่าน้ำหนักสูงสุดที่จะเก็บ (ค่าเริ่มต้น 50)
+local maxFruitWeight = 50
 
 local function cleanupAllFeatures()
     for k, _ in pairs(activeFunctions) do
@@ -513,11 +513,11 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
 end)
 
 -- ตั้งค่าน้ำหนักสูงสุดที่จะเก็บ
-createTextBoxRow(AutoContainer, "น้ำหนักสูงสุดที่เก็บ (<)", 100, function(val)
+createTextBoxRow(AutoContainer, "น้ำหนักสูงสุดที่เก็บ (<)", 50, function(val)
     maxFruitWeight = val
 end)
 
--- 2. เก็บผลไม้อัตโนมัติ (กรองน้ำหนักแม่นยำขึ้น + ข้ามตัวที่ล็อกไว้)
+-- 2. เก็บผลไม้อัตโนมัติ (กรองเฉพาะน้ำหนักจริง และเก็บเฉพาะตัวที่น้อยกว่าที่กำหนดเท่านั้น)
 createToggleRow(AutoContainer, "เก็บผลไม้อัตโนมัติ", function(state)
     activeFunctions.autoHarvestFruit = state
     if state then
@@ -537,27 +537,40 @@ createToggleRow(AutoContainer, "เก็บผลไม้อัตโนมั
                             if string.find(string.lower(objectText), "เก็บเกี่ยว") or string.find(string.lower(actionText), "เก็บเกี่ยว") or 
                                string.find(string.lower(objectText), "harvest") or string.find(string.lower(actionText), "harvest") then
                                 
-                                local shouldCollect = true
+                                local shouldCollect = false -- ค่าเริ่มต้นคือไม่เก็บ จนกว่าจะตรวจสอบน้ำหนักผ่าน
                                 
                                 if parent then
-                                    -- ข้ามทันทีถ้ามีสถานะล็อก (Locked)
-                                    if parent:GetAttribute("Locked") == true or parent:GetAttribute("IsLocked") == true then
-                                        shouldCollect = false
-                                    else
-                                        -- ค้นหาตัวเลขน้ำหนักจาก ObjectText เช่น "Robux [53.324 kg]" หรือชื่อ Parent
+                                    -- ตรวจสอบว่ามีการล็อกไว้หรือไม่ (ถ้าล็อก ข้ามทันที)
+                                    local isLocked = parent:GetAttribute("Locked") or parent:GetAttribute("IsLocked")
+                                    if not isLocked and parent.Parent then
+                                        isLocked = parent.Parent:GetAttribute("Locked") or parent.Parent:GetAttribute("IsLocked")
+                                    end
+
+                                    if not isLocked then
+                                        -- ดึงข้อความทั้งหมดมาค้นหาน้ำหนัก (เช่น "PCX150 [15.342 kg]")
                                         local fullText = objectText .. " " .. parent.Name
                                         
-                                        -- ดึงตัวเลขที่มีจุดทศนิยมได้ เช่น 53.324 หรือ 154
-                                        for numStr in string.gmatch(fullText, "%d+%.?%d*") do
-                                            local weightVal = tonumber(numStr)
-                                            -- กรองตัวเลขอายุขัยหรือตัวเลขที่ไม่ใช่น้ำหนักออก (สมมติน้ำหนักผลไม้อยู่ในช่วงสมเหตุสมผล เช่น มากกว่า 0.1)
-                                            if weightVal and weightVal > 0.5 and weightVal < 10000 then
-                                                -- ถ้าค่าน้ำหนักมากกว่าหรือเท่ากับค่า max ที่ตั้งไว้ ให้ยกเลิกการเก็บ
-                                                if weightVal >= maxFruitWeight then
-                                                    shouldCollect = false
+                                        -- ค้นหาตัวเลขที่อยู่ติดกับคำว่า "kg" หรืออยู่ในรูปแบบน้ำหนัก
+                                        local weightFound = nil
+                                        for numStr in string.gmatch(fullText, "(%d+%.?%d*)%s*kg") do
+                                            weightFound = tonumber(numStr)
+                                            break
+                                        end
+
+                                        -- ถ้าไม่เจอคำว่า kg ให้ลองหาตัวเลขในวงเล็บ []
+                                        if not weightFound then
+                                            for numStr in string.gmatch(fullText, "%[(%d+%.?%d*)%]") do
+                                                local val = tonumber(numStr)
+                                                if val and val < 10000 then -- ป้องกันหยิบเลขอื่นที่ไม่ใช่น้ำหนัก
+                                                    weightFound = val
+                                                    break
                                                 end
-                                                break -- ใช้ตัวเลขแรกที่เจอซึ่งมักจะเป็นค่าน้ำหนัก
                                             end
+                                        end
+
+                                        -- เงื่อนไขสำคัญ: ถ้าน้ำหนักน้อยกว่าค่าที่ผู้ใช้กรอก (และหาค่าน้ำหนักเจอ) ถึงจะอนุญาตให้เก็บ
+                                        if weightFound and weightFound < maxFruitWeight then
+                                            shouldCollect = true
                                         end
                                     end
                                 end
@@ -714,6 +727,7 @@ local function switchTab(tabName)
 end
 
 local function createCategoryButton(name)
+    val btn = Instance.new("TextButton")
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 26)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
