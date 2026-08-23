@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (FIXED UI SIZE & ADDED CropRemover)
+-- GKHub & grow a maji (SMOOTH FARM / NO TELEPORT)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -89,7 +89,7 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. Main Window Frame (ขยายความสูงเป็น 340 เพื่อรองรับปุ่มทั้งหมด)
+-- 2. Main Window Frame
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -312,7 +312,7 @@ local function createContainer(name)
     container.BorderSizePixel = 0
     container.AutomaticCanvasSize = Enum.AutomaticSize.Y
     container.CanvasSize = UDim2.new(0, 0, 0, 0)
-    container.ScrollBarThickness = 4 -- เพิ่มความหนาแถบเลื่อนให้เห็นชัดขึ้น
+    container.ScrollBarThickness = 4
     container.Visible = false
     container.Parent = RightSide
 
@@ -412,16 +412,17 @@ end
 -- Features Registration
 -- =============================================================================
 
--- 1. ฟาร์มอีเวนต์อัตโนมัติ
+-- 1. ฟาร์มอีเวนต์อัตโนมัติ (แบบเดินไปหาอัตโนมัติ ไม่วาร์ปกระตุก)
 createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
     activeFunctions.autoFarm = state
     if state then
         autoFarmCoroutine = task.spawn(function()
             while activeFunctions.autoFarm do
-                task.wait(0.15)
+                task.wait(0.2)
                 local character = LocalPlayer.Character
-                if character and character:FindFirstChild("HumanoidRootPart") then
+                if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildOfClass("Humanoid") then
                     local hrp = character.HumanoidRootPart
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
                     local targetPosition = nil
                     local targetPrompt = nil
 
@@ -449,11 +450,16 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
                     end
 
                     if targetPosition and targetPrompt then
-                        hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 2, 0))
-                        task.wait(0.08)
+                        -- เปลี่ยนจากการวาร์ป เป็นสั่งให้ Humanoid เดินไปหาเป้าหมายอย่างเป็นธรรมชาติ
                         pcall(function()
-                            if fireproximityprompt then
-                                fireproximityprompt(targetPrompt)
+                            humanoid:MoveTo(targetPosition)
+                            -- เช็คระยะว่าใกล้พอที่จะกด ProximityPrompt หรือยัง
+                            local dist = (hrp.Position - targetPosition).Magnitude
+                            if dist <= 12 then
+                                task.wait(0.1)
+                                if fireproximityprompt then
+                                    fireproximityprompt(targetPrompt)
+                                end
                             end
                         end)
                     end
