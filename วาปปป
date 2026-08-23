@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (ADDED CropRemover & ALL FUNCTIONS)
+-- GKHub & grow a maji (FIXED UI SIZE & ADDED CropRemover)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -19,7 +19,7 @@ local activeFunctions = {
     autoBuyPcx150 = false,
     autoBuyPlantMover = false,
     autoBuyPlantLocker = false,
-    autoBuyCropRemover = false -- เพิ่มตัวแปรสถานะ
+    autoBuyCropRemover = false
 }
 
 local autoFarmCoroutine = nil
@@ -89,12 +89,12 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. Main Window Frame
+-- 2. Main Window Frame (ขยายความสูงเป็น 340 เพื่อรองรับปุ่มทั้งหมด)
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 380, 0, 300)
-MainFrame.Position = UDim2.new(0.5, -190, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 380, 0, 340)
+MainFrame.Position = UDim2.new(0.5, -190, 0.5, -170)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -260,7 +260,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
         TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
     else
         MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 300)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 340)}):Play()
     end
 end)
 
@@ -312,7 +312,7 @@ local function createContainer(name)
     container.BorderSizePixel = 0
     container.AutomaticCanvasSize = Enum.AutomaticSize.Y
     container.CanvasSize = UDim2.new(0, 0, 0, 0)
-    container.ScrollBarThickness = 2
+    container.ScrollBarThickness = 4 -- เพิ่มความหนาแถบเลื่อนให้เห็นชัดขึ้น
     container.Visible = false
     container.Parent = RightSide
 
@@ -324,7 +324,7 @@ local function createContainer(name)
 
     local padding = Instance.new("UIPadding")
     padding.PaddingTop = UDim.new(0, 5)
-    padding.PaddingBottom = UDim.new(0, 10)
+    padding.PaddingBottom = UDim.new(0, 15)
     padding.Parent = container
 
     FunctionContainers[name] = container
@@ -574,7 +574,7 @@ createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโน
     end
 end)
 
--- 7. ตัวกำจัดพืชผล (เพิ่มใหม่ตามที่ขอ)
+-- 7. ตัวกำจัดพืชผล
 createToggleRow(AutoContainer, "ตัวกำจัดพืชผล", function(state)
     activeFunctions.autoBuyCropRemover = state
     if state then
@@ -658,11 +658,11 @@ task.spawn(function()
 
     MainFrame.Visible = true
     MainFrame.BackgroundTransparency = 1
-    MainFrame.Size = UDim2.new(0, 320, 0, 190)
+    MainFrame.Size = UDim2.new(0, 320, 0, 220)
 
     local info = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     local expandTween = TweenService:Create(MainFrame, info, {
-        Size = UDim2.new(0, 380, 0, 300),
+        Size = UDim2.new(0, 380, 0, 340),
         BackgroundTransparency = 0
     })
     expandTween:Play()
