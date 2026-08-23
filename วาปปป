@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (STAND STILL / NO MOVEMENT AUTO FARM)
+-- GKHub & grow a maji (FIXED UI SIZE & ADDED CropRemover)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -89,7 +89,7 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. Main Window Frame
+-- 2. Main Window Frame (ขยายความสูงเป็น 340 เพื่อรองรับปุ่มทั้งหมด)
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -312,7 +312,7 @@ local function createContainer(name)
     container.BorderSizePixel = 0
     container.AutomaticCanvasSize = Enum.AutomaticSize.Y
     container.CanvasSize = UDim2.new(0, 0, 0, 0)
-    container.ScrollBarThickness = 4
+    container.ScrollBarThickness = 4 -- เพิ่มความหนาแถบเลื่อนให้เห็นชัดขึ้น
     container.Visible = false
     container.Parent = RightSide
 
@@ -412,17 +412,20 @@ end
 -- Features Registration
 -- =============================================================================
 
--- 1. ฟาร์มอีเวนต์อัตโนมัติ (ยืนอยู่เฉยๆ แล้วกดเก็บทันที)
+-- 1. ฟาร์มอีเวนต์อัตโนมัติ
 createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
     activeFunctions.autoFarm = state
     if state then
         autoFarmCoroutine = task.spawn(function()
             while activeFunctions.autoFarm do
-                task.wait(0.1)
+                task.wait(0.15)
                 local character = LocalPlayer.Character
                 if character and character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = character.HumanoidRootPart
+                    local targetPosition = nil
+                    local targetPrompt = nil
+
                     for _, prompt in ipairs(Workspace:GetDescendants()) do
-                        if not activeFunctions.autoFarm then break end
                         if prompt:IsA("ProximityPrompt") and prompt.Enabled then
                             local parent = prompt.Parent
                             if parent then
@@ -433,15 +436,26 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
                                    not string.find(parentName, "ค้นหา") and not string.find(objectText, "ค้นหา") then
                                     
                                     if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") then
-                                        pcall(function()
-                                            if fireproximityprompt then
-                                                fireproximityprompt(prompt)
-                                            end
-                                        end)
+                                        local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
+                                        if pos then
+                                            targetPosition = pos
+                                            targetPrompt = prompt
+                                            break
+                                        end
                                     end
                                 end
                             end
                         end
+                    end
+
+                    if targetPosition and targetPrompt then
+                        hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 2, 0))
+                        task.wait(0.08)
+                        pcall(function()
+                            if fireproximityprompt then
+                                fireproximityprompt(targetPrompt)
+                            end
+                        end)
                     end
                 end
             end
