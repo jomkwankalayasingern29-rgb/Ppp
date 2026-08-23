@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (ADDED FRUIT HARVEST & WEIGHT FILTER)
+-- GKHub & grow a maji (FIXED UI & ADDED FRUIT HARVEST FILTER)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -14,25 +14,25 @@ local LocalPlayer = Players.LocalPlayer
 -- Active state tracking for safe cleanup
 local activeFunctions = {
     autoFarm = false,
+    autoHarvestFruit = false,
     autoBuyMikiTree = false,
     autoBuyMysteryStickTree = false,
     autoBuyPcx150 = false,
     autoBuyPlantMover = false,
     autoBuyPlantLocker = false,
-    autoBuyCropRemover = false,
-    autoHarvestFruit = false
+    autoBuyCropRemover = false
 }
 
 local autoFarmCoroutine = nil
+local autoHarvestFruitCoroutine = nil
 local autoBuyMikiTreeCoroutine = nil
 local autoBuyMysteryStickTreeCoroutine = nil
 local autoBuyPcx150Coroutine = nil
 local autoBuyPlantMoverCoroutine = nil
 local autoBuyPlantLockerCoroutine = nil
 local autoBuyCropRemoverCoroutine = nil
-local autoHarvestFruitCoroutine = nil
 
--- ตัวแปรเก็บค่าน้ำหนักสูงสุดที่จะเก็บ (ค่าเริ่มต้น 100)
+-- ตัวแปรเก็บค่าน้ำหนักสูงสุดที่จะเก็บ (ค่าเริ่มต้น 100 ตามที่คุณต้องการ)
 local maxFruitWeight = 100
 
 local function cleanupAllFeatures()
@@ -94,12 +94,12 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. Main Window Frame
+-- 2. Main Window Frame (ขยายความสูงเป็น 380 เพื่อไม่ให้เมนูตกขอบ)
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 380, 0, 340)
-MainFrame.Position = UDim2.new(0.5, -190, 0.5, -170)
+MainFrame.Size = UDim2.new(0, 380, 0, 380)
+MainFrame.Position = UDim2.new(0.5, -190, 0.5, -190)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -265,7 +265,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
         TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
     else
         MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 340)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 380)}):Play()
     end
 end)
 
@@ -413,7 +413,7 @@ local function createToggleRow(parent, labelText, callback)
     end)
 end
 
--- ฟังก์ชันสร้างช่องกรอกตัวเลขสำหรับตั้งค่าน้ำหนัก
+-- ช่องกรอกตัวเลขตั้งค่าน้ำหนัก
 local function createTextBoxRow(parent, labelText, defaultVal, callback)
     local RowFrame = Instance.new("Frame")
     RowFrame.Size = UDim2.new(0.92, 0, 0, 28)
@@ -512,12 +512,12 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
     end
 end)
 
--- ตั้งค่าน้ำหนักสูงสุดที่จะเก็บผลไม้
+-- ตั้งค่าน้ำหนักสูงสุดที่จะเก็บ
 createTextBoxRow(AutoContainer, "น้ำหนักสูงสุดที่เก็บ (<)", 100, function(val)
     maxFruitWeight = val
 end)
 
--- 2. เก็บผลไม้อัตโนมัติ (เช็ค Prompt "เก็บเกี่ยว" และกรองน้ำหนัก)
+-- 2. เก็บผลไม้อัตโนมัติ (ตามปุ่ม "เก็บเกี่ยว" ในภาพ)
 createToggleRow(AutoContainer, "เก็บผลไม้อัตโนมัติ", function(state)
     activeFunctions.autoHarvestFruit = state
     if state then
@@ -533,14 +533,14 @@ createToggleRow(AutoContainer, "เก็บผลไม้อัตโนมั
                             local actionText = string.lower(prompt.ActionText or "")
                             local parent = prompt.Parent
 
-                            -- ตรวจสอบว่าเป็นปุ่มเก็บเกี่ยวผลไม้ (ตามรูปตัวอย่าง UI ในเกม)
+                            -- ตรวจสอบคำว่า "เก็บเกี่ยว" หรือ "harvest"
                             if string.find(objectText, "เก็บเกี่ยว") or string.find(actionText, "เก็บเกี่ยว") or 
                                string.find(objectText, "harvest") or string.find(actionText, "harvest") then
                                 
                                 local shouldCollect = true
                                 
-                                -- พยายามตรวจสอบน้ำหนักจากชื่อหรือ Attribute ของ Parent (ถ้ามีข้อมูลน้ำหนักระบุไว้)
                                 if parent then
+                                    -- เช็ค Attribute น้ำหนัก
                                     local weightVal = parent:GetAttribute("Weight") or parent:GetAttribute("น้ำหนัก")
                                     if not weightVal and parent.Parent then
                                         weightVal = parent.Parent:GetAttribute("Weight") or parent.Parent:GetAttribute("น้ำหนัก")
@@ -551,12 +551,11 @@ createToggleRow(AutoContainer, "เก็บผลไม้อัตโนมั
                                             shouldCollect = false
                                         end
                                     else
-                                        -- หากไม่มี Attribute น้ำหนักโดยตรง ลองค้นหาตัวเลขน้ำหนักจากชื่อพืชผล
+                                        -- หากน้ำหนักซ่อนอยู่ในชื่อผลไม้ ให้เช็คตัวเลข
                                         for word in string.gmatch(parent.Name, "%d+") do
                                             local num = tonumber(word)
-                                            if num and num > 10 and num > maxFruitWeight then -- กรองตัวเลขที่เป็นน้ำหนักจริงๆ
-                                                -- ถ้าตัวเลขในชื่อมากกว่าน้ำหนักที่กำหนด ให้ข้าม
-                                                -- (ปรับเปลี่ยนเงื่อนไขนี้ได้ตามโครงสร้างชื่อในเกม)
+                                            if num and num > 10 and num > maxFruitWeight then
+                                                shouldCollect = false
                                             end
                                         end
                                     end
@@ -608,9 +607,7 @@ createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", f
     activeFunctions.autoBuyMysteryStickTree = state
     if state then
         autoBuyMysteryStickTreeCoroutine = task.spawn(function()
-            local args = {
-                "MysteryStickTree"
-            }
+            local args = {"MysteryStickTree"}
             while activeFunctions.autoBuyMysteryStickTree do
                 task.wait(0.2)
                 pcall(function()
@@ -631,9 +628,7 @@ createToggleRow(AutoContainer, "ซื้อ PCX150 อัตโนมัติ"
     activeFunctions.autoBuyPcx150 = state
     if state then
         autoBuyPcx150Coroutine = task.spawn(function()
-            local args = {
-                "PCX150"
-            }
+            local args = {"PCX150"}
             while activeFunctions.autoBuyPcx150 do
                 task.wait(0.2)
                 pcall(function()
@@ -694,9 +689,7 @@ createToggleRow(AutoContainer, "ตัวกำจัดพืชผล", functi
     activeFunctions.autoBuyCropRemover = state
     if state then
         autoBuyCropRemoverCoroutine = task.spawn(function()
-            local args = {
-                "CropRemover"
-            }
+            local args = {"CropRemover"}
             while activeFunctions.autoBuyCropRemover do
                 task.wait(0.2)
                 pcall(function()
@@ -777,7 +770,7 @@ task.spawn(function()
 
     local info = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     local expandTween = TweenService:Create(MainFrame, info, {
-        Size = UDim2.new(0, 380, 0, 340),
+        Size = UDim2.new(0, 380, 0, 380),
         BackgroundTransparency = 0
     })
     expandTween:Play()
