@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (FIXED UI SIZE & ADDED CropRemover)
+-- GKHub & grow a maji (ADDED FRUIT HARVEST & WEIGHT FILTER)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -19,7 +19,8 @@ local activeFunctions = {
     autoBuyPcx150 = false,
     autoBuyPlantMover = false,
     autoBuyPlantLocker = false,
-    autoBuyCropRemover = false
+    autoBuyCropRemover = false,
+    autoHarvestFruit = false
 }
 
 local autoFarmCoroutine = nil
@@ -29,6 +30,10 @@ local autoBuyPcx150Coroutine = nil
 local autoBuyPlantMoverCoroutine = nil
 local autoBuyPlantLockerCoroutine = nil
 local autoBuyCropRemoverCoroutine = nil
+local autoHarvestFruitCoroutine = nil
+
+-- ตัวแปรเก็บค่าน้ำหนักสูงสุดที่จะเก็บ (ค่าเริ่มต้น 100)
+local maxFruitWeight = 100
 
 local function cleanupAllFeatures()
     for k, _ in pairs(activeFunctions) do
@@ -89,7 +94,7 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. Main Window Frame (ขยายความสูงเป็น 340 เพื่อรองรับปุ่มทั้งหมด)
+-- 2. Main Window Frame
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -312,7 +317,7 @@ local function createContainer(name)
     container.BorderSizePixel = 0
     container.AutomaticCanvasSize = Enum.AutomaticSize.Y
     container.CanvasSize = UDim2.new(0, 0, 0, 0)
-    container.ScrollBarThickness = 4 -- เพิ่มความหนาแถบเลื่อนให้เห็นชัดขึ้น
+    container.ScrollBarThickness = 4
     container.Visible = false
     container.Parent = RightSide
 
@@ -408,24 +413,74 @@ local function createToggleRow(parent, labelText, callback)
     end)
 end
 
+-- ฟังก์ชันสร้างช่องกรอกตัวเลขสำหรับตั้งค่าน้ำหนัก
+local function createTextBoxRow(parent, labelText, defaultVal, callback)
+    local RowFrame = Instance.new("Frame")
+    RowFrame.Size = UDim2.new(0.92, 0, 0, 28)
+    RowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    RowFrame.BorderSizePixel = 0
+    RowFrame.Parent = parent
+
+    local RowCorner = Instance.new("UICorner")
+    RowCorner.CornerRadius = UDim.new(0, 4)
+    RowCorner.Parent = RowFrame
+
+    local RowStroke = Instance.new("UIStroke")
+    RowStroke.Color = Color3.fromRGB(0, 162, 255)
+    RowStroke.Thickness = 1
+    RowStroke.Parent = RowFrame
+
+    local RowLabel = Instance.new("TextLabel")
+    RowLabel.Size = UDim2.new(0.55, 0, 1, 0)
+    RowLabel.Position = UDim2.new(0, 6, 0, 0)
+    RowLabel.BackgroundTransparency = 1
+    RowLabel.Font = Enum.Font.GothamBold
+    RowLabel.Text = labelText
+    RowLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+    RowLabel.TextSize = 9
+    RowLabel.TextXAlignment = Enum.TextXAlignment.Left
+    RowLabel.Parent = RowFrame
+
+    local TextBox = Instance.new("TextBox")
+    TextBox.Size = UDim2.new(0, 55, 0, 18)
+    TextBox.Position = UDim2.new(1, -59, 0.5, -9)
+    TextBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    TextBox.BorderSizePixel = 0
+    TextBox.Font = Enum.Font.GothamBold
+    TextBox.Text = tostring(defaultVal)
+    TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextBox.TextSize = 9
+    TextBox.Parent = RowFrame
+
+    local BoxCorner = Instance.new("UICorner")
+    BoxCorner.CornerRadius = UDim.new(0, 3)
+    BoxCorner.Parent = TextBox
+
+    TextBox.FocusLost:Connect(function()
+        local num = tonumber(TextBox.Text)
+        if num then
+            callback(num)
+        else
+            TextBox.Text = tostring(defaultVal)
+        end
+    end)
+end
+
 -- =============================================================================
 -- Features Registration
 -- =============================================================================
 
--- 1. ฟาร์มอีเวนต์อัตโนมัติ
+-- 1. ฟาร์มอีเวนต์อัตโนมัติ (ยืนอยู่เฉยๆ แล้วกดเก็บทันที)
 createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
     activeFunctions.autoFarm = state
     if state then
         autoFarmCoroutine = task.spawn(function()
             while activeFunctions.autoFarm do
-                task.wait(0.15)
+                task.wait(0.1)
                 local character = LocalPlayer.Character
                 if character and character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = character.HumanoidRootPart
-                    local targetPosition = nil
-                    local targetPrompt = nil
-
                     for _, prompt in ipairs(Workspace:GetDescendants()) do
+                        if not activeFunctions.autoFarm then break end
                         if prompt:IsA("ProximityPrompt") and prompt.Enabled then
                             local parent = prompt.Parent
                             if parent then
@@ -436,26 +491,15 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
                                    not string.find(parentName, "ค้นหา") and not string.find(objectText, "ค้นหา") then
                                     
                                     if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") then
-                                        local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
-                                        if pos then
-                                            targetPosition = pos
-                                            targetPrompt = prompt
-                                            break
-                                        end
+                                        pcall(function()
+                                            if fireproximityprompt then
+                                                fireproximityprompt(prompt)
+                                            end
+                                        end)
                                     end
                                 end
                             end
                         end
-                    end
-
-                    if targetPosition and targetPrompt then
-                        hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 2, 0))
-                        task.wait(0.08)
-                        pcall(function()
-                            if fireproximityprompt then
-                                fireproximityprompt(targetPrompt)
-                            end
-                        end)
                     end
                 end
             end
@@ -468,7 +512,78 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
     end
 end)
 
--- 2. ซื้อเมล็ด MikiTree
+-- ตั้งค่าน้ำหนักสูงสุดที่จะเก็บผลไม้
+createTextBoxRow(AutoContainer, "น้ำหนักสูงสุดที่เก็บ (<)", 100, function(val)
+    maxFruitWeight = val
+end)
+
+-- 2. เก็บผลไม้อัตโนมัติ (เช็ค Prompt "เก็บเกี่ยว" และกรองน้ำหนัก)
+createToggleRow(AutoContainer, "เก็บผลไม้อัตโนมัติ", function(state)
+    activeFunctions.autoHarvestFruit = state
+    if state then
+        autoHarvestFruitCoroutine = task.spawn(function()
+            while activeFunctions.autoHarvestFruit do
+                task.wait(0.15)
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    for _, prompt in ipairs(Workspace:GetDescendants()) do
+                        if not activeFunctions.autoHarvestFruit then break end
+                        if prompt:IsA("ProximityPrompt") and prompt.Enabled then
+                            local objectText = string.lower(prompt.ObjectText or "")
+                            local actionText = string.lower(prompt.ActionText or "")
+                            local parent = prompt.Parent
+
+                            -- ตรวจสอบว่าเป็นปุ่มเก็บเกี่ยวผลไม้ (ตามรูปตัวอย่าง UI ในเกม)
+                            if string.find(objectText, "เก็บเกี่ยว") or string.find(actionText, "เก็บเกี่ยว") or 
+                               string.find(objectText, "harvest") or string.find(actionText, "harvest") then
+                                
+                                local shouldCollect = true
+                                
+                                -- พยายามตรวจสอบน้ำหนักจากชื่อหรือ Attribute ของ Parent (ถ้ามีข้อมูลน้ำหนักระบุไว้)
+                                if parent then
+                                    local weightVal = parent:GetAttribute("Weight") or parent:GetAttribute("น้ำหนัก")
+                                    if not weightVal and parent.Parent then
+                                        weightVal = parent.Parent:GetAttribute("Weight") or parent.Parent:GetAttribute("น้ำหนัก")
+                                    end
+
+                                    if weightVal and type(weightVal) == "number" then
+                                        if weightVal >= maxFruitWeight then
+                                            shouldCollect = false
+                                        end
+                                    else
+                                        -- หากไม่มี Attribute น้ำหนักโดยตรง ลองค้นหาตัวเลขน้ำหนักจากชื่อพืชผล
+                                        for word in string.gmatch(parent.Name, "%d+") do
+                                            local num = tonumber(word)
+                                            if num and num > 10 and num > maxFruitWeight then -- กรองตัวเลขที่เป็นน้ำหนักจริงๆ
+                                                -- ถ้าตัวเลขในชื่อมากกว่าน้ำหนักที่กำหนด ให้ข้าม
+                                                -- (ปรับเปลี่ยนเงื่อนไขนี้ได้ตามโครงสร้างชื่อในเกม)
+                                            end
+                                        end
+                                    end
+                                end
+
+                                if shouldCollect then
+                                    pcall(function()
+                                        if fireproximityprompt then
+                                            fireproximityprompt(prompt)
+                                        end
+                                    end)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    else
+        if autoHarvestFruitCoroutine then
+            task.cancel(autoHarvestFruitCoroutine)
+            autoHarvestFruitCoroutine = nil
+        end
+    end
+end)
+
+-- 3. ซื้อเมล็ด MikiTree
 createToggleRow(AutoContainer, "ซื้อเมล็ด MikiTree", function(state)
     activeFunctions.autoBuyMikiTree = state
     if state then
@@ -488,7 +603,7 @@ createToggleRow(AutoContainer, "ซื้อเมล็ด MikiTree", function(
     end
 end)
 
--- 3. ซื้อเมล็ด MysteryStickTree
+-- 4. ซื้อเมล็ด MysteryStickTree
 createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", function(state)
     activeFunctions.autoBuyMysteryStickTree = state
     if state then
@@ -511,7 +626,7 @@ createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", f
     end
 end)
 
--- 4. ซื้อ PCX150 อัตโนมัติ
+-- 5. ซื้อ PCX150 อัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อ PCX150 อัตโนมัติ", function(state)
     activeFunctions.autoBuyPcx150 = state
     if state then
@@ -534,7 +649,7 @@ createToggleRow(AutoContainer, "ซื้อ PCX150 อัตโนมัติ"
     end
 end)
 
--- 5. ซื้อจอบอัตโนมัติ
+-- 6. ซื้อจอบอัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ", function(state)
     activeFunctions.autoBuyPlantMover = state
     if state then
@@ -554,7 +669,7 @@ createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ
     end
 end)
 
--- 6. ซื้อตัวล็อกอัตโนมัติ
+-- 7. ซื้อตัวล็อกอัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโนมัติ", function(state)
     activeFunctions.autoBuyPlantLocker = state
     if state then
@@ -574,7 +689,7 @@ createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโน
     end
 end)
 
--- 7. ตัวกำจัดพืชผล
+-- 8. ตัวกำจัดพืชผล
 createToggleRow(AutoContainer, "ตัวกำจัดพืชผล", function(state)
     activeFunctions.autoBuyCropRemover = state
     if state then
