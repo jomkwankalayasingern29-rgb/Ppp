@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.22: FIXED AIMBOT & ESP 2D UPDATE (OPTIMIZED) ]] --
+-- [[ GKHub v1.4.22: FIXED AIMBOT & ESP 2D UPDATE (OPTIMIZED & FIXED) ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -825,12 +825,12 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
-createHeader(">> ระบบรันโค้ดอัตโนมัติ (0.1s) <<", AutoExecTab)
-local AutoLoopToggle = createToggle("AutoLoop", "รันโค้ดอัตโนมัติ (ความเร็ว 0.1)", AutoExecTab)
+createHeader(">> ระบบรันโค้ดอัตโนมัติ (0.01s) <<", AutoExecTab)
+local AutoLoopToggle = createToggle("AutoLoop", "รันโค้ดอัตโนมัติ (ความเร็ว 0.01)", AutoExecTab)
 local isLoopingCode = false
 AutoLoopToggle.MouseButton1Click:Connect(function()
     isLoopingCode = not isLoopingCode
@@ -840,7 +840,7 @@ AutoLoopToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.1) do -- [OPTIMIZED] ปรับจาก 0.01 เป็น 0.1 เพื่อลดภาระ CPU และอาการกระตุก
+    while task.wait(0.01) do -- [RESTORED] ปรับกลับเป็น 0.01 ตามที่คุณต้องการ
         if isLoopingCode then
             local code = CodeTextBox.Text
             if code ~= "" then
@@ -936,7 +936,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -947,7 +947,7 @@ for i = 1, 5 do
     Instance.new("UICorner", subAutoRow).CornerRadius = UDim.new(0, 3)
 
     local autoLbl = Instance.new("TextLabel")
-    autoLbl.Size = UDim2.new(0.65, 0, 1, 0); autoLbl.Position = UDim2.new(0, 6, 0, 0); autoLbl.BackgroundTransparency = 1; autoLbl.Text = "ออโต้รัน (0.1s)"; autoLbl.TextColor3 = Color3.fromRGB(240,240,240); autoLbl.Font = Enum.Font.Gotham; autoLbl.TextSize = 9; autoLbl.TextXAlignment = Enum.TextXAlignment.Left; autoLbl.Parent = subAutoRow
+    autoLbl.Size = UDim2.new(0.65, 0, 1, 0); autoLbl.Position = UDim2.new(0, 6, 0, 0); autoLbl.BackgroundTransparency = 1; autoLbl.Text = "ออโต้รัน (0.01s)"; autoLbl.TextColor3 = Color3.fromRGB(240,240,240); autoLbl.Font = Enum.Font.Gotham; autoLbl.TextSize = 9; autoLbl.TextXAlignment = Enum.TextXAlignment.Left; autoLbl.Parent = subAutoRow
 
     local autoBtn = Instance.new("TextButton")
     autoBtn.Size = UDim2.new(0, 45, 0, 16); autoBtn.Position = UDim2.new(1, -48, 0.5, -8); autoBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60); autoBtn.Text = "ปิด"; autoBtn.TextColor3 = Color3.fromRGB(255,255,255); autoBtn.Font = Enum.Font.GothamBold; autoBtn.TextSize = 8; autoBtn.Parent = subAutoRow
@@ -984,7 +984,7 @@ for i = 1, 5 do
     end)
 
     task.spawn(function()
-        while task.wait(0.1) do -- [OPTIMIZED] ปรับจาก 0.01 เป็น 0.1 สำหรับลูปย่อยแต่ละช่อง
+        while task.wait(0.01) do -- [RESTORED] ปรับช่องย่อยกลับเป็น 0.01 ตามเดิม
             if subLoopStates[i] then
                 local code = subBox.Text
                 if code ~= "" then
@@ -1031,7 +1031,7 @@ InstantActionToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(1) do -- [OPTIMIZED] ปรับจาก 0.5 เป็น 1 วินาที เพราะ ProximityPrompt แทบไม่จำเป็นต้องเช็คถี่เกินไป
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         if InstantActionConfig.Enabled then
             for _, obj in ipairs(Workspace:GetDescendants()) do
@@ -1089,7 +1089,7 @@ CooldownToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(1) do -- [OPTIMIZED] ปรับจาก 0.5 เป็น 1 วินาที ลดการเช็ค Tool ซ้ำๆ ถี่เกินไป
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         if CooldownConfig.Enabled then
             local char = LocalPlayer.Character
@@ -1140,7 +1140,7 @@ HitboxToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(1) do -- [OPTIMIZED] ปรับจาก 0.5 เป็น 1 วินาที เพื่อไม่ให้ระบบ Hitbox ขยายซ้ำทุกครึ่งวินาทีจนกินสเปก
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         if HitboxConfig.Enabled then
             for _, player in ipairs(Players:GetPlayers()) do
@@ -1731,7 +1731,7 @@ local function isVisible(targetPartInstance, targetChar)
 end
 
 task.spawn(function()
-    while task.wait(1) do -- [OPTIMIZED] ปรับจาก 0.5 เป็น 1 วินาที สำหรับตรวจสอบสถานะ Chams มองทะลุกำแพง
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         
         if LockConfig.PlayerEspChams then
@@ -1781,7 +1781,7 @@ RunService.RenderStepped:Connect(function()
     end
 
     frameCounter = frameCounter + 1
-    if frameCounter % 3 ~= 0 then return end -- [OPTIMIZED] ปรับจาก 2 เป็น 3 เพื่อข้ามเฟรมวาด ESP ลดภาระ RenderStepped ลง
+    if frameCounter % 2 ~= 0 then return end
 
     for model, _ in pairs(Active2D) do
         if not model or not model.Parent or not model:FindFirstChild("Humanoid") or model.Humanoid.Health <= 0 then 
@@ -1894,9 +1894,31 @@ local function getClosestTarget()
         return closestPart
     end
 
+    -- [FIXED] แยกฟังก์ชันประมวลผลระหว่าง Player และ NPC อย่างชัดเจน ไม่ให้เกิดการสลับเป้าหมายกัน
     local function processModel(model, isNpc)
-        local pName = (isNpc and (LockConfig.NPCHead and "Head" or LockConfig.NPCTorso and "HumanoidRootPart")) or (LockConfig.PlayerHead and "Head" or LockConfig.PlayerTorso and "HumanoidRootPart")
-        if not pName then return end
+        local isEnabled = false
+        local pName = nil
+        
+        if isNpc then
+            if LockConfig.NPCHead then
+                isEnabled = true
+                pName = "Head"
+            elseif LockConfig.NPCTorso then
+                isEnabled = true
+                pName = "HumanoidRootPart"
+            end
+        else
+            if LockConfig.PlayerHead then
+                isEnabled = true
+                pName = "Head"
+            elseif LockConfig.PlayerTorso then
+                isEnabled = true
+                pName = "HumanoidRootPart"
+            end
+        end
+        
+        if not isEnabled or not pName then return end
+        
         local part = model:FindFirstChild(pName) or (pName == "HumanoidRootPart" and (model:FindFirstChild("UpperTorso") or model:FindFirstChild("Torso")))
         if part and model:FindFirstChild("Humanoid") and model.Humanoid.Health > 0 then
             local partPos, onScreen = Camera:WorldToViewportPoint(part.Position)
@@ -1909,8 +1931,22 @@ local function getClosestTarget()
         end
     end
 
-    for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character then processModel(p.Character, false) end end
-    for _, d in ipairs(Workspace:GetDescendants()) do if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then processModel(d, true) end end
+    -- วนลูปเช็คผู้เล่น (Player) ก่อน
+    for _, p in ipairs(Players:GetPlayers()) do 
+        if p ~= LocalPlayer and p.Character then 
+            processModel(p.Character, false) 
+        end 
+    end
+    
+    -- วนลูปเช็ค NPC ต่อเมื่อเปิดใช้งานล็อก NPC เท่านั้น
+    if LockConfig.NPCHead or LockConfig.NPCTorso then
+        for _, d in ipairs(Workspace:GetDescendants()) do 
+            if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then 
+                processModel(d, true) 
+            end 
+        end
+    end
+    
     return closestPart
 end
 
