@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.22: FIXED AIMBOT & ESP 2D UPDATE ]] --
+-- [[ GKHub v1.4.22: FIXED AIMBOT & ESP 2D UPDATE (OPTIMIZED) ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -825,12 +825,12 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
-createHeader(">> ระบบรันโค้ดอัตโนมัติ (0.01s) <<", AutoExecTab)
-local AutoLoopToggle = createToggle("AutoLoop", "รันโค้ดอัตโนมัติ (ความเร็ว 0.01)", AutoExecTab)
+createHeader(">> ระบบรันโค้ดอัตโนมัติ (0.1s) <<", AutoExecTab)
+local AutoLoopToggle = createToggle("AutoLoop", "รันโค้ดอัตโนมัติ (ความเร็ว 0.1)", AutoExecTab)
 local isLoopingCode = false
 AutoLoopToggle.MouseButton1Click:Connect(function()
     isLoopingCode = not isLoopingCode
@@ -840,7 +840,7 @@ AutoLoopToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.01) do
+    while task.wait(0.1) do -- [OPTIMIZED] ปรับจาก 0.01 เป็น 0.1 เพื่อลดภาระ CPU และอาการกระตุก
         if isLoopingCode then
             local code = CodeTextBox.Text
             if code ~= "" then
@@ -947,7 +947,7 @@ for i = 1, 5 do
     Instance.new("UICorner", subAutoRow).CornerRadius = UDim.new(0, 3)
 
     local autoLbl = Instance.new("TextLabel")
-    autoLbl.Size = UDim2.new(0.65, 0, 1, 0); autoLbl.Position = UDim2.new(0, 6, 0, 0); autoLbl.BackgroundTransparency = 1; autoLbl.Text = "ออโต้รัน (0.01s)"; autoLbl.TextColor3 = Color3.fromRGB(240,240,240); autoLbl.Font = Enum.Font.Gotham; autoLbl.TextSize = 9; autoLbl.TextXAlignment = Enum.TextXAlignment.Left; autoLbl.Parent = subAutoRow
+    autoLbl.Size = UDim2.new(0.65, 0, 1, 0); autoLbl.Position = UDim2.new(0, 6, 0, 0); autoLbl.BackgroundTransparency = 1; autoLbl.Text = "ออโต้รัน (0.1s)"; autoLbl.TextColor3 = Color3.fromRGB(240,240,240); autoLbl.Font = Enum.Font.Gotham; autoLbl.TextSize = 9; autoLbl.TextXAlignment = Enum.TextXAlignment.Left; autoLbl.Parent = subAutoRow
 
     local autoBtn = Instance.new("TextButton")
     autoBtn.Size = UDim2.new(0, 45, 0, 16); autoBtn.Position = UDim2.new(1, -48, 0.5, -8); autoBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60); autoBtn.Text = "ปิด"; autoBtn.TextColor3 = Color3.fromRGB(255,255,255); autoBtn.Font = Enum.Font.GothamBold; autoBtn.TextSize = 8; autoBtn.Parent = subAutoRow
@@ -984,7 +984,7 @@ for i = 1, 5 do
     end)
 
     task.spawn(function()
-        while task.wait(0.01) do
+        while task.wait(0.1) do -- [OPTIMIZED] ปรับจาก 0.01 เป็น 0.1 สำหรับลูปย่อยแต่ละช่อง
             if subLoopStates[i] then
                 local code = subBox.Text
                 if code ~= "" then
@@ -1031,7 +1031,7 @@ InstantActionToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(1) do -- [OPTIMIZED] ปรับจาก 0.5 เป็น 1 วินาที เพราะ ProximityPrompt แทบไม่จำเป็นต้องเช็คถี่เกินไป
         if not ScreenGui.Parent then break end
         if InstantActionConfig.Enabled then
             for _, obj in ipairs(Workspace:GetDescendants()) do
@@ -1089,7 +1089,7 @@ CooldownToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(1) do -- [OPTIMIZED] ปรับจาก 0.5 เป็น 1 วินาที ลดการเช็ค Tool ซ้ำๆ ถี่เกินไป
         if not ScreenGui.Parent then break end
         if CooldownConfig.Enabled then
             local char = LocalPlayer.Character
@@ -1140,7 +1140,7 @@ HitboxToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(1) do -- [OPTIMIZED] ปรับจาก 0.5 เป็น 1 วินาที เพื่อไม่ให้ระบบ Hitbox ขยายซ้ำทุกครึ่งวินาทีจนกินสเปก
         if not ScreenGui.Parent then break end
         if HitboxConfig.Enabled then
             for _, player in ipairs(Players:GetPlayers()) do
@@ -1702,7 +1702,7 @@ HitboxInput.FocusLost:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.2) do
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("Humanoid") then
@@ -1731,7 +1731,7 @@ local function isVisible(targetPartInstance, targetChar)
 end
 
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(1) do -- [OPTIMIZED] ปรับจาก 0.5 เป็น 1 วินาที สำหรับตรวจสอบสถานะ Chams มองทะลุกำแพง
         if not ScreenGui.Parent then break end
         
         if LockConfig.PlayerEspChams then
@@ -1781,7 +1781,7 @@ RunService.RenderStepped:Connect(function()
     end
 
     frameCounter = frameCounter + 1
-    if frameCounter % 2 ~= 0 then return end
+    if frameCounter % 3 ~= 0 then return end -- [OPTIMIZED] ปรับจาก 2 เป็น 3 เพื่อข้ามเฟรมวาด ESP ลดภาระ RenderStepped ลง
 
     for model, _ in pairs(Active2D) do
         if not model or not model.Parent or not model:FindFirstChild("Humanoid") or model.Humanoid.Health <= 0 then 
