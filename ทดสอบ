@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.20: OPTIMIZED LAG FIX UPDATE ]] --
+-- [[ GKHub v1.4.21: OPTIMIZED LAG FIX & PERFORMANCE UPDATE ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -1021,7 +1021,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ระบบ Instant Action (ปรับลดความถี่เช็คให้เบาลง)
+-- ระบบ Instant Action
 local InstantActionConfig = { Enabled = false }
 InstantActionToggle.MouseButton1Click:Connect(function()
     InstantActionConfig.Enabled = not InstantActionConfig.Enabled
@@ -1031,7 +1031,7 @@ InstantActionToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.5) do -- ปรับจาก 0.1 เป็น 0.5 เพื่อลดอาการหน่วง
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         if InstantActionConfig.Enabled then
             for _, obj in ipairs(Workspace:GetDescendants()) do
@@ -1089,7 +1089,7 @@ CooldownToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.5) do -- ปรับจาก 0.2 เป็น 0.5
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         if CooldownConfig.Enabled then
             local char = LocalPlayer.Character
@@ -1702,7 +1702,7 @@ HitboxInput.FocusLost:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.2) do -- ปรับจาก 0.1 เป็น 0.2
+    while task.wait(0.2) do
         if not ScreenGui.Parent then break end
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("Humanoid") then
@@ -1731,7 +1731,7 @@ local function isVisible(targetPartInstance, targetChar)
 end
 
 task.spawn(function()
-    while task.wait(0.5) do -- ปรับจาก 0.2 เป็น 0.5 เพื่อลดอาการหน่วงเวลาเปิด Chams
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         
         if LockConfig.PlayerEspChams then
@@ -1772,12 +1772,17 @@ local function removeDrawingObject(model)
 end
 local function clearAllDrawings() for model, _ in pairs(Active2D) do removeDrawingObject(model) end end
 
+-- ปรับแต่ง Loop 2D ESP ให้ประมวลผลเบาลงด้วย Throttle (รันทุกๆ 2 เฟรม แทนที่จะเป็นทุกเฟรม)
+local frameCounter = 0
 RunService.RenderStepped:Connect(function()
     if not Drawing then return end
     if not ScreenGui.Parent or not LockConfig.MasterEsp2D then 
         if next(Active2D) then clearAllDrawings() end
         return 
     end
+
+    frameCounter = frameCounter + 1
+    if frameCounter % 2 ~= 0 then return end -- ข้ามเฟรมเพื่อลดโหลด
 
     for model, _ in pairs(Active2D) do
         if not model or not model.Parent or not model:FindFirstChild("Humanoid") or model.Humanoid.Health <= 0 then 
@@ -1843,8 +1848,10 @@ RunService.RenderStepped:Connect(function()
             drawESP(player.Character, false) 
         end
     end
-    for _, desc in ipairs(Workspace:GetDescendants()) do
-        if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then 
+    
+    -- Optimize การค้นหา NPC ESP 2D โดยการดึงเฉพาะ Model ที่อยู่ใน Workspace โดยตรงแทน GetDescendants ทั้งแมพ
+    for _, desc in ipairs(Workspace:GetChildren()) do
+        if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) then 
             if desc:FindFirstChild("HumanoidRootPart") then
                 drawESP(desc, true) 
             end
@@ -1905,7 +1912,7 @@ local function getClosestTarget()
     end
 
     for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character then processModel(p.Character, false) end end
-    for _, d in ipairs(Workspace:GetDescendants()) do if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then processModel(d, true) end end
+    for _, d in ipairs(Workspace:GetChildren()) do if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) then processModel(d, true) end end
     return closestPart
 end
 
@@ -1969,7 +1976,7 @@ YesButton.MouseButton1Click:Connect(function()
     end
 
     for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end end
-    for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("GKHub_NpcCham") then desc.GKHub_NpcCham:Destroy() end end
+    for _, desc in ipairs(Workspace:GetChildren()) do if desc:IsA("Model") and desc:FindFirstChild("GKHub_NpcCham") then desc.GKHub_NpcCham:Destroy() end end
 
     local closeTween = TweenService:Create(Main, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 440, 0, 0), BackgroundTransparency = 1})
     closeTween:Play()
