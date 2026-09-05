@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (DELTA OPTIMIZED VERSION)
+-- GKHub & grow a maji (DELTA EXPLOIT FIXED VERSION)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 ​local Players = game:GetService("Players")
@@ -18,9 +18,8 @@ autoBuyPlantMover = false,
 autoBuyPlantLocker = false,
 autoBuyCropRemover = false
 }
-​-- Saved position for farming return
-local savedFarmPosition = nil
-​local autoFarmCoroutine = nil
+​local savedFarmPosition = nil
+local autoFarmCoroutine = nil
 local autoBuyMikiTreeCoroutine = nil
 local autoBuyMysteryStickTreeCoroutine = nil
 local autoBuyPcx150Coroutine = nil
@@ -32,7 +31,7 @@ for k, _ in pairs(activeFunctions) do
 activeFunctions[k] = false
 end
 end
-​-- Clear legacy GUIs to prevent overlap
+​-- Clear old UI cleanly
 local oldUIs = {"CustomScriptUI", "HJ1JK_FpsGui", "D_Icon"}
 for _, uiName in ipairs(oldUIs) do
 pcall(function()
@@ -40,18 +39,18 @@ if CoreGui:FindFirstChild(uiName) then CoreGui[uiName]:Destroy() end
 if LocalPlayer.PlayerGui:FindFirstChild(uiName) then LocalPlayer.PlayerGui[uiName]:Destroy() end
 end)
 end
-​-- Main ScreenGui setup
+​-- ScreenGui Setup (Compatible with Delta CoreGui/PlayerGui fallback)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
+ScreenGui.ResetOnSpawn = false
 pcall(function()
 ScreenGui.Parent = CoreGui
 end)
 if not ScreenGui.Parent then
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ​-- =============================================================================
--- 1. Intro Loading Screen
+-- 1. Loading Screen
 -- =============================================================================
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
@@ -74,7 +73,7 @@ LoadText.BackgroundTransparency = 1
 LoadText.Font = Enum.Font.GothamBold
 LoadText.Text = "กำลังโหลด..."
 LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
-LoadText.TextSize = 16
+LoadText.TextSize = 15
 LoadText.Parent = LoadFrame
 ​-- =============================================================================
 -- 2. Main Window Frame
@@ -386,7 +385,7 @@ end
 ​-- =============================================================================
 -- Features Registration
 -- =============================================================================
-​-- Button 1: บันทึกตำแหน่งยืน (Save Position Button)
+​-- ปุ่มที่ 1: บันทึกตำแหน่งยืน
 createButtonRow(AutoContainer, "บันทึกตำแหน่งยืน", Color3.fromRGB(40, 140, 220), function(btn)
 local character = LocalPlayer.Character
 if character and character:FindFirstChild("HumanoidRootPart") then
@@ -396,14 +395,14 @@ task.wait(1.2)
 btn.Text = "บันทึกตำแหน่งยืน"
 end
 end)
-​-- Button 2: ฟาร์มอีเวนต์อัตโนมัติ (Requires saved position first)
+​-- ปุ่มที่ 2: ฟามอีเว้นอัตโนมัติ (วาปเก็บ 0 วิ กลับมาจุดเซฟทันที)
 createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
 activeFunctions.autoFarm = state
 if state then
 autoFarmCoroutine = task.spawn(function()
 while activeFunctions.autoFarm do
 task.wait(0.08)
-​-- Guard check: Must have saved position
+​-- ตรวจสอบว่าได้กดบันทึกตำแหน่งหรือยัง ถ้ายังให้รอ
 if not savedFarmPosition then
 task.wait(0.5)
 continue
@@ -440,17 +439,17 @@ end
 end
 end
 ​if targetPosition and targetPrompt then
--- Teleport to item
+-- วาปไปหาไอเทม
 hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 1.5, 0))
-task.wait(0.03)
-​-- Fire Prompt
+task.wait(0.02)
+​-- กด Prompt ทันที
 pcall(function()
 if fireproximityprompt then
 fireproximityprompt(targetPrompt)
 end
 end)
-task.wait(0.03)
-​-- Teleport back immediately to saved position
+task.wait(0.02)
+​-- วาปกลับมาจุดเซฟทันที
 if savedFarmPosition then
 hrp.CFrame = savedFarmPosition
 end
@@ -465,7 +464,7 @@ autoFarmCoroutine = nil
 end
 end
 end)
-​-- 3. ซื้อเมล็ด MikiTree
+​-- ปุ่มที่ 3: ซื้อเมล็ด MikiTree
 createToggleRow(AutoContainer, "ซื้อเมล็ด MikiTree", function(state)
 activeFunctions.autoBuyMikiTree = state
 if state then
@@ -484,7 +483,7 @@ autoBuyMikiTreeCoroutine = nil
 end
 end
 end)
-​-- 4. ซื้อเมล็ด MysteryStickTree
+​-- ปุ่มที่ 4: ซื้อเมล็ด MysteryStickTree
 createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", function(state)
 activeFunctions.autoBuyMysteryStickTree = state
 if state then
@@ -503,7 +502,7 @@ autoBuyMysteryStickTreeCoroutine = nil
 end
 end
 end)
-​-- 5. ซื้อ PCX150 อัตโนมัติ
+​-- ปุ่มที่ 5: ซื้อ PCX150 อัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อ PCX150 อัตโนมัติ", function(state)
 activeFunctions.autoBuyPcx150 = state
 if state then
@@ -522,7 +521,7 @@ autoBuyPcx150Coroutine = nil
 end
 end
 end)
-​-- 6. ซื้อจอบอัตโนมัติ
+​-- ปุ่มที่ 6: ซื้อจอบอัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ", function(state)
 activeFunctions.autoBuyPlantMover = state
 if state then
@@ -541,7 +540,7 @@ autoBuyPlantMoverCoroutine = nil
 end
 end
 end)
-​-- 7. ซื้อตัวล็อกอัตโนมัติ
+​-- ปุ่มที่ 7: ซื้อตัวล็อกอัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโนมัติ", function(state)
 activeFunctions.autoBuyPlantLocker = state
 if state then
@@ -560,11 +559,11 @@ autoBuyPlantLockerCoroutine = nil
 end
 end
 end)
-​-- 8. ตัวกำจัดพืชผล
+​-- ปุ่มที่ 8: ตัวกำจัดพืชผล
 createToggleRow(AutoContainer, "ตัวกำจัดพืชผล", function(state)
 activeFunctions.autoBuyCropRemover = state
 if state then
-activeFunctions.autoBuyCropRemoverCoroutine = task.spawn(function()
+autoBuyCropRemoverCoroutine = task.spawn(function()
 while activeFunctions.autoBuyCropRemover do
 task.wait(0.2)
 pcall(function()
@@ -573,13 +572,13 @@ end)
 end
 end)
 else
-if activeFunctions.autoBuyCropRemoverCoroutine then
-task.cancel(activeFunctions.autoBuyCropRemoverCoroutine)
-activeFunctions.autoBuyCropRemoverCoroutine = nil
+if autoBuyCropRemoverCoroutine then
+task.cancel(autoBuyCropRemoverCoroutine)
+autoBuyCropRemoverCoroutine = nil
 end
 end
 end)
-​-- Switch tab utility
+​-- Tab Switcher
 local function switchTab(tabName)
 for name, container in pairs(FunctionContainers) do
 container.Visible = (name == tabName)
@@ -617,7 +616,7 @@ LoadText.Text = "กำลังโหลด" .. d
 task.wait(0.15)
 end
 end
-​LoadText.Text = "พร้อมใช้งานแล้ว!"
+​LoadText.Text = "พร้อมใช้งานใน Delta แล้ว!"
 pcall(function()
 if setclipboard then
 setclipboard("https://discord.gg/Ugssja4wqQ")
