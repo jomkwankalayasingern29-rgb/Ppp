@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (UPDATED: Saved Position & Instant Event AutoFarm)
+-- GKHub & grow a maji (DELTA OPTIMIZED VERSION)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 ​local Players = game:GetService("Players")
@@ -8,7 +8,7 @@ local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ​local LocalPlayer = Players.LocalPlayer
-​-- Active state tracking for safe cleanup
+​-- Active state tracking
 local activeFunctions = {
 autoFarm = false,
 autoBuyMikiTree = false,
@@ -35,12 +35,10 @@ end
 ​-- Clear legacy GUIs to prevent overlap
 local oldUIs = {"CustomScriptUI", "HJ1JK_FpsGui", "D_Icon"}
 for _, uiName in ipairs(oldUIs) do
-if CoreGui:FindFirstChild(uiName) then
-pcall(function() CoreGui[uiName]:Destroy() end)
-end
-if LocalPlayer.PlayerGui:FindFirstChild(uiName) then
-pcall(function() LocalPlayer.PlayerGui[uiName]:Destroy() end)
-end
+pcall(function()
+if CoreGui:FindFirstChild(uiName) then CoreGui[uiName]:Destroy() end
+if LocalPlayer.PlayerGui:FindFirstChild(uiName) then LocalPlayer.PlayerGui[uiName]:Destroy() end
+end)
 end
 ​-- Main ScreenGui setup
 local ScreenGui = Instance.new("ScreenGui")
@@ -355,8 +353,7 @@ ToggleBtn.Text = state and "เปิด" or "ปิด"
 callback(state)
 end)
 end
-​-- Function to create a custom action button row
-local function createButtonRow(parent, buttonText, buttonColor, callback)
+​local function createButtonRow(parent, buttonText, buttonColor, callback)
 local RowFrame = Instance.new("Frame")
 RowFrame.Size = UDim2.new(0.92, 0, 0, 28)
 RowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -389,7 +386,7 @@ end
 ​-- =============================================================================
 -- Features Registration
 -- =============================================================================
-​-- Button 1: บันทึกตำแหน่งยืน (Save Standing Position)
+​-- Button 1: บันทึกตำแหน่งยืน (Save Position Button)
 createButtonRow(AutoContainer, "บันทึกตำแหน่งยืน", Color3.fromRGB(40, 140, 220), function(btn)
 local character = LocalPlayer.Character
 if character and character:FindFirstChild("HumanoidRootPart") then
@@ -399,14 +396,14 @@ task.wait(1.2)
 btn.Text = "บันทึกตำแหน่งยืน"
 end
 end)
-​-- Button 2: ฟาร์มอีเวนต์อัตโนมัติ (Teleport & Collect with Return)
+​-- Button 2: ฟาร์มอีเวนต์อัตโนมัติ (Requires saved position first)
 createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
 activeFunctions.autoFarm = state
 if state then
 autoFarmCoroutine = task.spawn(function()
 while activeFunctions.autoFarm do
-task.wait(0.1)
-​-- Check if position is saved
+task.wait(0.08)
+​-- Guard check: Must have saved position
 if not savedFarmPosition then
 task.wait(0.5)
 continue
@@ -416,9 +413,8 @@ if character and character:FindFirstChild("HumanoidRootPart") then
 local hrp = character.HumanoidRootPart
 local targetPosition = nil
 local targetPrompt = nil
-​-- Search for event items / prompts
-for _, prompt in ipairs(Workspace:GetDescendants()) do
-if prompt:IsA("ProximityPrompt") and prompt.Enabled then
+​for _, prompt in ipairs(Workspace:GetDescendants()) do
+if prompt and prompt:IsA("ProximityPrompt") and prompt.Enabled then
 local parent = prompt.Parent
 if parent then
 local parentName = string.lower(parent.Name)
@@ -426,8 +422,14 @@ local objectText = string.lower(prompt.ObjectText or "")
 ​if not string.find(parentName, "shop") and not string.find(objectText, "shop") and
 not string.find(parentName, "ค้นหา") and not string.find(objectText, "ค้นหา") then
 ​if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") or string.find(parentName, "egg") then
-local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
-if pos then
+local pos = nil
+if parent:IsA("BasePart") then
+pos = parent.Position
+elseif parent:IsA("Model") then
+local success, pivot = pcall(function() return parent:GetPivot().Position end)
+if success then pos = pivot end
+end
+​if pos then
 targetPosition = pos
 targetPrompt = prompt
 break
@@ -438,17 +440,17 @@ end
 end
 end
 ​if targetPosition and targetPrompt then
--- 1. Teleport instantly to item
+-- Teleport to item
 hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 1.5, 0))
-task.wait(0.05)
-​-- 2. Fire ProximityPrompt instantly
+task.wait(0.03)
+​-- Fire Prompt
 pcall(function()
 if fireproximityprompt then
 fireproximityprompt(targetPrompt)
 end
 end)
-task.wait(0.05)
-​-- 3. Teleport back immediately to saved standing position
+task.wait(0.03)
+​-- Teleport back immediately to saved position
 if savedFarmPosition then
 hrp.CFrame = savedFarmPosition
 end
@@ -487,13 +489,10 @@ createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", f
 activeFunctions.autoBuyMysteryStickTree = state
 if state then
 autoBuyMysteryStickTreeCoroutine = task.spawn(function()
-local args = {
-"MysteryStickTree"
-}
 while activeFunctions.autoBuyMysteryStickTree do
 task.wait(0.2)
 pcall(function()
-ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer(unpack(args))
+ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("MysteryStickTree")
 end)
 end
 end)
@@ -509,13 +508,10 @@ createToggleRow(AutoContainer, "ซื้อ PCX150 อัตโนมัติ"
 activeFunctions.autoBuyPcx150 = state
 if state then
 autoBuyPcx150Coroutine = task.spawn(function()
-local args = {
-"PCX150"
-}
 while activeFunctions.autoBuyPcx150 do
 task.wait(0.2)
 pcall(function()
-ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer(unpack(args))
+ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("PCX150")
 end)
 end
 end)
@@ -568,21 +564,18 @@ end)
 createToggleRow(AutoContainer, "ตัวกำจัดพืชผล", function(state)
 activeFunctions.autoBuyCropRemover = state
 if state then
-autoBuyCropRemoverCoroutine = task.spawn(function()
-local args = {
-"CropRemover"
-}
+activeFunctions.autoBuyCropRemoverCoroutine = task.spawn(function()
 while activeFunctions.autoBuyCropRemover do
 task.wait(0.2)
 pcall(function()
-ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer(unpack(args))
+ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("CropRemover")
 end)
 end
 end)
 else
-if autoBuyCropRemoverCoroutine then
-task.cancel(autoBuyCropRemoverCoroutine)
-autoBuyCropRemoverCoroutine = nil
+if activeFunctions.autoBuyCropRemoverCoroutine then
+task.cancel(activeFunctions.autoBuyCropRemoverCoroutine)
+activeFunctions.autoBuyCropRemoverCoroutine = nil
 end
 end
 end)
@@ -611,34 +604,31 @@ end)
 end
 ​createCategoryButton("เมนูหลัก")
 createCategoryButton("อัตโนมัติ")
-​-- เปิดหน้าแรกที่ "อัตโนมัติ" ทันที
-switchTab("อัตโนมัติ")
+​switchTab("อัตโนมัติ")
 ​-- =============================================================================
 -- Initialization & Intro Sequence
 -- =============================================================================
 task.spawn(function()
 local dots = {"", ".", "..", "..."}
 local startTime = tick()
-while tick() - startTime < 1.5 do
+while tick() - startTime < 1.0 do
 for _, d in ipairs(dots) do
 LoadText.Text = "กำลังโหลด" .. d
-task.wait(0.2)
+task.wait(0.15)
 end
 end
-​LoadText.Text = "ดาวน์โหลดเสร็จแล้ว!"
-task.wait(0.6)
-​LoadText.Text = "คัดลอกลิงก์ดิสสำเร็จแล้ว!"
+​LoadText.Text = "พร้อมใช้งานแล้ว!"
 pcall(function()
 if setclipboard then
 setclipboard("https://discord.gg/Ugssja4wqQ")
 end
 end)
-task.wait(0.8)
+task.wait(0.5)
 ​LoadFrame:Destroy()
 ​MainFrame.Visible = true
 MainFrame.BackgroundTransparency = 1
 MainFrame.Size = UDim2.new(0, 320, 0, 220)
-​local info = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+​local info = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 local expandTween = TweenService:Create(MainFrame, info, {
 Size = UDim2.new(0, 380, 0, 340),
 BackgroundTransparency = 0
