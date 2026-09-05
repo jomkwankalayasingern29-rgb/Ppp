@@ -1,5 +1,5 @@
 -- =============================================================================
--- GKHub & grow a maji (DELTA EXPLOIT FIXED VERSION)
+-- GKHub & grow a maji (ULTRA STABLE DELTA FIXED VERSION)
 -- =============================================================================
 if not game:IsLoaded() then game.Loaded:Wait() end
 ​local Players = game:GetService("Players")
@@ -349,7 +349,9 @@ ToggleBtn.MouseButton1Click:Connect(function()
 state = not state
 ToggleBtn.BackgroundColor3 = state and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
 ToggleBtn.Text = state and "เปิด" or "ปิด"
+pcall(function()
 callback(state)
+end)
 end)
 end
 ​local function createButtonRow(parent, buttonText, buttonColor, callback)
@@ -379,7 +381,9 @@ ActionBtn.Parent = RowFrame
 ActionCorner.CornerRadius = UDim.new(0, 3)
 ActionCorner.Parent = ActionBtn
 ​ActionBtn.MouseButton1Click:Connect(function()
+pcall(function()
 callback(ActionBtn)
+end)
 end)
 end
 ​-- =============================================================================
@@ -395,15 +399,14 @@ task.wait(1.2)
 btn.Text = "บันทึกตำแหน่งยืน"
 end
 end)
-​-- ปุ่มที่ 2: ฟามอีเว้นอัตโนมัติ (วาปเก็บ 0 วิ กลับมาจุดเซฟทันที)
+​-- ปุ่มที่ 2: ฟามอีเว้นอัตโนมัติ
 createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
 activeFunctions.autoFarm = state
 if state then
 autoFarmCoroutine = task.spawn(function()
 while activeFunctions.autoFarm do
-task.wait(0.08)
-​-- ตรวจสอบว่าได้กดบันทึกตำแหน่งหรือยัง ถ้ายังให้รอ
-if not savedFarmPosition then
+task.wait(0.1)
+​if not savedFarmPosition then
 task.wait(0.5)
 continue
 end
@@ -412,7 +415,8 @@ if character and character:FindFirstChild("HumanoidRootPart") then
 local hrp = character.HumanoidRootPart
 local targetPosition = nil
 local targetPrompt = nil
-​for _, prompt in ipairs(Workspace:GetDescendants()) do
+​pcall(function()
+for _, prompt in ipairs(Workspace:GetDescendants()) do
 if prompt and prompt:IsA("ProximityPrompt") and prompt.Enabled then
 local parent = prompt.Parent
 if parent then
@@ -438,19 +442,17 @@ end
 end
 end
 end
+end)
 ​if targetPosition and targetPrompt then
--- วาปไปหาไอเทม
 hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 1.5, 0))
-task.wait(0.02)
-​-- กด Prompt ทันที
-pcall(function()
+task.wait(0.03)
+​pcall(function()
 if fireproximityprompt then
 fireproximityprompt(targetPrompt)
 end
 end)
-task.wait(0.02)
-​-- วาปกลับมาจุดเซฟทันที
-if savedFarmPosition then
+task.wait(0.03)
+​if savedFarmPosition then
 hrp.CFrame = savedFarmPosition
 end
 end
@@ -459,7 +461,7 @@ end
 end)
 else
 if autoFarmCoroutine then
-task.cancel(autoFarmCoroutine)
+pcall(function() task.cancel(autoFarmCoroutine) end)
 autoFarmCoroutine = nil
 end
 end
@@ -470,7 +472,7 @@ activeFunctions.autoBuyMikiTree = state
 if state then
 autoBuyMikiTreeCoroutine = task.spawn(function()
 while activeFunctions.autoBuyMikiTree do
-task.wait(0.2)
+task.wait(0.3)
 pcall(function()
 ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("MikiTree")
 end)
@@ -478,7 +480,7 @@ end
 end)
 else
 if autoBuyMikiTreeCoroutine then
-task.cancel(autoBuyMikiTreeCoroutine)
+pcall(function() task.cancel(autoBuyMikiTreeCoroutine) end)
 autoBuyMikiTreeCoroutine = nil
 end
 end
@@ -489,7 +491,7 @@ activeFunctions.autoBuyMysteryStickTree = state
 if state then
 autoBuyMysteryStickTreeCoroutine = task.spawn(function()
 while activeFunctions.autoBuyMysteryStickTree do
-task.wait(0.2)
+task.wait(0.3)
 pcall(function()
 ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("MysteryStickTree")
 end)
@@ -497,7 +499,7 @@ end
 end)
 else
 if autoBuyMysteryStickTreeCoroutine then
-task.cancel(autoBuyMysteryStickTreeCoroutine)
+pcall(function() task.cancel(autoBuyMysteryStickTreeCoroutine) end)
 autoBuyMysteryStickTreeCoroutine = nil
 end
 end
@@ -508,7 +510,7 @@ activeFunctions.autoBuyPcx150 = state
 if state then
 autoBuyPcx150Coroutine = task.spawn(function()
 while activeFunctions.autoBuyPcx150 do
-task.wait(0.2)
+task.wait(0.3)
 pcall(function()
 ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("PCX150")
 end)
@@ -516,7 +518,7 @@ end
 end)
 else
 if autoBuyPcx150Coroutine then
-task.cancel(autoBuyPcx150Coroutine)
+pcall(function() task.cancel(autoBuyPcx150Coroutine) end)
 autoBuyPcx150Coroutine = nil
 end
 end
@@ -527,7 +529,7 @@ activeFunctions.autoBuyPlantMover = state
 if state then
 autoBuyPlantMoverCoroutine = task.spawn(function()
 while activeFunctions.autoBuyPlantMover do
-task.wait(0.2)
+task.wait(0.3)
 pcall(function()
 ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("PlantMover")
 end)
@@ -535,7 +537,7 @@ end
 end)
 else
 if autoBuyPlantMoverCoroutine then
-task.cancel(autoBuyPlantMoverCoroutine)
+pcall(function() task.cancel(autoBuyPlantMoverCoroutine) end)
 autoBuyPlantMoverCoroutine = nil
 end
 end
@@ -546,7 +548,7 @@ activeFunctions.autoBuyPlantLocker = state
 if state then
 autoBuyPlantLockerCoroutine = task.spawn(function()
 while activeFunctions.autoBuyPlantLocker do
-task.wait(0.2)
+task.wait(0.3)
 pcall(function()
 ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("PlantLocker")
 end)
@@ -554,7 +556,7 @@ end
 end)
 else
 if autoBuyPlantLockerCoroutine then
-task.cancel(autoBuyPlantLockerCoroutine)
+pcall(function() task.cancel(autoBuyPlantLockerCoroutine) end)
 autoBuyPlantLockerCoroutine = nil
 end
 end
@@ -565,7 +567,7 @@ activeFunctions.autoBuyCropRemover = state
 if state then
 autoBuyCropRemoverCoroutine = task.spawn(function()
 while activeFunctions.autoBuyCropRemover do
-task.wait(0.2)
+task.wait(0.3)
 pcall(function()
 ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("CropRemover")
 end)
@@ -573,7 +575,7 @@ end
 end)
 else
 if autoBuyCropRemoverCoroutine then
-task.cancel(autoBuyCropRemoverCoroutine)
+pcall(function() task.cancel(autoBuyCropRemoverCoroutine) end)
 autoBuyCropRemoverCoroutine = nil
 end
 end
@@ -606,28 +608,28 @@ createCategoryButton("อัตโนมัติ")
 ​switchTab("อัตโนมัติ")
 ​-- =============================================================================
 -- Initialization & Intro Sequence
--- =============================================================================
+-- =============================================================
 task.spawn(function()
 local dots = {"", ".", "..", "..."}
 local startTime = tick()
-while tick() - startTime < 1.0 do
+while tick() - startTime < 0.8 do
 for _, d in ipairs(dots) do
 LoadText.Text = "กำลังโหลด" .. d
-task.wait(0.15)
+task.wait(0.12)
 end
 end
-​LoadText.Text = "พร้อมใช้งานใน Delta แล้ว!"
+​LoadText.Text = "พร้อมใช้งาน!"
 pcall(function()
 if setclipboard then
 setclipboard("https://discord.gg/Ugssja4wqQ")
 end
 end)
-task.wait(0.5)
+task.wait(0.4)
 ​LoadFrame:Destroy()
 ​MainFrame.Visible = true
 MainFrame.BackgroundTransparency = 1
 MainFrame.Size = UDim2.new(0, 320, 0, 220)
-​local info = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+​local info = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 local expandTween = TweenService:Create(MainFrame, info, {
 Size = UDim2.new(0, 380, 0, 340),
 BackgroundTransparency = 0
