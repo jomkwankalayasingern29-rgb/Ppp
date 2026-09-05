@@ -92,7 +92,7 @@ LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
 -- =============================================================================
--- 2. Main Window Frame (ขยายความสูงเป็น 340 เพื่อรองรับปุ่มทั้งหมด)
+-- 2. Main Window Frame
 -- =============================================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -411,7 +411,6 @@ local function createToggleRow(parent, labelText, callback)
     end)
 end
 
--- ฟังก์ชันสร้างปุ่มกดธรรมดา (สำหรับบันทึกตำแหน่ง)
 local function createButtonRow(parent, buttonText, callback)
     local RowFrame = Instance.new("Frame")
     RowFrame.Size = UDim2.new(0.92, 0, 0, 28)
@@ -452,7 +451,6 @@ end
 -- Features Registration
 -- =============================================================================
 
--- เพิ่มปุ่มที่ 1: บันทึกตำแหน่งยืนก่อน
 createButtonRow(AutoContainer, "บันทึกตำแหน่งยืน", function(btn)
     local character = LocalPlayer.Character
     if character and character:FindFirstChild("HumanoidRootPart") then
@@ -471,18 +469,19 @@ createButtonRow(AutoContainer, "บันทึกตำแหน่งยืน
     end
 end)
 
--- เพิ่มปุ่มที่ 2: ฟาร์มอีเวนต์อัตโนมัติ (และเช็คว่าบันทึกตำแหน่งหรือยัง)
 createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมัติ", function(state)
     activeFunctions.autoFarm = state
     if state then
-        -- ตรวจสอบก่อนว่ามีการบันทึกตำแหน่งไว้หรือยัง
-        if not savedPosition then
-            warn("กรุณากด 'บันทึกตำแหน่งยืน' ก่อนเปิดใช้งานฟาร์มอีเวนต์!")
-        end
-
         autoFarmCoroutine = task.spawn(function()
             while activeFunctions.autoFarm do
-                task.wait(0.15)
+                task.wait(0.2)
+                
+                -- เช็คว่าบันทึกตำแหน่งหรือยัง ถ้ายังให้ข้ามรอบนี้ไปก่อน
+                if not savedPosition then
+                    task.wait(1)
+                    continue
+                end
+
                 local character = LocalPlayer.Character
                 if character and character:FindFirstChild("HumanoidRootPart") then
                     local hrp = character.HumanoidRootPart
@@ -499,7 +498,7 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
                                 if not string.find(parentName, "shop") and not string.find(objectText, "shop") and
                                    not string.find(parentName, "ค้นหา") and not string.find(objectText, "ค้นหา") then
                                     
-                                    if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") then
+                                    if string.find(parentName, "mushroom") or string.find(parentName, "token") or string.find(objectText, "token mushroom") or string.find(parentName, "egg") or string.find(objectText, "รับ") then
                                         local pos = parent:IsA("BasePart") and parent.Position or (parent:IsA("Model") and parent:GetPivot().Position)
                                         if pos then
                                             targetPosition = pos
@@ -513,16 +512,21 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
                     end
 
                     if targetPosition and targetPrompt then
-                        -- 1. วาร์ปไปเก็บของ (0 วิ)
+                        -- 1. วาร์ปไปเก็บของ
                         hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 2, 0))
-                        task.wait(0.08)
+                        task.wait(0.1)
+                        
                         pcall(function()
                             if fireproximityprompt then
                                 fireproximityprompt(targetPrompt)
+                            else
+                                -- เผื่อ Delta บางเวอร์ชันใช้คำสั่งจำลองกดปุ่ม
+                                firetouchinterest(hrp, targetPrompt.Parent, 0)
+                                firetouchinterest(hrp, targetPrompt.Parent, 1)
                             end
                         end)
                         
-                        -- 2. วาร์ปกลับมายังตำแหน่งที่บันทึกไว้ทันที
+                        -- 2. วาร์ปกลับตำแหน่งเดิมทันที
                         if savedPosition then
                             task.wait(0.05)
                             hrp.CFrame = savedPosition
@@ -539,13 +543,12 @@ createToggleRow(AutoContainer, "ฟามอีเว้นอัตโนมั
     end
 end)
 
--- 3. ซื้อเมล็ด MikiTree
 createToggleRow(AutoContainer, "ซื้อเมล็ด MikiTree", function(state)
     activeFunctions.autoBuyMikiTree = state
     if state then
         autoBuyMikiTreeCoroutine = task.spawn(function()
             while activeFunctions.autoBuyMikiTree do
-                task.wait(0.2)
+                task.wait(0.3)
                 pcall(function()
                     ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("MikiTree")
                 end)
@@ -559,18 +562,14 @@ createToggleRow(AutoContainer, "ซื้อเมล็ด MikiTree", function(
     end
 end)
 
--- 4. ซื้อเมล็ด MysteryStickTree
 createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", function(state)
     activeFunctions.autoBuyMysteryStickTree = state
     if state then
         autoBuyMysteryStickTreeCoroutine = task.spawn(function()
-            local args = {
-                "MysteryStickTree"
-            }
             while activeFunctions.autoBuyMysteryStickTree do
-                task.wait(0.2)
+                task.wait(0.3)
                 pcall(function()
-                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer(unpack(args))
+                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("MysteryStickTree")
                 end)
             end
         end)
@@ -582,18 +581,14 @@ createToggleRow(AutoContainer, "ซื้อเมล็ด MysteryStickTree", f
     end
 end)
 
--- 5. ซื้อ PCX150 อัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อ PCX150 อัตโนมัติ", function(state)
     activeFunctions.autoBuyPcx150 = state
     if state then
         autoBuyPcx150Coroutine = task.spawn(function()
-            local args = {
-                "PCX150"
-            }
             while activeFunctions.autoBuyPcx150 do
-                task.wait(0.2)
+                task.wait(0.3)
                 pcall(function()
-                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer(unpack(args))
+                    ReplicatedStorage:WaitForChild("RequestPurchase"):InvokeServer("PCX150")
                 end)
             end
         end)
@@ -605,13 +600,12 @@ createToggleRow(AutoContainer, "ซื้อ PCX150 อัตโนมัติ"
     end
 end)
 
--- 6. ซื้อจอบอัตโนมัติ
 createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ", function(state)
     activeFunctions.autoBuyPlantMover = state
     if state then
         autoBuyPlantMoverCoroutine = task.spawn(function()
             while activeFunctions.autoBuyPlantMover do
-                task.wait(0.2)
+                task.wait(0.3)
                 pcall(function()
                     ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("PlantMover")
                 end)
@@ -625,13 +619,12 @@ createToggleRow(AutoContainer, "ซื้อจอบอัตโนมัติ
     end
 end)
 
--- 7. ซื้อตัวล็อกอัตโนมัติ
-createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโนมัติ", function(state)
+createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโนมัติ", function, function(state)
     activeFunctions.autoBuyPlantLocker = state
     if state then
         autoBuyPlantLockerCoroutine = task.spawn(function()
             while activeFunctions.autoBuyPlantLocker do
-                task.wait(0.2)
+                task.wait(0.3)
                 pcall(function()
                     ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("PlantLocker")
                 end)
@@ -645,18 +638,14 @@ createToggleRow(AutoContainer, "ซื้อตัวล็อกอัตโน
     end
 end)
 
--- 8. ตัวกำจัดพืชผล
 createToggleRow(AutoContainer, "ตัวกำจัดพืชผล", function(state)
     activeFunctions.autoBuyCropRemover = state
     if state then
         autoBuyCropRemoverCoroutine = task.spawn(function()
-            local args = {
-                "CropRemover"
-            }
             while activeFunctions.autoBuyCropRemover do
-                task.wait(0.2)
+                task.wait(0.3)
                 pcall(function()
-                    ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer(unpack(args))
+                    ReplicatedStorage:WaitForChild("RequestGearPurchase"):InvokeServer("CropRemover")
                 end)
             end
         end)
@@ -668,7 +657,6 @@ createToggleRow(AutoContainer, "ตัวกำจัดพืชผล", functi
     end
 end)
 
--- Switch tab utility
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
         container.Visible = (name == tabName)
@@ -697,13 +685,8 @@ end
 
 createCategoryButton("เมนูหลัก")
 createCategoryButton("อัตโนมัติ")
-
--- เปิดหน้าแรกที่ "อัตโนมัติ" ทันที
 switchTab("อัตโนมัติ")
 
--- =============================================================================
--- Initialization & Intro Sequence
--- =============================================================================
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
