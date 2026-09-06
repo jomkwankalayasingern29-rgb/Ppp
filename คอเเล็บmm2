@@ -399,7 +399,6 @@ RunService.RenderStepped:Connect(function()
                 local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                 if otherRoot and humanoid and humanoid.Health > 0 then
-                    -- ขยายขนาดกล่องตัวผู้เล่นอื่นให้ใหญ่ครอบคลุมทั้งแมพเพื่อให้โจมตีโดนง่ายที่สุด
                     otherRoot.Size = Vector3.new(25, 25, 25)
                     otherRoot.Transparency = 0.8
                     otherRoot.CanCollide = false
@@ -409,9 +408,9 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- **Helper Module (Instant Teleport Coin Farm - Fixed & Fast)**
+-- **Helper Module (Instant Teleport Coin Farm - WITH 1 SECOND DELAY)**
 local autoFarmCoinsEnabled = false
-CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (วาร์ปเก็บทันที)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (วาร์ปเก็บแบบปลอดภัย)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoFarmCoinsEnabled = not autoFarmCoinsEnabled
     btn.Text = autoFarmCoinsEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = autoFarmCoinsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
@@ -428,21 +427,20 @@ task.spawn(function()
                         if not autoFarmCoinsEnabled then break end
                         if obj:IsA("BasePart") then
                             local name = string.lower(obj.Name)
-                            -- รองรับการตรวจจับเหรียญในแมพ MM2 ทุกรูปแบบ
                             if name == "coin" or name == "cd" or name == "coinvisual" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
                                 hrp.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                                task.wait(0.01) -- วาร์ปเก็บแบบรวดเร็วต่อเนื่องไม่มีดีเลย์
+                                task.wait(1) -- ปรับดีเลย์เป็น 1 วินาทีแล้วเพื่อป้องกันระบบเกมเตะ
                             end
                         end
                     end
                 end
             end)
         end
-        task.wait(0.05)
+        task.wait(0.1)
     end
 end)
 
-CreateFeatureRow(HelperPage, "วาร์ปไปเก็บเหรียญทันที", "วาร์ป", Color3.fromRGB(0, 162, 255), function()
+CreateFeatureRow(HelperPage, "วาร์ปไปเก็บเหรียญ 1 ครั้ง", "วาร์ป", Color3.fromRGB(0, 162, 255), function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         for _, obj in pairs(Workspace:GetDescendants()) do
