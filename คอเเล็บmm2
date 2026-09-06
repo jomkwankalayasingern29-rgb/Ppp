@@ -371,7 +371,7 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- **Attack Module**
+-- **Attack Module (Fixed Hitbox & Kill All Map)**
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
@@ -392,26 +392,24 @@ CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox)", "ปิ�
     end
 end)
 
-RunService.Stepped:Connect(function()
+RunService.RenderStepped:Connect(function()
     if expandHitboxEnabled then
-        local myChar = LocalPlayer.Character
-        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
-                    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-                    if otherRoot and humanoid and humanoid.Health > 0 then
-                        otherRoot.Size = Vector3.new(6, 6, 6)
-                        otherRoot.Transparency = 0.8
-                        otherRoot.CanCollide = false
-                    end
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                if otherRoot and humanoid and humanoid.Health > 0 then
+                    -- ขยายขนาดกล่องตัวผู้เล่นอื่นให้ใหญ่ครอบคลุมทั้งแมพเพื่อให้โจมตีโดนง่ายที่สุด
+                    otherRoot.Size = Vector3.new(25, 25, 25)
+                    otherRoot.Transparency = 0.8
+                    otherRoot.CanCollide = false
                 end
             end
         end
     end
 end)
 
--- **Helper Module (Instant Teleport Coin Farm - No Delay)**
+-- **Helper Module (Instant Teleport Coin Farm - Fixed & Fast)**
 local autoFarmCoinsEnabled = false
 CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (วาร์ปเก็บทันที)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoFarmCoinsEnabled = not autoFarmCoinsEnabled
@@ -419,7 +417,6 @@ CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (ว
     btn.BackgroundColor3 = autoFarmCoinsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
 
--- ระบบวาร์ปเก็บเหรียญแบบรวดเร็วต่อเนื่องทันทีไม่มีดีเลย์
 task.spawn(function()
     while true do
         if autoFarmCoinsEnabled then
@@ -431,10 +428,10 @@ task.spawn(function()
                         if not autoFarmCoinsEnabled then break end
                         if obj:IsA("BasePart") then
                             local name = string.lower(obj.Name)
-                            if name == "coin" or name == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
-                                -- วาร์ปไปหาเหรียญทันทีแบบปุ๊บๆ ไม่มีดีเลย์
+                            -- รองรับการตรวจจับเหรียญในแมพ MM2 ทุกรูปแบบ
+                            if name == "coin" or name == "cd" or name == "coinvisual" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
                                 hrp.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                                task.wait(0.01) -- ความเร็วสูงสุดปุ๊บๆ ตามที่ต้องการ
+                                task.wait(0.01) -- วาร์ปเก็บแบบรวดเร็วต่อเนื่องไม่มีดีเลย์
                             end
                         end
                     end
@@ -451,7 +448,7 @@ CreateFeatureRow(HelperPage, "วาร์ปไปเก็บเหรีย�
         for _, obj in pairs(Workspace:GetDescendants()) do
             if obj:IsA("BasePart") then
                 local name = string.lower(obj.Name)
-                if name == "coin" or name == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
+                if name == "coin" or name == "cd" or name == "coinvisual" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
                     char.HumanoidRootPart.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
                     break
                 end
