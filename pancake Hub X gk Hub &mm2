@@ -28,7 +28,7 @@ end
 ​local Window = MacLib:Window({
 Title = "🥞 PancakeHUB | MM2",
 Subtitle = "Mobile Optimized",
-Size = UDim2.fromOffset(420, 260), -- ปรับขนาดหน้าต่างให้เล็กลงสำหรับมือถือ
+Size = UDim2.fromOffset(400, 240), -- 📱 ปรับขนาดหน้าต่างให้เล็กลงกะทัดรัด ไม่บังจอ
 DragStyle = 1, -- รองรับการลากหน้าต่างเมนู
 Keybind = Enum.KeyCode.RightControl,
 AcrylicBlur = false, -- ปิดความเบลอ ป้องกันมือถือแครช
@@ -56,7 +56,7 @@ ToggleGui.ResetOnSpawn = false
 ​ToggleButton.Name = "ToggleButton"
 ToggleButton.Parent = ToggleGui
 ToggleButton.Position = UDim2.new(0, 15, 0.35, 0)
-ToggleButton.Size = UDim2.new(0, 42, 0, 42) -- ขนาดปุ่มกะทัดรัด ไม่บังจอเกินไป
+ToggleButton.Size = UDim2.new(0, 42, 0, 42) -- ขนาดปุ่มกะทัดรัด
 ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 ToggleButton.Text = "🥞"
 ToggleButton.TextSize = 20
