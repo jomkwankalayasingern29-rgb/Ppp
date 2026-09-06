@@ -70,7 +70,7 @@ local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(255, 180, 50)
 MainStroke.Thickness = 1.5
 
--- 4. TopBar ด้านบน (เปลี่ยนชื่อที่นี่)
+-- 4. TopBar ด้านบน
 local TopBar = Instance.new("Frame", MainFrame)
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 35)
@@ -186,16 +186,17 @@ local function CreateTab(name)
     return Page
 end
 
--- สร้างครบทุกหมวดหมู่
+-- สร้างครบทุกหมวดหมู่ (เพิ่มหมวดหมู่ "หลัก" ไว้บนสุด)
+local MainInfoPage = CreateTab("หลัก")
 local UIPage = CreateTab("UI")
 local PlayerPage = CreateTab("ตัวละคร")
 local ToolPage = CreateTab("เครื่องมือ")
 local ESPPage = CreateTab("ESP")
 local AutoShootPage = CreateTab("Auto Shoot")
 
-tabs["UI"].Page.Visible = true
-tabs["UI"].Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
-tabs["UI"].Btn.TextColor3 = Color3.fromRGB(240, 240, 255)
+tabs["หลัก"].Page.Visible = true
+tabs["หลัก"].Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+tabs["หลัก"].Btn.TextColor3 = Color3.fromRGB(240, 240, 255)
 
 -- 7. ระบบสร้าง Slider คอมโพเนนต์
 local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffix, callback)
@@ -267,6 +268,56 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
         end
     end)
 end
+
+-- =======================================================
+-- 7.1 หมวดหมู่ "หลัก" (เครดิตผู้สร้าง & ปุ่มคัดลอกลิงก์ Discord)
+-- =======================================================
+local function CreateCreditCard(parent, hubName, discordLink, themeColor)
+    local Card = Instance.new("Frame", parent)
+    Card.Size = UDim2.new(1, 0, 0, 75)
+    Card.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
+
+    local Stroke = Instance.new("UIStroke", Card)
+    Stroke.Color = themeColor
+    Stroke.Thickness = 1.5
+
+    local Title = Instance.new("TextLabel", Card)
+    Title.Size = UDim2.new(1, -16, 0, 22)
+    Title.Position = UDim2.new(0, 10, 0, 8)
+    Title.Text = "เครดิตผู้สร้าง: " .. hubName
+    Title.TextColor3 = themeColor
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 13
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.BackgroundTransparency = 1
+    table.insert(textLabelData, {Obj = Title, BaseSize = 13})
+
+    local CopyBtn = Instance.new("TextButton", Card)
+    CopyBtn.Size = UDim2.new(1, -20, 0, 30)
+    CopyBtn.Position = UDim2.new(0, 10, 0, 36)
+    CopyBtn.BackgroundColor3 = themeColor
+    CopyBtn.Text = "คัดลอกลิ้งดิส (Discord)"
+    CopyBtn.TextColor3 = Color3.fromRGB(20, 20, 24)
+    CopyBtn.Font = Enum.Font.GothamBold
+    CopyBtn.TextSize = 12
+    Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 5)
+    table.insert(textLabelData, {Obj = CopyBtn, BaseSize = 12})
+
+    CopyBtn.MouseButton1Click:Connect(function()
+        pcall(function()
+            setclipboard(discordLink)
+        end)
+        CopyBtn.Text = "คัดลอกสำเร็จ! (Copied)"
+        task.wait(1.5)
+        CopyBtn.Text = "คัดลอกลิ้งดิส (Discord)"
+    end)
+end
+
+-- สร้างการ์ดเครดิต: ค่าย PancakeHub (สีเหลือง) และ ค่าย GKHub (สีฟ้า)
+CreateCreditCard(MainInfoPage, "ค่าย PancakeHub", "https://discord.gg/HfnJnAAM8e", Color3.fromRGB(255, 180, 50))
+CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4wqQ", Color3.fromRGB(80, 150, 220))
+
 
 -- เพิ่ม Slider ในหมวดหมู่ UI
 CreateSlider(UIPage, "ปรับความทึบของ UI", 1, 100, 100, "%", function(val)
