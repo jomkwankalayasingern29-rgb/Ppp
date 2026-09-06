@@ -640,9 +640,9 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     end
 end)
 
--- **NEW FUNCTION: การโปรเตะออกแมพ (Pass Through Players Only)**
+-- **NEW FUNCTION: ทะลุผู้เล่น (Pass Players)**
 local passPlayersEnabled = false
-CreateFeatureRow(PlayerPage, "การโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(PlayerPage, "ทะลุผู้เล่น (Pass Players)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     passPlayersEnabled = not passPlayersEnabled
     btn.Text = passPlayersEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = passPlayersEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
