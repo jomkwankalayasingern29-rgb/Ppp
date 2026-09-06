@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 UI (Final Updated) ====================
+-- ==================== GKHub X PancakeHub & MM2 UI (Full Fix - Multi Round & 2s Delay) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -403,8 +403,9 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- ออโต้เก็บเหรียญ (ดีเลย์ 2 วิ)
 local autoFarmCoinsEnabled = false
-CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (ดีเลย์ 1 วิ)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (ดีเลย์ 2 วิ)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoFarmCoinsEnabled = not autoFarmCoinsEnabled
     btn.Text = autoFarmCoinsEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = autoFarmCoinsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
@@ -423,7 +424,7 @@ task.spawn(function()
                             local name = string.lower(obj.Name)
                             if name == "coin" or name == "cd" or name == "coinvisual" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
                                 hrp.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                                task.wait(1)
+                                task.wait(2) -- ดีเลย์ 2 วินาที
                             end
                         end
                     end
@@ -511,6 +512,9 @@ end
 
 local playerCardPool = {}
 
+-- เก็บสถานะตัวละครแยกแต่ละรอบการเล่น (เผื่อตารอบใหม่)
+local playerLastChar = {}
+
 task.spawn(function()
     while true do
         pcall(function()
@@ -521,9 +525,20 @@ task.spawn(function()
             for _, player in pairs(Players:GetPlayers()) do
                 local char = player.Character
                 local isAlive = false
+                
+                -- ตรวจจับการเริ่มตาใหม่ (หากตัวละครเปลี่ยนไปจากตาที่แล้ว ให้รีเซ็ตสถานะเป็นรอดชีวิตทันที)
+                if playerLastChar[player] ~= char then
+                    playerLastChar[player] = char
+                end
+
                 if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
-                    isAlive = true
-                    aliveCount = aliveCount + 1
+                    local head = char:FindFirstChild("Head")
+                    if not head or head.Transparency < 1 then
+                        isAlive = true
+                        aliveCount = aliveCount + 1
+                    else
+                        deadCount = deadCount + 1
+                    end
                 else
                     deadCount = deadCount + 1
                 end
@@ -667,7 +682,6 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     end
 end)
 
--- **ฟังก์ชันเดินทะลุตัวผู้เล่นอื่น (เปลี่ยนชื่อเป็น: กันโปรเตะออกแมพ และลบฟังก์ชันกันเตะตัวเก่าออกแล้ว)**
 local passPlayersEnabled = false
 CreateFeatureRow(PlayerPage, "กันโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     passPlayersEnabled = not passPlayersEnabled
