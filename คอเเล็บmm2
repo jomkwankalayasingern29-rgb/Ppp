@@ -63,7 +63,7 @@ LoadText.Parent = LoadFrame
 
 -- **Main Variables**
 local baseWidth = 520
-local baseHeight = 340
+local baseHeight = 360
 local currentScale = 1 
 local currentAlpha = 1 
 local textLabelData = {}
@@ -478,53 +478,151 @@ CreateSlider(UIPage, "ขนาดความใหญ่ UI", 50, 150, 100, "%
     end
 end)
 
--- **UI Bottom Section: MM2 Status Display (Survivors & Deceased Counter)**
-local StatusCard = Instance.new("Frame", UIPage)
-StatusCard.Size = UDim2.new(0.96, 0, 0, 60)
-StatusCard.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
-Instance.new("UICorner", StatusCard).CornerRadius = UDim.new(0, 6)
+-- **UI Bottom Section: MM2 Realtime Profiles & Counter (Top: Murderer/Sheriff, X for dead)**
+local StatusContainer = Instance.new("ScrollingFrame", UIPage)
+StatusContainer.Name = "StatusContainer"
+StatusContainer.Size = UDim2.new(0.96, 0, 0, 180)
+StatusContainer.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+StatusContainer.BorderSizePixel = 0
+StatusContainer.ScrollBarThickness = 2
+StatusContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+StatusContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Instance.new("UICorner", StatusContainer).CornerRadius = UDim.new(0, 6)
 
-local StatusTitle = Instance.new("TextLabel", StatusCard)
-StatusTitle.Size = UDim2.new(1, -16, 0, 20)
-StatusTitle.Position = UDim2.new(0, 8, 0, 4)
-StatusTitle.Text = "สถานะผู้เล่นในแมพ (MM2 Status)"
-StatusTitle.TextColor3 = Color3.fromRGB(0, 162, 255)
-StatusTitle.Font = Enum.Font.GothamBold
-StatusTitle.TextSize = 11
-StatusTitle.TextXAlignment = Enum.TextXAlignment.Left
-StatusTitle.BackgroundTransparency = 1
-table.insert(textLabelData, {Obj = StatusTitle, BaseSize = 11})
+local StatusLayout = Instance.new("UIListLayout", StatusContainer)
+StatusLayout.SortOrder = Enum.SortOrder.LayoutOrder
+StatusLayout.Padding = UDim.new(0, 4)
+StatusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-local StatusInfoText = Instance.new("TextLabel", StatusCard)
-StatusInfoText.Size = UDim2.new(1, -16, 0, 28)
-StatusInfoText.Position = UDim2.new(0, 8, 0, 26)
-StatusInfoText.Text = "ผู้รอดชีวิต: 0 คน | ตายไปแล้ว: 0 คน"
-StatusInfoText.TextColor3 = Color3.fromRGB(220, 220, 220)
-StatusInfoText.Font = Enum.Font.GothamBold
-StatusInfoText.TextSize = 11
-StatusInfoText.TextXAlignment = Enum.TextXAlignment.Left
-StatusInfoText.BackgroundTransparency = 1
-table.insert(textLabelData, {Obj = StatusInfoText, BaseSize = 11})
+-- Header summary inside UI Page
+local HeaderSummary = Instance.new("TextLabel", UIPage)
+HeaderSummary.Size = UDim2.new(0.96, 0, 0, 24)
+HeaderSummary.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+HeaderSummary.Text = "ผู้รอดชีวิต: 0 คน | ตายไปแล้ว: 0 คน"
+HeaderSummary.TextColor3 = Color3.fromRGB(0, 162, 255)
+HeaderSummary.Font = Enum.Font.GothamBold
+HeaderSummary.TextSize = 11
+HeaderSummary.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = HeaderSummary, BaseSize = 11})
 
--- Update MM2 Alive/Dead Stats
+local playerProfileCards = {}
+
+local function ScanToolsForRole(container)
+    if not container then return false, false end
+    local hasKnife, hasGun = false, false
+    for _, item in pairs(container:GetChildren()) do
+        if item:IsA("Tool") then
+            local n = string.lower(item.Name)
+            if n:find("knife") or n:find("dagger") or n:find("blade") then hasKnife = true end
+            if n:find("gun") or n:find("pistol") or n:find("revolver") then hasGun = true end
+        end
+    end
+    return hasKnife, hasGun
+end
+
 RunService.RenderStepped:Connect(function()
     pcall(function()
         local aliveCount = 0
         local deadCount = 0
+        local playerRoleData = {}
+
         for _, player in pairs(Players:GetPlayers()) do
             local char = player.Character
-            if char and char:FindFirstChild("Humanoid") then
-                local hum = char.Humanoid
-                if hum.Health > 0 then
-                    aliveCount = aliveCount + 1
-                else
-                    deadCount = deadCount + 1
-                end
+            local isAlive = false
+            if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                isAlive = true
+                aliveCount = aliveCount + 1
             else
                 deadCount = deadCount + 1
             end
+
+            local cKnife, cGun = ScanToolsForRole(char)
+            local bKnife, bGun = ScanToolsForRole(player:FindFirstChild("Backpack"))
+            local roleType = 3 -- Normal
+            local roleNameStr = "ผู้เล่นทั่วไป"
+            local roleColor = Color3.fromRGB(200, 200, 200)
+
+            if cKnife or bKnife then
+                roleType = 1 -- Murderer (Top priority)
+                roleNameStr = "ฆาตกร"
+                roleColor = Color3.fromRGB(220, 80, 80)
+            elseif cGun or bGun then
+                roleType = 2 -- Sheriff (Second priority)
+                roleNameStr = "นายอำเภอ"
+                roleColor = Color3.fromRGB(0, 162, 255)
+            end
+
+            table.insert(playerRoleData, {
+                Player = player,
+                IsAlive = isAlive,
+                RoleType = roleType,
+                RoleName = roleNameStr,
+                RoleColor = roleColor
+            })
         end
-        StatusInfoText.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
+
+        HeaderSummary.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
+
+        -- Sort: Murderer (1) -> Sheriff (2) -> Normal (3), then by name
+        table.sort(playerRoleData, function(a, b)
+            if a.RoleType ~= b.RoleType then
+                return a.RoleType < b.RoleType
+            end
+            return a.Player.Name < b.Player.Name
+        end)
+
+        -- Clean old UI elements in StatusContainer
+        for _, guiObj in pairs(StatusContainer:GetChildren()) do
+            if guiObj:IsA("Frame") then guiObj:Destroy() end
+        end
+
+        for _, data in ipairs(playerRoleData) do
+            local pCard = Instance.new("Frame", StatusContainer)
+            pCard.Size = UDim2.new(0.96, 0, 0, 35)
+            pCard.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
+            Instance.new("UICorner", pCard).CornerRadius = UDim.new(0, 5)
+
+            local headshot = Instance.new("ImageLabel", pCard)
+            headshot.Size = UDim2.new(0, 27, 0, 27)
+            headshot.Position = UDim2.new(0, 4, 0.5, -13.5)
+            headshot.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+            Instance.new("UICorner", headshot).CornerRadius = UDim.new(1, 0)
+            pcall(function()
+                local content, isReady = Players:GetUserThumbnailAsync(data.Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+                if isReady then headshot.Image = content end
+            end)
+
+            -- Dead Overlay X Mark if dead
+            if not data.IsAlive then
+                local deadX = Instance.new("TextLabel", headshot)
+                deadX.Size = UDim2.new(1, 0, 1, 0)
+                deadX.BackgroundTransparency = 1
+                deadX.Text = "X"
+                deadX.TextColor3 = Color3.fromRGB(255, 50, 50)
+                deadX.Font = Enum.Font.GothamBold
+                deadX.TextSize = 18
+            end
+
+            local nameLabel = Instance.new("TextLabel", pCard)
+            nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+            nameLabel.Position = UDim2.new(0, 36, 0, 0)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.Text = data.Player.Name .. " (" .. data.RoleName .. ")"
+            nameLabel.TextColor3 = data.RoleColor
+            nameLabel.Font = Enum.Font.GothamBold
+            nameLabel.TextSize = 10
+            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+            local stateLabel = Instance.new("TextLabel", pCard)
+            stateLabel.Size = UDim2.new(0.3, 0, 1, 0)
+            stateLabel.Position = UDim2.new(0.68, 0, 0, 0)
+            stateLabel.BackgroundTransparency = 1
+            stateLabel.Text = data.IsAlive and "รอดชีวิต" or "ตายแล้ว"
+            stateLabel.TextColor3 = data.IsAlive and Color3.fromRGB(80, 220, 100) or Color3.fromRGB(220, 80, 80)
+            stateLabel.Font = Enum.Font.GothamBold
+            stateLabel.TextSize = 10
+            stateLabel.TextXAlignment = Enum.TextXAlignment.Right
+        end
     end)
 end)
 
@@ -552,13 +650,12 @@ CreateFeatureRow(PlayerPage, "กันโปรเตะออกแมพ", "�
     btn.BackgroundColor3 = antiKickEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
 
--- Hook namecall to block kick attempts if anti-kick is active
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local method = getnamecallmethod()
     if antiKickEnabled and (method == "Kick" or method == "kick") then
         if self == LocalPlayer then
-            return -- Block kick
+            return
         end
     end
     return oldNamecall(self, ...)
