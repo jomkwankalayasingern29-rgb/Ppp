@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 (KillFeed Fixed Left-Top Version) ====================
+-- ==================== GKHub X PancakeHub & MM2 (Mobile Touch Fixed Version) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -69,6 +69,8 @@ MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
 MainFrame.ClipsDescendants = true
 MainFrame.Visible = false
 MainFrame.ZIndex = 2
+MainFrame.Active = true
+MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
@@ -106,7 +108,7 @@ LogoG.ZIndex = 4
 local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 380, 1, 0)
 TitleText.Position = UDim2.new(0, 38, 0, 0)
-TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Full Version)"
+TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Mobile Fix)"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 12
@@ -386,7 +388,7 @@ end
 local KillFeedHolder = Instance.new("ScrollingFrame", ScreenGui)
 KillFeedHolder.Name = "KillFeedHolder"
 KillFeedHolder.Size = UDim2.new(0, 320, 0, 220)
-KillFeedHolder.Position = UDim2.new(0, 10, 0, 10) -- ย้ายไปมุมซ้ายบน
+KillFeedHolder.Position = UDim2.new(0, 10, 0, 10)
 KillFeedHolder.BackgroundTransparency = 1
 KillFeedHolder.BorderSizePixel = 0
 KillFeedHolder.ScrollBarThickness = 0
@@ -394,18 +396,20 @@ KillFeedHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
 KillFeedHolder.AutomaticCanvasSize = Enum.AutomaticSize.Y
 KillFeedHolder.Visible = true
 KillFeedHolder.ZIndex = 5
+KillFeedHolder.Active = false
+KillFeedHolder.Selectable = false
 
 local KillFeedLayout = Instance.new("UIListLayout", KillFeedHolder)
 KillFeedLayout.SortOrder = Enum.SortOrder.LayoutOrder
 KillFeedLayout.Padding = UDim.new(0, 5)
-KillFeedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left -- จัดเรียงชิดซ้าย
+KillFeedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 
 local function ShowDeathFeed(killerName, killerRole, victimName, victimRole, weaponEmoji)
     if not KillFeedHolder.Visible then return end
 
     local FeedItem = Instance.new("Frame", KillFeedHolder)
     FeedItem.Size = UDim2.new(1, 0, 0, 30)
-    FeedItem.BackgroundColor3 = Color3.fromRGB(10, 10, 12) -- แถบสีดำ
+    FeedItem.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
     FeedItem.BackgroundTransparency = 0.2
     FeedItem.ZIndex = 6
     Instance.new("UICorner", FeedItem).CornerRadius = UDim.new(0, 6)
@@ -425,11 +429,10 @@ local function ShowDeathFeed(killerName, killerRole, victimName, victimRole, wea
     Label.RichText = true
     Label.ZIndex = 7
 
-    -- กำหนดสีชื่อตามบทบาท (ฆาตกร=แดง, นายอำเภอ=ฟ้า, ผู้บริสุทธิ์=เขียว)
     local function getRoleColorHex(role)
-        if role == 1 then return "#FF3C3C" -- สีแดง (ฆาตกร)
-        elseif role == 2 then return "#00A2FF" -- สีฟ้า (นายอำเภอ)
-        else return "#50DC64" end -- สีเขียว (ผู้บริสุทธิ์)
+        if role == 1 then return "#FF3C3C"
+        elseif role == 2 then return "#00A2FF"
+        else return "#50DC64" end
     end
 
     local kColor = getRoleColorHex(killerRole)
@@ -644,16 +647,13 @@ task.spawn(function()
                 if playerLastState[player] == nil then
                     playerLastState[player] = isAlive
                 elseif playerLastState[player] == true and not isAlive then
-                    -- ตรวจสอบหาว่าใครเป็นคนฆ่า (เช็คจากฆาตกรหรือนายอำเภอในแมพ)
                     local killer = nil
                     local killerRole = 1
                     local weapon = "🔪"
                     
                     if roleType == 1 then
-                        -- ฆาตกรตายเองหรือถูกยิง
                         weapon = "🔫"
                     else
-                        -- ค้นหาฆาตกรในแมพมาเป็นคนจัดการ
                         for _, p in pairs(Players:GetPlayers()) do
                             if p ~= player and p.Character then
                                 local pk, pg = ScanToolsForRole(p.Character)
@@ -1006,35 +1006,6 @@ local function ToggleMinimize()
 end
 
 MinBtn.MouseButton1Click:Connect(ToggleMinimize)
-
-local dragging = false
-local dragInput, dragStart, startPos
-
-TopBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(
-            startPos.X.Scale, 
-            startPos.X.Offset + delta.X, 
-            startPos.Y.Scale, 
-            startPos.Y.Offset + delta.Y
-        )
-    end
-end)
 
 local isLoadingDone = false
 
