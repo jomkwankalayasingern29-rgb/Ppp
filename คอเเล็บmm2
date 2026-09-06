@@ -399,8 +399,8 @@ RunService.RenderStepped:Connect(function()
                 local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                 if otherRoot and humanoid and humanoid.Health > 0 then
-                    otherRoot.Size = Vector3.new(250, 250, 250) -- ปรับขนาด Hitbox เป็น 250 ตามต้องการ
-                    otherRoot.Transparency = 0.9
+                    otherRoot.Size = Vector3.new(250, 250, 250) -- ปรับขนาด Hitbox เป็น 250 จริงๆ แล้วตรงนี้
+                    otherRoot.Transparency = 0.95
                     otherRoot.CanCollide = false
                 end
             end
