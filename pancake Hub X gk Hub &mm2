@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHUB | Murder Mystery 2 (MM2) - Mobile Fixed
+-- 🥞 PancakeHUB | Murder Mystery 2 (MM2) - Final Fixed
 -- =======================================================
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -22,7 +22,7 @@ for _, container in pairs(containers) do
 end
 
 -- -------------------------------------------------------
--- 📦 2. โหลด MacLib UI (พร้อมระบบดักจับ Error กันเกมแครช)
+-- 📦 2. โหลด MacLib UI
 -- -------------------------------------------------------
 local success, MacLib = pcall(function()
     return loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
@@ -36,21 +36,21 @@ end
 local Window = MacLib:Window({
     Title = "PancakeHUB | MM2",
     Subtitle = "Mobile Optimized",
-    Size = UDim2.fromOffset(400, 240), -- 📱 ปรับขนาดหน้าต่างให้เล็กลงกะทัดรัด
+    Size = UDim2.fromOffset(400, 240),
     DragStyle = 1,
     Keybind = Enum.KeyCode.RightControl,
-    AcrylicBlur = false, -- ปิดความเบลอ ป้องกันมือถือแครช
+    AcrylicBlur = false,
 })
 
 -- -------------------------------------------------------
--- 🎯 3. สแกนหา UI ของ MacLib เพื่อสั่งซ่อนบนมือถือ
+-- 🎯 3. สแกนหา UI ของ MacLib เพื่อควบคุมการปิด/เปิด
 -- -------------------------------------------------------
 local macGui = nil
 task.spawn(function()
     task.wait(0.5)
     for _, container in pairs(containers) do
         for _, v in pairs(container:GetChildren()) do
-            if not existingGuis[v] and v:IsA("ScreenGui") and v.Name ~= "TouchGui" and v.Name ~= "PancakeHUB_MobileToggle" and v.Name ~= "PancakeHUB_TrashToggle" then
+            if not existingGuis[v] and v:IsA("ScreenGui") and v.Name ~= "TouchGui" and v.Name ~= "PancakeHUB_MobileToggle" then
                 macGui = v
             end
         end
@@ -58,7 +58,7 @@ task.spawn(function()
 end)
 
 -- -------------------------------------------------------
--- 🔘 4. ปุ่ม 🥞 เปิด/ปิด UI บนมือถือ
+-- 🔘 4. ปุ่ม 🥞 เปิด/ปิด UI บนมือถือ (ปุ่มลอยตัวหลัก)
 -- -------------------------------------------------------
 local ToggleGui = Instance.new("ScreenGui")
 local ToggleButton = Instance.new("TextButton")
@@ -96,56 +96,9 @@ ToggleButton.MouseButton1Click:Connect(function()
 end)
 
 -- -------------------------------------------------------
--- 🗑️ 5. ปุ่มลบ UI และปิดสคริปต์ทั้งหมด (Trash Button)
+-- 🛠️ 5. ตัวแปรเปิด/ปิด สวิตช์ ESP
 -- -------------------------------------------------------
-local TrashGui = Instance.new("ScreenGui")
-local TrashButton = Instance.new("TextButton")
-local TrashCorner = Instance.new("UICorner")
-local TrashStroke = Instance.new("UIStroke")
-
-TrashGui.Name = "PancakeHUB_TrashToggle"
-TrashGui.Parent = CoreGui
-TrashGui.ResetOnSpawn = false
-
-TrashButton.Name = "TrashButton"
-TrashButton.Parent = TrashGui
-TrashButton.Position = UDim2.new(0, 15, 0.48, 0) -- อยู่ใต้ปุ่มแพนเค้กเล็กน้อย
-TrashButton.Size = UDim2.new(0, 42, 0, 42)
-TrashButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrashButton.Text = "🗑️"
-TrashButton.TextSize = 20
-TrashButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-TrashButton.Active = true
-TrashButton.Draggable = true
-
-TrashCorner.CornerRadius = UDim.new(0, 10)
-TrashCorner.Parent = TrashButton
-TrashStroke.Color = Color3.fromRGB(255, 80, 80)
-TrashStroke.Thickness = 2
-TrashStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-TrashStroke.Parent = TrashButton
-
 local scriptRunning = true
-
-TrashButton.MouseButton1Click:Connect(function()
-    scriptRunning = false
-    if ToggleGui then ToggleGui:Destroy() end
-    if TrashGui then TrashGui:Destroy() end
-    
-    local oldFolder = CoreGui:FindFirstChild("PancakeHUB_3DESP")
-    if oldFolder then oldFolder:Destroy() end
-    
-    for _, d in pairs(drawings) do
-        if d.Remove then d:Remove() end
-    end
-    drawings = {}
-    
-    if macGui then macGui:Destroy() end
-end)
-
--- -------------------------------------------------------
--- 🛠️ 6. ตัวแปรเปิด/ปิด สวิตช์
--- -------------------------------------------------------
 local esp3D = false
 local espTracer = false
 local espGreenbox = false
@@ -158,7 +111,7 @@ highlightFolder.Name = "PancakeHUB_3DESP"
 local drawings = {}
 
 -- -------------------------------------------------------
--- 🔍 7. ฟังก์ชันเช็คบทบาท MM2 (Role Checker)
+-- 🔍 6. ฟังก์ชันเช็คบทบาท MM2 (Role Checker)
 -- -------------------------------------------------------
 local function getPlayerRoleColor(player)
     if not player then return Color3.fromRGB(0, 255, 0) end
@@ -189,7 +142,7 @@ local function getPlayerRoleColor(player)
 end
 
 -- -------------------------------------------------------
--- 🧹 8. ฟังก์ชันทำความสะอาด Drawing & Highlights
+-- 🧹 7. ฟังก์ชันทำความสะอาด Drawing & Highlights
 -- -------------------------------------------------------
 local function clearDrawings()
     for _, d in pairs(drawings) do
@@ -199,7 +152,7 @@ local function clearDrawings()
 end
 
 -- -------------------------------------------------------
--- 🔄 9. Main Render Loop
+-- 🔄 8. Main Render Loop
 -- -------------------------------------------------------
 RunService.RenderStepped:Connect(function()
     if not scriptRunning then return end
@@ -272,7 +225,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- -------------------------------------------------------
--- 🎨 10. สร้าง UI หน้าต่างเมนู (MacLib)
+-- 🎨 9. สร้าง UI หน้าต่างเมนู (MacLib)
 -- -------------------------------------------------------
 local TabGroup = Window:TabGroup()
 
@@ -303,19 +256,34 @@ MainSec:Toggle({
     end,
 })
 
-local InfoSec = EspTab:Section({ Side = "Right", Title = "สถานะสีบทบาท" })
+-- ปุ่มลบสคริปต์และปิด UI อยู่ในเมนูฝั่งขวา
+local InfoSec = EspTab:Section({ Side = "Right", Title = "การจัดการสคริปต์" })
 
-InfoSec:Paragraph({
-    Title = "🔴 สีแดง: ฆาตกร",
-    Content = "มีด (Murderer)",
+InfoSec:Button({
+    Name = "ปิดสคริปต์และลบ UI ทั้งหมด",
+    Callback = function()
+        scriptRunning = false
+        
+        -- ลบปุ่มเปิด/ปิดลอยตัว
+        if ToggleGui then ToggleGui:Destroy() end
+        
+        -- เคลียร์โฟลเดอร์ ESP 3D
+        if highlightFolder then highlightFolder:Destroy() end
+        
+        -- เคลียร์เส้นและกล่อง Drawing ทั้งหมด
+        clearDrawings()
+        
+        -- ทำลายหน้าต่าง UI หลักของ MacLib ทิ้ง
+        if macGui then 
+            macGui:Destroy() 
+        else
+            -- เผื่อกรณีหา macGui ไม่เจอ ให้สั่งปิดผ่าน Window ของ MacLib โดยตรง
+            pcall(function() Window:Destroy() end)
+        end
+    end,
 })
 
 InfoSec:Paragraph({
-    Title = "🔵 สีฟ้า: นายอำเภอ",
-    Content = "ปืน (Sheriff)",
-})
-
-InfoSec:Paragraph({
-    Title = "🟢 สีเขียว: คนบริสุทธิ์",
-    Content = "ประชาชน (Innocent)",
+    Title = "สถานะสีบทบาท",
+    Content = "🔴 แดง = ฆาตกร | 🔵 ฟ้า = นายอำเภอ | 🟢 เขียว = คนบริสุทธิ์",
 })
