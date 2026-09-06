@@ -384,7 +384,7 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- ==================== KILL FEED SYSTEM (TRUE PASS-THROUGH FIX) ====================
+-- ==================== ระบบแถบสาเหตุการตาย (แก้ไขให้ทะลุจอได้สมบูรณ์ พร้อมอัปเดตขนาดอัตโนมัติ) ====================
 local KillFeedHolder = Instance.new("Frame", ScreenGui)
 KillFeedHolder.Name = "KillFeedHolder"
 KillFeedHolder.Size = UDim2.new(0, 320, 0, 220)
@@ -410,6 +410,11 @@ local KillFeedLayout = Instance.new("UIListLayout", KillFeedScroll)
 KillFeedLayout.SortOrder = Enum.SortOrder.LayoutOrder
 KillFeedLayout.Padding = UDim.new(0, 5)
 KillFeedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+
+-- บังคับอัปเดตขนาดพื้นที่เลื่อนอัตโนมัติเมื่อมีข้อความแจ้งเตือนใหม่เพิ่มขึ้นมา
+KillFeedLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    KillFeedScroll.CanvasSize = UDim2.new(0, 0, 0, KillFeedLayout.AbsoluteContentSize.Y)
+end)
 
 local function ShowDeathFeed(killerName, killerRole, victimName, victimRole, weaponEmoji)
     if not KillFeedHolder.Visible then return end
