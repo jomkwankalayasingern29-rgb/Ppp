@@ -24,14 +24,14 @@ for _, container in pairs(containers) do
 end
 
 -- -------------------------------------------------------
--- 📦 2. โหลด MacLib UI
+-- 📦 2. โหลด MacLib UI (ปรับขนาดเล็กลง)
 -- -------------------------------------------------------
 local MacLib = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 
 local Window = MacLib:Window({
-    Title = "PancakeHUB | Murder Mystery 2",
-    Subtitle = "หมวดหมู่มองทะลุระบุบทบาท",
-    Size = UDim2.fromOffset(400, 280),
+    Title = "PancakeHUB | MM2",
+    Subtitle = "ESP By PancakeHUB",
+    Size = UDim2.fromOffset(460, 280), -- 📌 ปรับขนาดหน้าต่างให้เล็กลงที่นี่
     DragStyle = 1,
     Keybind = Enum.KeyCode.RightControl,
     AcrylicBlur = false, -- ปิดความเบลอ ป้องกันมือถือแครช
@@ -110,7 +110,6 @@ local drawings = {}
 local function getPlayerRoleColor(player)
     if not player then return Color3.fromRGB(0, 255, 0) end
     
-    -- เช็คอาวุธในตัว หรือในกระเป๋า (Backpack)
     local char = player.Character
     local backpack = player:FindFirstChild("Backpack")
     
@@ -182,7 +181,7 @@ RunService.RenderStepped:Connect(function()
                     -- 📏 2. มองทะลุเป็นเส้น (Tracer)
                     if espTracer then
                         local line = Drawing.new("Line")
-                        line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y) -- เริ่มจากกลางจอด้านล่าง
+                        line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                         line.To = Vector2.new(pos.X, pos.Y)
                         line.Color = color
                         line.Thickness = 1.5
@@ -193,7 +192,6 @@ RunService.RenderStepped:Connect(function()
 
                     -- 📦 3. มองทะลุ Greenbox (Box ESP)
                     if espGreenbox then
-                        -- คำนวณขนาดกล่องตามระยะห่าง
                         local head = char:FindFirstChild("Head")
                         if head then
                             local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
@@ -205,7 +203,7 @@ RunService.RenderStepped:Connect(function()
                             local box = Drawing.new("Square")
                             box.Size = Vector2.new(width, height)
                             box.Position = Vector2.new(pos.X - (width / 2), pos.Y - (height / 2))
-                            box.Color = Color3.fromRGB(0, 255, 0) -- Greenbox ตามคำขอ (เน้นสีเขียว)
+                            box.Color = Color3.fromRGB(0, 255, 0)
                             box.Thickness = 1.5
                             box.Filled = false
                             box.Transparency = 1
