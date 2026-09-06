@@ -24,17 +24,17 @@ for _, container in pairs(containers) do
 end
 
 -- -------------------------------------------------------
--- 📦 2. โหลด MacLib UI (ปรับขนาดให้พอดี ไม่ตกขอบ)
+-- 📦 2. โหลด MacLib UI (ใช้ขนาดเดิมของคุณ)
 -- -------------------------------------------------------
 local MacLib = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 
 local Window = MacLib:Window({
     Title = "PancakeHUB | MM2",
-    Subtitle = "ESP System",
-    Size = UDim2.fromOffset(540, 320), -- 📌 ขยายขนาดให้พอดี ข้อความไม่ตกขอบ
+    Subtitle = "ESP Menu",
+    Size = UDim2.fromOffset(460, 280), -- 📌 ขนาดเดิมตามที่คุณต้องการ
     DragStyle = 1,
     Keybind = Enum.KeyCode.RightControl,
-    AcrylicBlur = false, -- ปิดความเบลอ ป้องกันมือถือแครช
+    AcrylicBlur = false,
 })
 
 -- -------------------------------------------------------
@@ -101,7 +101,7 @@ local espGreenbox = false
 local highlightFolder = Instance.new("Folder", CoreGui)
 highlightFolder.Name = "PancakeHUB_3DESP"
 
--- Storage สำหรับเก็บ Drawing Objects (เส้น และ กล่อง 2D)
+-- Storage สำหรับเก็บ Drawing Objects
 local drawings = {}
 
 -- -------------------------------------------------------
@@ -127,11 +127,11 @@ local function getPlayerRoleColor(player)
     end
     
     if hasKnife then
-        return Color3.fromRGB(255, 0, 0) -- 🔴 ฆาตกร (Red)
+        return Color3.fromRGB(255, 0, 0) -- 🔴 ฆาตกร
     elseif hasGun then
-        return Color3.fromRGB(0, 150, 255) -- 🔵 นายอำเภอ (Blue)
+        return Color3.fromRGB(0, 150, 255) -- 🔵 นายอำเภอ
     else
-        return Color3.fromRGB(0, 255, 0) -- 🟢 ประชาชนบริสุทธิ์ (Green)
+        return Color3.fromRGB(0, 255, 0) -- 🟢 ประชาชน
     end
 end
 
@@ -146,7 +146,7 @@ local function clearDrawings()
 end
 
 -- -------------------------------------------------------
--- 🔄 8. Main Render Loop (อัปเดตระบบ ESP ตลอดเวลา)
+-- 🔄 8. Main Render Loop
 -- -------------------------------------------------------
 RunService.RenderStepped:Connect(function()
     highlightFolder:ClearAllChildren()
@@ -161,7 +161,6 @@ RunService.RenderStepped:Connect(function()
             if hum.Health > 0 then
                 local color = getPlayerRoleColor(plr)
                 
-                -- 🟢 1. มองทะลุ 3D (Highlight)
                 if esp3D then
                     local hl = Instance.new("Highlight")
                     hl.Name = plr.Name .. "_3D"
@@ -174,11 +173,9 @@ RunService.RenderStepped:Connect(function()
                     hl.Parent = highlightFolder
                 end
 
-                -- คำนวณตำแหน่ง 2D บนหน้าจอ
                 local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
                 
                 if onScreen then
-                    -- 📏 2. มองทะลุเป็นเส้น (Tracer)
                     if espTracer then
                         local line = Drawing.new("Line")
                         line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
@@ -190,7 +187,6 @@ RunService.RenderStepped:Connect(function()
                         table.insert(drawings, line)
                     end
 
-                    -- 📦 3. มองทะลุ Greenbox (Box ESP)
                     if espGreenbox then
                         local head = char:FindFirstChild("Head")
                         if head then
@@ -218,19 +214,16 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- -------------------------------------------------------
--- 🎨 9. สร้าง UI หน้าต่างเมนู
+-- 🎨 9. สร้าง UI หน้าต่างเมนู (ปรับข้อความให้สั้น ไม่โดนตัด)
 -- -------------------------------------------------------
 local TabGroup = Window:TabGroup()
 
--- ==========================================
--- 👁️ แท็บ: หมวดหมู่มองทะลุ
--- ==========================================
-local EspTab = TabGroup:Tab({ Name = "ระบบ ESP", Image = "rbxassetid://10709782582" })
+local EspTab = TabGroup:Tab({ Name = "ESP", Image = "rbxassetid://10709782582" })
 
-local MainSec = EspTab:Section({ Side = "Left", Title = "ฟังก์ชัน ESP" })
+local MainSec = EspTab:Section({ Side = "Left", Title = "ฟังก์ชัน" })
 
 MainSec:Toggle({
-    Name = "ESP 3D (สีตามบทบาท)",
+    Name = "ESP 3D",
     Default = false,
     Callback = function(state)
         esp3D = state
@@ -238,7 +231,7 @@ MainSec:Toggle({
 })
 
 MainSec:Toggle({
-    Name = "ESP Tracer (ลากเส้น)",
+    Name = "Tracer Line",
     Default = false,
     Callback = function(state)
         espTracer = state
@@ -246,14 +239,14 @@ MainSec:Toggle({
 })
 
 MainSec:Toggle({
-    Name = "ESP Greenbox",
+    Name = "Greenbox",
     Default = false,
     Callback = function(state)
         espGreenbox = state
     end,
 })
 
-local InfoSec = EspTab:Section({ Side = "Right", Title = "เช็คสีบทบาท" })
+local InfoSec = EspTab:Section({ Side = "Right", Title = "เช็คสี" })
 
 InfoSec:Paragraph({
     Title = "🔴 สีแดง",
