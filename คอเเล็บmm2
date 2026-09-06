@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 (Fixed Dragging Version) ====================
+-- ==================== GKHub X PancakeHub & MM2 (KillFeed Fixed Left-Top Version) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -382,11 +382,11 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- ==================== KILL FEED SYSTEM ====================
+-- ==================== KILL FEED SYSTEM (LEFT-TOP BLACK THEME) ====================
 local KillFeedHolder = Instance.new("ScrollingFrame", ScreenGui)
 KillFeedHolder.Name = "KillFeedHolder"
-KillFeedHolder.Size = UDim2.new(0, 280, 0, 220)
-KillFeedHolder.Position = UDim2.new(1, -290, 0, 10)
+KillFeedHolder.Size = UDim2.new(0, 320, 0, 220)
+KillFeedHolder.Position = UDim2.new(0, 10, 0, 10) -- ย้ายไปมุมซ้ายบน
 KillFeedHolder.BackgroundTransparency = 1
 KillFeedHolder.BorderSizePixel = 0
 KillFeedHolder.ScrollBarThickness = 0
@@ -398,42 +398,51 @@ KillFeedHolder.ZIndex = 5
 local KillFeedLayout = Instance.new("UIListLayout", KillFeedHolder)
 KillFeedLayout.SortOrder = Enum.SortOrder.LayoutOrder
 KillFeedLayout.Padding = UDim.new(0, 5)
-KillFeedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+KillFeedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left -- จัดเรียงชิดซ้าย
 
-local function ShowDeathFeed(text, roleType)
+local function ShowDeathFeed(killerName, killerRole, victimName, victimRole, weaponEmoji)
     if not KillFeedHolder.Visible then return end
-    
-    local colorMap = {
-        [1] = Color3.fromRGB(255, 60, 60),   -- ฆาตกร (สีแดง)
-        [2] = Color3.fromRGB(0, 162, 255),  -- นายอำเภอ (สีฟ้า)
-        [3] = Color3.fromRGB(80, 220, 100)  -- ผู้บริสุทธิ์ (สีเขียว)
-    }
-    local chosenColor = colorMap[roleType] or Color3.fromRGB(200, 200, 200)
 
     local FeedItem = Instance.new("Frame", KillFeedHolder)
     FeedItem.Size = UDim2.new(1, 0, 0, 30)
-    FeedItem.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    FeedItem.BackgroundColor3 = Color3.fromRGB(10, 10, 12) -- แถบสีดำ
     FeedItem.BackgroundTransparency = 0.2
     FeedItem.ZIndex = 6
     Instance.new("UICorner", FeedItem).CornerRadius = UDim.new(0, 6)
 
     local Stroke = Instance.new("UIStroke", FeedItem)
-    Stroke.Color = chosenColor
+    Stroke.Color = Color3.fromRGB(40, 40, 50)
     Stroke.Thickness = 1.2
 
     local Label = Instance.new("TextLabel", FeedItem)
     Label.Size = UDim2.new(1, -10, 1, 0)
-    Label.Position = UDim2.new(0, 5, 0, 0)
+    Label.Position = UDim2.new(0, 8, 0, 0)
     Label.BackgroundTransparency = 1
     Label.Font = Enum.Font.GothamBold
-    Label.TextSize = 10
+    Label.TextSize = 11
     Label.TextColor3 = Color3.fromRGB(240, 240, 240)
-    Label.Text = text
-    Label.TextXAlignment = Enum.TextXAlignment.Center
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.RichText = true
     Label.ZIndex = 7
 
+    -- กำหนดสีชื่อตามบทบาท (ฆาตกร=แดง, นายอำเภอ=ฟ้า, ผู้บริสุทธิ์=เขียว)
+    local function getRoleColorHex(role)
+        if role == 1 then return "#FF3C3C" -- สีแดง (ฆาตกร)
+        elseif role == 2 then return "#00A2FF" -- สีฟ้า (นายอำเภอ)
+        else return "#50DC64" end -- สีเขียว (ผู้บริสุทธิ์)
+    end
+
+    local kColor = getRoleColorHex(killerRole)
+    local vColor = getRoleColorHex(victimRole)
+
+    if killerName then
+        Label.Text = string.format("<font color=\"%s\"><b>%s</b></font> %s <font color=\"%s\"><b>%s</b></font>", kColor, killerName, weaponEmoji, vColor, victimName)
+    else
+        Label.Text = string.format("<font color=\"%s\"><b>%s</b></font> เสียชีวิตแล้ว 💀", vColor, victimName)
+    end
+
     task.spawn(function()
-        task.wait(2)
+        task.wait(3)
         local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
         pcall(function()
             TweenService:Create(FeedItem, tweenInfo, {BackgroundTransparency = 1}):Play()
@@ -635,15 +644,35 @@ task.spawn(function()
                 if playerLastState[player] == nil then
                     playerLastState[player] = isAlive
                 elseif playerLastState[player] == true and not isAlive then
-                    local msg = player.Name .. " (" .. roleNameStr .. ") ตายโดยไม่ทราบสาเหตุ"
+                    -- ตรวจสอบหาว่าใครเป็นคนฆ่า (เช็คจากฆาตกรหรือนายอำเภอในแมพ)
+                    local killer = nil
+                    local killerRole = 1
+                    local weapon = "🔪"
+                    
                     if roleType == 1 then
-                        msg = "ฆาตกร " .. player.Name .. " ถูกยิงหรือเสียชีวิต"
-                    elseif roleType == 2 then
-                        msg = "นายอำเภอ " .. player.Name .. " เสียชีวิตแล้ว"
+                        -- ฆาตกรตายเองหรือถูกยิง
+                        weapon = "🔫"
                     else
-                        msg = "ฆาตกรสังหาร " .. player.Name .. " (ผู้บริสุทธิ์)"
+                        -- ค้นหาฆาตกรในแมพมาเป็นคนจัดการ
+                        for _, p in pairs(Players:GetPlayers()) do
+                            if p ~= player and p.Character then
+                                local pk, pg = ScanToolsForRole(p.Character)
+                                local pbp = p:FindFirstChild("Backpack")
+                                if pbp then
+                                    local pbpk, pbpg = ScanToolsForRole(pbp)
+                                    pk = pk or pbpk
+                                end
+                                if pk then
+                                    killer = p.Name
+                                    killerRole = 1
+                                    weapon = "🔪"
+                                    break
+                                end
+                            end
+                        end
                     end
-                    ShowDeathFeed(msg, roleType)
+                    
+                    ShowDeathFeed(killer, killerRole, player.Name, roleType, weapon)
                 end
                 playerLastState[player] = isAlive
 
@@ -978,7 +1007,6 @@ end
 
 MinBtn.MouseButton1Click:Connect(ToggleMinimize)
 
--- ระบบลากหน้าต่างที่ได้รับการแก้ไขให้ลื่นและไม่บล็อกเมาส์
 local dragging = false
 local dragInput, dragStart, startPos
 
