@@ -1,11 +1,12 @@
 -- =======================================================
--- 🥞 PancakeHUB | Murder Mystery 2 (MM2)
--- 🏢 สตูดิโอ: PancakeHUB Studio (Mobile Supported)
+-- 🥞 PancakeHUB | Murder Mystery 2 (Delta UI System)
 -- =======================================================
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -24,14 +25,14 @@ for _, container in pairs(containers) do
 end
 
 -- -------------------------------------------------------
--- 📦 2. โหลด MacLib UI (ใช้ขนาดเดิมของคุณ)
+-- 📦 2. โหลด MacLib UI (คงรูปแบบเดิมที่คุณชอบ ขนาดพอดี ไม่รก)
 -- -------------------------------------------------------
 local MacLib = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 
 local Window = MacLib:Window({
-    Title = "PancakeHUB | MM2",
-    Subtitle = "ESP Menu",
-    Size = UDim2.fromOffset(460, 280), -- 📌 ขนาดเดิมตามที่คุณต้องการ
+    Title = "PancakeHUB | Delta",
+    Subtitle = "MM2 Ultimate Hub",
+    Size = UDim2.fromOffset(500, 320), -- ขนาดมาตรฐานตามที่คุณต้องการ
     DragStyle = 1,
     Keybind = Enum.KeyCode.RightControl,
     AcrylicBlur = false,
@@ -91,174 +92,292 @@ ToggleButton.MouseButton1Click:Connect(function()
 end)
 
 -- -------------------------------------------------------
--- 🛠️ 5. ตัวแปรเปิด/ปิด สวิตช์
+-- 🛠️ 5. ตัวแปรระบบฟังก์ชันทั้งหมด (จากโค้ดDeltaที่คุณให้มา)
 -- -------------------------------------------------------
-local esp3D = false
-local espTracer = false
-local espGreenbox = false
+local espEnabled = false
+local noclipEnabled = false
+local autoShootEnabled = false
+local miniShootGui = nil
+local espTextObjects = {}
 
--- Folder สำหรับเก็บ Highlight 3D
+-- Folder สำหรับเก็บ Highlight ESP
 local highlightFolder = Instance.new("Folder", CoreGui)
-highlightFolder.Name = "PancakeHUB_3DESP"
+highlightFolder.Name = "PancakeHUB_Highlights"
 
--- Storage สำหรับเก็บ Drawing Objects
-local drawings = {}
+-- ฟังก์ชันเช็คปืนและมีด
+local function ScanTools(container)
+    local foundKnife, foundGun = false, false
+    if container then
+        for _, item in pairs(container:GetChildren()) do
+            if item:IsA("Tool") then
+                local name = string.lower(item.Name)
+                if string.find(name, "knife") or string.find(name, "dagger") or string.find(name, "blade") or item:FindFirstChild("Knife") then
+                    foundKnife = true
+                elseif string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or item:FindFirstChild("Gun") then
+                    foundGun = true
+                end
+            end
+        end
+    end
+    return foundKnife, foundGun
+end
 
--- -------------------------------------------------------
--- 🔍 6. ฟังก์ชันเช็คบทบาท MM2 (Role Checker)
--- -------------------------------------------------------
-local function getPlayerRoleColor(player)
-    if not player then return Color3.fromRGB(0, 255, 0) end
-    
-    local char = player.Character
-    local backpack = player:FindFirstChild("Backpack")
-    
-    local hasKnife = false
-    local hasGun = false
-    
-    if char then
-        if char:FindFirstChild("Knife") or char:FindFirstChild("KnifeServer") then hasKnife = true end
-        if char:FindFirstChild("Gun") or char:FindFirstChild("GunServer") then hasGun = true end
+local function ClearAllHighlights()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character then
+            local highlight = player.Character:FindFirstChild("ESPHighlight")
+            if highlight then highlight:Destroy() end
+        end
     end
-    
-    if backpack then
-        if backpack:FindFirstChild("Knife") or backpack:FindFirstChild("KnifeServer") then hasKnife = true end
-        if backpack:FindFirstChild("Gun") or backpack:FindFirstChild("GunServer") then hasGun = true end
+end
+
+-- ฟังก์ชันสั่งยิงอัตโนมัติ MM2
+local function TriggerMM2Shoot()
+    local myChar = LocalPlayer.Character
+    if not myChar then return end
+
+    local gunTool = myChar:FindFirstChild("Gun")
+    if not gunTool then
+        for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
+            if item:IsA("Tool") and (string.lower(item.Name):find("gun") or item:FindFirstChild("GunScript") or item:FindFirstChild("Shoot")) then
+                item.Parent = myChar
+                gunTool = item
+                task.wait(0.1)
+                break
+            end
+        end
     end
-    
-    if hasKnife then
-        return Color3.fromRGB(255, 0, 0) -- 🔴 ฆาตกร
-    elseif hasGun then
-        return Color3.fromRGB(0, 150, 255) -- 🔵 นายอำเภอ
-    else
-        return Color3.fromRGB(0, 255, 0) -- 🟢 ประชาชน
+    if not gunTool then gunTool = myChar:FindFirstChildWhichIsA("Tool") end
+    if not gunTool then return end
+
+    local targetHead = nil
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local charKnife, _ = ScanTools(p.Character)
+            local packKnife, _ = ScanTools(p:FindFirstChild("Backpack"))
+            if charKnife or packKnife then
+                local head = p.Character:FindFirstChild("Head") or p.Character:FindFirstChild("HumanoidRootPart")
+                if head then
+                    targetHead = head
+                    break
+                end
+            end
+        end
+    end
+
+    if targetHead then
+        local remote = nil
+        for _, desc in pairs(gunTool:GetDescendants()) do
+            if desc:IsA("RemoteEvent") then
+                remote = desc
+                break
+            end
+        end
+        if remote then
+            remote:FireServer(targetHead.Position)
+        else
+            gunTool.Parent = myChar
+            gunTool:Activate()
+        end
     end
 end
 
 -- -------------------------------------------------------
--- 🧹 7. ฟังก์ชันทำความสะอาด Drawing & Highlights
+-- 🎨 6. สร้างหมวดหมู่เมนู UI (จัดหมวดหมู่แยกชัดเจน + ไม่ตัดคำ)
 -- -------------------------------------------------------
-local function clearDrawings()
-    for _, d in pairs(drawings) do
-        if d.Remove then d:Remove() end
-    end
-    drawings = {}
-end
+local TabGroup = Window:TabGroup()
 
--- -------------------------------------------------------
--- 🔄 8. Main Render Loop
--- -------------------------------------------------------
+-- 1. หมวดหมู่ UI Setting
+local UiTab = TabGroup:Tab({ Name = "ตั้งค่า UI", Image = "rbxassetid://10723424687" })
+local UiSec = UiTab:Section({ Side = "Left", Title = "ปรับแต่งหน้าต่าง" })
+
+UiSec:Slider({
+    Name = "ความทึบ UI (%)",
+    Default = 100,
+    Min = 20,
+    Max = 100,
+    Callback = function(val)
+        -- ปรับแต่งผ่าน MacLib ตามความเหมาะสม
+    end,
+})
+
+-- 2. หมวดหมู่ ตัวละคร (Player)
+local PlayerTab = TabGroup:Tab({ Name = "ตัวละคร", Image = "rbxassetid://10709791437" })
+local PlayerSec = PlayerTab:Section({ Side = "Left", Title = "ความสามารถตัวละคร" })
+
+PlayerSec:Slider({
+    Name = "ความเร็ววิ่ง",
+    Default = 16,
+    Min = 16,
+    Max = 250,
+    Callback = function(val)
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.WalkSpeed = val
+        end
+    end,
+})
+
+PlayerSec:Slider({
+    Name = "กระโดดสูง",
+    Default = 50,
+    Min = 50,
+    Max = 300,
+    Callback = function(val)
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.UseJumpPower = true
+            char.Humanoid.JumpPower = val
+        end
+    end,
+})
+
+PlayerSec:Toggle({
+    Name = "ทะลุกำแพง (Noclip)",
+    Default = false,
+    Callback = function(state)
+        noclipEnabled = state
+    end,
+})
+
+RunService.Stepped:Connect(function()
+    if noclipEnabled then
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+        end
+    end
+end)
+
+-- 3. หมวดหมู่ เครื่องมือ (Tools)
+local ToolTab = TabGroup:Tab({ Name = "เครื่องมือ", Image = "rbxassetid://10723434515" })
+local ToolSec = ToolTab:Section({ Side = "Left", Title = "ไอเทมพิเศษ" })
+
+ToolSec:Button({
+    Name = "รับไอเทมคลิกวาร์ป (Click TP)",
+    Callback = function()
+        local mouse = LocalPlayer:GetMouse()
+        local tool = Instance.new("Tool")
+        tool.Name = "Click TP Tool"
+        tool.RequiresHandle = false
+        tool.Parent = LocalPlayer.Backpack
+
+        tool.Activated:Connect(function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local targetPos = mouse.Hit.Position + Vector3.new(0, 3, 0)
+                char.HumanoidRootPart.CFrame = CFrame.new(targetPos)
+            end
+        end)
+    end,
+})
+
+-- 4. หมวดหมู่ ESP
+local EspTab = TabGroup:Tab({ Name = "ระบบ ESP", Image = "rbxassetid://10709782582" })
+local EspSec = EspTab:Section({ Side = "Left", Title = "ตั้งค่าการมองทะลุ" })
+
+EspSec:Toggle({
+    Name = "เปิด ESP ไฮไลท์ตัวละคร",
+    Default = false,
+    Callback = function(state)
+        espEnabled = state
+        if not state then ClearAllHighlights() end
+    end,
+})
+
+local EspInfoSec = EspTab:Section({ Side = "Right", Title = "คำอธิบายสี" })
+EspInfoSec:Paragraph({ Title = "🔴 สีแดง", Content = "ฆาตกร (Murderer)" })
+EspInfoSec:Paragraph({ Title = "🔵 สีฟ้า", Content = "นายอำเภอ (Sheriff)" })
+EspInfoSec:Paragraph({ Title = "🟢 สีเขียว", Content = "คนปกติ (Innocent)" })
+
 RunService.RenderStepped:Connect(function()
-    highlightFolder:ClearAllChildren()
-    clearDrawings()
+    for _, v in pairs(espTextObjects) do pcall(function() v:Remove() end) end
+    espTextObjects = {}
 
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChildOfClass("Humanoid") then
-            local char = plr.Character
-            local root = char.HumanoidRootPart
-            local hum = char:FindFirstChildOfClass("Humanoid")
+    if not espEnabled then return end
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local character = player.Character
+            local head = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
             
-            if hum.Health > 0 then
-                local color = getPlayerRoleColor(plr)
-                
-                if esp3D then
-                    local hl = Instance.new("Highlight")
-                    hl.Name = plr.Name .. "_3D"
-                    hl.Adornee = char
-                    hl.FillColor = color
-                    hl.FillTransparency = 0.4
-                    hl.OutlineColor = color
-                    hl.OutlineTransparency = 0
-                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                    hl.Parent = highlightFolder
+            if head then
+                local pos, onScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.8, 0))
+                local charKnife, charGun = ScanTools(character)
+                local packKnife, packGun = ScanTools(player:FindFirstChild("Backpack"))
+
+                local color = Color3.fromRGB(80, 200, 100)
+                if charKnife or packKnife then
+                    color = Color3.fromRGB(220, 80, 80)
+                elseif charGun or packGun then
+                    color = Color3.fromRGB(80, 150, 220)
                 end
 
-                local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-                
+                local highlight = character:FindFirstChild("ESPHighlight")
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "ESPHighlight"
+                    highlight.Parent = character
+                end
+                highlight.FillColor = color
+                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                highlight.FillTransparency = 0.5
+                highlight.OutlineTransparency = 0.2
+
                 if onScreen then
-                    if espTracer then
-                        local line = Drawing.new("Line")
-                        line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                        line.To = Vector2.new(pos.X, pos.Y)
-                        line.Color = color
-                        line.Thickness = 1.5
-                        line.Transparency = 1
-                        line.Visible = true
-                        table.insert(drawings, line)
-                    end
-
-                    if espGreenbox then
-                        local head = char:FindFirstChild("Head")
-                        if head then
-                            local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-                            local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
-                            
-                            local height = math.abs(headPos.Y - legPos.Y)
-                            local width = height / 1.5
-
-                            local box = Drawing.new("Square")
-                            box.Size = Vector2.new(width, height)
-                            box.Position = Vector2.new(pos.X - (width / 2), pos.Y - (height / 2))
-                            box.Color = Color3.fromRGB(0, 255, 0)
-                            box.Thickness = 1.5
-                            box.Filled = false
-                            box.Transparency = 1
-                            box.Visible = true
-                            table.insert(drawings, box)
-                        end
-                    end
+                    local textObj = Drawing.new("Text")
+                    textObj.Text = player.Name
+                    textObj.Color = color
+                    textObj.Position = Vector2.new(pos.X, pos.Y)
+                    textObj.Center = true
+                    textObj.Outline = true
+                    textObj.Size = 14
+                    textObj.Visible = true
+                    table.insert(espTextObjects, textObj)
                 end
             end
         end
     end
 end)
 
--- -------------------------------------------------------
--- 🎨 9. สร้าง UI หน้าต่างเมนู (ปรับข้อความให้สั้น ไม่โดนตัด)
--- -------------------------------------------------------
-local TabGroup = Window:TabGroup()
+-- 5. หมวดหมู่ Auto Shoot (ยิงอัตโนมัติ)
+local ShootTab = TabGroup:Tab({ Name = "Auto Shoot", Image = "rbxassetid://10734950309" })
+local ShootSec = ShootTab:Section({ Side = "Left", Title = "ระบบยิงออโต้ MM2" })
 
-local EspTab = TabGroup:Tab({ Name = "ESP", Image = "rbxassetid://10709782582" })
-
-local MainSec = EspTab:Section({ Side = "Left", Title = "ฟังก์ชัน" })
-
-MainSec:Toggle({
-    Name = "ESP 3D",
+ShootSec:Toggle({
+    Name = "เปิดปุ่มยิงด่วน (Instant Shoot)",
     Default = false,
     Callback = function(state)
-        esp3D = state
+        autoShootEnabled = state
+        if state then
+            if not miniShootGui then
+                miniShootGui = Instance.new("ScreenGui")
+                miniShootGui.Name = "PancakeHUB_MiniShoot"
+                miniShootGui.Parent = CoreGui
+
+                local shootBtn = Instance.new("TextButton", miniShootGui)
+                shootBtn.Size = UDim2.new(0, 110, 0, 45)
+                shootBtn.Position = UDim2.new(0.8, 0, 0.5, -22)
+                shootBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+                shootBtn.Text = "ยิงทันที!"
+                shootBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                shootBtn.Font = Enum.Font.GothamBold
+                shootBtn.TextSize = 13
+                shootBtn.Active = true
+                shootBtn.Draggable = true
+                Instance.new("UICorner", shootBtn).CornerRadius = UDim.new(0, 8)
+
+                shootBtn.MouseButton1Click:Connect(function()
+                    TriggerMM2Shoot()
+                end)
+            end
+            miniShootGui.Enabled = true
+        else
+            if miniShootGui then
+                miniShootGui.Enabled = false
+            end
+        end
     end,
-})
-
-MainSec:Toggle({
-    Name = "Tracer Line",
-    Default = false,
-    Callback = function(state)
-        espTracer = state
-    end,
-})
-
-MainSec:Toggle({
-    Name = "Greenbox",
-    Default = false,
-    Callback = function(state)
-        espGreenbox = state
-    end,
-})
-
-local InfoSec = EspTab:Section({ Side = "Right", Title = "เช็คสี" })
-
-InfoSec:Paragraph({
-    Title = "🔴 สีแดง",
-    Content = "ฆาตกร (Murderer)",
-})
-
-InfoSec:Paragraph({
-    Title = "🔵 สีฟ้า",
-    Content = "นายอำเภอ (Sheriff)",
-})
-
-InfoSec:Paragraph({
-    Title = "🟢 สีเขียว",
-    Content = "ประชาชน (Innocent)",
 })
