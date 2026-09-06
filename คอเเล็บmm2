@@ -482,7 +482,7 @@ end)
 local HeaderSummary = Instance.new("TextLabel", UIPage)
 HeaderSummary.Size = UDim2.new(0.96, 0, 0, 24)
 HeaderSummary.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
-HeaderSummary.Text = "ผู้รอดชีวิต: 0 คน | ตายไปแล้ว: 0 คน"
+HeaderSummary.Text = "เกมยังไม่เริ่ม"
 HeaderSummary.TextColor3 = Color3.fromRGB(0, 162, 255)
 HeaderSummary.Font = Enum.Font.GothamBold
 HeaderSummary.TextSize = 11
@@ -517,6 +517,68 @@ local function ScanToolsForRole(container)
     return hasKnife, hasGun
 end
 
+-- ตัวแปรเก็บสถานะรอบเกมและการแคชข้อมูลรอบที่แล้ว
+local GameState = "Waiting" 
+local TimerActive = false
+local lastPlayerRoleData = {}
+local lastAliveCount = 0
+local lastDeadCount = 0
+
+local function RenderPlayerList(dataList)
+    for _, guiObj in pairs(StatusContainer:GetChildren()) do
+        if guiObj:IsA("Frame") then guiObj:Destroy() end
+    end
+
+    for _, data in ipairs(dataList) do
+        local pCard = Instance.new("Frame", StatusContainer)
+        pCard.Size = UDim2.new(0.96, 0, 0, 32)
+        pCard.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
+        Instance.new("UICorner", pCard).CornerRadius = UDim.new(0, 5)
+
+        local headshot = Instance.new("ImageLabel", pCard)
+        headshot.Size = UDim2.new(0, 24, 0, 24)
+        headshot.Position = UDim2.new(0, 4, 0.5, -12)
+        headshot.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        Instance.new("UICorner", headshot).CornerRadius = UDim.new(1, 0)
+        pcall(function()
+            local content, isReady = Players:GetUserThumbnailAsync(data.Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+            if isReady then headshot.Image = content end
+        end)
+
+        if not data.IsAlive then
+            local deadX = Instance.new("TextLabel", headshot)
+            deadX.Size = UDim2.new(1, 0, 1, 0)
+            deadX.BackgroundTransparency = 1
+            deadX.Text = "X"
+            deadX.TextColor3 = Color3.fromRGB(255, 50, 50)
+            deadX.Font = Enum.Font.GothamBold
+            deadX.TextSize = 16
+            deadX.TextXAlignment = Enum.TextXAlignment.Center
+            deadX.TextYAlignment = Enum.TextYAlignment.Center
+        end
+
+        local nameLabel = Instance.new("TextLabel", pCard)
+        nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+        nameLabel.Position = UDim2.new(0, 34, 0, 0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Text = data.Player.Name .. " (" .. data.RoleName .. ")"
+        nameLabel.TextColor3 = data.RoleColor
+        nameLabel.Font = Enum.Font.GothamBold
+        nameLabel.TextSize = 10
+        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+        local stateLabel = Instance.new("TextLabel", pCard)
+        stateLabel.Size = UDim2.new(0.3, 0, 1, 0)
+        stateLabel.Position = UDim2.new(0.68, 0, 0, 0)
+        stateLabel.BackgroundTransparency = 1
+        stateLabel.Text = data.IsAlive and "รอดชีวิต" or "ตายแล้ว"
+        stateLabel.TextColor3 = data.IsAlive and Color3.fromRGB(80, 220, 100) or Color3.fromRGB(220, 80, 80)
+        stateLabel.Font = Enum.Font.GothamBold
+        stateLabel.TextSize = 10
+        stateLabel.TextXAlignment = Enum.TextXAlignment.Right
+    end
+end
+
 RunService.RenderStepped:Connect(function()
     pcall(function()
         local aliveCount = 0
@@ -541,13 +603,13 @@ RunService.RenderStepped:Connect(function()
             local roleColor = Color3.fromRGB(200, 200, 200)
 
             if cKnife or bKnife then
-                roleType = 1 -- ฆาตกร (บนสุด)
+                roleType = 1 
                 roleNameStr = "ฆาตกร"
-                roleColor = Color3.fromRGB(255, 60, 60) -- ชื่อสีแดง
+                roleColor = Color3.fromRGB(255, 60, 60) 
             elseif cGun or bGun then
-                roleType = 2 -- นายอำเภอ (รองจากฆาตกร)
+                roleType = 2 
                 roleNameStr = "นายอำเภอ"
-                roleColor = Color3.fromRGB(0, 162, 255) -- ชื่อสีฟ้า
+                roleColor = Color3.fromRGB(0, 162, 255) 
             end
 
             table.insert(playerRoleData, {
@@ -559,9 +621,6 @@ RunService.RenderStepped:Connect(function()
             })
         end
 
-        HeaderSummary.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
-
-        -- จัดเรียงลำดับ: ฆาตกร (1) -> นายอำเภอ (2) -> ผู้บริสุทธิ์ (3)
         table.sort(playerRoleData, function(a, b)
             if a.RoleType ~= b.RoleType then
                 return a.RoleType < b.RoleType
@@ -569,58 +628,46 @@ RunService.RenderStepped:Connect(function()
             return a.Player.Name < b.Player.Name
         end)
 
-        for _, guiObj in pairs(StatusContainer:GetChildren()) do
-            if guiObj:IsA("Frame") then guiObj:Destroy() end
+        local rs = Workspace:FindFirstChild("RoundState") or Workspace:FindFirstChild("GameStatus")
+        local statusVal = rs and tostring(rs.Value) or ""
+        local isGamePlaying = (aliveCount > 1 and statusVal ~= "Waiting" and statusVal ~= "Intermission") or (statusVal == "Playing")
+
+        if not isGamePlaying and GameState == "Playing" then
+            -- บันทึกข้อมูลตาที่แล้วไว้เมื่อเกมจบ
+            lastPlayerRoleData = playerRoleData
+            lastAliveCount = aliveCount
+            lastDeadCount = deadCount
+            GameState = "Waiting"
         end
 
-        for _, data in ipairs(playerRoleData) do
-            local pCard = Instance.new("Frame", StatusContainer)
-            pCard.Size = UDim2.new(0.96, 0, 0, 32)
-            pCard.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
-            Instance.new("UICorner", pCard).CornerRadius = UDim.new(0, 5)
-
-            local headshot = Instance.new("ImageLabel", pCard)
-            headshot.Size = UDim2.new(0, 24, 0, 24)
-            headshot.Position = UDim2.new(0, 4, 0.5, -12)
-            headshot.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-            Instance.new("UICorner", headshot).CornerRadius = UDim.new(1, 0)
-            pcall(function()
-                local content, isReady = Players:GetUserThumbnailAsync(data.Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-                if isReady then headshot.Image = content end
-            end)
-
-            -- กากบาท X ถ้าผู้เล่นตาย
-            if not data.IsAlive then
-                local deadX = Instance.new("TextLabel", headshot)
-                deadX.Size = UDim2.new(1, 0, 1, 0)
-                deadX.BackgroundTransparency = 1
-                deadX.Text = "X"
-                deadX.TextColor3 = Color3.fromRGB(255, 50, 50)
-                deadX.Font = Enum.Font.GothamBold
-                deadX.TextSize = 16
-                deadX.TextXAlignment = Enum.TextXAlignment.Center
-                deadX.TextYAlignment = Enum.TextYAlignment.Center
+        if not isGamePlaying then
+            if GameState == "Waiting" and not TimerActive then
+                if #lastPlayerRoleData > 0 then
+                    HeaderSummary.Text = "เกมยังไม่เริ่ม (แสดงผลสรุปตาที่แล้ว)"
+                    RenderPlayerList(lastPlayerRoleData)
+                else
+                    HeaderSummary.Text = "เกมยังไม่เริ่ม"
+                    RenderPlayerList(playerRoleData)
+                end
+                
+                -- เช็คสัญญาณเริ่มเกมเพื่อเริ่มนับถอยหลัง 10 วิ
+                if statusVal == "Starting" or statusVal == "Intermission" then
+                    GameState = "Starting"
+                    TimerActive = true
+                    task.spawn(function()
+                        for i = 10, 1, -1 do
+                            HeaderSummary.Text = "กำลังหา... เริ่มใน " .. i .. " วินาที"
+                            task.wait(1)
+                        end
+                        TimerActive = false
+                        GameState = "Playing"
+                    end)
+                end
             end
-
-            local nameLabel = Instance.new("TextLabel", pCard)
-            nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
-            nameLabel.Position = UDim2.new(0, 34, 0, 0)
-            nameLabel.BackgroundTransparency = 1
-            nameLabel.Text = data.Player.Name .. " (" .. data.RoleName .. ")"
-            nameLabel.TextColor3 = data.RoleColor
-            nameLabel.Font = Enum.Font.GothamBold
-            nameLabel.TextSize = 10
-            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-            local stateLabel = Instance.new("TextLabel", pCard)
-            stateLabel.Size = UDim2.new(0.3, 0, 1, 0)
-            stateLabel.Position = UDim2.new(0.68, 0, 0, 0)
-            stateLabel.BackgroundTransparency = 1
-            stateLabel.Text = data.IsAlive and "รอดชีวิต" or "ตายแล้ว"
-            stateLabel.TextColor3 = data.IsAlive and Color3.fromRGB(80, 220, 100) or Color3.fromRGB(220, 80, 80)
-            stateLabel.Font = Enum.Font.GothamBold
-            stateLabel.TextSize = 10
-            stateLabel.TextXAlignment = Enum.TextXAlignment.Right
+        else
+            GameState = "Playing"
+            HeaderSummary.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
+            RenderPlayerList(playerRoleData)
         end
     end)
 end)
