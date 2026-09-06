@@ -1,11 +1,10 @@
--- ==================== GKHub X PancakeHub & MM2 UI (Noclip Player Fix) ====================
+-- ==================== GKHub X PancakeHub & MM2 UI (Final Updated) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
-local PhysicsService = game:GetService("PhysicsService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
@@ -668,27 +667,9 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     end
 end)
 
-local antiKickEnabled = false
-CreateFeatureRow(PlayerPage, "กันโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
-    antiKickEnabled = not antiKickEnabled
-    btn.Text = antiKickEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    btn.BackgroundColor3 = antiKickEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
-end)
-
-pcall(function()
-    local oldNamecall
-    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        local method = getnamecallmethod()
-        if antiKickEnabled and (method == "Kick" or method == "kick") then
-            if self == LocalPlayer then return end
-        end
-        return oldNamecall(self, ...)
-    end)
-end)
-
--- **แก้ไขใหม่: ระบบเดินทะลุตัวผู้เล่นคนอื่น (Pass-Through Fix)**
+-- **ฟังก์ชันเดินทะลุตัวผู้เล่นอื่น (เปลี่ยนชื่อเป็น: กันโปรเตะออกแมพ และลบฟังก์ชันกันเตะตัวเก่าออกแล้ว)**
 local passPlayersEnabled = false
-CreateFeatureRow(PlayerPage, "เดินทะลุตัวผู้เล่นคนอื่น", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(PlayerPage, "กันโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     passPlayersEnabled = not passPlayersEnabled
     btn.Text = passPlayersEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = passPlayersEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
