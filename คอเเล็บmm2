@@ -371,7 +371,7 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- **Attack Module (Fixed Hitbox 250, Invisible & No Collision to prevent glitching)**
+-- **Attack Module**
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
@@ -408,7 +408,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- **Helper Module (Instant Teleport Coin Farm - FIXED 1 SECOND DELAY)**
+-- **Helper Module**
 local autoFarmCoinsEnabled = false
 CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (ดีเลย์ 1 วิ)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoFarmCoinsEnabled = not autoFarmCoinsEnabled
@@ -478,10 +478,20 @@ CreateSlider(UIPage, "ขนาดความใหญ่ UI", 50, 150, 100, "%
     end
 end)
 
--- **UI Bottom Section: MM2 Realtime Profiles & Counter (Top: Murderer/Sheriff, X for dead)**
+-- **UI Bottom Section: MM2 Realtime Profiles & Counter (Murderer -> Sheriff -> Innocent)**
+local HeaderSummary = Instance.new("TextLabel", UIPage)
+HeaderSummary.Size = UDim2.new(0.96, 0, 0, 24)
+HeaderSummary.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+HeaderSummary.Text = "ผู้รอดชีวิต: 0 คน | ตายไปแล้ว: 0 คน"
+HeaderSummary.TextColor3 = Color3.fromRGB(0, 162, 255)
+HeaderSummary.Font = Enum.Font.GothamBold
+HeaderSummary.TextSize = 11
+HeaderSummary.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = HeaderSummary, BaseSize = 11})
+
 local StatusContainer = Instance.new("ScrollingFrame", UIPage)
 StatusContainer.Name = "StatusContainer"
-StatusContainer.Size = UDim2.new(0.96, 0, 0, 180)
+StatusContainer.Size = UDim2.new(0.96, 0, 0, 175)
 StatusContainer.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
 StatusContainer.BorderSizePixel = 0
 StatusContainer.ScrollBarThickness = 2
@@ -493,19 +503,6 @@ local StatusLayout = Instance.new("UIListLayout", StatusContainer)
 StatusLayout.SortOrder = Enum.SortOrder.LayoutOrder
 StatusLayout.Padding = UDim.new(0, 4)
 StatusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
--- Header summary inside UI Page
-local HeaderSummary = Instance.new("TextLabel", UIPage)
-HeaderSummary.Size = UDim2.new(0.96, 0, 0, 24)
-HeaderSummary.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
-HeaderSummary.Text = "ผู้รอดชีวิต: 0 คน | ตายไปแล้ว: 0 คน"
-HeaderSummary.TextColor3 = Color3.fromRGB(0, 162, 255)
-HeaderSummary.Font = Enum.Font.GothamBold
-HeaderSummary.TextSize = 11
-HeaderSummary.BackgroundTransparency = 1
-table.insert(textLabelData, {Obj = HeaderSummary, BaseSize = 11})
-
-local playerProfileCards = {}
 
 local function ScanToolsForRole(container)
     if not container then return false, false end
@@ -538,18 +535,19 @@ RunService.RenderStepped:Connect(function()
 
             local cKnife, cGun = ScanToolsForRole(char)
             local bKnife, bGun = ScanToolsForRole(player:FindFirstChild("Backpack"))
-            local roleType = 3 -- Normal
-            local roleNameStr = "ผู้เล่นทั่วไป"
+            
+            local roleType = 3
+            local roleNameStr = "ผู้บริสุทธิ์"
             local roleColor = Color3.fromRGB(200, 200, 200)
 
             if cKnife or bKnife then
-                roleType = 1 -- Murderer (Top priority)
+                roleType = 1 -- ฆาตกร (บนสุด)
                 roleNameStr = "ฆาตกร"
-                roleColor = Color3.fromRGB(220, 80, 80)
+                roleColor = Color3.fromRGB(255, 60, 60) -- ชื่อสีแดง
             elseif cGun or bGun then
-                roleType = 2 -- Sheriff (Second priority)
+                roleType = 2 -- นายอำเภอ (รองจากฆาตกร)
                 roleNameStr = "นายอำเภอ"
-                roleColor = Color3.fromRGB(0, 162, 255)
+                roleColor = Color3.fromRGB(0, 162, 255) -- ชื่อสีฟ้า
             end
 
             table.insert(playerRoleData, {
@@ -563,7 +561,7 @@ RunService.RenderStepped:Connect(function()
 
         HeaderSummary.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
 
-        -- Sort: Murderer (1) -> Sheriff (2) -> Normal (3), then by name
+        -- จัดเรียงลำดับ: ฆาตกร (1) -> นายอำเภอ (2) -> ผู้บริสุทธิ์ (3)
         table.sort(playerRoleData, function(a, b)
             if a.RoleType ~= b.RoleType then
                 return a.RoleType < b.RoleType
@@ -571,20 +569,19 @@ RunService.RenderStepped:Connect(function()
             return a.Player.Name < b.Player.Name
         end)
 
-        -- Clean old UI elements in StatusContainer
         for _, guiObj in pairs(StatusContainer:GetChildren()) do
             if guiObj:IsA("Frame") then guiObj:Destroy() end
         end
 
         for _, data in ipairs(playerRoleData) do
             local pCard = Instance.new("Frame", StatusContainer)
-            pCard.Size = UDim2.new(0.96, 0, 0, 35)
+            pCard.Size = UDim2.new(0.96, 0, 0, 32)
             pCard.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
             Instance.new("UICorner", pCard).CornerRadius = UDim.new(0, 5)
 
             local headshot = Instance.new("ImageLabel", pCard)
-            headshot.Size = UDim2.new(0, 27, 0, 27)
-            headshot.Position = UDim2.new(0, 4, 0.5, -13.5)
+            headshot.Size = UDim2.new(0, 24, 0, 24)
+            headshot.Position = UDim2.new(0, 4, 0.5, -12)
             headshot.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
             Instance.new("UICorner", headshot).CornerRadius = UDim.new(1, 0)
             pcall(function()
@@ -592,7 +589,7 @@ RunService.RenderStepped:Connect(function()
                 if isReady then headshot.Image = content end
             end)
 
-            -- Dead Overlay X Mark if dead
+            -- กากบาท X ถ้าผู้เล่นตาย
             if not data.IsAlive then
                 local deadX = Instance.new("TextLabel", headshot)
                 deadX.Size = UDim2.new(1, 0, 1, 0)
@@ -600,12 +597,14 @@ RunService.RenderStepped:Connect(function()
                 deadX.Text = "X"
                 deadX.TextColor3 = Color3.fromRGB(255, 50, 50)
                 deadX.Font = Enum.Font.GothamBold
-                deadX.TextSize = 18
+                deadX.TextSize = 16
+                deadX.TextXAlignment = Enum.TextXAlignment.Center
+                deadX.TextYAlignment = Enum.TextYAlignment.Center
             end
 
             local nameLabel = Instance.new("TextLabel", pCard)
             nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
-            nameLabel.Position = UDim2.new(0, 36, 0, 0)
+            nameLabel.Position = UDim2.new(0, 34, 0, 0)
             nameLabel.BackgroundTransparency = 1
             nameLabel.Text = data.Player.Name .. " (" .. data.RoleName .. ")"
             nameLabel.TextColor3 = data.RoleColor
@@ -642,7 +641,6 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     end
 end)
 
--- **NEW FUNCTION: กันโปรเตะออกแมพ**
 local antiKickEnabled = false
 CreateFeatureRow(PlayerPage, "กันโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     antiKickEnabled = not antiKickEnabled
@@ -654,9 +652,7 @@ local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local method = getnamecallmethod()
     if antiKickEnabled and (method == "Kick" or method == "kick") then
-        if self == LocalPlayer then
-            return
-        end
+        if self == LocalPlayer then return end
     end
     return oldNamecall(self, ...)
 end)
@@ -720,13 +716,6 @@ CreateFeatureRow(ESPPage, "เปิดใช้งาน ESP ไฮไลท์
     btn.BackgroundColor3 = espEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
 
-local gunEspEnabled = false
-CreateFeatureRow(ESPPage, "ESP ปืนตกพื้น", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
-    gunEspEnabled = not gunEspEnabled
-    btn.Text = gunEspEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    btn.BackgroundColor3 = gunEspEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
-end)
-
 local InfoBox = Instance.new("Frame", ESPPage)
 InfoBox.Size = UDim2.new(0.96, 0, 0, 75)
 InfoBox.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
@@ -735,7 +724,7 @@ Instance.new("UICorner", InfoBox).CornerRadius = UDim.new(0, 6)
 local InfoText = Instance.new("TextLabel", InfoBox)
 InfoText.Size = UDim2.new(1, -12, 1, 0)
 InfoText.Position = UDim2.new(0, 6, 0, 0)
-InfoText.Text = "• สีแดง = มีมีด (Knife)\n• สีฟ้า = มีปืน (Gun)\n• สีเขียว = คนปกติ\n• สีเหลือง = ปืนตกพื้น"
+InfoText.Text = "• สีแดง = มีมีด (Knife / ฆาตกร)\n• สีฟ้า = มีปืน (Gun / นายอำเภอ)\n• สีเทา = คนปกติ (ผู้บริสุทธิ์)"
 InfoText.TextColor3 = Color3.fromRGB(180, 180, 190)
 InfoText.Font = Enum.Font.Gotham
 InfoText.TextSize = 10
@@ -777,8 +766,8 @@ RunService.RenderStepped:Connect(function()
                     local charKnife, charGun = ScanTools(character)
                     local packKnife, packGun = ScanTools(player:FindFirstChild("Backpack"))
 
-                    local color = Color3.fromRGB(80, 200, 100)
-                    if charKnife or packKnife then color = Color3.fromRGB(220, 80, 80)
+                    local color = Color3.fromRGB(200, 200, 200)
+                    if charKnife or packKnife then color = Color3.fromRGB(255, 60, 60)
                     elseif charGun or packGun then color = Color3.fromRGB(0, 162, 255) end
 
                     local highlight = character:FindFirstChild("ESPHighlight")
