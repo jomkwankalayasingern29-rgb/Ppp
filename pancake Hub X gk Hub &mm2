@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHUB | Murder Mystery 2 (MM2) - Fixed Layout
+-- 🥞 PancakeHUB | Murder Mystery 2 (MM2) - Final Stable
 -- =======================================================
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -16,7 +16,7 @@ for _, v in pairs(container:GetChildren()) do
 existingGuis[v] = true
 end
 end
-​-- 📦 2. โหลด MacLib UI
+​-- 📦 2. โหลด MacLib UI (ขนาดพอดี ไม่ล้นหน้าจอ)
 ​local success, MacLib = pcall(function()
 return loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 end)
@@ -24,11 +24,10 @@ end)
 warn("PancakeHUB: Failed to load MacLib!")
 return
 end
-​-- 📱 ปรับขนาด Window ให้กว้างขึ้นเพื่อไม่ให้ข้อความล้นและบังฟังก์ชัน
-local Window = MacLib:Window({
-Title = "PancakeHUB | Murder Mystery 2",
-Subtitle = "Mobile Optimized",
-Size = UDim2.fromOffset(560, 320),
+​local Window = MacLib:Window({
+Title = "PancakeHUB | MM2",
+Subtitle = "Mobile Version",
+Size = UDim2.fromOffset(500, 280), -- 📱 ปรับขนาดให้พอดี ไม่เล็กเกินไปจนคอมโพเนนต์พัง
 DragStyle = 1,
 Keybind = Enum.KeyCode.RightControl,
 AcrylicBlur = false,
@@ -204,19 +203,15 @@ end,
 })
 ​local InfoSec = EspTab:Section({ Side = "Right", Title = "การจัดการสคริปต์" })
 ​InfoSec:Button({
-Name = "ปิดสคริปต์ทั้งหมด",
+Name = "ปิดสคริปต์และลบ UI ทั้งหมด",
 Callback = function()
 scriptRunning = false
 if ToggleGui then ToggleGui:Destroy() end
 if highlightFolder then highlightFolder:Destroy() end
 clearDrawings()
-​for _, container in pairs(containers) do
-for _, v in pairs(container:GetChildren()) do
-if v:IsA("ScreenGui") and (v.Name:lower():find("maclib") or v ~= ToggleGui) then
-pcall(function() v:Destroy() end)
-end
-end
-end
+​-- ปิดหน้าต่าง MacLib และ GUI ทั้งหมด
+if macGui then macGui:Destroy() end
+pcall(function() Window:Destroy() end)
 end,
 })
 ​InfoSec:Paragraph({
