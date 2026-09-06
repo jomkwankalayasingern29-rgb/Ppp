@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 (KillFeed True Pass-Through Fix) ====================
+-- ==================== GKHub X PancakeHub & MM2 (KillFeed Repositioned Fix) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -108,7 +108,7 @@ LogoG.ZIndex = 4
 local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 380, 1, 0)
 TitleText.Position = UDim2.new(0, 38, 0, 0)
-TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (True Pass-Through)"
+TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Repositioned Fix)"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 12
@@ -384,16 +384,16 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- ==================== ระบบแถบสาเหตุการตาย (True Pass-Through แบบไม่ต้องเลื่อนนิ้ว จิ้มเดินและเลื่อนจอทะลุผ่านได้ 100%) ====================
+-- ==================== ระบบแถบสาเหตุการตาย (ย้ายหนีมุมซ้ายบนเพื่อแก้ปัญหาจิ้มเดินไม่ได้) ====================
 local KillFeedHolder = Instance.new("Frame", ScreenGui)
 KillFeedHolder.Name = "KillFeedHolder"
 KillFeedHolder.Size = UDim2.new(0, 320, 0, 220)
-KillFeedHolder.Position = UDim2.new(0, 10, 0, 10)
+KillFeedHolder.Position = UDim2.new(0.5, -160, 0, 45) -- ย้ายมาตรงกลางด้านบน ไม่ทับจอยสติ๊กเดิน
 KillFeedHolder.BackgroundTransparency = 1
 KillFeedHolder.BorderSizePixel = 0
 KillFeedHolder.Visible = true
 KillFeedHolder.ZIndex = 5
-KillFeedHolder.Active = false -- ปิดการใช้งานเพื่อให้นิ้วทะลุกดผ่านได้ 100%
+KillFeedHolder.Active = false 
 
 local KillFeedScroll = Instance.new("Frame", KillFeedHolder)
 KillFeedScroll.Name = "KillFeedScroll"
@@ -401,12 +401,12 @@ KillFeedScroll.Size = UDim2.new(1, 0, 1, 0)
 KillFeedScroll.BackgroundTransparency = 1
 KillFeedScroll.BorderSizePixel = 0
 KillFeedScroll.ZIndex = 5
-KillFeedScroll.Active = false -- ป้องกันไม่ให้บล็อกการสัมผัสจอ
+KillFeedScroll.Active = false 
 
 local KillFeedLayout = Instance.new("UIListLayout", KillFeedScroll)
 KillFeedLayout.SortOrder = Enum.SortOrder.LayoutOrder
 KillFeedLayout.Padding = UDim.new(0, 5)
-KillFeedLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom -- ดันข้อความใหม่ขึ้นด้านบนอัตโนมัติ
+KillFeedLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom 
 KillFeedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 
 local function ShowDeathFeed(killerName, killerRole, victimName, victimRole, weaponEmoji)
