@@ -186,8 +186,9 @@ local function CreateTab(name)
     return Page
 end
 
--- สร้างครบทุกหมวดหมู่ (เพิ่มหมวดหมู่ "หลัก" ไว้บนสุด)
+-- สร้างครบทุกหมวดหมู่ (เพิ่มหมวดหมู่ "โจมตี" เข้ามาใหม่)
 local MainInfoPage = CreateTab("หลัก")
+local AttackPage = CreateTab("โจมตี")
 local UIPage = CreateTab("UI")
 local PlayerPage = CreateTab("ตัวละคร")
 local ToolPage = CreateTab("เครื่องมือ")
@@ -314,9 +315,65 @@ local function CreateCreditCard(parent, hubName, discordLink, themeColor)
     end)
 end
 
--- สร้างการ์ดเครดิต: ค่าย PancakeHub (สีเหลือง) และ ค่าย GKHub (สีฟ้า)
 CreateCreditCard(MainInfoPage, "ค่าย PancakeHub", "https://discord.gg/HfnJnAAM8e", Color3.fromRGB(255, 180, 50))
 CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4wqQ", Color3.fromRGB(80, 150, 220))
+
+
+-- =======================================================
+-- 7.2 หมวดหมู่ "โจมตี" (ระบบฆ่าทั้งหมด / Kill All Hitbox)
+-- =======================================================
+local killAllEnabled = false
+local KillAllFrame = Instance.new("Frame", AttackPage)
+KillAllFrame.Size = UDim2.new(1, 0, 0, 45)
+KillAllFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", KillAllFrame).CornerRadius = UDim.new(0, 6)
+
+local KillAllLabel = Instance.new("TextLabel", KillAllFrame)
+KillAllLabel.Size = UDim2.new(0, 200, 1, 0)
+KillAllLabel.Position = UDim2.new(0, 10, 0, 0)
+KillAllLabel.Text = "ฆ่าทั้งหมด (Kill All Hitbox)"
+KillAllLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+KillAllLabel.Font = Enum.Font.Gotham
+KillAllLabel.TextSize = 12
+KillAllLabel.TextXAlignment = Enum.TextXAlignment.Left
+KillAllLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = KillAllLabel, BaseSize = 12})
+
+local KillAllBtn = Instance.new("TextButton", KillAllFrame)
+KillAllBtn.Size = UDim2.new(0, 80, 0, 26)
+KillAllBtn.Position = UDim2.new(1, -88, 0.5, -13)
+KillAllBtn.Font = Enum.Font.GothamBold
+KillAllBtn.TextSize = 11
+KillAllBtn.Text = "ปิด (OFF)"
+KillAllBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+KillAllBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", KillAllBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = KillAllBtn, BaseSize = 11})
+
+KillAllBtn.MouseButton1Click:Connect(function()
+    killAllEnabled = not killAllEnabled
+    KillAllBtn.Text = killAllEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    KillAllBtn.BackgroundColor3 = killAllEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
+    KillAllBtn.TextColor3 = killAllEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+end)
+
+-- ลูปการทำงานดึงฮิตบ็อกซ์ผู้เล่นอื่นมาที่ตัวเราเมื่อเปิดใช้งาน
+RunService.Stepped:Connect(function()
+    if killAllEnabled then
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+            local myRoot = myChar.HumanoidRootPart
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                    if otherRoot then
+                        otherRoot.CFrame = myRoot.CFrame
+                    end
+                end
+            end
+        end
+    end
+end)
 
 
 -- เพิ่ม Slider ในหมวดหมู่ UI
