@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Ultimate Orbit Fling (Super Fast Fix)
+-- 🥞 PancakeHub X GKHub | MM2 Clean UI & Player Features
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -186,14 +186,12 @@ local function CreateTab(name)
     return Page
 end
 
--- สร้างแท็บทั้งหมด
+-- สร้างแท็บทั้งหมด (เอาหมวดหมู่โจมตีและออโต้ยิงออกแล้ว)
 local MainInfoPage = CreateTab("หลัก")
-local AttackPage = CreateTab("โจมตี")
 local UIPage = CreateTab("UI")
 local PlayerPage = CreateTab("ตัวละคร")
 local ToolPage = CreateTab("เครื่องมือ")
 local ESPPage = CreateTab("ESP")
-local AutoShootPage = CreateTab("Auto Shoot")
 
 tabs["หลัก"].Page.Visible = true
 tabs["หลัก"].Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
@@ -315,261 +313,6 @@ end
 
 CreateCreditCard(MainInfoPage, "ค่าย PancakeHub", "https://discord.gg/HfnJnAAM8e", Color3.fromRGB(255, 180, 50))
 CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4wqQ", Color3.fromRGB(80, 150, 220))
-
-
--- =======================================================
--- 7.2 หมวดหมู่ "โจมตี"
--- =======================================================
-
-local function ScanTools(container)
-    local foundKnife, foundGun = false, false
-    if container then
-        for _, item in pairs(container:GetChildren()) do
-            if item:IsA("Tool") then
-                local name = string.lower(item.Name)
-                if string.find(name, "knife") or string.find(name, "dagger") or string.find(name, "blade") or item:FindFirstChild("Knife") then
-                    foundKnife = true
-                elseif string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or item:FindFirstChild("Gun") then
-                    foundGun = true
-                end
-            end
-        end
-    end
-    return foundKnife, foundGun
-end
-
--- 1. ฟังก์ชันขยาย Hitbox
-local expandHitboxEnabled = false
-local hitboxTransparencyVal = 85
-
-local HitboxFrame = Instance.new("Frame", AttackPage)
-HitboxFrame.Size = UDim2.new(1, 0, 0, 45)
-HitboxFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
-Instance.new("UICorner", HitboxFrame).CornerRadius = UDim.new(0, 6)
-
-local HitboxLabel = Instance.new("TextLabel", HitboxFrame)
-HitboxLabel.Size = UDim2.new(0, 210, 1, 0)
-HitboxLabel.Position = UDim2.new(0, 10, 0, 0)
-HitboxLabel.Text = "ขยายฮิตบ็อกซ์ตัวผู้เล่นอื่น (Size 999)"
-HitboxLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-HitboxLabel.Font = Enum.Font.Gotham
-HitboxLabel.TextSize = 12
-HitboxLabel.TextXAlignment = Enum.TextXAlignment.Left
-HitboxLabel.BackgroundTransparency = 1
-table.insert(textLabelData, {Obj = HitboxLabel, BaseSize = 12})
-
-local HitboxBtn = Instance.new("TextButton", HitboxFrame)
-HitboxBtn.Size = UDim2.new(0, 80, 0, 26)
-HitboxBtn.Position = UDim2.new(1, -88, 0.5, -13)
-HitboxBtn.Font = Enum.Font.GothamBold
-HitboxBtn.TextSize = 11
-HitboxBtn.Text = "ปิด (OFF)"
-HitboxBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-HitboxBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
-Instance.new("UICorner", HitboxBtn).CornerRadius = UDim.new(0, 5)
-table.insert(textLabelData, {Obj = HitboxBtn, BaseSize = 11})
-
-HitboxBtn.MouseButton1Click:Connect(function()
-    expandHitboxEnabled = not expandHitboxEnabled
-    HitboxBtn.Text = expandHitboxEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    HitboxBtn.BackgroundColor3 = expandHitboxEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
-    HitboxBtn.TextColor3 = expandHitboxEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
-    
-    if not expandHitboxEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local root = player.Character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    root.Size = Vector3.new(2, 2, 1)
-                    root.Transparency = 1
-                end
-            end
-        end
-    end
-end)
-
-CreateSlider(AttackPage, "ปรับความจางฮิตบ็อกซ์ (0=ทึบ, 100=ล่องหน)", 0, 100, 85, "%", function(val)
-    hitboxTransparencyVal = val
-end)
-
-RunService.Stepped:Connect(function()
-    if expandHitboxEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
-                if otherRoot then
-                    otherRoot.Size = Vector3.new(999, 999, 999)
-                    otherRoot.Transparency = hitboxTransparencyVal / 100
-                    otherRoot.CanCollide = false
-                end
-            end
-        end
-    end
-end)
-
--- 2. ฟังก์ชันดึงฆาตกรมาด้านหน้า + ยิงโดน 100% ทันที (Pull & Shoot)
-local pullKillerEnabled = false
-local PullFrame = Instance.new("Frame", AttackPage)
-PullFrame.Size = UDim2.new(1, 0, 0, 45)
-PullFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
-Instance.new("UICorner", PullFrame).CornerRadius = UDim.new(0, 6)
-
-local PullLabel = Instance.new("TextLabel", PullFrame)
-PullLabel.Size = UDim2.new(0, 210, 1, 0)
-PullLabel.Position = UDim2.new(0, 10, 0, 0)
-PullLabel.Text = "ดึงฆาตกรมาด้านหน้าแล้วยิง (Pull & Shoot)"
-PullLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-PullLabel.Font = Enum.Font.Gotham
-PullLabel.TextSize = 12
-PullLabel.TextXAlignment = Enum.TextXAlignment.Left
-PullLabel.BackgroundTransparency = 1
-table.insert(textLabelData, {Obj = PullLabel, BaseSize = 12})
-
-local PullBtn = Instance.new("TextButton", PullFrame)
-PullBtn.Size = UDim2.new(0, 80, 0, 26)
-PullBtn.Position = UDim2.new(1, -88, 0.5, -13)
-PullBtn.Font = Enum.Font.GothamBold
-PullBtn.TextSize = 11
-PullBtn.Text = "ปิด (OFF)"
-PullBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-PullBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
-Instance.new("UICorner", PullBtn).CornerRadius = UDim.new(0, 5)
-table.insert(textLabelData, {Obj = PullBtn, BaseSize = 11})
-
-PullBtn.MouseButton1Click:Connect(function()
-    pullKillerEnabled = not pullKillerEnabled
-    PullBtn.Text = pullKillerEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    PullBtn.BackgroundColor3 = pullKillerEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
-    PullBtn.TextColor3 = pullKillerEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
-end)
-
-RunService.Stepped:Connect(function()
-    if pullKillerEnabled then
-        local myChar = LocalPlayer.Character
-        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-            local myRoot = myChar.HumanoidRootPart
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    local charKnife, _ = ScanTools(player.Character)
-                    local packKnife, _ = ScanTools(player:FindFirstChild("Backpack"))
-                    
-                    if charKnife or packKnife then
-                        local killerRoot = player.Character:FindFirstChild("HumanoidRootPart")
-                        local killerHead = player.Character:FindFirstChild("Head")
-                        if killerRoot and killerHead then
-                            killerRoot.CFrame = myRoot.CFrame * CFrame.new(0, 0, -5)
-                            
-                            local gunTool = myChar:FindFirstChild("Gun")
-                            if not gunTool then
-                                for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
-                                    if item:IsA("Tool") and (string.lower(item.Name):find("gun") or item:FindFirstChild("GunScript") or item:FindFirstChild("Shoot")) then
-                                        item.Parent = myChar
-                                        gunTool = item
-                                        break
-                                    end
-                                end
-                            end
-                            
-                            if gunTool then
-                                local remote = nil
-                                for _, desc in pairs(gunTool:GetDescendants()) do
-                                    if desc:IsA("RemoteEvent") then
-                                        remote = desc
-                                        break
-                                    end
-                                end
-                                if remote then
-                                    remote:FireServer(killerHead.Position)
-                                else
-                                    gunTool.Parent = myChar
-                                    gunTool:Activate()
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-end)
-
--- 3. อัปเกรด: ระบบวิ่งวนรอบตัวฆาตกรแบบสปีดนรกและแม่นยำขึ้น (Super Fast Orbit Fling)
-local flingKillerEnabled = false
-local originalPosition = nil
-local FlingFrame = Instance.new("Frame", AttackPage)
-FlingFrame.Size = UDim2.new(1, 0, 0, 45)
-FlingFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
-Instance.new("UICorner", FlingFrame).CornerRadius = UDim.new(0, 6)
-
-local FlingLabel = Instance.new("TextLabel", FlingFrame)
-FlingLabel.Size = UDim2.new(0, 210, 1, 0)
-FlingLabel.Position = UDim2.new(0, 10, 0, 0)
-FlingLabel.Text = "ดีดฆาตกรออกนอกแมพ (Super Fast Orbit)"
-FlingLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-FlingLabel.Font = Enum.Font.Gotham
-FlingLabel.TextSize = 12
-FlingLabel.TextXAlignment = Enum.TextXAlignment.Left
-FlingLabel.BackgroundTransparency = 1
-table.insert(textLabelData, {Obj = FlingLabel, BaseSize = 12})
-
-local FlingBtn = Instance.new("TextButton", FlingFrame)
-FlingBtn.Size = UDim2.new(0, 80, 0, 26)
-FlingBtn.Position = UDim2.new(1, -88, 0.5, -13)
-FlingBtn.Font = Enum.Font.GothamBold
-FlingBtn.TextSize = 11
-FlingBtn.Text = "ปิด (OFF)"
-FlingBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-FlingBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
-Instance.new("UICorner", FlingBtn).CornerRadius = UDim.new(0, 5)
-table.insert(textLabelData, {Obj = FlingBtn, BaseSize = 11})
-
-FlingBtn.MouseButton1Click:Connect(function()
-    flingKillerEnabled = not flingKillerEnabled
-    FlingBtn.Text = flingKillerEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    FlingBtn.BackgroundColor3 = flingKillerEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
-    FlingBtn.TextColor3 = flingKillerEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
-    
-    local myChar = LocalPlayer.Character
-    if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-        if flingKillerEnabled then
-            originalPosition = myChar.HumanoidRootPart.CFrame
-        else
-            if originalPosition then
-                myChar.HumanoidRootPart.CFrame = originalPosition
-                originalPosition = nil
-            end
-        end
-    end
-end)
-
--- ระบบวิ่งวนรอบตัวฆาตกรความเร็วสูงพิเศษ (Super Fast Orbit)
-RunService.Stepped:Connect(function()
-    if flingKillerEnabled then
-        local myChar = LocalPlayer.Character
-        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-            local myRoot = myChar.HumanoidRootPart
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    local charKnife, _ = ScanTools(player.Character)
-                    local packKnife, _ = ScanTools(player:FindFirstChild("Backpack"))
-                    
-                    if charKnife or packKnife then
-                        local killerRoot = player.Character:FindFirstChild("HumanoidRootPart")
-                        if killerRoot then
-                            -- เพิ่มความเร็วในการหมุนเป็น 120 และรัศมีชิดติดตัว 1.2 เพื่อให้โดนตัวฆาตกรเต็มๆ
-                            local angle = tick() * 120 
-                            local radius = 1.2 
-                            local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
-                            
-                            myRoot.CFrame = killerRoot.CFrame + offset
-                            myRoot.CanCollide = true
-                        end
-                    end
-                end
-            end
-        end
-    end
-end)
 
 
 -- เพิ่ม Slider ปรับความทึบและขนาด UI
@@ -813,6 +556,23 @@ SwitchBtn.MouseButton1Click:Connect(function()
     if not espEnabled then ClearAllHighlights() end
 end)
 
+local function ScanTools(container)
+    local foundKnife, foundGun = false, false
+    if container then
+        for _, item in pairs(container:GetChildren()) do
+            if item:IsA("Tool") then
+                local name = string.lower(item.Name)
+                if string.find(name, "knife") or string.find(name, "dagger") or string.find(name, "blade") or item:FindFirstChild("Knife") then
+                    foundKnife = true
+                elseif string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or item:FindFirstChild("Gun") then
+                    foundGun = true
+                end
+            end
+        end
+    end
+    return foundKnife, foundGun
+end
+
 RunService.RenderStepped:Connect(function()
     for _, v in pairs(espTextObjects) do pcall(function() v:Remove() end) end
     espTextObjects = {}
@@ -861,134 +621,6 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
-end)
-
--- 10. หมวดหมู่ Auto Shoot
-local autoShootEnabled = false
-local miniShootGui = nil
-
-local ShootSwitchFrame = Instance.new("Frame", AutoShootPage)
-ShootSwitchFrame.Size = UDim2.new(1, 0, 0, 45)
-ShootSwitchFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
-Instance.new("UICorner", ShootSwitchFrame).CornerRadius = UDim.new(0, 6)
-
-local ShootSwitchLabel = Instance.new("TextLabel", ShootSwitchFrame)
-ShootSwitchLabel.Size = UDim2.new(0, 200, 1, 0)
-ShootSwitchLabel.Position = UDim2.new(0, 10, 0, 0)
-ShootSwitchLabel.Text = "ยิงอัตโนมัติแบบทันที (MM2)"
-ShootSwitchLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-ShootSwitchLabel.Font = Enum.Font.Gotham
-ShootSwitchLabel.TextSize = 12
-ShootSwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
-ShootSwitchLabel.BackgroundTransparency = 1
-table.insert(textLabelData, {Obj = ShootSwitchLabel, BaseSize = 12})
-
-local ShootSwitchBtn = Instance.new("TextButton", ShootSwitchFrame)
-ShootSwitchBtn.Size = UDim2.new(0, 80, 0, 26)
-ShootSwitchBtn.Position = UDim2.new(1, -88, 0.5, -13)
-ShootSwitchBtn.Font = Enum.Font.GothamBold
-ShootSwitchBtn.TextSize = 11
-ShootSwitchBtn.Text = "ปิด (OFF)"
-ShootSwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-ShootSwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
-Instance.new("UICorner", ShootSwitchBtn).CornerRadius = UDim.new(0, 5)
-table.insert(textLabelData, {Obj = ShootSwitchBtn, BaseSize = 11})
-
-local function TriggerMM2Shoot()
-    local myChar = LocalPlayer.Character
-    if not myChar then return end
-
-    local gunTool = myChar:FindFirstChild("Gun")
-    if not gunTool then
-        for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
-            if item:IsA("Tool") and (string.lower(item.Name):find("gun") or item:FindFirstChild("GunScript") or item:FindFirstChild("Shoot")) then
-                item.Parent = myChar
-                gunTool = item
-                task.wait(0.1)
-                break
-            end
-        end
-    end
-    if not gunTool then gunTool = myChar:FindFirstChildWhichIsA("Tool") end
-    if not gunTool then return end
-
-    local targetHead = nil
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character then
-            local charKnife, _ = ScanTools(p.Character)
-            local packKnife, _ = ScanTools(p:FindFirstChild("Backpack"))
-            
-            if charKnife or packKnife then
-                local head = p.Character:FindFirstChild("Head") or p.Character:FindFirstChild("HumanoidRootPart")
-                if head then
-                    targetHead = head
-                    break
-                end
-            end
-        end
-    end
-
-    if targetHead then
-        local remote = nil
-        for _, desc in pairs(gunTool:GetDescendants()) do
-            if desc:IsA("RemoteEvent") then
-                remote = desc
-                break
-            end
-        end
-        if remote then
-            remote:FireServer(targetHead.Position)
-        else
-            gunTool.Parent = myChar
-            gunTool:Activate()
-        end
-    end
-end
-
-local function ToggleMiniShootUI(state)
-    if state then
-        if not miniShootGui then
-            miniShootGui = Instance.new("Frame")
-            miniShootGui.Name = "MiniShootUI"
-            miniShootGui.Size = UDim2.new(0, 110, 0, 50)
-            miniShootGui.Position = UDim2.new(0.8, 0, 0.5, -25)
-            miniShootGui.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
-            miniShootGui.Active = true
-            miniShootGui.Draggable = true
-            miniShootGui.Parent = ScreenGui
-            Instance.new("UICorner", miniShootGui).CornerRadius = UDim.new(0, 8)
-
-            local stroke = Instance.new("UIStroke", miniShootGui)
-            stroke.Color = Color3.fromRGB(220, 80, 80)
-            stroke.Thickness = 1.5
-
-            local shootBtn = Instance.new("TextButton", miniShootGui)
-            shootBtn.Size = UDim2.new(1, -10, 1, -10)
-            shootBtn.Position = UDim2.new(0, 5, 0, 5)
-            shootBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
-            shootBtn.Text = "ยิงทันที! (INSTANT)"
-            shootBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            shootBtn.Font = Enum.Font.GothamBold
-            shootBtn.TextSize = 11
-            Instance.new("UICorner", shootBtn).CornerRadius = UDim.new(0, 6)
-            table.insert(textLabelData, {Obj = shootBtn, BaseSize = 11})
-
-            shootBtn.MouseButton1Click:Connect(function()
-                TriggerMM2Shoot()
-            end)
-        end
-        miniShootGui.Visible = true
-    else
-        if miniShootGui then miniShootGui.Visible = false end
-    end
-end
-
-ShootSwitchBtn.MouseButton1Click:Connect(function()
-    autoShootEnabled = not autoShootEnabled
-    ShootSwitchBtn.Text = autoShootEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    ShootSwitchBtn.BackgroundColor3 = autoShootEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
-    ShootSwitchBtn.TextColor3 = autoShootEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
-    ToggleMiniShootUI(autoShootEnabled)
 end)
 
 -- 11. ระบบ Animation ย่อ/กาง UI เข้าหาไอคอน Pancake
