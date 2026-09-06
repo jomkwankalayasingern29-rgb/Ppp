@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | Murder Mystery 2 (Hitbox Expand Offset Front)
+-- 🥞 PancakeHub X GKHub | MM2 Hitbox 999 + Custom Transparency
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -318,9 +318,11 @@ CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4
 
 
 -- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (ระบบดึงฮิตบ็อกซ์มาไว้ด้านหน้าตัวเรา)
+-- 7.2 หมวดหมู่ "โจมตี" (ระบบขยาย Hitbox ขนาด 999 และปรับความจางได้)
 -- =======================================================
 local expandHitboxEnabled = false
+local hitboxTransparencyVal = 85 -- ค่าเริ่มต้นความจาง (0-100)
+
 local HitboxFrame = Instance.new("Frame", AttackPage)
 HitboxFrame.Size = UDim2.new(1, 0, 0, 45)
 HitboxFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
@@ -329,7 +331,7 @@ Instance.new("UICorner", HitboxFrame).CornerRadius = UDim.new(0, 6)
 local HitboxLabel = Instance.new("TextLabel", HitboxFrame)
 HitboxLabel.Size = UDim2.new(0, 210, 1, 0)
 HitboxLabel.Position = UDim2.new(0, 10, 0, 0)
-HitboxLabel.Text = "ดูดฮิตบ็อกซ์มาไว้ด้านหน้า (Front Hitbox)"
+HitboxLabel.Text = "ขยายฮิตบ็อกซ์ตัวผู้เล่นอื่น (Size 999)"
 HitboxLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 HitboxLabel.Font = Enum.Font.Gotham
 HitboxLabel.TextSize = 12
@@ -354,7 +356,7 @@ HitboxBtn.MouseButton1Click:Connect(function()
     HitboxBtn.BackgroundColor3 = expandHitboxEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
     HitboxBtn.TextColor3 = expandHitboxEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
     
-    -- ถ้าปิด ให้คืนค่าขนาดปกติของผู้เล่นอื่น
+    -- ถ้าปิด ให้คืนค่าขนาดปกติของผู้เล่นอื่นทันที
     if not expandHitboxEnabled then
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
@@ -368,26 +370,22 @@ HitboxBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ลูปการทำงานขยายฮิตบ็อกซ์และดึงตำแหน่งมาไว้ "ด้านหน้า" ของตัวเราตลอดเวลา
+-- เพิ่ม Slider สำหรับปรับความจางของฮิตบ็อกซ์
+CreateSlider(AttackPage, "ปรับความจางฮิตบ็อกซ์ (0=ทึบ, 100=ล่องหน)", 0, 100, 85, "%", function(val)
+    hitboxTransparencyVal = val
+end)
+
+-- ลูปการทำงานขยายฮิตบ็อกซ์เป็น 999 และปรับความโปร่งใสตามสไลเดอร์ตลอดเวลา
 RunService.Stepped:Connect(function()
     if expandHitboxEnabled then
-        local myChar = LocalPlayer.Character
-        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-            local myRoot = myChar.HumanoidRootPart
-            -- ดึงไปข้างหน้าเรา 4 หน่วย (ปรับเลขนี้เพิ่ม/ลดระยะห่างได้ตามต้องการ)
-            local frontCFrame = myRoot.CFrame + (myRoot.CFrame.LookVector * 4)
-            
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
-                    if otherRoot then
-                        -- ขยายฮิตบ็อกซ์ให้ใหญ่ครอบคลุมด้านหน้า
-                        otherRoot.Size = Vector3.new(15, 15, 15)
-                        otherRoot.Transparency = 0.85 -- มองเห็นจางๆ (เปลี่ยนเป็น 1 ถ้าไม่อยากให้เห็น)
-                        otherRoot.CanCollide = false
-                        -- บังคับตำแหน่งให้อยู่ด้านหน้าเรา
-                        otherRoot.CFrame = frontCFrame
-                    end
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if otherRoot then
+                    -- ขยายขนาดใหญ่สุดๆ (999)
+                    otherRoot.Size = Vector3.new(999, 999, 999)
+                    otherRoot.Transparency = hitboxTransparencyVal / 100
+                    otherRoot.CanCollide = false
                 end
             end
         end
@@ -805,7 +803,7 @@ local function ToggleUI()
             BackgroundTransparency = 1 - currentAlpha
         }):Play()
     else
-        closeTween = TweenService:Create(MainFrame, tweenInfo, {
+        local closeTween = TweenService:Create(MainFrame, tweenInfo, {
             Size = UDim2.new(0, 40, 0, 40),
             Position = ToggleBtn.Position,
             BackgroundTransparency = 1
