@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Hitbox 999 + Custom Transparency
+-- 🥞 PancakeHub X GKHub | MM2 Final Update + Pull Killer
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -318,10 +318,30 @@ CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4
 
 
 -- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (ระบบขยาย Hitbox ขนาด 999 และปรับความจางได้)
+-- 7.2 หมวดหมู่ "โจมตี" (Hitbox 999 + ระบบดึงฆาตกรมาด้านหน้า)
 -- =======================================================
+
+-- Helper ตรวจสอบอาวุธมีด
+local function ScanTools(container)
+    local foundKnife, foundGun = false, false
+    if container then
+        for _, item in pairs(container:GetChildren()) do
+            if item:IsA("Tool") then
+                local name = string.lower(item.Name)
+                if string.find(name, "knife") or string.find(name, "dagger") or string.find(name, "blade") or item:FindFirstChild("Knife") then
+                    foundKnife = true
+                elseif string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or item:FindFirstChild("Gun") then
+                    foundGun = true
+                end
+            end
+        end
+    end
+    return foundKnife, foundGun
+end
+
+-- 1. ฟังก์ชันขยาย Hitbox
 local expandHitboxEnabled = false
-local hitboxTransparencyVal = 85 -- ค่าเริ่มต้นความจาง (0-100)
+local hitboxTransparencyVal = 85
 
 local HitboxFrame = Instance.new("Frame", AttackPage)
 HitboxFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -331,7 +351,7 @@ Instance.new("UICorner", HitboxFrame).CornerRadius = UDim.new(0, 6)
 local HitboxLabel = Instance.new("TextLabel", HitboxFrame)
 HitboxLabel.Size = UDim2.new(0, 210, 1, 0)
 HitboxLabel.Position = UDim2.new(0, 10, 0, 0)
-HitboxLabel.Text = "ฆ่าทั้งเเมพ"
+HitboxLabel.Text = "ขยายฮิตบ็อกซ์ตัวผู้เล่นอื่น (Size 999)"
 HitboxLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 HitboxLabel.Font = Enum.Font.Gotham
 HitboxLabel.TextSize = 12
@@ -356,7 +376,6 @@ HitboxBtn.MouseButton1Click:Connect(function()
     HitboxBtn.BackgroundColor3 = expandHitboxEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
     HitboxBtn.TextColor3 = expandHitboxEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
     
-    -- ถ้าปิด ให้คืนค่าขนาดปกติของผู้เล่นอื่นทันที
     if not expandHitboxEnabled then
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
@@ -370,22 +389,79 @@ HitboxBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- เพิ่ม Slider สำหรับปรับความจางของฮิตบ็อกซ์
 CreateSlider(AttackPage, "ปรับความจางฮิตบ็อกซ์ (0=ทึบ, 100=ล่องหน)", 0, 100, 85, "%", function(val)
     hitboxTransparencyVal = val
 end)
 
--- ลูปการทำงานขยายฮิตบ็อกซ์เป็น 999 และปรับความโปร่งใสตามสไลเดอร์ตลอดเวลา
 RunService.Stepped:Connect(function()
     if expandHitboxEnabled then
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
                 local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 if otherRoot then
-                    -- ขยายขนาดใหญ่สุดๆ (999)
                     otherRoot.Size = Vector3.new(999, 999, 999)
                     otherRoot.Transparency = hitboxTransparencyVal / 100
                     otherRoot.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+-- 2. ฟังก์ชันใหม่: ดึงฆาตกรมาด้านหน้า (Pull Killer/Knife)
+local pullKillerEnabled = false
+local PullFrame = Instance.new("Frame", AttackPage)
+PullFrame.Size = UDim2.new(1, 0, 0, 45)
+PullFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", PullFrame).CornerRadius = UDim.new(0, 6)
+
+local PullLabel = Instance.new("TextLabel", PullFrame)
+PullLabel.Size = UDim2.new(0, 210, 1, 0)
+PullLabel.Position = UDim2.new(0, 10, 0, 0)
+PullLabel.Text = "ดึงฆาตกรมาด้านหน้า (Pull Killer)"
+PullLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+PullLabel.Font = Enum.Font.Gotham
+PullLabel.TextSize = 12
+PullLabel.TextXAlignment = Enum.TextXAlignment.Left
+PullLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = PullLabel, BaseSize = 12})
+
+local PullBtn = Instance.new("TextButton", PullFrame)
+PullBtn.Size = UDim2.new(0, 80, 0, 26)
+PullBtn.Position = UDim2.new(1, -88, 0.5, -13)
+PullBtn.Font = Enum.Font.GothamBold
+PullBtn.TextSize = 11
+PullBtn.Text = "ปิด (OFF)"
+PullBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+PullBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", PullBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = PullBtn, BaseSize = 11})
+
+PullBtn.MouseButton1Click:Connect(function()
+    pullKillerEnabled = not pullKillerEnabled
+    PullBtn.Text = pullKillerEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    PullBtn.BackgroundColor3 = pullKillerEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
+    PullBtn.TextColor3 = pullKillerEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+end)
+
+-- ลูปการทำงานดึงฆาตกรมาด้านหน้าตัวเราตลอดเวลาที่เปิดใช้งาน
+RunService.Stepped:Connect(function()
+    if pullKillerEnabled then
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+            local myRoot = myChar.HumanoidRootPart
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local charKnife, _ = ScanTools(player.Character)
+                    local packKnife, _ = ScanTools(player:FindFirstChild("Backpack"))
+                    
+                    if charKnife or packKnife then
+                        local killerRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                        if killerRoot then
+                            -- ดึงมาไว้ด้านหน้าตัวเรา (ระยะห่างประมาณ 4 สตั๊ด)
+                            killerRoot.CFrame = myRoot.CFrame * CFrame.new(0, 0, -4)
+                        end
+                    end
                 end
             end
         end
@@ -416,7 +492,7 @@ CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 
     end
 end)
 
--- 8. หมวดหมู่ตัวละคร: วิ่งเร็ว, กระโดดสูง, ทะลุกำแพง (Noclip)
+-- 8. หมวดหมู่ตัวละคร: วิ่งเร็ว, กระโดดสูง, ทะลุกำแพง (Noclip) + กระโดดไม่จำกัด (Infinite Jump)
 CreateSlider(PlayerPage, "ความเร็วในการวิ่ง (WalkSpeed)", 16, 250, 16, "", function(val)
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
@@ -432,6 +508,7 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     end
 end)
 
+-- Noclip Toggle
 local noclipEnabled = false
 local NoclipFrame = Instance.new("Frame", PlayerPage)
 NoclipFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -477,6 +554,52 @@ RunService.Stepped:Connect(function()
         end
     end
 end)
+
+-- เพิ่มฟังก์ชัน: กระโดดไม่จำกัด (Infinite Jump)
+local infJumpEnabled = false
+local InfJumpFrame = Instance.new("Frame", PlayerPage)
+InfJumpFrame.Size = UDim2.new(1, 0, 0, 45)
+InfJumpFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", InfJumpFrame).CornerRadius = UDim.new(0, 6)
+
+local InfJumpLabel = Instance.new("TextLabel", InfJumpFrame)
+InfJumpLabel.Size = UDim2.new(0, 200, 1, 0)
+InfJumpLabel.Position = UDim2.new(0, 10, 0, 0)
+InfJumpLabel.Text = "กระโดดไม่จำกัด (Infinite Jump)"
+InfJumpLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+InfJumpLabel.Font = Enum.Font.Gotham
+InfJumpLabel.TextSize = 12
+InfJumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+InfJumpLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = InfJumpLabel, BaseSize = 12})
+
+local InfJumpBtn = Instance.new("TextButton", InfJumpFrame)
+InfJumpBtn.Size = UDim2.new(0, 80, 0, 26)
+InfJumpBtn.Position = UDim2.new(1, -88, 0.5, -13)
+InfJumpBtn.Font = Enum.Font.GothamBold
+InfJumpBtn.TextSize = 11
+InfJumpBtn.Text = "ปิด (OFF)"
+InfJumpBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+InfJumpBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", InfJumpBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = InfJumpBtn, BaseSize = 11})
+
+InfJumpBtn.MouseButton1Click:Connect(function()
+    infJumpEnabled = not infJumpEnabled
+    InfJumpBtn.Text = infJumpEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    InfJumpBtn.BackgroundColor3 = infJumpEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    InfJumpBtn.TextColor3 = infJumpEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if infJumpEnabled then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
 
 -- 8.5 หมวดหมู่เครื่องมือ: ระบบคลิกวาร์ป (Click TP Tool)
 local ToolFrame = Instance.new("Frame", ToolPage)
@@ -569,23 +692,6 @@ InfoText.BackgroundTransparency = 1
 table.insert(textLabelData, {Obj = InfoText, BaseSize = 11})
 
 local espTextObjects = {}
-
-local function ScanTools(container)
-    local foundKnife, foundGun = false, false
-    if container then
-        for _, item in pairs(container:GetChildren()) do
-            if item:IsA("Tool") then
-                local name = string.lower(item.Name)
-                if string.find(name, "knife") or string.find(name, "dagger") or string.find(name, "blade") or item:FindFirstChild("Knife") then
-                    foundKnife = true
-                elseif string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or item:FindFirstChild("Gun") then
-                    foundGun = true
-                end
-            end
-        end
-    end
-    return foundKnife, foundGun
-end
 
 local function ClearAllHighlights()
     for _, player in pairs(Players:GetPlayers()) do
