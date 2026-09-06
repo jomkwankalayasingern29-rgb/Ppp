@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHUB | Murder Mystery 2 (MacLib Fixed Version)
+-- 🥞 PancakeHUB | Murder Mystery 2 (MacLib Full Features)
 -- =======================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -90,7 +90,7 @@ ToggleButton.MouseButton1Click:Connect(function()
 end)
 
 -- -------------------------------------------------------
--- 🛠️ 5. ตัวแปรระบบฟังก์ชัน
+-- 🛠️ 5. ตัวแปรและฟังก์ชันระบบหลัก
 -- -------------------------------------------------------
 local espEnabled = false
 local noclipEnabled = false
@@ -98,18 +98,15 @@ local autoShootEnabled = false
 local miniShootGui = nil
 local espTextObjects = {}
 
-local highlightFolder = Instance.new("Folder", CoreGui)
-highlightFolder.Name = "PancakeHUB_Highlights"
-
 local function ScanTools(container)
     local foundKnife, foundGun = false, false
     if container then
         for _, item in pairs(container:GetChildren()) do
             if item:IsA("Tool") then
                 local name = string.lower(item.Name)
-                if string.find(name, "knife") or string.find(name, "dagger") or string.find(name, "blade") or item:FindFirstChild("Knife") then
+                if string.find(name, "knife") or string.find(name, "dagger") or string.find(name, "blade") or string.find(name, "sword") or item:FindFirstChild("Knife") then
                     foundKnife = true
-                elseif string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or item:FindFirstChild("Gun") then
+                elseif string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or string.find(name, "rifle") or string.find(name, "shotgun") or item:FindFirstChild("Gun") then
                     foundGun = true
                 end
             end
@@ -150,6 +147,7 @@ local function TriggerMM2Shoot()
         if p ~= LocalPlayer and p.Character then
             local charKnife, _ = ScanTools(p.Character)
             local packKnife, _ = ScanTools(p:FindFirstChild("Backpack"))
+            
             if charKnife or packKnife then
                 local head = p.Character:FindFirstChild("Head") or p.Character:FindFirstChild("HumanoidRootPart")
                 if head then
@@ -187,7 +185,7 @@ local PlayerTab = TabGroup:Tab({ Name = "ตัวละคร", Image = "rbxass
 local PlayerSec = PlayerTab:Section({ Side = "Left", Title = "ตั้งค่าตัวละคร" })
 
 PlayerSec:Slider({
-    Name = "ความเร็ววิ่ง",
+    Name = "ความเร็วในการวิ่ง (WalkSpeed)",
     Default = 16,
     Min = 16,
     Max = 250,
@@ -201,7 +199,7 @@ PlayerSec:Slider({
 })
 
 PlayerSec:Slider({
-    Name = "กระโดดสูง",
+    Name = "ความสูงในการกระโดด (JumpPower)",
     Default = 50,
     Min = 50,
     Max = 300,
@@ -216,7 +214,7 @@ PlayerSec:Slider({
 })
 
 PlayerSec:Toggle({
-    Name = "ทะลุกำแพง (Noclip)",
+    Name = "เปิดทะลุกำแพง (Noclip)",
     Default = false,
     Callback = function(state)
         noclipEnabled = state
@@ -262,7 +260,7 @@ local EspTab = TabGroup:Tab({ Name = "ระบบ ESP", Image = "rbxassetid://1
 local EspSec = EspTab:Section({ Side = "Left", Title = "ฟังก์ชันมองทะลุ" })
 
 EspSec:Toggle({
-    Name = "เปิด ESP ไฮไลท์ตัวละคร",
+    Name = "เปิดใช้งาน ESP ไฮไลท์ตัวละคร",
     Default = false,
     Callback = function(state)
         espEnabled = state
@@ -270,9 +268,9 @@ EspSec:Toggle({
     end,
 })
 
-local EspInfoSec = EspTab:Section({ Side = "Right", Title = "สัญลักษณ์สี" })
-EspInfoSec:Paragraph({ Title = "🔴 สีแดง", Content = "ฆาตกร (Murderer)" })
-EspInfoSec:Paragraph({ Title = "🔵 สีฟ้า", Content = "นายอำเภอ (Sheriff)" })
+local EspInfoSec = EspTab:Section({ Side = "Right", Title = "คำอธิบายสีไฮไลท์" })
+EspInfoSec:Paragraph({ Title = "🔴 สีแดง", Content = "ถือ/มีมีดในตัว (Knife)" })
+EspInfoSec:Paragraph({ Title = "🔵 สีฟ้า", Content = "ถือ/มีปืนในตัว (Gun)" })
 EspInfoSec:Paragraph({ Title = "🟢 สีเขียว", Content = "คนปกติ (Innocent)" })
 
 RunService.RenderStepped:Connect(function()
@@ -330,7 +328,7 @@ local ShootTab = TabGroup:Tab({ Name = "Auto Shoot", Image = "rbxassetid://10734
 local ShootSec = ShootTab:Section({ Side = "Left", Title = "ระบบยิงออโต้ MM2" })
 
 ShootSec:Toggle({
-    Name = "เปิดปุ่มยิงด่วน (Instant Shoot)",
+    Name = "ยิงอัตโนมัติแบบทันที (MM2)",
     Default = false,
     Callback = function(state)
         autoShootEnabled = state
@@ -344,10 +342,10 @@ ShootSec:Toggle({
                 shootBtn.Size = UDim2.new(0, 110, 0, 45)
                 shootBtn.Position = UDim2.new(0.8, 0, 0.5, -22)
                 shootBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
-                shootBtn.Text = "ยิงทันที!"
+                shootBtn.Text = "ยิงทันที! (INSTANT)"
                 shootBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
                 shootBtn.Font = Enum.Font.GothamBold
-                shootBtn.TextSize = 13
+                shootBtn.TextSize = 11
                 shootBtn.Active = true
                 shootBtn.Draggable = true
                 Instance.new("UICorner", shootBtn).CornerRadius = UDim.new(0, 8)
