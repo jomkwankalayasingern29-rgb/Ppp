@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHUB | Murder Mystery 2 (Full Fixed Original UI)
+-- 🥞 PancakeHub X GKHub | Murder Mystery 2
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -70,7 +70,7 @@ local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(255, 180, 50)
 MainStroke.Thickness = 1.5
 
--- 4. TopBar ด้านบน
+-- 4. TopBar ด้านบน (เปลี่ยนชื่อที่นี่)
 local TopBar = Instance.new("Frame", MainFrame)
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 35)
@@ -79,15 +79,15 @@ TopBar.BorderSizePixel = 0
 TopBar.BackgroundTransparency = 1 - currentAlpha
 
 local TitleText = Instance.new("TextLabel", TopBar)
-TitleText.Size = UDim2.new(0, 250, 1, 0)
+TitleText.Size = UDim2.new(0, 320, 1, 0)
 TitleText.Position = UDim2.new(0, 12, 0, 0)
-TitleText.Text = "🥞 PancakeHUB | MM2"
+TitleText.Text = "🥞 PancakeHub X GKHub & mm2"
 TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleText.Font = Enum.Font.GothamBold
-TitleText.TextSize = 14
+TitleText.TextSize = 13
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.BackgroundTransparency = 1
-table.insert(textLabelData, {Obj = TitleText, BaseSize = 14})
+table.insert(textLabelData, {Obj = TitleText, BaseSize = 13})
 
 local MinBtn = Instance.new("TextButton", TopBar)
 MinBtn.Size = UDim2.new(0, 28, 0, 28)
@@ -186,14 +186,13 @@ local function CreateTab(name)
     return Page
 end
 
--- สร้างครบทุกหมวดหมู่ (UI, ตัวละคร, เครื่องมือ, ESP, Auto Shoot)
+-- สร้างครบทุกหมวดหมู่
 local UIPage = CreateTab("UI")
 local PlayerPage = CreateTab("ตัวละคร")
 local ToolPage = CreateTab("เครื่องมือ")
 local ESPPage = CreateTab("ESP")
 local AutoShootPage = CreateTab("Auto Shoot")
 
--- เปิดหมวดหมู่ UI เป็นหน้าแรก
 tabs["UI"].Page.Visible = true
 tabs["UI"].Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
 tabs["UI"].Btn.TextColor3 = Color3.fromRGB(240, 240, 255)
