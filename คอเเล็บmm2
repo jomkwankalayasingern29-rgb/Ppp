@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 UI (Full Fix - Multi Round & 2s Delay) ====================
+-- ==================== GKHub X PancakeHub & MM2 (Full Version Fixed) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -109,7 +109,7 @@ LogoG.TextSize = 14
 local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 380, 1, 0)
 TitleText.Position = UDim2.new(0, 38, 0, 0)
-TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Delta Fixed)"
+TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Full Version)"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 12
@@ -403,7 +403,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ออโต้เก็บเหรียญ (ดีเลย์ 2 วิ)
 local autoFarmCoinsEnabled = false
 CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (ดีเลย์ 2 วิ)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoFarmCoinsEnabled = not autoFarmCoinsEnabled
@@ -424,7 +423,7 @@ task.spawn(function()
                             local name = string.lower(obj.Name)
                             if name == "coin" or name == "cd" or name == "coinvisual" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
                                 hrp.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                                task.wait(2) -- ดีเลย์ 2 วินาที
+                                task.wait(2)
                             end
                         end
                     end
@@ -511,8 +510,6 @@ local function ScanToolsForRole(container)
 end
 
 local playerCardPool = {}
-
--- เก็บสถานะตัวละครแยกแต่ละรอบการเล่น (เผื่อตารอบใหม่)
 local playerLastChar = {}
 
 task.spawn(function()
@@ -526,7 +523,6 @@ task.spawn(function()
                 local char = player.Character
                 local isAlive = false
                 
-                -- ตรวจจับการเริ่มตาใหม่ (หากตัวละครเปลี่ยนไปจากตาที่แล้ว ให้รีเซ็ตสถานะเป็นรอดชีวิตทันที)
                 if playerLastChar[player] ~= char then
                     playerLastChar[player] = char
                 end
