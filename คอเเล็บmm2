@@ -384,7 +384,6 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- ==================== ระบบแถบสาเหตุการตาย (ซ้ายบน + ทะลุตลอดตัว) ====================
 local KillFeedHolder = Instance.new("Frame", ScreenGui)
 KillFeedHolder.Name = "KillFeedHolder"
 KillFeedHolder.Size = UDim2.new(0, 310, 0, 200)
@@ -471,7 +470,6 @@ CreateFeatureRow(UIPage, "แสดงแถบ สาเหตุการต�
     btn.Text = killFeedDisplayEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = killFeedDisplayEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
--- ==================================================================
 
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
@@ -480,7 +478,7 @@ CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ป
     btn.BackgroundColor3 = expandHitboxEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(50, 50, 60)
 end)
 
--- ==================== ฟังก์ชันใหม่: ฆ่าทั้งแมพ V2 (ดึงตัวผู้เล่นทุกคนมาหน้าเราแล้วฟัน) ====================
+-- ==================== ฟังก์ชันใหม่: ฆ่าทั้งแมพ V2 ====================
 local massKillV2Enabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ V2", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     massKillV2Enabled = not massKillV2Enabled
@@ -493,14 +491,13 @@ RunService.RenderStepped:Connect(function()
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
             local hrp = char.HumanoidRootPart
-            local frontPos = hrp.CFrame + (hrp.CFrame.LookVector * 4) -- ตำแหน่งด้านหน้าเรา 4 สตั๊ด
+            local frontPos = hrp.CFrame + (hrp.CFrame.LookVector * 4) -- ตำแหน่งด้านหน้า 4 สตั๊ด
             
             for _, player in pairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character then
                     local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                     local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                     if otherRoot and humanoid and humanoid.Health > 0 then
-                        -- ดึงตัวผู้เล่นมาไว้ข้างหน้าเรา
                         otherRoot.CFrame = frontPos
                         otherRoot.CanCollide = false
                         otherRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
@@ -510,7 +507,7 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
--- ==========================================================================================
+-- ================================================================
 
 RunService.RenderStepped:Connect(function()
     if expandHitboxEnabled then
@@ -1063,7 +1060,7 @@ local function FinishLoading()
     MainFrame.Visible = true
 end
 
-SkipBtn.MouseButton1Click:Connect(FinishLayout or FinishLoading)
+SkipBtn.MouseButton1Click:Connect(FinishLoading)
 
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
