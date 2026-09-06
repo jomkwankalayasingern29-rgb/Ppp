@@ -507,13 +507,15 @@ StatusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 local function ScanToolsForRole(container)
     if not container then return false, false end
     local hasKnife, hasGun = false, false
-    for _, item in pairs(container:GetChildren()) do
-        if item:IsA("Tool") then
-            local n = string.lower(item.Name)
-            if n:find("knife") or n:find("dagger") or n:find("blade") then hasKnife = true end
-            if n:find("gun") or n:find("pistol") or n:find("revolver") then hasGun = true end
+    pcall(function()
+        for _, item in pairs(container:GetChildren()) do
+            if item:IsA("Tool") then
+                local n = string.lower(item.Name)
+                if n:find("knife") or n:find("dagger") or n:find("blade") then hasKnife = true end
+                if n:find("gun") or n:find("pistol") or n:find("revolver") then hasGun = true end
+            end
         end
-    end
+    end)
     return hasKnife, hasGun
 end
 
@@ -522,58 +524,60 @@ local isCountingDown = false
 local gameActive = false
 
 local function RenderPlayerList(dataList)
-    for _, guiObj in pairs(StatusContainer:GetChildren()) do
-        if guiObj:IsA("Frame") then guiObj:Destroy() end
-    end
-
-    for _, data in ipairs(dataList) do
-        local pCard = Instance.new("Frame", StatusContainer)
-        pCard.Size = UDim2.new(0.96, 0, 0, 32)
-        pCard.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
-        Instance.new("UICorner", pCard).CornerRadius = UDim.new(0, 5)
-
-        local headshot = Instance.new("ImageLabel", pCard)
-        headshot.Size = UDim2.new(0, 24, 0, 24)
-        headshot.Position = UDim2.new(0, 4, 0.5, -12)
-        headshot.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-        Instance.new("UICorner", headshot).CornerRadius = UDim.new(1, 0)
-        pcall(function()
-            local content, isReady = Players:GetUserThumbnailAsync(data.Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-            if isReady then headshot.Image = content end
-        end)
-
-        if not data.IsAlive then
-            local deadX = Instance.new("TextLabel", headshot)
-            deadX.Size = UDim2.new(1, 0, 1, 0)
-            deadX.BackgroundTransparency = 1
-            deadX.Text = "X"
-            deadX.TextColor3 = Color3.fromRGB(255, 50, 50)
-            deadX.Font = Enum.Font.GothamBold
-            deadX.TextSize = 16
-            deadX.TextXAlignment = Enum.TextXAlignment.Center
-            deadX.TextYAlignment = Enum.TextYAlignment.Center
+    pcall(function()
+        for _, guiObj in pairs(StatusContainer:GetChildren()) do
+            if guiObj:IsA("Frame") then guiObj:Destroy() end
         end
 
-        local nameLabel = Instance.new("TextLabel", pCard)
-        nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
-        nameLabel.Position = UDim2.new(0, 34, 0, 0)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Text = data.Player.Name .. " (" .. data.RoleName .. ")"
-        nameLabel.TextColor3 = data.RoleColor
-        nameLabel.Font = Enum.Font.GothamBold
-        nameLabel.TextSize = 10
-        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        for _, data in ipairs(dataList) do
+            local pCard = Instance.new("Frame", StatusContainer)
+            pCard.Size = UDim2.new(0.96, 0, 0, 32)
+            pCard.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
+            Instance.new("UICorner", pCard).CornerRadius = UDim.new(0, 5)
 
-        local stateLabel = Instance.new("TextLabel", pCard)
-        stateLabel.Size = UDim2.new(0.3, 0, 1, 0)
-        stateLabel.Position = UDim2.new(0.68, 0, 0, 0)
-        stateLabel.BackgroundTransparency = 1
-        stateLabel.Text = data.IsAlive and "รอดชีวิต" or "ตายแล้ว"
-        stateLabel.TextColor3 = data.IsAlive and Color3.fromRGB(80, 220, 100) or Color3.fromRGB(220, 80, 80)
-        stateLabel.Font = Enum.Font.GothamBold
-        stateLabel.TextSize = 10
-        stateLabel.TextXAlignment = Enum.TextXAlignment.Right
-    end
+            local headshot = Instance.new("ImageLabel", pCard)
+            headshot.Size = UDim2.new(0, 24, 0, 24)
+            headshot.Position = UDim2.new(0, 4, 0.5, -12)
+            headshot.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+            Instance.new("UICorner", headshot).CornerRadius = UDim.new(1, 0)
+            pcall(function()
+                local content, isReady = Players:GetUserThumbnailAsync(data.Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+                if isReady then headshot.Image = content end
+            end)
+
+            if not data.IsAlive then
+                local deadX = Instance.new("TextLabel", headshot)
+                deadX.Size = UDim2.new(1, 0, 1, 0)
+                deadX.BackgroundTransparency = 1
+                deadX.Text = "X"
+                deadX.TextColor3 = Color3.fromRGB(255, 50, 50)
+                deadX.Font = Enum.Font.GothamBold
+                deadX.TextSize = 16
+                deadX.TextXAlignment = Enum.TextXAlignment.Center
+                deadX.TextYAlignment = Enum.TextYAlignment.Center
+            end
+
+            local nameLabel = Instance.new("TextLabel", pCard)
+            nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+            nameLabel.Position = UDim2.new(0, 34, 0, 0)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.Text = data.Player.Name .. " (" .. data.RoleName .. ")"
+            nameLabel.TextColor3 = data.RoleColor
+            nameLabel.Font = Enum.Font.GothamBold
+            nameLabel.TextSize = 10
+            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+            local stateLabel = Instance.new("TextLabel", pCard)
+            stateLabel.Size = UDim2.new(0.3, 0, 1, 0)
+            stateLabel.Position = UDim2.new(0.68, 0, 0, 0)
+            stateLabel.BackgroundTransparency = 1
+            stateLabel.Text = data.IsAlive and "รอดชีวิต" or "ตายแล้ว"
+            stateLabel.TextColor3 = data.IsAlive and Color3.fromRGB(80, 220, 100) or Color3.fromRGB(220, 80, 80)
+            stateLabel.Font = Enum.Font.GothamBold
+            stateLabel.TextSize = 10
+            stateLabel.TextXAlignment = Enum.TextXAlignment.Right
+        end
+    end)
 end
 
 RunService.RenderStepped:Connect(function()
@@ -625,7 +629,6 @@ RunService.RenderStepped:Connect(function()
             return a.Player.Name < b.Player.Name
         end)
 
-        -- ตรวจสอบเงื่อนไขเกมเริ่ม (มีผู้เล่นถือมีดหรือปืน หรือมีคนรอดชีวิตมากกว่า 1 คน)
         local hasActiveRole = false
         for _, d in ipairs(playerRoleData) do
             if d.RoleType < 3 then
@@ -682,20 +685,23 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     end
 end)
 
+-- ปรับปรุงฟังก์ชันกันเตะไม่ให้เกิดข้อผิดพลาด
 local antiKickEnabled = false
-CreateFeatureRow(PlayerPage, "กันโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(PlayerPage, "ระบบป้องกันการถูกเตะ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     antiKickEnabled = not antiKickEnabled
     btn.Text = antiKickEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = antiKickEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
 
-local oldNamecall
-oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local method = getnamecallmethod()
-    if antiKickEnabled and (method == "Kick" or method == "kick") then
-        if self == LocalPlayer then return end
-    end
-    return oldNamecall(self, ...)
+pcall(function()
+    local oldNamecall
+    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        local method = getnamecallmethod()
+        if antiKickEnabled and (method == "Kick" or method == "kick") then
+            if self == LocalPlayer then return end
+        end
+        return oldNamecall(self, ...)
+    end)
 end)
 
 local noclipEnabled = false
