@@ -20,25 +20,6 @@ ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- ปุ่มเปิด/ปิด UI (Toggle Button) แบบเดิม
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Name = "ToggleIcon"
-ToggleBtn.Size = UDim2.new(0, 40, 0, 40)
-ToggleBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-ToggleBtn.Text = "🥞"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.TextSize = 20
-ToggleBtn.Active = true
-ToggleBtn.Draggable = true
-ToggleBtn.Parent = ScreenGui
-Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 8)
-
-local ToggleStroke = Instance.new("UIStroke", ToggleBtn)
-ToggleStroke.Color = Color3.fromRGB(0, 162, 255)
-ToggleStroke.Thickness = 1.5
-
 -- หน้าต่างแจ้งเตือนสถานะตอนเริ่ม (Loading Screen)
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
@@ -120,7 +101,7 @@ LogoG.Size = UDim2.new(0, 20, 0, 20)
 LogoG.Position = UDim2.new(0, 8, 0, 6)
 LogoG.BackgroundTransparency = 1
 LogoG.Font = Enum.Font.GothamBold
-LogoG.Text = "🥞"
+LogoG.Text = "G"
 LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
 LogoG.TextSize = 14
 LogoG.Parent = TopBar
@@ -130,7 +111,7 @@ TitleLabel.Size = UDim2.new(1, -90, 1, 0)
 TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "PancakeHub X GKHub & mm2 (Blue Theme)"
+TitleLabel.Text = "Black & White UI | Blue Theme"
 TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -185,7 +166,6 @@ local function ToggleUI()
 end
 
 MinimizeButton.MouseButton1Click:Connect(ToggleUI)
-ToggleBtn.MouseButton1Click:Connect(ToggleUI)
 
 -- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
 local LeftSide = Instance.new("ScrollingFrame")
