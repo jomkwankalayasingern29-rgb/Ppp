@@ -371,152 +371,6 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- **Role Display UI (Floating Right Window)**
-local RoleDisplayGui = Instance.new("Frame", ScreenGui)
-RoleDisplayGui.Name = "RoleDisplayGui"
-RoleDisplayGui.Size = UDim2.new(0, 200, 0, 130)
-RoleDisplayGui.Position = UDim2.new(0.8, 0, 0.2, 0)
-RoleDisplayGui.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
-RoleDisplayGui.BorderSizePixel = 0
-RoleDisplayGui.Visible = false
-Instance.new("UICorner", RoleDisplayGui).CornerRadius = UDim.new(0, 8)
-local RoleStroke = Instance.new("UIStroke", RoleDisplayGui)
-RoleStroke.Color = Color3.fromRGB(0, 162, 255)
-RoleStroke.Thickness = 1.5
-
-local RoleTopBar = Instance.new("Frame", RoleDisplayGui)
-RoleTopBar.Size = UDim2.new(1, 0, 0, 25)
-RoleTopBar.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-RoleTopBar.BorderSizePixel = 0
-Instance.new("UICorner", RoleTopBar).CornerRadius = UDim.new(0, 8)
-
-local RoleTitle = Instance.new("TextLabel", RoleTopBar)
-RoleTitle.Size = UDim2.new(1, 0, 1, 0)
-RoleTitle.Text = "จอแสดงผล (MM2 Roles)"
-RoleTitle.TextColor3 = Color3.fromRGB(240, 240, 240)
-RoleTitle.Font = Enum.Font.GothamBold
-RoleTitle.TextSize = 10
-RoleTitle.BackgroundTransparency = 1
-
--- Murderer Info
-local MurderHeadshot = Instance.new("ImageLabel", RoleDisplayGui)
-MurderHeadshot.Size = UDim2.new(0, 35, 0, 35)
-MurderHeadshot.Position = UDim2.new(0, 8, 0, 33)
-MurderHeadshot.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-Instance.new("UICorner", MurderHeadshot).CornerRadius = UDim.new(1, 0)
-
-local MurderLabel = Instance.new("TextLabel", RoleDisplayGui)
-MurderLabel.Size = UDim2.new(1, -50, 0, 35)
-MurderLabel.Position = UDim2.new(0, 50, 0, 33)
-MurderLabel.Text = "ฆาตกร: กำลังค้นหา..."
-MurderLabel.TextColor3 = Color3.fromRGB(220, 80, 80)
-MurderLabel.Font = Enum.Font.GothamBold
-MurderLabel.TextSize = 10
-MurderLabel.TextXAlignment = Enum.TextXAlignment.Left
-MurderLabel.BackgroundTransparency = 1
-
--- Sheriff Info
-local SheriffHeadshot = Instance.new("ImageLabel", RoleDisplayGui)
-SheriffHeadshot.Size = UDim2.new(0, 35, 0, 35)
-SheriffHeadshot.Position = UDim2.new(0, 8, 0, 78)
-SheriffHeadshot.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-Instance.new("UICorner", SheriffHeadshot).CornerRadius = UDim.new(1, 0)
-
-local SheriffLabel = Instance.new("TextLabel", RoleDisplayGui)
-SheriffLabel.Size = UDim2.new(1, -50, 0, 35)
-SheriffLabel.Position = UDim2.new(0, 50, 0, 78)
-SheriffLabel.Text = "นายอำเภอ: กำลังค้นหา..."
-SheriffLabel.TextColor3 = Color3.fromRGB(0, 162, 255)
-SheriffLabel.Font = Enum.Font.GothamBold
-SheriffLabel.TextSize = 10
-SheriffLabel.TextXAlignment = Enum.TextXAlignment.Left
-SheriffLabel.BackgroundTransparency = 1
-
--- Draggable for RoleDisplayGui
-local RD_Dragging, RD_DragStart, RD_StartPos
-RoleTopBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        RD_Dragging = true; RD_DragStart = input.Position; RD_StartPos = RoleDisplayGui.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if RD_Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - RD_DragStart
-        RoleDisplayGui.Position = UDim2.new(RD_StartPos.X.Scale, RD_StartPos.X.Offset + delta.X, RD_StartPos.Y.Scale, RD_StartPos.Y.Offset + delta.Y)
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then RD_Dragging = false end
-end)
-
--- Function to Scan MM2 Roles
-local function ScanMM2Roles()
-    local murdererFound = false
-    local sheriffFound = false
-
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.Character then
-            local backpack = player:FindFirstChild("Backpack")
-            local character = player.Character
-            
-            local function checkTools(container)
-                if not container then return false, false end
-                local hasKnife, hasGun = false, false
-                for _, item in pairs(container:GetChildren()) do
-                    if item:IsA("Tool") then
-                        local n = string.lower(item.Name)
-                        if n:find("knife") or n:find("dagger") or n:find("blade") then hasKnife = true end
-                        if n:find("gun") or n:find("pistol") or n:find("revolver") then hasGun = true end
-                    end
-                end
-                return hasKnife, hasGun
-            end
-
-            local cKnife, cGun = checkTools(character)
-            local bKnife, bGun = checkTools(backpack)
-
-            if cKnife or bKnife then
-                murdererFound = true
-                MurderLabel.Text = "ฆาตกร:\n" .. player.Name
-                pcall(function()
-                    local content, isReady = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-                    if isReady then MurderHeadshot.Image = content end
-                end)
-            end
-
-            if cGun or bGun then
-                sheriffFound = true
-                SheriffLabel.Text = "นายอำเภอ:\n" .. player.Name
-                pcall(function()
-                    local content, isReady = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-                    if isReady then SheriffHeadshot.Image = content end
-                end)
-            end
-        end
-    end
-
-    if not murdererFound then
-        MurderLabel.Text = "ฆาตกร: ไม่พบ / ยังไม่เริ่ม"
-        MurderHeadshot.Image = ""
-    end
-    if not sheriffFound then
-        SheriffLabel.Text = "นายอำเภอ: ไม่พบ / ยังไม่เริ่ม"
-        SheriffHeadshot.Image = ""
-    end
-end
-
-RunService.RenderStepped:Connect(function()
-    if RoleDisplayGui.Visible then
-        pcall(ScanMM2Roles)
-    end
-end)
-
-CreateFeatureRow(UIPage, "จอแสดงผล (เช็คฆาตกร/นายอำเภอ)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
-    RoleDisplayGui.Visible = not RoleDisplayGui.Visible
-    btn.Text = RoleDisplayGui.Visible and "เปิด (ON)" or "ปิด (OFF)"
-    btn.BackgroundColor3 = RoleDisplayGui.Visible and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
-end)
-
 -- **Attack Module (Fixed Hitbox 250, Invisible & No Collision to prevent glitching)**
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
@@ -624,6 +478,56 @@ CreateSlider(UIPage, "ขนาดความใหญ่ UI", 50, 150, 100, "%
     end
 end)
 
+-- **UI Bottom Section: MM2 Status Display (Survivors & Deceased Counter)**
+local StatusCard = Instance.new("Frame", UIPage)
+StatusCard.Size = UDim2.new(0.96, 0, 0, 60)
+StatusCard.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+Instance.new("UICorner", StatusCard).CornerRadius = UDim.new(0, 6)
+
+local StatusTitle = Instance.new("TextLabel", StatusCard)
+StatusTitle.Size = UDim2.new(1, -16, 0, 20)
+StatusTitle.Position = UDim2.new(0, 8, 0, 4)
+StatusTitle.Text = "สถานะผู้เล่นในแมพ (MM2 Status)"
+StatusTitle.TextColor3 = Color3.fromRGB(0, 162, 255)
+StatusTitle.Font = Enum.Font.GothamBold
+StatusTitle.TextSize = 11
+StatusTitle.TextXAlignment = Enum.TextXAlignment.Left
+StatusTitle.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = StatusTitle, BaseSize = 11})
+
+local StatusInfoText = Instance.new("TextLabel", StatusCard)
+StatusInfoText.Size = UDim2.new(1, -16, 0, 28)
+StatusInfoText.Position = UDim2.new(0, 8, 0, 26)
+StatusInfoText.Text = "ผู้รอดชีวิต: 0 คน | ตายไปแล้ว: 0 คน"
+StatusInfoText.TextColor3 = Color3.fromRGB(220, 220, 220)
+StatusInfoText.Font = Enum.Font.GothamBold
+StatusInfoText.TextSize = 11
+StatusInfoText.TextXAlignment = Enum.TextXAlignment.Left
+StatusInfoText.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = StatusInfoText, BaseSize = 11})
+
+-- Update MM2 Alive/Dead Stats
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        local aliveCount = 0
+        local deadCount = 0
+        for _, player in pairs(Players:GetPlayers()) do
+            local char = player.Character
+            if char and char:FindFirstChild("Humanoid") then
+                local hum = char.Humanoid
+                if hum.Health > 0 then
+                    aliveCount = aliveCount + 1
+                else
+                    deadCount = deadCount + 1
+                end
+            else
+                deadCount = deadCount + 1
+            end
+        end
+        StatusInfoText.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
+    end)
+end)
+
 -- **Player Module**
 CreateSlider(PlayerPage, "ความเร็วในการวิ่ง (WalkSpeed)", 16, 250, 16, "", function(val)
     local char = LocalPlayer.Character
@@ -640,26 +544,24 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     end
 end)
 
--- **NEW FUNCTION: ทะลุผู้เล่น (Pass Players)**
-local passPlayersEnabled = false
-CreateFeatureRow(PlayerPage, "ทะลุผู้เล่น (Pass Players)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
-    passPlayersEnabled = not passPlayersEnabled
-    btn.Text = passPlayersEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    btn.BackgroundColor3 = passPlayersEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
+-- **NEW FUNCTION: กันโปรเตะออกแมพ**
+local antiKickEnabled = false
+CreateFeatureRow(PlayerPage, "กันโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+    antiKickEnabled = not antiKickEnabled
+    btn.Text = antiKickEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    btn.BackgroundColor3 = antiKickEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
 
-RunService.Stepped:Connect(function()
-    if passPlayersEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                for _, part in pairs(player.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end
-            end
+-- Hook namecall to block kick attempts if anti-kick is active
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    if antiKickEnabled and (method == "Kick" or method == "kick") then
+        if self == LocalPlayer then
+            return -- Block kick
         end
     end
+    return oldNamecall(self, ...)
 end)
 
 local noclipEnabled = false
