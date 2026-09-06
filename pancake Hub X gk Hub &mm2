@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Script (Fixed ESP Text Loop)
+-- 🥞 PancakeHub X GKHub | MM2 Script (Fully Fixed ESP & Gun ESP)
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -656,12 +656,26 @@ local function ClearAllHighlights()
 end
 
 local function ClearGunHighlights()
-    for _, obj in pairs(Workspace:GetChildren()) do
-        if obj.Name == "GunDrop" or obj.Name == "Gun" or (obj:IsA("Tool") and not obj.Parent:IsA("Model")) then
-            local hl = obj:FindFirstChild("GunDropHighlight")
-            if hl then hl:Destroy() end
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        local hl = obj:FindFirstChild("GunDropHighlight")
+        if hl then hl:Destroy() end
+    end
+end
+
+-- ฟังก์ชันตรวจสอบปืนที่ตกพื้นแบบครอบคลุม
+local function IsGunDrop(obj)
+    if obj:IsA("Tool") then
+        local name = string.lower(obj.Name)
+        if string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or obj:FindFirstChild("Gun") then
+            return true
+        end
+    elseif obj:IsA("Model") then
+        local name = string.lower(obj.Name)
+        if string.find(name, "gun") or string.find(name, "gundrop") or string.find(name, "pistol") then
+            return true
         end
     end
+    return false
 end
 
 SwitchBtn.MouseButton1Click:Connect(function()
@@ -687,7 +701,7 @@ GunEspBtn.MouseButton1Click:Connect(function()
 end)
 
 RunService.RenderStepped:Connect(function()
-    -- เคลียร์ข้อความ Drawing เก่าทิ้งทุกเฟรมอย่างถูกต้อง
+    -- เคลียร์ข้อความ Drawing เก่าทิ้งทุกเฟรมอย่างถูกต้อง ป้องกันชื่อซ้อนรัวๆ
     for _, textObj in pairs(espTextObjects) do
         textObj:Remove()
     end
@@ -739,21 +753,25 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ESP ปืนที่ตกอยู่บนพื้น
+    -- ESP ปืนที่ตกอยู่บนพื้น (เวอร์ชันอัปเดตค้นหาทั่ว Workspace ทะลุทะลวงทุกเงื่อนไข)
     if gunEspEnabled then
-        for _, obj in pairs(Workspace:GetChildren()) do
-            local isGunDrop = (obj.Name == "GunDrop" or obj.Name == "Gun" or (obj:IsA("Tool") and not obj.Parent:IsA("Model")))
-            if isGunDrop then
-                local targetPart = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")) or (obj:IsA("BasePart") and obj)
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if IsGunDrop(obj) then
+                local targetPart = nil
+                if obj:IsA("Model") then
+                    targetPart = obj.PrimaryPart or obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")
+                elseif obj:IsA("Tool") then
+                    targetPart = obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")
+                end
                 
                 if targetPart then
-                    local gunHighlight = obj:FindFirstChild("GunDropHighlight")
+                    local gunHighlight = targetPart:FindFirstChild("GunDropHighlight")
                     if not gunHighlight then
                         gunHighlight = Instance.new("Highlight")
                         gunHighlight.Name = "GunDropHighlight"
-                        gunHighlight.Parent = obj
+                        gunHighlight.Parent = targetPart
                     end
-                    gunHighlight.FillColor = Color3.fromRGB(255, 220, 0)
+                    gunHighlight.FillColor = Color3.fromRGB(255, 220, 0) -- สีเหลืองทอง
                     gunHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
                     gunHighlight.FillTransparency = 0.3
                     gunHighlight.OutlineTransparency = 0.1
