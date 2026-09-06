@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 (Added Mass Kill V2 Function) ====================
+-- ==================== GKHub & MM2 [Rainbow Premium] ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -106,14 +106,15 @@ LogoG.TextSize = 14
 LogoG.ZIndex = 4
 
 local TitleText = Instance.new("TextLabel", TopBar)
-TitleText.Size = UDim2.new(0, 380, 1, 0)
+TitleText.Size = UDim2.new(0, 420, 1, 0)
 TitleText.Position = UDim2.new(0, 38, 0, 0)
-TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Mass Kill V2)"
+TitleText.Text = "GKHub & MM2 [<font color=\"rgb(255,0,0)\">p</font><font color=\"rgb(255,128,0)\">r</font><font color=\"rgb(255,255,0)\">e</font><font color=\"rgb(0,255,0)\">m</font><font color=\"rgb(0,255,255)\">i</font><font color=\"rgb(0,0,255)\">u</font><font color=\"rgb(128,0,255)\">m</font>]"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 12
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.BackgroundTransparency = 1
+TitleText.RichText = true
 TitleText.ZIndex = 4
 table.insert(textLabelData, {Obj = TitleText, BaseSize = 12})
 
@@ -344,7 +345,7 @@ local function CreateCreditCard(parent, hubName, discordLink, themeColor)
     end)
 end
 
-CreateCreditCard(MainInfoPage, "PancakeHub", "https://discord.gg/HfnJnAAM8e", Color3.fromRGB(0, 162, 255))
+-- คงเหลือเฉพาะเครดิต GKHub ตามคำขอ
 CreateCreditCard(MainInfoPage, "GKHub", "https://discord.gg/Ugssja4wqQ", Color3.fromRGB(80, 150, 220))
 
 local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, callback)
@@ -478,7 +479,6 @@ CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ป
     btn.BackgroundColor3 = expandHitboxEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(50, 50, 60)
 end)
 
--- ==================== ฟังก์ชันใหม่: ฆ่าทั้งแมพ V2 ====================
 local massKillV2Enabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ V2", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     massKillV2Enabled = not massKillV2Enabled
@@ -491,7 +491,7 @@ RunService.RenderStepped:Connect(function()
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
             local hrp = char.HumanoidRootPart
-            local frontPos = hrp.CFrame + (hrp.CFrame.LookVector * 4) -- ตำแหน่งด้านหน้า 4 สตั๊ด
+            local frontPos = hrp.CFrame + (hrp.CFrame.LookVector * 4)
             
             for _, player in pairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character then
@@ -507,7 +507,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
--- ================================================================
 
 RunService.RenderStepped:Connect(function()
     if expandHitboxEnabled then
