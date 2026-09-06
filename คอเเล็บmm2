@@ -384,7 +384,7 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- ==================== ระบบแถบสาเหตุการตาย (แก้ไขให้ทะลุจอได้สมบูรณ์ พร้อมอัปเดตขนาดอัตโนมัติ) ====================
+-- ==================== ระบบแถบสาเหตุการตาย (True Pass-Through แบบไม่ต้องเลื่อนนิ้ว จิ้มเดินและเลื่อนจอทะลุผ่านได้ 100%) ====================
 local KillFeedHolder = Instance.new("Frame", ScreenGui)
 KillFeedHolder.Name = "KillFeedHolder"
 KillFeedHolder.Size = UDim2.new(0, 320, 0, 220)
@@ -393,28 +393,21 @@ KillFeedHolder.BackgroundTransparency = 1
 KillFeedHolder.BorderSizePixel = 0
 KillFeedHolder.Visible = true
 KillFeedHolder.ZIndex = 5
-KillFeedHolder.Active = false -- ป้องกันบล็อกทัช
+KillFeedHolder.Active = false -- ปิดการใช้งานเพื่อให้นิ้วทะลุกดผ่านได้ 100%
 
-local KillFeedScroll = Instance.new("ScrollingFrame", KillFeedHolder)
+local KillFeedScroll = Instance.new("Frame", KillFeedHolder)
 KillFeedScroll.Name = "KillFeedScroll"
 KillFeedScroll.Size = UDim2.new(1, 0, 1, 0)
 KillFeedScroll.BackgroundTransparency = 1
 KillFeedScroll.BorderSizePixel = 0
-KillFeedScroll.ScrollBarThickness = 0
-KillFeedScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-KillFeedScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 KillFeedScroll.ZIndex = 5
-KillFeedScroll.Active = false -- ให้ทะลุผ่านเพื่อเลื่อนจอได้ 100%
+KillFeedScroll.Active = false -- ป้องกันไม่ให้บล็อกการสัมผัสจอ
 
 local KillFeedLayout = Instance.new("UIListLayout", KillFeedScroll)
 KillFeedLayout.SortOrder = Enum.SortOrder.LayoutOrder
 KillFeedLayout.Padding = UDim.new(0, 5)
+KillFeedLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom -- ดันข้อความใหม่ขึ้นด้านบนอัตโนมัติ
 KillFeedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-
--- บังคับอัปเดตขนาดพื้นที่เลื่อนอัตโนมัติเมื่อมีข้อความแจ้งเตือนใหม่เพิ่มขึ้นมา
-KillFeedLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    KillFeedScroll.CanvasSize = UDim2.new(0, 0, 0, KillFeedLayout.AbsoluteContentSize.Y)
-end)
 
 local function ShowDeathFeed(killerName, killerRole, victimName, victimRole, weaponEmoji)
     if not KillFeedHolder.Visible then return end
