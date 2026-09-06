@@ -1,7 +1,3 @@
--- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Script (Zero Delay Turbo Farm)
--- =======================================================
-
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -11,7 +7,6 @@ local Workspace = game:GetService("Workspace")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- 1. ทำความสะอาด UI เก่า ป้องกันการรันซ้อน
 if CoreGui:FindFirstChild("DeltaCustomUI") then 
     CoreGui.DeltaCustomUI:Destroy() 
 end
@@ -21,7 +16,6 @@ ScreenGui.Name = "DeltaCustomUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- 2. ปุ่มไอคอนตัว "🥞" สี่เหลี่ยมมน ขนาด 40x40
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Name = "ToggleIcon"
 ToggleBtn.Size = UDim2.new(0, 40, 0, 40)
@@ -46,7 +40,6 @@ local currentScale = 1
 local currentAlpha = 1 
 local textLabelData = {}
 
--- 3. หน้าต่างหลัก (MainFrame)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, baseWidth, 0, baseHeight)
@@ -63,7 +56,6 @@ local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(255, 180, 50)
 MainStroke.Thickness = 1.5
 
--- 4. TopBar ด้านบน
 local TopBar = Instance.new("Frame", MainFrame)
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 35)
@@ -108,7 +100,6 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- 5. แถบหมวดหมู่ซ้ายมือ (Sidebar)
 local Sidebar = Instance.new("Frame", MainFrame)
 Sidebar.Name = "Sidebar"
 Sidebar.Size = UDim2.new(0, 120, 1, -35)
@@ -126,7 +117,6 @@ SidePadding.PaddingTop = UDim.new(0, 10)
 SidePadding.PaddingLeft = UDim.new(0, 8)
 SidePadding.PaddingRight = UDim.new(0, 8)
 
--- 6. พื้นที่ฟังก์ชันขวามือ (Content Area)
 local ContentArea = Instance.new("Frame", MainFrame)
 ContentArea.Name = "ContentArea"
 ContentArea.Size = UDim2.new(1, -130, 1, -45)
@@ -179,7 +169,6 @@ local function CreateTab(name)
     return Page
 end
 
--- สร้างแท็บตามลำดับ
 local MainInfoPage = CreateTab("หลัก")
 local AttackPage = CreateTab("โจมตี")
 local HelperPage = CreateTab("ช่วยเล่น")
@@ -192,7 +181,6 @@ tabs["หลัก"].Page.Visible = true
 tabs["หลัก"].Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
 tabs["หลัก"].Btn.TextColor3 = Color3.fromRGB(240, 240, 255)
 
--- 7. ระบบสร้าง Slider
 local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffix, callback)
     local SliderFrame = Instance.new("Frame", parent)
     SliderFrame.Size = UDim2.new(1, 0, 0, 50)
@@ -263,9 +251,6 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
     end)
 end
 
--- =======================================================
--- 7.1 หมวดหมู่ "หลัก" (เครดิต)
--- =======================================================
 local function CreateCreditCard(parent, hubName, discordLink, themeColor)
     local Card = Instance.new("Frame", parent)
     Card.Size = UDim2.new(1, 0, 0, 75)
@@ -309,10 +294,6 @@ end
 CreateCreditCard(MainInfoPage, "ค่าย PancakeHub", "https://discord.gg/HfnJnAAM8e", Color3.fromRGB(255, 180, 50))
 CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4wqQ", Color3.fromRGB(80, 150, 220))
 
-
--- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (ฆ่าทั้งแมพ)
--- =======================================================
 local expandHitboxEnabled = false
 
 local HitboxFrame = Instance.new("Frame", AttackPage)
@@ -376,10 +357,6 @@ RunService.Stepped:Connect(function()
     end
 end)
 
-
--- =======================================================
--- 7.3 หมวดหมู่ "ช่วยเล่น" (Zero Delay Instant Auto Farm)
--- =======================================================
 local autoFarmCoinsEnabled = false
 
 local AutoFarmFrame = Instance.new("Frame", HelperPage)
@@ -416,7 +393,6 @@ AutoFarmBtn.MouseButton1Click:Connect(function()
     AutoFarmBtn.TextColor3 = autoFarmCoinsEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
 end)
 
--- ฟังก์ชันค้นหาเหรียญแบบทันที (ไม่จำกัดเงื่อนไขเวลา)
 local function GetInstantCoin()
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("BasePart") then
@@ -438,7 +414,6 @@ local function GetInstantCoin()
     return nil
 end
 
--- วาปทันทีแบบไม่มีดีเลย์ทุกเฟรมภาพ
 RunService.RenderStepped:Connect(function()
     if autoFarmCoinsEnabled then
         local char = LocalPlayer.Character
@@ -451,7 +426,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ปุ่มวาร์ปด่วนพิเศษ
 local TpCoinFrame = Instance.new("Frame", HelperPage)
 TpCoinFrame.Size = UDim2.new(1, 0, 0, 45)
 TpCoinFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
@@ -489,8 +463,6 @@ TpCoinBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-
--- เพิ่ม Slider ปรับความทึบและขนาด UI ในหมวด UI
 CreateSlider(UIPage, "ปรับความทึบของ UI", 1, 100, 100, "%", function(val)
     currentAlpha = val / 100
     local transparency = 1 - currentAlpha
@@ -513,7 +485,6 @@ CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 
     end
 end)
 
--- 8. หมวดหมู่ตัวละคร: วิ่งเร็ว, กระโดดสูง, ทะลุกำแพง (Noclip) + กระโดดไม่จำกัด (Infinite Jump)
 CreateSlider(PlayerPage, "ความเร็วในการวิ่ง (WalkSpeed)", 16, 250, 16, "", function(val)
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
@@ -529,7 +500,6 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     end
 end)
 
--- Noclip Toggle
 local noclipEnabled = false
 local NoclipFrame = Instance.new("Frame", PlayerPage)
 NoclipFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -576,7 +546,6 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- กระโดดไม่จำกัด (Infinite Jump)
 local infJumpEnabled = false
 local InfJumpFrame = Instance.new("Frame", PlayerPage)
 InfJumpFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -621,8 +590,6 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
-
--- 8.5 หมวดหมู่เครื่องมือ: ระบบคลิกวาร์ป (Click TP Tool)
 local ToolFrame = Instance.new("Frame", ToolPage)
 ToolFrame.Size = UDim2.new(1, 0, 0, 45)
 ToolFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
@@ -666,7 +633,6 @@ GetToolBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- 9. หมวดหมู่ ESP
 local espEnabled = false
 local SwitchFrame = Instance.new("Frame", ESPPage)
 SwitchFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -898,7 +864,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 10. ระบบ Animation ย่อ/กาง UI เข้าหาไอคอน Pancake
 local isOpen = false
 local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
@@ -934,7 +899,6 @@ end
 ToggleBtn.MouseButton1Click:Connect(ToggleUI)
 MinBtn.MouseButton1Click:Connect(ToggleUI)
 
--- ระบบลากหน้าต่างผ่าน TopBar
 local Dragging, DragStart, StartPos
 TopBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
