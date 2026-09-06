@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 (Fixed Version) ====================
+-- ==================== GKHub X PancakeHub & MM2 (With Kill Feed UI) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -68,7 +68,6 @@ MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
-MainFrame.BackgroundTransparency = 0
 
 local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(0, 162, 255)
@@ -358,6 +357,76 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
+-- ==================== KILL FEED SYSTEM (มุมขวาบน) ====================
+local KillFeedHolder = Instance.new("ScrollingFrame", ScreenGui)
+KillFeedHolder.Name = "KillFeedHolder"
+KillFeedHolder.Size = UDim2.new(0, 280, 0, 220)
+KillFeedHolder.Position = UDim2.new(1, -290, 0, 10)
+KillFeedHolder.BackgroundTransparency = 1
+KillFeedHolder.BorderSizePixel = 0
+KillFeedHolder.ScrollBarThickness = 0
+KillFeedHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
+KillFeedHolder.AutomaticCanvasSize = Enum.AutomaticSize.Y
+KillFeedHolder.Visible = true
+
+local KillFeedLayout = Instance.new("UIListLayout", KillFeedHolder)
+KillFeedLayout.SortOrder = Enum.SortOrder.LayoutOrder
+KillFeedLayout.Padding = UDim.new(0, 5)
+KillFeedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+
+local function ShowDeathFeed(text, roleType)
+    if not KillFeedHolder.Visible then return end
+    
+    local colorMap = {
+        [1] = Color3.fromRGB(255, 60, 60),   -- ฆาตกร (สีแดง)
+        [2] = Color3.fromRGB(0, 162, 255),  -- นายอำเภอ (สีฟ้า)
+        [3] = Color3.fromRGB(80, 220, 100)  -- ผู้บริสุทธิ์ (สีเขียว)
+    }
+    local chosenColor = colorMap[roleType] or Color3.fromRGB(200, 200, 200)
+
+    local FeedItem = Instance.new("Frame", KillFeedHolder)
+    FeedItem.Size = UDim2.new(1, 0, 0, 30)
+    FeedItem.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    FeedItem.BackgroundTransparency = 0.2
+    Instance.new("UICorner", FeedItem).CornerRadius = UDim.new(0, 6)
+
+    local Stroke = Instance.new("UIStroke", FeedItem)
+    Stroke.Color = chosenColor
+    Stroke.Thickness = 1.2
+
+    local Label = Instance.new("TextLabel", FeedItem)
+    Label.Size = UDim2.new(1, -10, 1, 0)
+    Label.Position = UDim2.new(0, 5, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Font = Enum.Font.GothamBold
+    Label.TextSize = 10
+    Label.TextColor3 = Color3.fromRGB(240, 240, 240)
+    Label.Text = text
+    Label.TextXAlignment = Enum.TextXAlignment.Center
+
+    -- เด้งขึ้นมา ค้างไว้ 2 วินาทีแล้วจางหาย
+    task.spawn(function()
+        task.wait(2)
+        local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+        pcall(function()
+            TweenService:Create(FeedItem, tweenInfo, {BackgroundTransparency = 1}):Play()
+            TweenService:Create(Label, tweenInfo, {TextTransparency = 1}):Play()
+            TweenService:Create(Stroke, tweenInfo, {Transparency = 1}):Play()
+        end)
+        task.wait(0.5)
+        FeedItem:Destroy()
+    end)
+end
+
+local killFeedDisplayEnabled = true
+CreateFeatureRow(UIPage, "แสดงแถบ สาเหตุการตาย", "เปิด (ON)", Color3.fromRGB(0, 162, 255), function(btn)
+    killFeedDisplayEnabled = not killFeedDisplayEnabled
+    KillFeedHolder.Visible = killFeedDisplayEnabled
+    btn.Text = killFeedDisplayEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    btn.BackgroundColor3 = killFeedDisplayEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
+end)
+-- ==================================================================
+
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
@@ -461,7 +530,7 @@ table.insert(textLabelData, {Obj = HeaderSummary, BaseSize = 11})
 
 local StatusContainer = Instance.new("ScrollingFrame", UIPage)
 StatusContainer.Name = "StatusContainer"
-StatusContainer.Size = UDim2.new(0.96, 0, 0, 175)
+StatusContainer.Size = UDim2.new(0.96, 0, 0, 135)
 StatusContainer.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
 StatusContainer.BorderSizePixel = 0
 StatusContainer.ScrollBarThickness = 2
@@ -488,7 +557,7 @@ local function ScanToolsForRole(container)
 end
 
 local playerCardPool = {}
-local playerLastChar = {}
+local playerLastState = {}
 
 task.spawn(function()
     while true do
@@ -501,10 +570,6 @@ task.spawn(function()
                 local char = player.Character
                 local isAlive = false
                 
-                if playerLastChar[player] ~= char then
-                    playerLastChar[player] = char
-                end
-
                 if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
                     local head = char:FindFirstChild("Head")
                     if not head or head.Transparency < 1 then
@@ -526,7 +591,7 @@ task.spawn(function()
                 
                 local roleType = 3
                 local roleNameStr = "ผู้บริสุทธิ์"
-                local roleColor = Color3.fromRGB(200, 200, 200)
+                local roleColor = Color3.fromRGB(80, 220, 100)
 
                 if cKnife or bKnife then
                     roleType = 1
@@ -537,6 +602,23 @@ task.spawn(function()
                     roleNameStr = "นายอำเภอ"
                     roleColor = Color3.fromRGB(0, 162, 255)
                 end
+
+                -- ตรวจจับสถานะการตายเพื่อส่งเข้า Kill Feed
+                if playerLastState[player] == nil then
+                    playerLastState[player] = isAlive
+                elseif playerLastState[player] == true and not isAlive then
+                    -- ผู้เล่นเพิ่งตาย ประเมินสาเหตุคร่าวๆ
+                    local msg = player.Name .. " (" .. roleNameStr .. ") ตายโดยไม่ทราบสาเหตุ"
+                    if roleType == 1 then
+                        msg = "ฆาตกร " .. player.Name .. " ถูกยิงหรือเสียชีวิต"
+                    elseif roleType == 2 then
+                        msg = "นายอำเภอ " .. player.Name .. " เสียชีวิตแล้ว"
+                    else
+                        msg = "ฆาตกรสังหาร " .. player.Name .. " (ผู้บริสุทธิ์)"
+                    end
+                    ShowDeathFeed(msg, roleType)
+                end
+                playerLastState[player] = isAlive
 
                 table.insert(playerRoleData, {
                     Player = player,
@@ -754,7 +836,7 @@ Instance.new("UICorner", InfoBox).CornerRadius = UDim.new(0, 6)
 local InfoText = Instance.new("TextLabel", InfoBox)
 InfoText.Size = UDim2.new(1, -12, 1, 0)
 InfoText.Position = UDim2.new(0, 6, 0, 0)
-InfoText.Text = "• สีแดง = มีมีด (Knife / ฆาตกร)\n• สีฟ้า = มีปืน (Gun / นายอำเภอ)\n• สีเทา = คนปกติ (ผู้บริสุทธิ์)"
+InfoText.Text = "• สีแดง = มีมีด (Knife / ฆาตกร)\n• สีฟ้า = มีปืน (Gun / นายอำเภอ)\n• สีเขียว = ผู้บริสุทธิ์"
 InfoText.TextColor3 = Color3.fromRGB(180, 180, 190)
 InfoText.Font = Enum.Font.Gotham
 InfoText.TextSize = 10
@@ -794,7 +876,7 @@ RunService.RenderStepped:Connect(function()
                         packKnife, packGun = ScanTools(bp)
                     end
 
-                    local color = Color3.fromRGB(200, 200, 200)
+                    local color = Color3.fromRGB(80, 220, 100)
                     if charKnife or packKnife then color = Color3.fromRGB(255, 60, 60)
                     elseif charGun or packGun then color = Color3.fromRGB(0, 162, 255) end
 
@@ -878,7 +960,6 @@ UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then Dragging = false end
 end)
 
--- ระบบโหลดที่แก้ไขไม่ให้ค้าง และเพิ่มปุ่มกดข้าม
 local isLoadingDone = false
 
 local function FinishLoading()
