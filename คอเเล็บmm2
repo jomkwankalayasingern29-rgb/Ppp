@@ -371,9 +371,9 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- **Attack Module (Fixed Hitbox & Kill All Map)**
+-- **Attack Module (Fixed Hitbox 250 & Kill All Map)**
 local expandHitboxEnabled = false
-CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
     btn.Text = expandHitboxEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = expandHitboxEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(50, 50, 60)
@@ -399,8 +399,8 @@ RunService.RenderStepped:Connect(function()
                 local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                 if otherRoot and humanoid and humanoid.Health > 0 then
-                    otherRoot.Size = Vector3.new(25, 25, 25)
-                    otherRoot.Transparency = 0.8
+                    otherRoot.Size = Vector3.new(250, 250, 250) -- ปรับขนาด Hitbox เป็น 250 ตามต้องการ
+                    otherRoot.Transparency = 0.9
                     otherRoot.CanCollide = false
                 end
             end
@@ -429,7 +429,7 @@ task.spawn(function()
                             local name = string.lower(obj.Name)
                             if name == "coin" or name == "cd" or name == "coinvisual" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
                                 hrp.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                                task.wait(1) -- ล็อกบังคับดีเลย์ 1 วินาทีต่อการวาร์ปแต่ละเหรียญอย่างแน่นอน
+                                task.wait(1) -- ดีเลย์ 1 วินาทีต่อเหรียญ
                             end
                         end
                     end
