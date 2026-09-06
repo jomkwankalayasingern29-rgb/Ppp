@@ -17,18 +17,19 @@ ScreenGui.Name = "DeltaCustomUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- **Toggle Button (Text Style)**
+-- **Toggle Button (Hidden by default, UI itself minimizes to TopBar)**
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Name = "ToggleIcon"
 ToggleBtn.Size = UDim2.new(0, 44, 0, 44)
 ToggleBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-ToggleBtn.Text = "G"
+ToggleBtn.Text = "UI"
 ToggleBtn.TextColor3 = Color3.fromRGB(0, 162, 255)
 ToggleBtn.Font = Enum.Font.GothamBold
 ToggleBtn.TextSize = 16
 ToggleBtn.Active = true
 ToggleBtn.Draggable = true
+ToggleBtn.Visible = false -- ซ่อนปุ่มลอยเดิม เพราะใช้การพับเก็บเหลือแค่ TopBar แทน
 ToggleBtn.Parent = ScreenGui
 
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)
@@ -636,41 +637,32 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- **Open / Minimize Animation Logic**
-local isOpen = false
-local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+-- **Open / Minimize Animation Logic (Minimizes to TopBar style)**
+local isMinimized = false
+local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
-local function ToggleUI()
-    isOpen = not isOpen
-    if isOpen then
-        MainFrame.Visible = true
-        MainFrame.Size = UDim2.new(0, 44, 0, 44)
-        MainFrame.Position = ToggleBtn.Position
-        MainFrame.BackgroundTransparency = 1
-        
-        local targetW = baseWidth * currentScale
-        local targetH = baseHeight * currentScale
-        
+local function ToggleMinimize()
+    isMinimized = not isMinimized
+    if isMinimized then
+        -- พับเก็บตัว UI ให้เหลือแค่แถบ TopBar ด้านบน (ขนาดความสูง 35)
         TweenService:Create(MainFrame, tweenInfo, {
-            Size = UDim2.new(0, targetW, 0, targetH),
-            Position = UDim2.new(0.5, -targetW/2, 0.5, -targetH/2),
-            BackgroundTransparency = 1 - currentAlpha
+            Size = UDim2.new(0, baseWidth * currentScale, 0, 35)
         }):Play()
+        Sidebar.Visible = false
+        ContentArea.Visible = false
+        MinBtn.Text = "+"
     else
-        local closeTween = TweenService:Create(MainFrame, tweenInfo, {
-            Size = UDim2.new(0, 44, 0, 44),
-            Position = ToggleBtn.Position,
-            BackgroundTransparency = 1
-        })
-        closeTween:Play()
-        closeTween.Completed:Connect(function()
-            if not isOpen then MainFrame.Visible = false end
-        end)
+        -- ขยาย UI กลับมาเต็มขนาดเดิม
+        Sidebar.Visible = true
+        ContentArea.Visible = true
+        TweenService:Create(MainFrame, tweenInfo, {
+            Size = UDim2.new(0, baseWidth * currentScale, 0, baseHeight * currentScale)
+        }):Play()
+        MinBtn.Text = "-"
     end
 end
 
-ToggleBtn.MouseButton1Click:Connect(ToggleUI)
-MinBtn.MouseButton1Click:Connect(ToggleUI)
+MinBtn.MouseButton1Click:Connect(ToggleMinimize)
 
 -- **Draggable Window Script**
 local Dragging, DragStart, StartPos
