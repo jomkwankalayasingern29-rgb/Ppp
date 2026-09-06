@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Ultimate Pull & Auto Shoot Fix
+-- 🥞 PancakeHub X GKHub | MM2 Ultimate Pull, Fling & Auto Shoot
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -318,7 +318,7 @@ CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4
 
 
 -- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (Hitbox 999 + ระบบดึงฆาตกรมาด้านหน้าแล้วยิงทันที)
+-- 7.2 หมวดหมู่ "โจมตี" (Hitbox 999, Pull & Shoot, และ Fling Killer)
 -- =======================================================
 
 local function ScanTools(container)
@@ -407,7 +407,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 2. ฟังก์ชันแก้ไข: ดึงฆาตกรมาด้านหน้า + ยิงโดน 100% ทันที (Pull & Shoot Killer)
+-- 2. ฟังก์ชันดึงฆาตกรมาด้านหน้า + ยิงโดน 100% ทันที (Pull & Shoot)
 local pullKillerEnabled = false
 local PullFrame = Instance.new("Frame", AttackPage)
 PullFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -443,7 +443,6 @@ PullBtn.MouseButton1Click:Connect(function()
     PullBtn.TextColor3 = pullKillerEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
 end)
 
--- ระบบดึงฆาตกรมาไว้ด้านหน้าแบบเว้นระยะที่แม่นยำ และยิงอัตโนมัติ
 RunService.Stepped:Connect(function()
     if pullKillerEnabled then
         local myChar = LocalPlayer.Character
@@ -458,10 +457,8 @@ RunService.Stepped:Connect(function()
                         local killerRoot = player.Character:FindFirstChild("HumanoidRootPart")
                         local killerHead = player.Character:FindFirstChild("Head")
                         if killerRoot and killerHead then
-                            -- ดึงมาไว้ด้านหน้า 5 สตั๊ด (กำลังดี ปืนไม่ทะลุตัวและมองเห็นหัวชัดเจน)
                             killerRoot.CFrame = myRoot.CFrame * CFrame.new(0, 0, -5)
                             
-                            -- สั่งยิงอัตโนมัติทันทีที่ดึงมา
                             local gunTool = myChar:FindFirstChild("Gun")
                             if not gunTool then
                                 for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
@@ -488,6 +485,84 @@ RunService.Stepped:Connect(function()
                                     gunTool:Activate()
                                 end
                             end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- 3. ฟังก์ชันใหม่: ดีดฆาตกรออกนอกแมพ (Fling Killer) พร้อมระบบจำพิกัดเดิมและวาร์ปกลับ
+local flingKillerEnabled = false
+local originalPosition = nil
+local FlingFrame = Instance.new("Frame", AttackPage)
+FlingFrame.Size = UDim2.new(1, 0, 0, 45)
+FlingFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", FlingFrame).CornerRadius = UDim.new(0, 6)
+
+local FlingLabel = Instance.new("TextLabel", FlingFrame)
+FlingLabel.Size = UDim2.new(0, 210, 1, 0)
+FlingLabel.Position = UDim2.new(0, 10, 0, 0)
+FlingLabel.Text = "ดีดฆาตกรออกนอกแมพ (Fling Killer)"
+FlingLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+FlingLabel.Font = Enum.Font.Gotham
+FlingLabel.TextSize = 12
+FlingLabel.TextXAlignment = Enum.TextXAlignment.Left
+FlingLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = FlingLabel, BaseSize = 12})
+
+local FlingBtn = Instance.new("TextButton", FlingFrame)
+FlingBtn.Size = UDim2.new(0, 80, 0, 26)
+FlingBtn.Position = UDim2.new(1, -88, 0.5, -13)
+FlingBtn.Font = Enum.Font.GothamBold
+FlingBtn.TextSize = 11
+FlingBtn.Text = "ปิด (OFF)"
+FlingBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+FlingBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", FlingBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = FlingBtn, BaseSize = 11})
+
+FlingBtn.MouseButton1Click:Connect(function()
+    flingKillerEnabled = not flingKillerEnabled
+    FlingBtn.Text = flingKillerEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    FlingBtn.BackgroundColor3 = flingKillerEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
+    FlingBtn.TextColor3 = flingKillerEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+    
+    local myChar = LocalPlayer.Character
+    if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+        if flingKillerEnabled then
+            -- จำพิกัดปัจจุบันก่อนวาร์ปไปหาฆาตกร
+            originalPosition = myChar.HumanoidRootPart.CFrame
+        else
+            -- ปิดแล้ววาร์ปกลับจุดเดิมทันที
+            if originalPosition then
+                myChar.HumanoidRootPart.CFrame = originalPosition
+                originalPosition = nil
+            end
+        end
+    end
+end)
+
+-- ระบบทำ Fling สะบัดกระแทกตัวฆาตกร
+RunService.Stepped:Connect(function()
+    if flingKillerEnabled then
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+            local myRoot = myChar.HumanoidRootPart
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local charKnife, _ = ScanTools(player.Character)
+                    local packKnife, _ = ScanTools(player:FindFirstChild("Backpack"))
+                    
+                    if charKnife or packKnife then
+                        local killerRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                        if killerRoot then
+                            -- วาร์ปไปทับตัวฆาตกรเพื่อสร้างแรงปะทะ
+                            myRoot.CFrame = killerRoot.CFrame
+                            -- สร้างแรงเหวี่ยงหมุน (Spin Fling) มหาศาลเพื่อให้ฆาตกรปลิวออกนอกแมพ
+                            myRoot.AssemblyAngularVelocity = Vector3.new(0, 99999, 0)
+                            myRoot.AssemblyLinearVelocity = Vector3.new(99999, 99999, 99999)
                         end
                     end
                 end
