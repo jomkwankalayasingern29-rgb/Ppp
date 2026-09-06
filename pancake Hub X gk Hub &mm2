@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Script (With Attack & Kill All)
+-- 🥞 PancakeHub X GKHub | MM2 Script (Final Adjusted)
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -178,7 +178,7 @@ local function CreateTab(name)
     return Page
 end
 
--- สร้างแท็บทั้งหมดรวมถึง "โจมตี" กลับมาแล้ว
+-- สร้างแท็บทั้งหมด
 local MainInfoPage = CreateTab("หลัก")
 local AttackPage = CreateTab("โจมตี")
 local UIPage = CreateTab("UI")
@@ -309,63 +309,9 @@ CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4
 
 
 -- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (รวมปุ่มฆ่าทั้งแมพ และขยายฮิตบ็อกซ์)
+-- 7.2 หมวดหมู่ "โจมตี" (มีเฉพาะฟังก์ชัน "ฆ่าทั้งแมพ" ฮิตบ็อกซ์ล่องหน 100%)
 -- =======================================================
-
--- ปุ่ม: ฆ่าทั้งแมพ (Kill All)
-local KillAllFrame = Instance.new("Frame", AttackPage)
-KillAllFrame.Size = UDim2.new(1, 0, 0, 45)
-KillAllFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
-Instance.new("UICorner", KillAllFrame).CornerRadius = UDim.new(0, 6)
-
-local KillAllLabel = Instance.new("TextLabel", KillAllFrame)
-KillAllLabel.Size = UDim2.new(0, 210, 1, 0)
-KillAllLabel.Position = UDim2.new(0, 10, 0, 0)
-KillAllLabel.Text = "ฆ่าผู้เล่นอื่นทั้งหมดในแมพ (Kill All)"
-KillAllLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-KillAllLabel.Font = Enum.Font.Gotham
-KillAllLabel.TextSize = 12
-KillAllLabel.TextXAlignment = Enum.TextXAlignment.Left
-KillAllLabel.BackgroundTransparency = 1
-table.insert(textLabelData, {Obj = KillAllLabel, BaseSize = 12})
-
-local KillAllBtn = Instance.new("TextButton", KillAllFrame)
-KillAllBtn.Size = UDim2.new(0, 80, 0, 26)
-KillAllBtn.Position = UDim2.new(1, -88, 0.5, -13)
-KillAllBtn.Font = Enum.Font.GothamBold
-KillAllBtn.TextSize = 11
-KillAllBtn.Text = "ทำงาน"
-KillAllBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-KillAllBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-Instance.new("UICorner", KillAllBtn).CornerRadius = UDim.new(0, 5)
-table.insert(textLabelData, {Obj = KillAllBtn, BaseSize = 11})
-
-KillAllBtn.MouseButton1Click:Connect(function()
-    pcall(function()
-        local myChar = LocalPlayer.Character
-        if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
-        local originalPos = myChar.HumanoidRootPart.CFrame
-
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local enemyRoot = player.Character.HumanoidRootPart
-                -- วาร์ปไปหาผู้เล่นอื่นแล้วโจมตี/เคลียร์
-                myChar.HumanoidRootPart.CFrame = enemyRoot.CFrame
-                task.wait(0.05)
-            end
-        end
-        task.wait(0.1)
-        myChar.HumanoidRootPart.CFrame = originalPos
-    end)
-    KillAllBtn.Text = "สำเร็จ!"
-    task.wait(1.5)
-    KillAllBtn.Text = "ทำงาน"
-end)
-
-
--- ปุ่มและระบบ: ขยายฮิตบ็อกซ์
 local expandHitboxEnabled = false
-local hitboxTransparencyVal = 85
 
 local HitboxFrame = Instance.new("Frame", AttackPage)
 HitboxFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -375,7 +321,7 @@ Instance.new("UICorner", HitboxFrame).CornerRadius = UDim.new(0, 6)
 local HitboxLabel = Instance.new("TextLabel", HitboxFrame)
 HitboxLabel.Size = UDim2.new(0, 210, 1, 0)
 HitboxLabel.Position = UDim2.new(0, 10, 0, 0)
-HitboxLabel.Text = "ขยายฮิตบ็อกซ์ตัวผู้เล่นอื่น (Size 999)"
+HitboxLabel.Text = "ฆ่าทั้งแมพ"
 HitboxLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 HitboxLabel.Font = Enum.Font.Gotham
 HitboxLabel.TextSize = 12
@@ -413,10 +359,6 @@ HitboxBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-CreateSlider(AttackPage, "ปรับความจางฮิตบ็อกซ์ (0=ทึบ, 100=ล่องหน)", 0, 100, 85, "%", function(val)
-    hitboxTransparencyVal = val
-end)
-
 RunService.Stepped:Connect(function()
     if expandHitboxEnabled then
         for _, player in pairs(Players:GetPlayers()) do
@@ -424,7 +366,7 @@ RunService.Stepped:Connect(function()
                 local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 if otherRoot then
                     otherRoot.Size = Vector3.new(999, 999, 999)
-                    otherRoot.Transparency = hitboxTransparencyVal / 100
+                    otherRoot.Transparency = 1 -- ตั้งค่าความจางเป็น 100% (ล่องหน) ตั้งแต่แรก
                     otherRoot.CanCollide = false
                 end
             end
@@ -734,7 +676,7 @@ RunService.RenderStepped:Connect(function()
                     textObj.Outline = true
                     textObj.Size = 14
                     textObj.Visible = true
-                    table.insert(espTextObjects, textObj)
+                    table.Inst(espTextObjects, textObj)
                 end
             end
         end
