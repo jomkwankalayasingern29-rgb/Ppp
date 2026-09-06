@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | Murder Mystery 2
+-- 🥞 PancakeHub X GKHub | Murder Mystery 2 (Hitbox Expand)
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -186,7 +186,7 @@ local function CreateTab(name)
     return Page
 end
 
--- สร้างครบทุกหมวดหมู่ (เพิ่มหมวดหมู่ "โจมตี" เข้ามาใหม่)
+-- สร้างแท็บทั้งหมด
 local MainInfoPage = CreateTab("หลัก")
 local AttackPage = CreateTab("โจมตี")
 local UIPage = CreateTab("UI")
@@ -199,7 +199,7 @@ tabs["หลัก"].Page.Visible = true
 tabs["หลัก"].Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
 tabs["หลัก"].Btn.TextColor3 = Color3.fromRGB(240, 240, 255)
 
--- 7. ระบบสร้าง Slider คอมโพเนนต์
+-- 7. ระบบสร้าง Slider
 local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffix, callback)
     local SliderFrame = Instance.new("Frame", parent)
     SliderFrame.Size = UDim2.new(1, 0, 0, 50)
@@ -271,7 +271,7 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
 end
 
 -- =======================================================
--- 7.1 หมวดหมู่ "หลัก" (เครดิตผู้สร้าง & ปุ่มคัดลอกลิงก์ Discord)
+-- 7.1 หมวดหมู่ "หลัก"
 -- =======================================================
 local function CreateCreditCard(parent, hubName, discordLink, themeColor)
     local Card = Instance.new("Frame", parent)
@@ -306,9 +306,7 @@ local function CreateCreditCard(parent, hubName, discordLink, themeColor)
     table.insert(textLabelData, {Obj = CopyBtn, BaseSize = 12})
 
     CopyBtn.MouseButton1Click:Connect(function()
-        pcall(function()
-            setclipboard(discordLink)
-        end)
+        pcall(function() setclipboard(discordLink) end)
         CopyBtn.Text = "คัดลอกสำเร็จ! (Copied)"
         task.wait(1.5)
         CopyBtn.Text = "คัดลอกลิ้งดิส (Discord)"
@@ -320,46 +318,59 @@ CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4
 
 
 -- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (ระบบฆ่าทั้งหมด / Kill All Hitbox)
+-- 7.2 หมวดหมู่ "โจมตี" (ระบบขยาย Hitbox ให้มาโดนตัวเรา)
 -- =======================================================
-local killAllEnabled = false
-local KillAllFrame = Instance.new("Frame", AttackPage)
-KillAllFrame.Size = UDim2.new(1, 0, 0, 45)
-KillAllFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
-Instance.new("UICorner", KillAllFrame).CornerRadius = UDim.new(0, 6)
+local expandHitboxEnabled = false
+local HitboxFrame = Instance.new("Frame", AttackPage)
+HitboxFrame.Size = UDim2.new(1, 0, 0, 45)
+HitboxFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", HitboxFrame).CornerRadius = UDim.new(0, 6)
 
-local KillAllLabel = Instance.new("TextLabel", KillAllFrame)
-KillAllLabel.Size = UDim2.new(0, 200, 1, 0)
-KillAllLabel.Position = UDim2.new(0, 10, 0, 0)
-KillAllLabel.Text = "ฆ่าทั้งหมด (Kill All Hitbox)"
-KillAllLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-KillAllLabel.Font = Enum.Font.Gotham
-KillAllLabel.TextSize = 12
-KillAllLabel.TextXAlignment = Enum.TextXAlignment.Left
-KillAllLabel.BackgroundTransparency = 1
-table.insert(textLabelData, {Obj = KillAllLabel, BaseSize = 12})
+local HitboxLabel = Instance.new("TextLabel", HitboxFrame)
+HitboxLabel.Size = UDim2.new(0, 210, 1, 0)
+HitboxLabel.Position = UDim2.new(0, 10, 0, 0)
+HitboxLabel.Text = "ขยายฮิตบ็อกซ์มาโดนตัวเรา (Kill All Hitbox)"
+HitboxLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+HitboxLabel.Font = Enum.Font.Gotham
+HitboxLabel.TextSize = 12
+HitboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+HitboxLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = HitboxLabel, BaseSize = 12})
 
-local KillAllBtn = Instance.new("TextButton", KillAllFrame)
-KillAllBtn.Size = UDim2.new(0, 80, 0, 26)
-KillAllBtn.Position = UDim2.new(1, -88, 0.5, -13)
-KillAllBtn.Font = Enum.Font.GothamBold
-KillAllBtn.TextSize = 11
-KillAllBtn.Text = "ปิด (OFF)"
-KillAllBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-KillAllBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
-Instance.new("UICorner", KillAllBtn).CornerRadius = UDim.new(0, 5)
-table.insert(textLabelData, {Obj = KillAllBtn, BaseSize = 11})
+local HitboxBtn = Instance.new("TextButton", HitboxFrame)
+HitboxBtn.Size = UDim2.new(0, 80, 0, 26)
+HitboxBtn.Position = UDim2.new(1, -88, 0.5, -13)
+HitboxBtn.Font = Enum.Font.GothamBold
+HitboxBtn.TextSize = 11
+HitboxBtn.Text = "ปิด (OFF)"
+HitboxBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+HitboxBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", HitboxBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = HitboxBtn, BaseSize = 11})
 
-KillAllBtn.MouseButton1Click:Connect(function()
-    killAllEnabled = not killAllEnabled
-    KillAllBtn.Text = killAllEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    KillAllBtn.BackgroundColor3 = killAllEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
-    KillAllBtn.TextColor3 = killAllEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+HitboxBtn.MouseButton1Click:Connect(function()
+    expandHitboxEnabled = not expandHitboxEnabled
+    HitboxBtn.Text = expandHitboxEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    HitboxBtn.BackgroundColor3 = expandHitboxEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
+    HitboxBtn.TextColor3 = expandHitboxEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+    
+    -- ถ้าปิด ให้คืนค่าขนาดปกติของผู้เล่นอื่น
+    if not expandHitboxEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local root = player.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    root.Size = Vector3.new(2, 2, 1)
+                    root.Transparency = 1
+                end
+            end
+        end
+    end
 end)
 
--- ลูปการทำงานดึงฮิตบ็อกซ์ผู้เล่นอื่นมาที่ตัวเราเมื่อเปิดใช้งาน
+-- ลูปการทำงานขยายฮิตบ็อกซ์และดึงตำแหน่งมาซ้อนทับตัวเราตลอดเวลา
 RunService.Stepped:Connect(function()
-    if killAllEnabled then
+    if expandHitboxEnabled then
         local myChar = LocalPlayer.Character
         if myChar and myChar:FindFirstChild("HumanoidRootPart") then
             local myRoot = myChar.HumanoidRootPart
@@ -367,6 +378,11 @@ RunService.Stepped:Connect(function()
                 if player ~= LocalPlayer and player.Character then
                     local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                     if otherRoot then
+                        -- ขยายฮิตบ็อกซ์ให้ใหญ่ครอบคลุมพื้นที่
+                        otherRoot.Size = Vector3.new(15, 15, 15)
+                        otherRoot.Transparency = 0.85 -- มองเห็นจางๆ หรือใส่เป็น 1 ถ้าไม่อยากให้เห็น
+                        otherRoot.CanCollide = false
+                        -- ดึงตำแหน่งฮิตบ็อกซ์มาไว้ที่ตัวเรา
                         otherRoot.CFrame = myRoot.CFrame
                     end
                 end
@@ -376,7 +392,7 @@ RunService.Stepped:Connect(function()
 end)
 
 
--- เพิ่ม Slider ในหมวดหมู่ UI
+-- เพิ่ม Slider ปรับความทึบและขนาด UI
 CreateSlider(UIPage, "ปรับความทึบของ UI", 1, 100, 100, "%", function(val)
     currentAlpha = val / 100
     local transparency = 1 - currentAlpha
@@ -637,7 +653,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 10. หมวดหมู่ Auto Shoot & ปุ่มยิงด่วน
+-- 10. หมวดหมู่ Auto Shoot
 local autoShootEnabled = false
 local miniShootGui = nil
 
