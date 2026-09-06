@@ -1,4 +1,4 @@
--- ==================== PancakeHub X GKHub UI (Modern Restyle) ====================
+-- ==================== GKHub X PancakeHub & MM2 UI ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -17,16 +17,16 @@ ScreenGui.Name = "DeltaCustomUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- **Toggle Button (Pancake Icon)**
+-- **Toggle Button (Text Style)**
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Name = "ToggleIcon"
 ToggleBtn.Size = UDim2.new(0, 44, 0, 44)
 ToggleBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-ToggleBtn.Text = "🥞"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Text = "UI"
+ToggleBtn.TextColor3 = Color3.fromRGB(0, 162, 255)
 ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.TextSize = 22
+ToggleBtn.TextSize = 16
 ToggleBtn.Active = true
 ToggleBtn.Draggable = true
 ToggleBtn.Parent = ScreenGui
@@ -100,20 +100,20 @@ FixTopBar.Position = UDim2.new(0, 0, 1, -5)
 FixTopBar.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 FixTopBar.BorderSizePixel = 0
 
--- Logo G
+-- Logo G (No Emoji)
 local LogoG = Instance.new("TextLabel", TopBar)
 LogoG.Size = UDim2.new(0, 24, 0, 24)
 LogoG.Position = UDim2.new(0, 10, 0, 5.5)
 LogoG.BackgroundTransparency = 1
 LogoG.Font = Enum.Font.GothamBold
-LogoG.Text = "🥞"
+LogoG.Text = "G"
 LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
 LogoG.TextSize = 14
 
 local TitleText = Instance.new("TextLabel", TopBar)
-TitleText.Size = UDim2.new(0, 320, 1, 0)
+TitleText.Size = UDim2.new(0, 380, 1, 0)
 TitleText.Position = UDim2.new(0, 38, 0, 0)
-TitleText.Text = "PancakeHub X GKHub & mm2 (Zero Delay)"
+TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 12
@@ -338,7 +338,6 @@ end
 CreateCreditCard(MainInfoPage, "PancakeHub", "https://discord.gg/HfnJnAAM8e", Color3.fromRGB(0, 162, 255))
 CreateCreditCard(MainInfoPage, "GKHub", "https://discord.gg/Ugssja4wqQ", Color3.fromRGB(80, 150, 220))
 
--- **Function Component Builder**
 local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, callback)
     local Frame = Instance.new("Frame", parent)
     Frame.Size = UDim2.new(0.96, 0, 0, 38)
@@ -450,12 +449,6 @@ CreateFeatureRow(HelperPage, "วาร์ปไปเก็บเหรีย�
     end
 end)
 
-CreateFeatureRow(HelperPage, "ขายทั้งหมด (MM2)", "ขาย", Color3.fromRGB(0, 162, 255), function()
-    pcall(function()
-        game:GetService("ReplicatedStorage"):WaitForChild("RequestSell"):InvokeServer("sellAll")
-    end)
-end)
-
 -- **UI Customization Module**
 CreateSlider(UIPage, "ความทึบของ UI", 1, 100, 100, "%", function(val)
     currentAlpha = val / 100
@@ -561,7 +554,6 @@ CreateFeatureRow(ESPPage, "ESP ปืนตกพื้น", "ปิด (OFF)", 
     btn.BackgroundColor3 = gunEspEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
 
--- Info Box for ESP
 local InfoBox = Instance.new("Frame", ESPPage)
 InfoBox.Size = UDim2.new(0.96, 0, 0, 75)
 InfoBox.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
