@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Script (Full Version + Fixed Gun Drop ESP)
+-- 🥞 PancakeHub X GKHub | MM2 Script (Full Version + Auto Farm Coins)
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -126,7 +126,7 @@ SidePadding.PaddingTop = UDim.new(0, 10)
 SidePadding.PaddingLeft = UDim.new(0, 8)
 SidePadding.PaddingRight = UDim.new(0, 8)
 
--- 6. พื้นที่ฟังชั่นขวามือ (Content Area)
+-- 6. พื้นที่ฟังก์ชันขวามือ (Content Area)
 local ContentArea = Instance.new("Frame", MainFrame)
 ContentArea.Name = "ContentArea"
 ContentArea.Size = UDim2.new(1, -130, 1, -45)
@@ -179,9 +179,10 @@ local function CreateTab(name)
     return Page
 end
 
--- สร้างแท็บทั้งหมด
+-- สร้างแท็บตามลำดับที่ต้องการ (ช่องที่ 3 คือ ช่วยเล่น)
 local MainInfoPage = CreateTab("หลัก")
 local AttackPage = CreateTab("โจมตี")
+local HelperPage = CreateTab("ช่วยเล่น") -- ช่องที่ 3 ตามคำขอ
 local UIPage = CreateTab("UI")
 local PlayerPage = CreateTab("ตัวละคร")
 local ToolPage = CreateTab("เครื่องมือ")
@@ -310,7 +311,7 @@ CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4
 
 
 -- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (ฟังก์ชัน "ฆ่าทั้งแมพ")
+-- 7.2 หมวดหมู่ "โจมตี" (ฆ่าทั้งแมพ)
 -- =======================================================
 local expandHitboxEnabled = false
 
@@ -371,6 +372,118 @@ RunService.Stepped:Connect(function()
                     otherRoot.CanCollide = false
                 end
             end
+        end
+    end
+end)
+
+
+-- =======================================================
+-- 7.3 หมวดหมู่ "ช่วยเล่น" (ออโต้เก็บเหรียญ และ วาร์ปไปเก็บเหรียญ)
+-- =======================================================
+local autoFarmCoinsEnabled = false
+
+local AutoFarmFrame = Instance.new("Frame", HelperPage)
+AutoFarmFrame.Size = UDim2.new(1, 0, 0, 45)
+AutoFarmFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", AutoFarmFrame).CornerRadius = UDim.new(0, 6)
+
+local AutoFarmLabel = Instance.new("TextLabel", AutoFarmFrame)
+AutoFarmLabel.Size = UDim2.new(0, 200, 1, 0)
+AutoFarmLabel.Position = UDim2.new(0, 10, 0, 0)
+AutoFarmLabel.Text = "ออโต้เก็บเหรียญ (Auto Farm)"
+AutoFarmLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+AutoFarmLabel.Font = Enum.Font.Gotham
+AutoFarmLabel.TextSize = 12
+AutoFarmLabel.TextXAlignment = Enum.TextXAlignment.Left
+AutoFarmLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = AutoFarmLabel, BaseSize = 12})
+
+local AutoFarmBtn = Instance.new("TextButton", AutoFarmFrame)
+AutoFarmBtn.Size = UDim2.new(0, 80, 0, 26)
+AutoFarmBtn.Position = UDim2.new(1, -88, 0.5, -13)
+AutoFarmBtn.Font = Enum.Font.GothamBold
+AutoFarmBtn.TextSize = 11
+AutoFarmBtn.Text = "ปิด (OFF)"
+AutoFarmBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+AutoFarmBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", AutoFarmBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = AutoFarmBtn, BaseSize = 11})
+
+AutoFarmBtn.MouseButton1Click:Connect(function()
+    autoFarmCoinsEnabled = not autoFarmCoinsEnabled
+    AutoFarmBtn.Text = autoFarmCoinsEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    AutoFarmBtn.BackgroundColor3 = autoFarmCoinsEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    AutoFarmBtn.TextColor3 = autoFarmCoinsEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+end)
+
+-- ฟังก์ชันหาเหรียญใน MM2
+local function GetNearestCoin()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and (string.lower(obj.Name) == "coin" or string.lower(obj.Name) == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin")) then
+            return obj
+        end
+    end
+    -- Fallback ค้นหาตามชื่อชิ้นส่วนใน Workspace ทั่วไปของ MM2
+    for _, obj in pairs(Workspace:GetChildren()) do
+        if obj.Name == "CoinVisual" or obj.Name == "Coin" or (obj:IsA("Model") and obj:FindFirstChild("Coin")) then
+            if obj:IsA("Model") then
+                return obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+            else
+                return obj
+            end
+        end
+    end
+    return nil
+end
+
+-- ลูปทำงานออโต้เก็บเหรียญ และปุ่มวาร์ปด่วน
+RunService.Stepped:Connect(function()
+    if autoFarmCoinsEnabled then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local coinPart = GetNearestCoin()
+            if coinPart then
+                -- วาร์ปตัวละครไปหาเหรียญทันที
+                char.HumanoidRootPart.CFrame = coinPart.CFrame + Vector3.new(0, 2, 0)
+            end
+        end
+    end
+end)
+
+-- ปุ่มวาร์ปไปเก็บเหรียญครั้งเดียว (Teleport to Coin)
+local TpCoinFrame = Instance.new("Frame", HelperPage)
+TpCoinFrame.Size = UDim2.new(1, 0, 0, 45)
+TpCoinFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", TpCoinFrame).CornerRadius = UDim.new(0, 6)
+
+local TpCoinLabel = Instance.new("TextLabel", TpCoinFrame)
+TpCoinLabel.Size = UDim2.new(0, 200, 1, 0)
+TpCoinLabel.Position = UDim2.new(0, 10, 0, 0)
+TpCoinLabel.Text = "วาร์ปไปเก็บเหรียญทันที"
+TpCoinLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+TpCoinLabel.Font = Enum.Font.Gotham
+TpCoinLabel.TextSize = 12
+TpCoinLabel.TextXAlignment = Enum.TextXAlignment.Left
+TpCoinLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = TpCoinLabel, BaseSize = 12})
+
+local TpCoinBtn = Instance.new("TextButton", TpCoinFrame)
+TpCoinBtn.Size = UDim2.new(0, 80, 0, 26)
+TpCoinBtn.Position = UDim2.new(1, -88, 0.5, -13)
+TpCoinBtn.Font = Enum.Font.GothamBold
+TpCoinBtn.TextSize = 11
+TpCoinBtn.Text = "วาร์ป"
+TpCoinBtn.BackgroundColor3 = Color3.fromRGB(80, 110, 180)
+TpCoinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", TpCoinBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = TpCoinBtn, BaseSize = 11})
+
+TpCoinBtn.MouseButton1Click:Connect(function()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local coinPart = GetNearestCoin()
+        if coinPart then
+            char.HumanoidRootPart.CFrame = coinPart.CFrame + Vector3.new(0, 2, 0)
         end
     end
 end)
@@ -738,7 +851,7 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ESP ปืนที่ตกอยู่บนพื้นเท่านั้น (กรองไม่ให้จับปืนที่คนถืออยู่)
+    -- ESP ปืนที่ตกอยู่บนพื้นเท่านั้น
     if gunEspEnabled then
         for _, obj in pairs(Workspace:GetDescendants()) do
             local isDroppedGun = false
