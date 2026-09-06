@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | Murder Mystery 2 (Hitbox Expand)
+-- 🥞 PancakeHub X GKHub | Murder Mystery 2 (Hitbox Expand Offset Front)
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -318,7 +318,7 @@ CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4
 
 
 -- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (ระบบขยาย Hitbox ให้มาโดนตัวเรา)
+-- 7.2 หมวดหมู่ "โจมตี" (ระบบดึงฮิตบ็อกซ์มาไว้ด้านหน้าตัวเรา)
 -- =======================================================
 local expandHitboxEnabled = false
 local HitboxFrame = Instance.new("Frame", AttackPage)
@@ -329,7 +329,7 @@ Instance.new("UICorner", HitboxFrame).CornerRadius = UDim.new(0, 6)
 local HitboxLabel = Instance.new("TextLabel", HitboxFrame)
 HitboxLabel.Size = UDim2.new(0, 210, 1, 0)
 HitboxLabel.Position = UDim2.new(0, 10, 0, 0)
-HitboxLabel.Text = "ขยายฮิตบ็อกซ์มาโดนตัวเรา (Kill All Hitbox)"
+HitboxLabel.Text = "ดูดฮิตบ็อกซ์มาไว้ด้านหน้า (Front Hitbox)"
 HitboxLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 HitboxLabel.Font = Enum.Font.Gotham
 HitboxLabel.TextSize = 12
@@ -368,22 +368,25 @@ HitboxBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ลูปการทำงานขยายฮิตบ็อกซ์และดึงตำแหน่งมาซ้อนทับตัวเราตลอดเวลา
+-- ลูปการทำงานขยายฮิตบ็อกซ์และดึงตำแหน่งมาไว้ "ด้านหน้า" ของตัวเราตลอดเวลา
 RunService.Stepped:Connect(function()
     if expandHitboxEnabled then
         local myChar = LocalPlayer.Character
         if myChar and myChar:FindFirstChild("HumanoidRootPart") then
             local myRoot = myChar.HumanoidRootPart
+            -- ดึงไปข้างหน้าเรา 4 หน่วย (ปรับเลขนี้เพิ่ม/ลดระยะห่างได้ตามต้องการ)
+            local frontCFrame = myRoot.CFrame + (myRoot.CFrame.LookVector * 4)
+            
             for _, player in pairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character then
                     local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                     if otherRoot then
-                        -- ขยายฮิตบ็อกซ์ให้ใหญ่ครอบคลุมพื้นที่
+                        -- ขยายฮิตบ็อกซ์ให้ใหญ่ครอบคลุมด้านหน้า
                         otherRoot.Size = Vector3.new(15, 15, 15)
-                        otherRoot.Transparency = 0.85 -- มองเห็นจางๆ หรือใส่เป็น 1 ถ้าไม่อยากให้เห็น
+                        otherRoot.Transparency = 0.85 -- มองเห็นจางๆ (เปลี่ยนเป็น 1 ถ้าไม่อยากให้เห็น)
                         otherRoot.CanCollide = false
-                        -- ดึงตำแหน่งฮิตบ็อกซ์มาไว้ที่ตัวเรา
-                        otherRoot.CFrame = myRoot.CFrame
+                        -- บังคับตำแหน่งให้อยู่ด้านหน้าเรา
+                        otherRoot.CFrame = frontCFrame
                     end
                 end
             end
@@ -802,7 +805,7 @@ local function ToggleUI()
             BackgroundTransparency = 1 - currentAlpha
         }):Play()
     else
-        local closeTween = TweenService:Create(MainFrame, tweenInfo, {
+        closeTween = TweenService:Create(MainFrame, tweenInfo, {
             Size = UDim2.new(0, 40, 0, 40),
             Position = ToggleBtn.Position,
             BackgroundTransparency = 1
