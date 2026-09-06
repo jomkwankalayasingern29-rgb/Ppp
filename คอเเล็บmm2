@@ -1,10 +1,11 @@
--- ==================== GKHub X PancakeHub & MM2 UI (Optimized for Delta) ====================
+-- ==================== GKHub X PancakeHub & MM2 UI (Noclip Player Fix) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local PhysicsService = game:GetService("PhysicsService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
@@ -17,10 +18,8 @@ ScreenGui.Name = "DeltaCustomUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- **Clipboard Compatibility for Delta**
 local writeClipboard = setclipboard or toclipboard or function() end
 
--- **Toggle Button**
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Name = "ToggleIcon"
 ToggleBtn.Size = UDim2.new(0, 44, 0, 44)
@@ -40,7 +39,6 @@ local ToggleStroke = Instance.new("UIStroke", ToggleBtn)
 ToggleStroke.Color = Color3.fromRGB(0, 162, 255)
 ToggleStroke.Thickness = 1.5
 
--- **Loading Screen**
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
 LoadFrame.Size = UDim2.new(0, 300, 0, 65)
@@ -64,14 +62,12 @@ LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
--- **Main Variables**
 local baseWidth = 520
 local baseHeight = 360
 local currentScale = 1 
 local currentAlpha = 1 
 local textLabelData = {}
 
--- **Main Window Frame**
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, baseWidth, 0, baseHeight)
@@ -88,7 +84,6 @@ local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(0, 162, 255)
 MainStroke.Thickness = 1.5
 
--- **TopBar**
 local TopBar = Instance.new("Frame", MainFrame)
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 35)
@@ -147,7 +142,6 @@ MinBtn.Font = Enum.Font.GothamBold
 MinBtn.TextSize = 14
 table.insert(textLabelData, {Obj = MinBtn, BaseSize = 14})
 
--- **Sidebar & Content Area**
 local Sidebar = Instance.new("ScrollingFrame", MainFrame)
 Sidebar.Name = "Sidebar"
 Sidebar.Size = UDim2.new(0.28, 0, 1, -43)
@@ -374,7 +368,6 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- **Attack Module**
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
@@ -411,7 +404,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- **Helper Module**
 local autoFarmCoinsEnabled = false
 CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (ดีเลย์ 1 วิ)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoFarmCoinsEnabled = not autoFarmCoinsEnabled
@@ -458,7 +450,6 @@ CreateFeatureRow(HelperPage, "วาร์ปไปเก็บเหรีย�
     end
 end)
 
--- **UI Customization Module**
 CreateSlider(UIPage, "ความทึบของ UI", 1, 100, 100, "%", function(val)
     currentAlpha = val / 100
     local transparency = 1 - currentAlpha
@@ -481,7 +472,6 @@ CreateSlider(UIPage, "ขนาดความใหญ่ UI", 50, 150, 100, "%
     end
 end)
 
--- **UI Bottom Section: MM2 Realtime Profiles & Counter (Optimized Pool System)**
 local HeaderSummary = Instance.new("TextLabel", UIPage)
 HeaderSummary.Size = UDim2.new(0.96, 0, 0, 24)
 HeaderSummary.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
@@ -663,7 +653,6 @@ task.spawn(function()
     end
 end)
 
--- **Player Module**
 CreateSlider(PlayerPage, "ความเร็วในการวิ่ง (WalkSpeed)", 16, 250, 16, "", function(val)
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
@@ -695,6 +684,29 @@ pcall(function()
         end
         return oldNamecall(self, ...)
     end)
+end)
+
+-- **แก้ไขใหม่: ระบบเดินทะลุตัวผู้เล่นคนอื่น (Pass-Through Fix)**
+local passPlayersEnabled = false
+CreateFeatureRow(PlayerPage, "เดินทะลุตัวผู้เล่นคนอื่น", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+    passPlayersEnabled = not passPlayersEnabled
+    btn.Text = passPlayersEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    btn.BackgroundColor3 = passPlayersEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
+end)
+
+RunService.Stepped:Connect(function()
+    if passPlayersEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                for _, part in pairs(player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                        part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end
+        end
+    end
 end)
 
 local noclipEnabled = false
@@ -731,7 +743,6 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- **Tools Module**
 CreateFeatureRow(ToolPage, "รับไอเทมคลิกวาร์ป (Click TP)", "รับไอเทม", Color3.fromRGB(0, 162, 255), function()
     local mouse = LocalPlayer:GetMouse()
     local tool = Instance.new("Tool")
@@ -748,7 +759,6 @@ CreateFeatureRow(ToolPage, "รับไอเทมคลิกวาร์ป 
     end)
 end)
 
--- **ESP Module (Delta Safe: BillboardGui Based)**
 local espEnabled = false
 CreateFeatureRow(ESPPage, "เปิดใช้งาน ESP ไฮไลท์ตัวละคร", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     espEnabled = not espEnabled
@@ -859,7 +869,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- **Open / Minimize Animation Logic**
 local isMinimized = false
 local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
@@ -884,7 +893,6 @@ end
 
 MinBtn.MouseButton1Click:Connect(ToggleMinimize)
 
--- **Draggable Window Script**
 local Dragging, DragStart, StartPos
 TopBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -901,7 +909,6 @@ UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then Dragging = false end
 end)
 
--- **Loading Sequence & Startup Animation**
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
