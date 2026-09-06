@@ -505,13 +505,12 @@ local function ScanMM2Roles()
     end
 end
 
-TaskLoop = RunService.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function()
     if RoleDisplayGui.Visible then
         pcall(ScanMM2Roles)
     end
 end)
 
--- Add to UI Page
 CreateFeatureRow(UIPage, "จอแสดงผล (เช็คฆาตกร/นายอำเภอ)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     RoleDisplayGui.Visible = not RoleDisplayGui.Visible
     btn.Text = RoleDisplayGui.Visible and "เปิด (ON)" or "ปิด (OFF)"
@@ -638,6 +637,28 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     if char and char:FindFirstChild("Humanoid") then
         char.Humanoid.UseJumpPower = true
         char.Humanoid.JumpPower = val
+    end
+end)
+
+-- **NEW FUNCTION: การโปรเตะออกแมพ (Pass Through Players Only)**
+local passPlayersEnabled = false
+CreateFeatureRow(PlayerPage, "การโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+    passPlayersEnabled = not passPlayersEnabled
+    btn.Text = passPlayersEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    btn.BackgroundColor3 = passPlayersEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
+end)
+
+RunService.Stepped:Connect(function()
+    if passPlayersEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                for _, part in pairs(player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end
     end
 end)
 
