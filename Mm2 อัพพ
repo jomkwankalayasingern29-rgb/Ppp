@@ -371,7 +371,7 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- **Attack Module (Fixed Hitbox 250, Invisible & No Collision to prevent glitching)**
+-- **Attack Module**
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
@@ -408,9 +408,9 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- **Helper Module (Instant Teleport Coin Farm - FIXED 1 SECOND DELAY)**
+-- **Helper Module (Instant Teleport Coin Farm - FIXED 5 SECONDS DELAY)**
 local autoFarmCoinsEnabled = false
-CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (ดีเลย์ 1 วิ)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (ดีเลย์ 5 วิ)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoFarmCoinsEnabled = not autoFarmCoinsEnabled
     btn.Text = autoFarmCoinsEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = autoFarmCoinsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
@@ -429,7 +429,7 @@ task.spawn(function()
                             local name = string.lower(obj.Name)
                             if name == "coin" or name == "cd" or name == "coinvisual" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
                                 hrp.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                                task.wait(1)
+                                task.wait(5) -- เปลี่ยนดีเลย์เป็น 5 วินาที
                             end
                         end
                     end
@@ -437,21 +437,6 @@ task.spawn(function()
             end)
         end
         task.wait(1)
-    end
-end)
-
-CreateFeatureRow(HelperPage, "วาร์ปไปเก็บเหรียญ 1 ครั้ง", "วาร์ป", Color3.fromRGB(0, 162, 255), function()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        for _, obj in pairs(Workspace:GetDescendants()) do
-            if obj:IsA("BasePart") then
-                local name = string.lower(obj.Name)
-                if name == "coin" or name == "cd" or name == "coinvisual" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
-                    char.HumanoidRootPart.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                    break
-                end
-            end
-        end
     end
 end)
 
@@ -478,7 +463,7 @@ CreateSlider(UIPage, "ขนาดความใหญ่ UI", 50, 150, 100, "%
     end
 end)
 
--- **UI Bottom Section: MM2 Realtime Profiles & Counter (Top: Murderer/Sheriff, X for dead)**
+-- **UI Bottom Section: MM2 Realtime Profiles & Counter**
 local StatusContainer = Instance.new("ScrollingFrame", UIPage)
 StatusContainer.Name = "StatusContainer"
 StatusContainer.Size = UDim2.new(0.96, 0, 0, 180)
@@ -494,7 +479,6 @@ StatusLayout.SortOrder = Enum.SortOrder.LayoutOrder
 StatusLayout.Padding = UDim.new(0, 4)
 StatusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
--- Header summary inside UI Page
 local HeaderSummary = Instance.new("TextLabel", UIPage)
 HeaderSummary.Size = UDim2.new(0.96, 0, 0, 24)
 HeaderSummary.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
@@ -504,8 +488,6 @@ HeaderSummary.Font = Enum.Font.GothamBold
 HeaderSummary.TextSize = 11
 HeaderSummary.BackgroundTransparency = 1
 table.insert(textLabelData, {Obj = HeaderSummary, BaseSize = 11})
-
-local playerProfileCards = {}
 
 local function ScanToolsForRole(container)
     if not container then return false, false end
@@ -538,16 +520,16 @@ RunService.RenderStepped:Connect(function()
 
             local cKnife, cGun = ScanToolsForRole(char)
             local bKnife, bGun = ScanToolsForRole(player:FindFirstChild("Backpack"))
-            local roleType = 3 -- Normal
+            local roleType = 3
             local roleNameStr = "ผู้เล่นทั่วไป"
             local roleColor = Color3.fromRGB(200, 200, 200)
 
             if cKnife or bKnife then
-                roleType = 1 -- Murderer (Top priority)
+                roleType = 1
                 roleNameStr = "ฆาตกร"
                 roleColor = Color3.fromRGB(220, 80, 80)
             elseif cGun or bGun then
-                roleType = 2 -- Sheriff (Second priority)
+                roleType = 2
                 roleNameStr = "นายอำเภอ"
                 roleColor = Color3.fromRGB(0, 162, 255)
             end
@@ -563,7 +545,6 @@ RunService.RenderStepped:Connect(function()
 
         HeaderSummary.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
 
-        -- Sort: Murderer (1) -> Sheriff (2) -> Normal (3), then by name
         table.sort(playerRoleData, function(a, b)
             if a.RoleType ~= b.RoleType then
                 return a.RoleType < b.RoleType
@@ -571,7 +552,6 @@ RunService.RenderStepped:Connect(function()
             return a.Player.Name < b.Player.Name
         end)
 
-        -- Clean old UI elements in StatusContainer
         for _, guiObj in pairs(StatusContainer:GetChildren()) do
             if guiObj:IsA("Frame") then guiObj:Destroy() end
         end
@@ -592,7 +572,6 @@ RunService.RenderStepped:Connect(function()
                 if isReady then headshot.Image = content end
             end)
 
-            -- Dead Overlay X Mark if dead
             if not data.IsAlive then
                 local deadX = Instance.new("TextLabel", headshot)
                 deadX.Size = UDim2.new(1, 0, 1, 0)
@@ -640,25 +619,6 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
         char.Humanoid.UseJumpPower = true
         char.Humanoid.JumpPower = val
     end
-end)
-
--- **NEW FUNCTION: กันโปรเตะออกแมพ**
-local antiKickEnabled = false
-CreateFeatureRow(PlayerPage, "กันโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
-    antiKickEnabled = not antiKickEnabled
-    btn.Text = antiKickEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    btn.BackgroundColor3 = antiKickEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
-end)
-
-local oldNamecall
-oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local method = getnamecallmethod()
-    if antiKickEnabled and (method == "Kick" or method == "kick") then
-        if self == LocalPlayer then
-            return
-        end
-    end
-    return oldNamecall(self, ...)
 end)
 
 local noclipEnabled = false
