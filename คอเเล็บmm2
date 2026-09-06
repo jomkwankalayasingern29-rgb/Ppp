@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 UI ====================
+-- ==================== GKHub X PancakeHub & MM2 UI (Optimized for Delta) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -16,6 +16,9 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaCustomUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
+
+-- **Clipboard Compatibility for Delta**
+local writeClipboard = setclipboard or toclipboard or function() end
 
 -- **Toggle Button**
 local ToggleBtn = Instance.new("TextButton")
@@ -112,7 +115,7 @@ LogoG.TextSize = 14
 local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 380, 1, 0)
 TitleText.Position = UDim2.new(0, 38, 0, 0)
-TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2"
+TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Delta Fixed)"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 12
@@ -327,7 +330,7 @@ local function CreateCreditCard(parent, hubName, discordLink, themeColor)
     table.insert(textLabelData, {Obj = CopyBtn, BaseSize = 10})
 
     CopyBtn.MouseButton1Click:Connect(function()
-        pcall(function() setclipboard(discordLink) end)
+        pcall(function() writeClipboard(discordLink) end)
         CopyBtn.Text = "คัดลอกสำเร็จ!"
         task.wait(1.5)
         CopyBtn.Text = "คัดลอกลิงก์ Discord"
@@ -478,11 +481,11 @@ CreateSlider(UIPage, "ขนาดความใหญ่ UI", 50, 150, 100, "%
     end
 end)
 
--- **UI Bottom Section: MM2 Realtime Profiles & Counter**
+-- **UI Bottom Section: MM2 Realtime Profiles & Counter (Optimized Pool System)**
 local HeaderSummary = Instance.new("TextLabel", UIPage)
 HeaderSummary.Size = UDim2.new(0.96, 0, 0, 24)
 HeaderSummary.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
-HeaderSummary.Text = "เกมยังไม่เริ่ม (แสดงผลสรุปตาที่แล้ว)"
+HeaderSummary.Text = "ผู้รอดชีวิต: 0 คน | ตายไปแล้ว: 0 คน"
 HeaderSummary.TextColor3 = Color3.fromRGB(0, 162, 255)
 HeaderSummary.Font = Enum.Font.GothamBold
 HeaderSummary.TextSize = 11
@@ -507,166 +510,157 @@ StatusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 local function ScanToolsForRole(container)
     if not container then return false, false end
     local hasKnife, hasGun = false, false
-    pcall(function()
-        for _, item in pairs(container:GetChildren()) do
-            if item:IsA("Tool") then
-                local n = string.lower(item.Name)
-                if n:find("knife") or n:find("dagger") or n:find("blade") then hasKnife = true end
-                if n:find("gun") or n:find("pistol") or n:find("revolver") then hasGun = true end
-            end
+    for _, item in pairs(container:GetChildren()) do
+        if item:IsA("Tool") then
+            local n = string.lower(item.Name)
+            if n:find("knife") or n:find("dagger") or n:find("blade") then hasKnife = true end
+            if n:find("gun") or n:find("pistol") or n:find("revolver") then hasGun = true end
         end
-    end)
+    end
     return hasKnife, hasGun
 end
 
-local lastPlayerRoleData = {}
-local isCountingDown = false
-local gameActive = false
+local playerCardPool = {}
 
-local function RenderPlayerList(dataList)
-    pcall(function()
-        for _, guiObj in pairs(StatusContainer:GetChildren()) do
-            if guiObj:IsA("Frame") then guiObj:Destroy() end
-        end
+task.spawn(function()
+    while true do
+        pcall(function()
+            local aliveCount = 0
+            local deadCount = 0
+            local playerRoleData = {}
 
-        for _, data in ipairs(dataList) do
-            local pCard = Instance.new("Frame", StatusContainer)
-            pCard.Size = UDim2.new(0.96, 0, 0, 32)
-            pCard.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
-            Instance.new("UICorner", pCard).CornerRadius = UDim.new(0, 5)
+            for _, player in pairs(Players:GetPlayers()) do
+                local char = player.Character
+                local isAlive = false
+                if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                    isAlive = true
+                    aliveCount = aliveCount + 1
+                else
+                    deadCount = deadCount + 1
+                end
 
-            local headshot = Instance.new("ImageLabel", pCard)
-            headshot.Size = UDim2.new(0, 24, 0, 24)
-            headshot.Position = UDim2.new(0, 4, 0.5, -12)
-            headshot.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-            Instance.new("UICorner", headshot).CornerRadius = UDim.new(1, 0)
-            pcall(function()
-                local content, isReady = Players:GetUserThumbnailAsync(data.Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-                if isReady then headshot.Image = content end
+                local cKnife, cGun = ScanToolsForRole(char)
+                local bKnife, bGun = false, false
+                local bp = player:FindFirstChild("Backpack")
+                if bp then
+                    bKnife, bGun = ScanToolsForRole(bp)
+                end
+                
+                local roleType = 3
+                local roleNameStr = "ผู้บริสุทธิ์"
+                local roleColor = Color3.fromRGB(200, 200, 200)
+
+                if cKnife or bKnife then
+                    roleType = 1
+                    roleNameStr = "ฆาตกร"
+                    roleColor = Color3.fromRGB(255, 60, 60)
+                elseif cGun or bGun then
+                    roleType = 2
+                    roleNameStr = "นายอำเภอ"
+                    roleColor = Color3.fromRGB(0, 162, 255)
+                end
+
+                table.insert(playerRoleData, {
+                    Player = player,
+                    IsAlive = isAlive,
+                    RoleType = roleType,
+                    RoleName = roleNameStr,
+                    RoleColor = roleColor
+                })
+            end
+
+            HeaderSummary.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
+
+            table.sort(playerRoleData, function(a, b)
+                if a.RoleType ~= b.RoleType then
+                    return a.RoleType < b.RoleType
+                end
+                return a.Player.Name < b.Player.Name
             end)
 
-            if not data.IsAlive then
-                local deadX = Instance.new("TextLabel", headshot)
-                deadX.Size = UDim2.new(1, 0, 1, 0)
-                deadX.BackgroundTransparency = 1
-                deadX.Text = "X"
-                deadX.TextColor3 = Color3.fromRGB(255, 50, 50)
-                deadX.Font = Enum.Font.GothamBold
-                deadX.TextSize = 16
-                deadX.TextXAlignment = Enum.TextXAlignment.Center
-                deadX.TextYAlignment = Enum.TextYAlignment.Center
+            for _, card in pairs(playerCardPool) do
+                card.Visible = false
             end
 
-            local nameLabel = Instance.new("TextLabel", pCard)
-            nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
-            nameLabel.Position = UDim2.new(0, 34, 0, 0)
-            nameLabel.BackgroundTransparency = 1
-            nameLabel.Text = data.Player.Name .. " (" .. data.RoleName .. ")"
-            nameLabel.TextColor3 = data.RoleColor
-            nameLabel.Font = Enum.Font.GothamBold
-            nameLabel.TextSize = 10
-            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+            for i, data in ipairs(playerRoleData) do
+                local pCard = playerCardPool[i]
+                if not pCard then
+                    pCard = Instance.new("Frame", StatusContainer)
+                    pCard.Size = UDim2.new(0.96, 0, 0, 32)
+                    pCard.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
+                    Instance.new("UICorner", pCard).CornerRadius = UDim.new(0, 5)
 
-            local stateLabel = Instance.new("TextLabel", pCard)
-            stateLabel.Size = UDim2.new(0.3, 0, 1, 0)
-            stateLabel.Position = UDim2.new(0.68, 0, 0, 0)
-            stateLabel.BackgroundTransparency = 1
-            stateLabel.Text = data.IsAlive and "รอดชีวิต" or "ตายแล้ว"
-            stateLabel.TextColor3 = data.IsAlive and Color3.fromRGB(80, 220, 100) or Color3.fromRGB(220, 80, 80)
-            stateLabel.Font = Enum.Font.GothamBold
-            stateLabel.TextSize = 10
-            stateLabel.TextXAlignment = Enum.TextXAlignment.Right
-        end
-    end)
-end
+                    local headshot = Instance.new("ImageLabel", pCard)
+                    headshot.Name = "Headshot"
+                    headshot.Size = UDim2.new(0, 24, 0, 24)
+                    headshot.Position = UDim2.new(0, 4, 0.5, -12)
+                    headshot.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                    Instance.new("UICorner", headshot).CornerRadius = UDim.new(1, 0)
 
-RunService.RenderStepped:Connect(function()
-    pcall(function()
-        local aliveCount = 0
-        local deadCount = 0
-        local playerRoleData = {}
+                    local deadX = Instance.new("TextLabel", headshot)
+                    deadX.Name = "DeadX"
+                    deadX.Size = UDim2.new(1, 0, 1, 0)
+                    deadX.BackgroundTransparency = 1
+                    deadX.Text = "X"
+                    deadX.TextColor3 = Color3.fromRGB(255, 50, 50)
+                    deadX.Font = Enum.Font.GothamBold
+                    deadX.TextSize = 16
+                    deadX.TextXAlignment = Enum.TextXAlignment.Center
+                    deadX.TextYAlignment = Enum.TextYAlignment.Center
 
-        for _, player in pairs(Players:GetPlayers()) do
-            local char = player.Character
-            local isAlive = false
-            if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
-                isAlive = true
-                aliveCount = aliveCount + 1
-            else
-                deadCount = deadCount + 1
+                    local nameLabel = Instance.new("TextLabel", pCard)
+                    nameLabel.Name = "NameLabel"
+                    nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+                    nameLabel.Position = UDim2.new(0, 34, 0, 0)
+                    nameLabel.BackgroundTransparency = 1
+                    nameLabel.Font = Enum.Font.GothamBold
+                    nameLabel.TextSize = 10
+                    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+                    local stateLabel = Instance.new("TextLabel", pCard)
+                    stateLabel.Name = "StateLabel"
+                    stateLabel.Size = UDim2.new(0.3, 0, 1, 0)
+                    stateLabel.Position = UDim2.new(0.68, 0, 0, 0)
+                    stateLabel.BackgroundTransparency = 1
+                    stateLabel.Font = Enum.Font.GothamBold
+                    stateLabel.TextSize = 10
+                    stateLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+                    playerCardPool[i] = pCard
+                end
+
+                pCard.Visible = true
+                pCard.LayoutOrder = i
+
+                local headshot = pCard:FindFirstChild("Headshot")
+                local deadX = headshot and headshot:FindFirstChild("DeadX")
+                local nameLabel = pCard:FindFirstChild("NameLabel")
+                local stateLabel = pCard:FindFirstChild("StateLabel")
+
+                if headshot then
+                    pcall(function()
+                        local content, isReady = Players:GetUserThumbnailAsync(data.Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+                        if isReady then headshot.Image = content end
+                    end)
+                end
+
+                if deadX then
+                    deadX.Visible = not data.IsAlive
+                end
+
+                if nameLabel then
+                    nameLabel.Text = data.Player.Name .. " (" .. data.RoleName .. ")"
+                    nameLabel.TextColor3 = data.RoleColor
+                end
+
+                if stateLabel then
+                    stateLabel.Text = data.IsAlive and "รอดชีวิต" or "ตายแล้ว"
+                    stateLabel.TextColor3 = data.IsAlive and Color3.fromRGB(80, 220, 100) or Color3.fromRGB(220, 80, 80)
+                end
             end
-
-            local cKnife, cGun = ScanToolsForRole(char)
-            local bKnife, bGun = ScanToolsForRole(player:FindFirstChild("Backpack"))
-            
-            local roleType = 3
-            local roleNameStr = "ผู้บริสุทธิ์"
-            local roleColor = Color3.fromRGB(200, 200, 200)
-
-            if cKnife or bKnife then
-                roleType = 1 
-                roleNameStr = "ฆาตกร"
-                roleColor = Color3.fromRGB(255, 60, 60) 
-            elseif cGun or bGun then
-                roleType = 2 
-                roleNameStr = "นายอำเภอ"
-                roleColor = Color3.fromRGB(0, 162, 255) 
-            end
-
-            table.insert(playerRoleData, {
-                Player = player,
-                IsAlive = isAlive,
-                RoleType = roleType,
-                RoleName = roleNameStr,
-                RoleColor = roleColor
-            })
-        end
-
-        table.sort(playerRoleData, function(a, b)
-            if a.RoleType ~= b.RoleType then
-                return a.RoleType < b.RoleType
-            end
-            return a.Player.Name < b.Player.Name
         end)
-
-        local hasActiveRole = false
-        for _, d in ipairs(playerRoleData) do
-            if d.RoleType < 3 then
-                hasActiveRole = true
-                break
-            end
-        end
-
-        if hasActiveRole then
-            gameActive = true
-            isCountingDown = false
-            HeaderSummary.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
-            RenderPlayerList(playerRoleData)
-            lastPlayerRoleData = playerRoleData
-        else
-            if gameActive then
-                gameActive = false
-            end
-            
-            if not isCountingDown then
-                isCountingDown = true
-                task.spawn(function()
-                    for i = 10, 1, -1 do
-                        if gameActive then break end
-                        HeaderSummary.Text = "กำลังหา... เริ่มใน " .. i .. " วินาที"
-                        task.wait(1)
-                    end
-                    if not gameActive then
-                        HeaderSummary.Text = "เกมยังไม่เริ่ม (แสดงผลตาที่แล้ว)"
-                        if #lastPlayerRoleData > 0 then
-                            RenderPlayerList(lastPlayerRoleData)
-                        end
-                    end
-                    isCountingDown = false
-                end)
-            end
-        end
-    end)
+        task.wait(1)
+    end
 end)
 
 -- **Player Module**
@@ -685,9 +679,8 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     end
 end)
 
--- ปรับปรุงฟังก์ชันกันเตะไม่ให้เกิดข้อผิดพลาด
 local antiKickEnabled = false
-CreateFeatureRow(PlayerPage, "ระบบป้องกันการถูกเตะ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(PlayerPage, "กันโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     antiKickEnabled = not antiKickEnabled
     btn.Text = antiKickEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = antiKickEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
@@ -755,12 +748,23 @@ CreateFeatureRow(ToolPage, "รับไอเทมคลิกวาร์ป 
     end)
 end)
 
--- **ESP Module**
+-- **ESP Module (Delta Safe: BillboardGui Based)**
 local espEnabled = false
 CreateFeatureRow(ESPPage, "เปิดใช้งาน ESP ไฮไลท์ตัวละคร", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     espEnabled = not espEnabled
     btn.Text = espEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = espEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
+    
+    if not espEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character then
+                local hl = player.Character:FindFirstChild("ESPHighlight")
+                if hl then hl:Destroy() end
+                local bg = player.Character:FindFirstChild("ESPBillboard")
+                if bg then bg:Destroy() end
+            end
+        end
+    end
 end)
 
 local InfoBox = Instance.new("Frame", ESPPage)
@@ -780,8 +784,6 @@ InfoText.TextXAlignment = Enum.TextXAlignment.Left
 InfoText.BackgroundTransparency = 1
 table.insert(textLabelData, {Obj = InfoText, BaseSize = 10})
 
-local espTextObjects = {}
-
 local function ScanTools(container)
     local foundKnife, foundGun = false, false
     if container then
@@ -800,18 +802,18 @@ local function ScanTools(container)
 end
 
 RunService.RenderStepped:Connect(function()
-    for _, textObj in pairs(espTextObjects) do textObj:Remove() end
-    espTextObjects = {}
-
     if espEnabled then
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
                 local character = player.Character
                 local head = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
                 if head then
-                    local pos, onScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.8, 0))
                     local charKnife, charGun = ScanTools(character)
-                    local packKnife, packGun = ScanTools(player:FindFirstChild("Backpack"))
+                    local bp = player:FindFirstChild("Backpack")
+                    local packKnife, packGun = false, false
+                    if bp then
+                        packKnife, packGun = ScanTools(bp)
+                    end
 
                     local color = Color3.fromRGB(200, 200, 200)
                     if charKnife or packKnife then color = Color3.fromRGB(255, 60, 60)
@@ -828,16 +830,28 @@ RunService.RenderStepped:Connect(function()
                     highlight.FillTransparency = 0.5
                     highlight.OutlineTransparency = 0.2
 
-                    if onScreen then
-                        local textObj = Drawing.new("Text")
-                        textObj.Text = player.Name
-                        textObj.Color = color
-                        textObj.Position = Vector2.new(pos.X, pos.Y)
-                        textObj.Center = true
-                        textObj.Outline = true
-                        textObj.Size = 12
-                        textObj.Visible = true
-                        table.insert(espTextObjects, textObj)
+                    local billboard = character:FindFirstChild("ESPBillboard")
+                    if not billboard then
+                        billboard = Instance.new("BillboardGui")
+                        billboard.Name = "ESPBillboard"
+                        billboard.Size = UDim2.new(0, 100, 0, 30)
+                        billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+                        billboard.AlwaysOnTop = true
+                        billboard.Parent = character
+
+                        local nameLabel = Instance.new("TextLabel", billboard)
+                        nameLabel.Name = "NameLabel"
+                        nameLabel.Size = UDim2.new(1, 0, 1, 0)
+                        nameLabel.BackgroundTransparency = 1
+                        nameLabel.Font = Enum.Font.GothamBold
+                        nameLabel.TextSize = 12
+                        nameLabel.TextStrokeTransparency = 0
+                    end
+
+                    local textLabel = billboard:FindFirstChild("NameLabel")
+                    if textLabel then
+                        textLabel.Text = player.Name
+                        textLabel.TextColor3 = color
                     end
                 end
             end
@@ -903,7 +917,7 @@ task.spawn(function()
     task.wait(1)
     
     LoadText.Text = "คัดลอกลิงก์ Discord แล้ว"
-    pcall(function() setclipboard("https://discord.gg/Ugssja4wqQ") end)
+    pcall(function() writeClipboard("https://discord.gg/Ugssja4wqQ") end)
     task.wait(1)
     
     LoadFrame:Destroy()
