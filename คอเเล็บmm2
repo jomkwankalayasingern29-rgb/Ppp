@@ -411,30 +411,37 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- **Helper Module (Optimized Instant Coin Farm)**
+-- **Helper Module (Instant Teleport Coin Farm - No Delay)**
 local autoFarmCoinsEnabled = false
-CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (Zero Delay)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (วาร์ปเก็บทันที)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoFarmCoinsEnabled = not autoFarmCoinsEnabled
     btn.Text = autoFarmCoinsEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = autoFarmCoinsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
 
--- ปรับปรุงระบบเก็บเหรียญให้กวาดทุกเหรียญในแมพทันทีด้วยความเร็วสูงสุดแบบไม่มีดีเลย์
-RunService.Stepped:Connect(function()
-    if autoFarmCoinsEnabled then
-        local char = LocalPlayer.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            local hrp = char.HumanoidRootPart
-            for _, obj in pairs(Workspace:GetDescendants()) do
-                if obj:IsA("BasePart") then
-                    local name = string.lower(obj.Name)
-                    if name == "coin" or name == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
-                        -- ดึงเหรียญมาไว้ที่ตัวละครทันทีเพื่อเก็บแบบรวดเร็วไร้ดีเลย์
-                        obj.CFrame = hrp.CFrame
+-- ระบบวาร์ปเก็บเหรียญแบบรวดเร็วต่อเนื่องทันทีไม่มีดีเลย์
+task.spawn(function()
+    while true do
+        if autoFarmCoinsEnabled then
+            pcall(function()
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    local hrp = char.HumanoidRootPart
+                    for _, obj in pairs(Workspace:GetDescendants()) do
+                        if not autoFarmCoinsEnabled then break end
+                        if obj:IsA("BasePart") then
+                            local name = string.lower(obj.Name)
+                            if name == "coin" or name == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
+                                -- วาร์ปไปหาเหรียญทันทีแบบปุ๊บๆ ไม่มีดีเลย์
+                                hrp.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
+                                task.wait(0.01) -- ความเร็วสูงสุดปุ๊บๆ ตามที่ต้องการ
+                            end
+                        end
                     end
                 end
-            end
+            end)
         end
+        task.wait(0.05)
     end
 end)
 
@@ -445,7 +452,7 @@ CreateFeatureRow(HelperPage, "วาร์ปไปเก็บเหรีย�
             if obj:IsA("BasePart") then
                 local name = string.lower(obj.Name)
                 if name == "coin" or name == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
-                    char.HumanoidRootPart.CFrame = obj.CFrame
+                    char.HumanoidRootPart.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
                     break
                 end
             end
