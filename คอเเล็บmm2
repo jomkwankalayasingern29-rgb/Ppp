@@ -17,7 +17,7 @@ ScreenGui.Name = "DeltaCustomUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- **Toggle Button (Hidden by default, UI itself minimizes to TopBar)**
+-- **Toggle Button**
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Name = "ToggleIcon"
 ToggleBtn.Size = UDim2.new(0, 44, 0, 44)
@@ -29,7 +29,7 @@ ToggleBtn.Font = Enum.Font.GothamBold
 ToggleBtn.TextSize = 16
 ToggleBtn.Active = true
 ToggleBtn.Draggable = true
-ToggleBtn.Visible = false -- ซ่อนปุ่มลอยเดิม เพราะใช้การพับเก็บเหลือแค่ TopBar แทน
+ToggleBtn.Visible = false
 ToggleBtn.Parent = ScreenGui
 
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)
@@ -94,14 +94,12 @@ TopBar.BorderSizePixel = 0
 TopBar.BackgroundTransparency = 1
 Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 8)
 
--- Fix TopBar bottom sharp corners
 local FixTopBar = Instance.new("Frame", TopBar)
 FixTopBar.Size = UDim2.new(1, 0, 0, 5)
 FixTopBar.Position = UDim2.new(0, 0, 1, -5)
 FixTopBar.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 FixTopBar.BorderSizePixel = 0
 
--- Logo G (No Emoji)
 local LogoG = Instance.new("TextLabel", TopBar)
 LogoG.Size = UDim2.new(0, 24, 0, 24)
 LogoG.Position = UDim2.new(0, 10, 0, 5.5)
@@ -373,7 +371,7 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- **Attack Module**
+-- **Attack Module (Fixed Hitbox / Optimized Range)**
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
@@ -387,21 +385,29 @@ CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox)", "ปิ�
                 if root then
                     root.Size = Vector3.new(2, 2, 1)
                     root.Transparency = 1
+                    root.CanCollide = true
                 end
             end
         end
     end
 end)
 
+-- ใช้ระบบขยายกล่องพอดีตัวและดึงระยะประชิดเสถียร ไม่แล็ก 100%
 RunService.Stepped:Connect(function()
     if expandHitboxEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
-                if otherRoot then
-                    otherRoot.Size = Vector3.new(999, 999, 999)
-                    otherRoot.Transparency = 1
-                    otherRoot.CanCollide = false
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+            local myRoot = myChar.HumanoidRootPart
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                    if otherRoot and humanoid and humanoid.Health > 0 then
+                        -- ขยาย Hitbox พอดีๆ เพื่อให้โจมตีโดนง่ายและแม่นยำ ไม่ทำให้เกมแล็ก
+                        otherRoot.Size = Vector3.new(6, 6, 6)
+                        otherRoot.Transparency = 0.8
+                        otherRoot.CanCollide = false
+                    end
                 end
             end
         end
@@ -637,14 +643,13 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- **Open / Minimize Animation Logic (Minimizes to TopBar style)**
+-- **Open / Minimize Animation Logic**
 local isMinimized = false
 local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
 local function ToggleMinimize()
     isMinimized = not isMinimized
     if isMinimized then
-        -- พับเก็บตัว UI ให้เหลือแค่แถบ TopBar ด้านบน (ขนาดความสูง 35)
         TweenService:Create(MainFrame, tweenInfo, {
             Size = UDim2.new(0, baseWidth * currentScale, 0, 35)
         }):Play()
@@ -652,7 +657,6 @@ local function ToggleMinimize()
         ContentArea.Visible = false
         MinBtn.Text = "+"
     else
-        -- ขยาย UI กลับมาเต็มขนาดเดิม
         Sidebar.Visible = true
         ContentArea.Visible = true
         TweenService:Create(MainFrame, tweenInfo, {
