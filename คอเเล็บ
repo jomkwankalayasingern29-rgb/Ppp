@@ -1,6 +1,5 @@
--- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
-local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -8,16 +7,37 @@ local Workspace = game:GetService("Workspace")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
+-- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
+if CoreGui:FindFirstChild("DeltaCustomUI") then 
+    CoreGui.DeltaCustomUI:Destroy() 
+end
 if CoreGui:FindFirstChild("CustomScriptUI") then
     CoreGui.CustomScriptUI:Destroy()
 end
 
--- สร้าง ScreenGui หลัก
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.ResetOnSpawn = false
+
+-- ปุ่มเปิด/ปิด UI (Toggle Button) แบบเดิม
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "ToggleIcon"
+ToggleBtn.Size = UDim2.new(0, 40, 0, 40)
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleBtn.Text = "🥞"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 20
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+ToggleBtn.Parent = ScreenGui
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 8)
+
+local ToggleStroke = Instance.new("UIStroke", ToggleBtn)
+ToggleStroke.Color = Color3.fromRGB(0, 162, 255)
+ToggleStroke.Thickness = 1.5
 
 -- หน้าต่างแจ้งเตือนสถานะตอนเริ่ม (Loading Screen)
 local LoadFrame = Instance.new("Frame")
@@ -47,12 +67,14 @@ LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
--- ==================== หน้าต่าง UI หลัก ====================
-local baseWidth = 460
-local baseHeight = 280
-local currentScale = 1
+-- ==================== ตัวแปรระบบฟังก์ชัน ====================
+local baseWidth = 480
+local baseHeight = 300
+local currentScale = 1 
+local currentAlpha = 1 
 local textLabelData = {}
 
+-- ==================== หน้าต่าง UI หลัก ====================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, baseWidth, 0, baseHeight)
@@ -92,6 +114,7 @@ FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 FixTopBar.BorderSizePixel = 0
 FixTopBar.Parent = TopBar
 
+-- โลโก้ตัว "G"
 local LogoG = Instance.new("TextLabel")
 LogoG.Size = UDim2.new(0, 20, 0, 20)
 LogoG.Position = UDim2.new(0, 8, 0, 6)
@@ -103,11 +126,11 @@ LogoG.TextSize = 14
 LogoG.Parent = TopBar
 
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -80, 1, 0)
+TitleLabel.Size = UDim2.new(1, -90, 1, 0)
 TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "PancakeHub X GKHub & mm2 (Zero Delay)"
+TitleLabel.Text = "PancakeHub X GKHub & mm2 (Blue Theme)"
 TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -124,6 +147,7 @@ CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.fromRGB(220, 60, 60)
 CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
+table.insert(textLabelData, {Obj = CloseButton, BaseSize = 13})
 
 CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
@@ -139,18 +163,29 @@ MinimizeButton.Text = "-"
 MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
 MinimizeButton.TextSize = 14
 MinimizeButton.Parent = TopBar
+table.insert(textLabelData, {Obj = MinimizeButton, BaseSize = 14})
 
-local isMinimized = false
-MinimizeButton.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        MinimizeButton.Text = "+"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, baseWidth, 0, 32)}):Play()
-    else
+local isOpen = true
+local function ToggleUI()
+    isOpen = not isOpen
+    local targetW = baseWidth * currentScale
+    local targetH = baseHeight * currentScale
+    if isOpen then
+        MainFrame.Visible = true
         MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, baseWidth, 0, baseHeight)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, targetW, 0, targetH)}):Play()
+    else
+        MinimizeButton.Text = "+"
+        local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, targetW, 0, 32)})
+        closeTween:Play()
+        closeTween.Completed:Connect(function()
+            if not isOpen then MainFrame.Visible = false end
+        end)
     end
-end)
+end
+
+MinimizeButton.MouseButton1Click:Connect(ToggleUI)
+ToggleBtn.MouseButton1Click:Connect(ToggleUI)
 
 -- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
 local LeftSide = Instance.new("ScrollingFrame")
@@ -177,8 +212,8 @@ LeftPadding.PaddingTop = UDim.new(0, 6)
 
 -- ==================== ฝั่งขวา: ฟังก์ชัน ====================
 local RightSide = Instance.new("ScrollingFrame")
-RightSide.Size = UDim2.new(0.70, 0, 1, -40)
-RightSide.Position = UDim2.new(0.29, 0, 0, 36)
+RightSide.Size = UDim2.new(0.69, 0, 1, -40)
+RightSide.Position = UDim2.new(0.295, 0, 0, 36)
 RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 RightSide.BorderSizePixel = 0
 RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -190,6 +225,7 @@ RightCorner.CornerRadius = UDim.new(0, 5)
 RightCorner.Parent = RightSide
 
 local FunctionContainers = {}
+local tabButtons = {}
 
 local function createContainer(name)
     local container = Instance.new("ScrollingFrame")
@@ -210,27 +246,18 @@ local function createContainer(name)
 
     local padding = Instance.new("UIPadding", container)
     padding.PaddingTop = UDim.new(0, 6)
-    padding.PaddingBottom = UDim.new(0, 6)
+    padding.PaddingRight = UDim.new(0, 4)
 
     FunctionContainers[name] = container
     return container
 end
 
-local MainInfoPage = createContainer("หลัก")
-local AttackPage = createContainer("โจมตี")
-local HelperPage = createContainer("ช่วยเล่น")
-local UIPage = createContainer("UI")
-local PlayerPage = createContainer("ตัวละคร")
-local ToolPage = createContainer("เครื่องมือ")
-local ESPPage = createContainer("ESP")
-
-local tabButtons = {}
-local function switchTab(tabName)
+local function switchTab(targetName)
     for name, container in pairs(FunctionContainers) do
-        container.Visible = (name == tabName)
+        container.Visible = (name == targetName)
     end
     for name, btn in pairs(tabButtons) do
-        if name == tabName then
+        if name == targetName then
             btn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
             btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         else
@@ -250,18 +277,28 @@ local function createCategoryButton(name)
     btn.TextColor3 = Color3.fromRGB(240, 240, 240)
     btn.TextSize = 11
     btn.Parent = LeftSide
+    table.insert(textLabelData, {Obj = btn, BaseSize = 11})
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = btn
-    table.insert(textLabelData, {Obj = btn, BaseSize = 11})
 
     tabButtons[name] = btn
 
     btn.MouseButton1Click:Connect(function()
         switchTab(name)
     end)
+    return btn
 end
+
+-- สร้างหน้าแท็บทั้งหมด
+local MainInfoPage = createContainer("หลัก")
+local AttackPage = createContainer("โจมตี")
+local HelperPage = createContainer("ช่วยเล่น")
+local UIPage = createContainer("UI")
+local PlayerPage = createContainer("ตัวละคร")
+local ToolPage = createContainer("เครื่องมือ")
+local ESPPage = createContainer("ESP")
 
 createCategoryButton("หลัก")
 createCategoryButton("โจมตี")
@@ -273,21 +310,21 @@ createCategoryButton("ESP")
 
 switchTab("หลัก")
 
--- ==================== สร้างองค์ประกอบฟังก์ชัน ====================
+-- ==================== ฟังก์ชันสร้างองค์ประกอบย่อย ====================
 local function CreateCreditCard(parent, hubName, discordLink, themeColor)
     local Card = Instance.new("Frame", parent)
-    Card.Size = UDim2.new(0.94, 0, 0, 65)
-    Card.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    Card.Size = UDim2.new(0.95, 0, 0, 65)
+    Card.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
 
     local Stroke = Instance.new("UIStroke", Card)
     Stroke.Color = themeColor
-    Stroke.Thickness = 1.5
+    Stroke.Thickness = 1.2
 
     local Title = Instance.new("TextLabel", Card)
-    Title.Size = UDim2.new(1, -16, 0, 20)
+    Title.Size = UDim2.new(1, -12, 0, 20)
     Title.Position = UDim2.new(0, 8, 0, 6)
-    Title.Text = "เครดิต: " .. hubName
+    Title.Text = "เครดิตผู้สร้าง: " .. hubName
     Title.TextColor3 = themeColor
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 11
@@ -297,104 +334,115 @@ local function CreateCreditCard(parent, hubName, discordLink, themeColor)
 
     local CopyBtn = Instance.new("TextButton", Card)
     CopyBtn.Size = UDim2.new(1, -16, 0, 26)
-    CopyBtn.Position = UDim2.new(0, 8, 0, 31)
+    CopyBtn.Position = UDim2.new(0, 8, 0, 30)
     CopyBtn.BackgroundColor3 = themeColor
-    CopyBtn.Text = "คัดลอกลิงก์ Discord"
+    CopyBtn.Text = "คัดลอกลิ้งดิส (Discord)"
     CopyBtn.TextColor3 = Color3.fromRGB(20, 20, 24)
     CopyBtn.Font = Enum.Font.GothamBold
-    CopyBtn.TextSize = 11
+    CopyBtn.TextSize = 10
     Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 4)
-    table.insert(textLabelData, {Obj = CopyBtn, BaseSize = 11})
+    table.insert(textLabelData, {Obj = CopyBtn, BaseSize = 10})
 
     CopyBtn.MouseButton1Click:Connect(function()
         pcall(function() setclipboard(discordLink) end)
-        CopyBtn.Text = "คัดลอกสำเร็จ!"
+        CopyBtn.Text = "คัดลอกสำเร็จ! (Copied)"
         task.wait(1.5)
-        CopyBtn.Text = "คัดลอกลิงก์ Discord"
+        CopyBtn.Text = "คัดลอกลิ้งดิส (Discord)"
     end)
 end
 
-CreateCreditCard(MainInfoPage, "PancakeHub", "https://discord.gg/HfnJnAAM8e", Color3.fromRGB(255, 180, 50))
-CreateCreditCard(MainInfoPage, "GKHub", "https://discord.gg/Ugssja4wqQ", Color3.fromRGB(0, 162, 255))
+local function CreateToggleOption(parent, titleText, callback)
+    local Frame = Instance.new("Frame", parent)
+    Frame.Size = UDim2.new(0.95, 0, 0, 36)
+    Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
 
-local function CreateToggleRow(parent, titleText, callback)
-    local RowFrame = Instance.new("Frame", parent)
-    RowFrame.Size = UDim2.new(0.94, 0, 0, 36)
-    RowFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-    Instance.new("UICorner", RowFrame).CornerRadius = UDim.new(0, 6)
+    local Stroke = Instance.new("UIStroke", Frame)
+    Stroke.Color = Color3.fromRGB(0, 162, 255)
+    Stroke.Thickness = 1
 
-    local RowLabel = Instance.new("TextLabel", RowFrame)
-    RowLabel.Size = UDim2.new(0.65, 0, 1, 0)
-    RowLabel.Position = UDim2.new(0, 10, 0, 0)
-    RowLabel.Text = titleText
-    RowLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
-    RowLabel.Font = Enum.Font.Gotham
-    RowLabel.TextSize = 11
-    RowLabel.TextXAlignment = Enum.TextXAlignment.Left
-    RowLabel.BackgroundTransparency = 1
-    table.insert(textLabelData, {Obj = RowLabel, BaseSize = 11})
+    local Label = Instance.new("TextLabel", Frame)
+    Label.Size = UDim2.new(0.6, 0, 1, 0)
+    Label.Position = UDim2.new(0, 8, 0, 0)
+    Label.Text = titleText
+    Label.TextColor3 = Color3.fromRGB(240, 240, 240)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 11
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.BackgroundTransparency = 1
+    table.insert(textLabelData, {Obj = Label, BaseSize = 11})
 
-    local ToggleBtn = Instance.new("TextButton", RowFrame)
-    ToggleBtn.Size = UDim2.new(0, 75, 0, 22)
-    ToggleBtn.Position = UDim2.new(1, -83, 0.5, -11)
-    ToggleBtn.Font = Enum.Font.GothamBold
-    ToggleBtn.TextSize = 10
-    ToggleBtn.Text = "ปิด (OFF)"
-    ToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    ToggleBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
-    Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 4)
-    table.insert(textLabelData, {Obj = ToggleBtn, BaseSize = 10})
+    local Btn = Instance.new("TextButton", Frame)
+    Btn.Size = UDim2.new(0, 65, 0, 22)
+    Btn.Position = UDim2.new(1, -73, 0.5, -11)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 10
+    Btn.Text = "ปิด (OFF)"
+    Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Btn.TextColor3 = Color3.fromRGB(180, 180, 190)
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+    table.insert(textLabelData, {Obj = Btn, BaseSize = 10})
 
-    local enabled = false
-    ToggleBtn.MouseButton1Click:Connect(function()
-        enabled = not enabled
-        ToggleBtn.Text = enabled and "เปิด (ON)" or "ปิด (OFF)"
-        ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(45, 45, 45)
-        ToggleBtn.TextColor3 = enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
-        callback(enabled)
+    local state = false
+    Btn.MouseButton1Click:Connect(function()
+        state = not state
+        Btn.Text = state and "เปิด (ON)" or "ปิด (OFF)"
+        Btn.BackgroundColor3 = state and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(30, 30, 30)
+        Btn.TextColor3 = state and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+        callback(state)
     end)
+    return Frame
 end
 
-local function CreateActionRow(parent, titleText, btnText, callback)
-    local RowFrame = Instance.new("Frame", parent)
-    RowFrame.Size = UDim2.new(0.94, 0, 0, 36)
-    RowFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-    Instance.new("UICorner", RowFrame).CornerRadius = UDim.new(0, 6)
+local function CreateButtonOption(parent, titleText, btnText, callback)
+    local Frame = Instance.new("Frame", parent)
+    Frame.Size = UDim2.new(0.95, 0, 0, 36)
+    Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
 
-    local RowLabel = Instance.new("TextLabel", RowFrame)
-    RowLabel.Size = UDim2.new(0.65, 0, 1, 0)
-    RowLabel.Position = UDim2.new(0, 10, 0, 0)
-    RowLabel.Text = titleText
-    RowLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
-    RowLabel.Font = Enum.Font.Gotham
-    RowLabel.TextSize = 11
-    RowLabel.TextXAlignment = Enum.TextXAlignment.Left
-    RowLabel.BackgroundTransparency = 1
-    table.insert(textLabelData, {Obj = RowLabel, BaseSize = 11})
+    local Stroke = Instance.new("UIStroke", Frame)
+    Stroke.Color = Color3.fromRGB(0, 162, 255)
+    Stroke.Thickness = 1
 
-    local ActionBtn = Instance.new("TextButton", RowFrame)
-    ActionBtn.Size = UDim2.new(0, 75, 0, 22)
-    ActionBtn.Position = UDim2.new(1, -83, 0.5, -11)
-    ActionBtn.Font = Enum.Font.GothamBold
-    ActionBtn.TextSize = 10
-    ActionBtn.Text = btnText
-    ActionBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-    ActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Instance.new("UICorner", ActionBtn).CornerRadius = UDim.new(0, 4)
-    table.insert(textLabelData, {Obj = ActionBtn, BaseSize = 10})
+    local Label = Instance.new("TextLabel", Frame)
+    Label.Size = UDim2.new(0.6, 0, 1, 0)
+    Label.Position = UDim2.new(0, 8, 0, 0)
+    Label.Text = titleText
+    Label.TextColor3 = Color3.fromRGB(240, 240, 240)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 11
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.BackgroundTransparency = 1
+    table.insert(textLabelData, {Obj = Label, BaseSize = 11})
 
-    ActionBtn.MouseButton1Click:Connect(callback)
+    local Btn = Instance.new("TextButton", Frame)
+    Btn.Size = UDim2.new(0, 65, 0, 22)
+    Btn.Position = UDim2.new(1, -73, 0.5, -11)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 10
+    Btn.Text = btnText
+    Btn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+    table.insert(textLabelData, {Obj = Btn, BaseSize = 10})
+
+    Btn.MouseButton1Click:Connect(callback)
+    return Frame
 end
 
 local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffix, callback)
     local SliderFrame = Instance.new("Frame", parent)
-    SliderFrame.Size = UDim2.new(0.94, 0, 0, 50)
-    SliderFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    SliderFrame.Size = UDim2.new(0.95, 0, 0, 45)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
+
+    local Stroke = Instance.new("UIStroke", SliderFrame)
+    Stroke.Color = Color3.fromRGB(0, 162, 255)
+    Stroke.Thickness = 1
 
     local Label = Instance.new("TextLabel", SliderFrame)
     Label.Size = UDim2.new(0.6, 0, 0, 20)
-    Label.Position = UDim2.new(0, 10, 0, 6)
+    Label.Position = UDim2.new(0, 8, 0, 4)
     Label.Text = titleText
     Label.TextColor3 = Color3.fromRGB(240, 240, 240)
     Label.Font = Enum.Font.Gotham
@@ -405,7 +453,7 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
 
     local ValueLabel = Instance.new("TextLabel", SliderFrame)
     ValueLabel.Size = UDim2.new(0.3, 0, 0, 20)
-    ValueLabel.Position = UDim2.new(0.64, 0, 0, 6)
+    ValueLabel.Position = UDim2.new(0.67, 0, 0, 4)
     ValueLabel.Text = tostring(defaultVal) .. suffix
     ValueLabel.TextColor3 = Color3.fromRGB(0, 162, 255)
     ValueLabel.Font = Enum.Font.GothamBold
@@ -415,9 +463,9 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
     table.insert(textLabelData, {Obj = ValueLabel, BaseSize = 11})
 
     local SliderBar = Instance.new("Frame", SliderFrame)
-    SliderBar.Size = UDim2.new(1, -20, 0, 6)
-    SliderBar.Position = UDim2.new(0, 10, 0, 32)
-    SliderBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    SliderBar.Size = UDim2.new(1, -16, 0, 6)
+    SliderBar.Position = UDim2.new(0, 8, 0, 28)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     SliderBar.BorderSizePixel = 0
     Instance.new("UICorner", SliderBar).CornerRadius = UDim.new(1, 0)
 
@@ -456,11 +504,15 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
     end)
 end
 
--- ==================== ระบบฟังก์ชันทั้งหมด ====================
+-- ==================== บรรจุฟังก์ชันและเนื้อหาลงในหน้าต่างๆ ====================
 
--- 1. โจมตี
+-- 1. หน้าหลัก
+CreateCreditCard(MainInfoPage, "ค่าย PancakeHub", "https://discord.gg/HfnJnAAM8e", Color3.fromRGB(255, 180, 50))
+CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4wqQ", Color3.fromRGB(0, 162, 255))
+
+-- 2. หน้าโจมตี
 local expandHitboxEnabled = false
-CreateToggleRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox)", function(state)
+CreateToggleOption(AttackPage, "ฆ่าทั้งแมพ (Hitbox)", function(state)
     expandHitboxEnabled = state
     if not expandHitboxEnabled then
         for _, player in pairs(Players:GetPlayers()) do
@@ -490,9 +542,9 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 2. ช่วยเล่น
+-- 3. หน้าช่วยเล่น
 local autoFarmCoinsEnabled = false
-CreateToggleRow(HelperPage, "ออโต้เก็บเหรียญ (Zero Delay)", function(state)
+CreateToggleOption(HelperPage, "ออโต้เก็บเหรียญ (Zero Delay)", function(state)
     autoFarmCoinsEnabled = state
 end)
 
@@ -529,7 +581,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-CreateActionRow(HelperPage, "วาร์ปไปเก็บเหรียญทันที", "วาร์ป", function()
+CreateButtonOption(HelperPage, "วาร์ปไปเก็บเหรียญทันที", "วาร์ป", function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         local coinPart = GetInstantCoin()
@@ -539,28 +591,31 @@ CreateActionRow(HelperPage, "วาร์ปไปเก็บเหรียญ
     end
 end)
 
--- 3. UI Settings
-CreateSlider(UIPage, "ปรับความทึบของ UI", 0, 100, 0, "%", function(val)
-    local alpha = val / 100
-    MainFrame.BackgroundTransparency = alpha
-    TopBar.BackgroundTransparency = alpha
-    LeftSide.BackgroundTransparency = alpha
+-- 4. หน้า UI
+CreateSlider(UIPage, "ปรับความทึบของ UI", 1, 100, 100, "%", function(val)
+    currentAlpha = val / 100
+    local transparency = 1 - currentAlpha
+    MainFrame.BackgroundTransparency = transparency
+    TopBar.BackgroundTransparency = transparency
+    LeftSide.BackgroundTransparency = transparency
+    RightSide.BackgroundTransparency = transparency
 end)
 
-CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 70, 130, 100, "%", function(val)
+CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 150, 100, "%", function(val)
     currentScale = val / 100
     local newW = baseWidth * currentScale
     local newH = baseHeight * currentScale
     MainFrame.Size = UDim2.new(0, newW, 0, newH)
+    MainFrame.Position = UDim2.new(0.5, -newW/2, 0.5, -newH/2)
 
     for _, item in ipairs(textLabelData) do
         if item.Obj and item.Obj.Parent then
-            item.Obj.TextSize = math.clamp(math.floor(item.BaseSize * currentScale), 8, 24)
+            item.Obj.TextSize = math.clamp(math.floor(item.BaseSize * currentScale), 8, 30)
         end
     end
 end)
 
--- 4. ตัวละคร
+-- 5. หน้าตัวละคร
 CreateSlider(PlayerPage, "ความเร็วในการวิ่ง (WalkSpeed)", 16, 250, 16, "", function(val)
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
@@ -577,7 +632,7 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
 end)
 
 local noclipEnabled = false
-CreateToggleRow(PlayerPage, "เปิดทะลุกำแพง (Noclip)", function(state)
+CreateToggleOption(PlayerPage, "เปิดทะลุกำแพง (Noclip)", function(state)
     noclipEnabled = state
 end)
 
@@ -593,7 +648,7 @@ RunService.Stepped:Connect(function()
 end)
 
 local infJumpEnabled = false
-CreateToggleRow(PlayerPage, "กระโดดไม่จำกัด (Infinite Jump)", function(state)
+CreateToggleOption(PlayerPage, "กระโดดไม่จำกัด (Infinite Jump)", function(state)
     infJumpEnabled = state
 end)
 
@@ -606,8 +661,8 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- 5. เครื่องมือ
-CreateActionRow(ToolPage, "รับไอเทมคลิกวาร์ป (Click TP)", "รับไอเทม", function()
+-- 6. หน้าเครื่องมือ
+CreateButtonOption(ToolPage, "รับไอเทมคลิกวาร์ป (Click TP)", "รับไอเทม", function()
     local mouse = LocalPlayer:GetMouse()
     local tool = Instance.new("Tool")
     tool.Name = "Click TP Tool"
@@ -623,11 +678,11 @@ CreateActionRow(ToolPage, "รับไอเทมคลิกวาร์ป (
     end)
 end)
 
--- 6. ESP
+-- 7. หน้า ESP
 local espEnabled = false
-CreateToggleRow(ESPPage, "เปิดใช้งาน ESP ไฮไลท์ตัวละคร", function(state)
+CreateToggleOption(ESPPage, "เปิดใช้งาน ESP ไฮไลท์ตัวละคร", function(state)
     espEnabled = state
-    if not espEnabled then
+    if not espEnabled then 
         for _, player in pairs(Players:GetPlayers()) do
             if player.Character then
                 local highlight = player.Character:FindFirstChild("ESPHighlight")
@@ -638,7 +693,7 @@ CreateToggleRow(ESPPage, "เปิดใช้งาน ESP ไฮไลท์�
 end)
 
 local gunEspEnabled = false
-CreateToggleRow(ESPPage, "ESP ปืนตกพื้น", function(state)
+CreateToggleOption(ESPPage, "ESPปืนตกพื้น (เฉพาะบนพื้น)", function(state)
     gunEspEnabled = state
     if not gunEspEnabled then
         for _, obj in pairs(Workspace:GetDescendants()) do
@@ -648,14 +703,14 @@ CreateToggleRow(ESPPage, "ESP ปืนตกพื้น", function(state)
 end)
 
 local InfoBox = Instance.new("Frame", ESPPage)
-InfoBox.Size = UDim2.new(0.94, 0, 0, 75)
-InfoBox.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+InfoBox.Size = UDim2.new(0.95, 0, 0, 75)
+InfoBox.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Instance.new("UICorner", InfoBox).CornerRadius = UDim.new(0, 6)
 
 local InfoText = Instance.new("TextLabel", InfoBox)
 InfoText.Size = UDim2.new(1, -16, 1, 0)
 InfoText.Position = UDim2.new(0, 8, 0, 0)
-InfoText.Text = "คำอธิบายสีไฮไลท์:\n• สีแดง = มีมีด (Knife)\n• สีฟ้า = มีปืน (Gun)\n• สีเขียว = คนปกติ\n• สีเหลือง = ปืนตกพื้น"
+InfoText.Text = "คำอธิบายสีไฮไลท์และชื่อ:\n• สีแดง = ถือ/มีมีดในตัว (Knife)\n• สีฟ้า = ถือ/มีปืนในตัว (Gun)\n• สีเขียว = คนปกติ\n• สีเหลืองทอง = ปืนตกพื้นเท่านั้น"
 InfoText.TextColor3 = Color3.fromRGB(180, 180, 190)
 InfoText.Font = Enum.Font.Gotham
 InfoText.TextSize = 10
@@ -686,26 +741,30 @@ RunService.RenderStepped:Connect(function()
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
                 local character = player.Character
-                local charKnife, charGun = ScanTools(character)
-                local packKnife, packGun = ScanTools(player:FindFirstChild("Backpack"))
+                local head = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
+                
+                if head then
+                    local charKnife, charGun = ScanTools(character)
+                    local packKnife, packGun = ScanTools(player:FindFirstChild("Backpack"))
 
-                local color = Color3.fromRGB(80, 200, 100)
-                if charKnife or packKnife then
-                    color = Color3.fromRGB(220, 80, 80)
-                elseif charGun or packGun then
-                    color = Color3.fromRGB(80, 150, 220)
-                end
+                    local color = Color3.fromRGB(80, 200, 100)
+                    if charKnife or packKnife then
+                        color = Color3.fromRGB(220, 80, 80)
+                    elseif charGun or packGun then
+                        color = Color3.fromRGB(0, 162, 255)
+                    end
 
-                local highlight = character:FindFirstChild("ESPHighlight")
-                if not highlight then
-                    highlight = Instance.new("Highlight")
-                    highlight.Name = "ESPHighlight"
-                    highlight.Parent = character
+                    local highlight = character:FindFirstChild("ESPHighlight")
+                    if not highlight then
+                        highlight = Instance.new("Highlight")
+                        highlight.Name = "ESPHighlight"
+                        highlight.Parent = character
+                    end
+                    highlight.FillColor = color
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.FillTransparency = 0.5
+                    highlight.OutlineTransparency = 0.2
                 end
-                highlight.FillColor = color
-                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                highlight.FillTransparency = 0.5
-                highlight.OutlineTransparency = 0.2
             end
         end
     end
@@ -733,7 +792,13 @@ RunService.RenderStepped:Connect(function()
             end
 
             if isDroppedGun then
-                local targetPart = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")) or obj:IsA("Tool") and (obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart"))
+                local targetPart = nil
+                if obj:IsA("Model") then
+                    targetPart = obj.PrimaryPart or obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")
+                elseif obj:IsA("Tool") then
+                    targetPart = obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")
+                end
+                
                 if targetPart and not targetPart:FindFirstChild("GunDropHighlight") then
                     local gunHighlight = Instance.new("Highlight")
                     gunHighlight.Name = "GunDropHighlight"
@@ -748,7 +813,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ==================== ลำดับการทำงาน (Loading & Animation) ====================
+-- ==================== Loading Animation ====================
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
@@ -756,20 +821,23 @@ task.spawn(function()
     while tick() - startTime < 1.5 do
         for _, d in ipairs(dots) do
             LoadText.Text = "กำลังโหลด" .. d
-            task.wait(0.25)
+            task.wait(0.3)
         end
     end
     
-    LoadText.Text = "ดาวน์โหลดเสร็จแล้ว"
+    LoadText.Text = "ดาวโหลดเสร็จเเล้ว"
     task.wait(0.8)
     
-    LoadText.Text = "พร้อมใช้งาน!"
-    task.wait(0.6)
+    LoadText.Text = "คัดลอกลิ้งดิสเสร็จเเล้ว"
+    if setclipboard then
+        setclipboard("https://discord.gg/Ugssja4wqQ")
+    end
+    task.wait(0.8)
     
     LoadFrame:Destroy()
     
     MainFrame.Visible = true
-    MainFrame.Size = UDim2.new(0, 380, 0, 220)
+    MainFrame.Size = UDim2.new(0, 320, 0, 180)
     
     local info = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     local expandTween = TweenService:Create(MainFrame, info, {
