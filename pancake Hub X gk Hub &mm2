@@ -24,14 +24,14 @@ for _, container in pairs(containers) do
 end
 
 -- -------------------------------------------------------
--- 📦 2. โหลด MacLib UI (ปรับขนาดเล็กลง)
+-- 📦 2. โหลด MacLib UI (ปรับขนาดให้พอดี ไม่ตกขอบ)
 -- -------------------------------------------------------
 local MacLib = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 
 local Window = MacLib:Window({
     Title = "PancakeHUB | MM2",
-    Subtitle = "ESP By PancakeHUB",
-    Size = UDim2.fromOffset(460, 280), -- 📌 ปรับขนาดหน้าต่างให้เล็กลงที่นี่
+    Subtitle = "ESP System",
+    Size = UDim2.fromOffset(540, 320), -- 📌 ขยายขนาดให้พอดี ข้อความไม่ตกขอบ
     DragStyle = 1,
     Keybind = Enum.KeyCode.RightControl,
     AcrylicBlur = false, -- ปิดความเบลอ ป้องกันมือถือแครช
@@ -225,12 +225,12 @@ local TabGroup = Window:TabGroup()
 -- ==========================================
 -- 👁️ แท็บ: หมวดหมู่มองทะลุ
 -- ==========================================
-local EspTab = TabGroup:Tab({ Name = "มองทะลุ (ESP)", Image = "rbxassetid://10709782582" })
+local EspTab = TabGroup:Tab({ Name = "ระบบ ESP", Image = "rbxassetid://10709782582" })
 
-local MainSec = EspTab:Section({ Side = "Left", Title = "ตั้งค่าเปิด/ปิดระบบ ESP" })
+local MainSec = EspTab:Section({ Side = "Left", Title = "ฟังก์ชัน ESP" })
 
 MainSec:Toggle({
-    Name = "มองทะลุ 3D (ระบุสีตามบทบาท)",
+    Name = "ESP 3D (สีตามบทบาท)",
     Default = false,
     Callback = function(state)
         esp3D = state
@@ -238,7 +238,7 @@ MainSec:Toggle({
 })
 
 MainSec:Toggle({
-    Name = "มองทะลุเป็นเส้น (Tracer)",
+    Name = "ESP Tracer (ลากเส้น)",
     Default = false,
     Callback = function(state)
         espTracer = state
@@ -246,26 +246,26 @@ MainSec:Toggle({
 })
 
 MainSec:Toggle({
-    Name = "มองทะลุ Greenbox",
+    Name = "ESP Greenbox",
     Default = false,
     Callback = function(state)
         espGreenbox = state
     end,
 })
 
-local InfoSec = EspTab:Section({ Side = "Right", Title = "สัญลักษณ์สีบทบาท" })
+local InfoSec = EspTab:Section({ Side = "Right", Title = "เช็คสีบทบาท" })
 
 InfoSec:Paragraph({
-    Title = "🔴 สีแดง (Red)",
-    Content = "คือ Murderer (ฆาตกรถือมีด)",
+    Title = "🔴 สีแดง",
+    Content = "ฆาตกร (Murderer)",
 })
 
 InfoSec:Paragraph({
-    Title = "🔵 สีฟ้า (Blue)",
-    Content = "คือ Sheriff / Hero (นายอำเภอถือปืน)",
+    Title = "🔵 สีฟ้า",
+    Content = "นายอำเภอ (Sheriff)",
 })
 
 InfoSec:Paragraph({
-    Title = "🟢 สีเขียว (Green)",
-    Content = "คือ Innocent (ประชาชนบริสุทธิ์)",
+    Title = "🟢 สีเขียว",
+    Content = "ประชาชน (Innocent)",
 })
