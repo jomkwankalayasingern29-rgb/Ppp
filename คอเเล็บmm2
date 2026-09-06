@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 (Kill Feed + UI Toggle) ====================
+-- ==================== GKHub X PancakeHub & MM2 (Fixed Loading Screen) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -32,7 +32,7 @@ KillFeedLayout.SortOrder = Enum.SortOrder.LayoutOrder
 KillFeedLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 KillFeedLayout.Padding = UDim.new(0, 6)
 
-local killFeedEnabled = true -- สถานะเปิด/ปิด Kill Feed
+local killFeedEnabled = true
 
 local function GetPlayerRole(player)
     local function ScanTools(container)
@@ -70,7 +70,7 @@ local function AddKillFeedMessage(killer, victim, weaponName)
         ItemFrame.Size = UDim2.new(1, 0, 0, 32)
         ItemFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
         ItemFrame.BackgroundTransparency = 0.2
-        ItemFrame.Position = UDim2.new(-1.2, 0, 0, 0) -- เริ่มจากซ้ายนอกจอ
+        ItemFrame.Position = UDim2.new(-1.2, 0, 0, 0)
         ItemFrame.ClipsDescendants = true
 
         Instance.new("UICorner", ItemFrame).CornerRadius = UDim.new(0, 6)
@@ -78,7 +78,6 @@ local function AddKillFeedMessage(killer, victim, weaponName)
         stroke.Color = kColor
         stroke.Thickness = 1.2
 
-        -- รูปโปรไฟล์ผู้ฆ่า
         local KillerHead = Instance.new("ImageLabel", ItemFrame)
         KillerHead.Size = UDim2.new(0, 24, 0, 24)
         KillerHead.Position = UDim2.new(0, 4, 0.5, -12)
@@ -89,7 +88,6 @@ local function AddKillFeedMessage(killer, victim, weaponName)
             KillerHead.Image = content
         end)
 
-        -- ข้อความแสดงผล
         local MsgLabel = Instance.new("TextLabel", ItemFrame)
         MsgLabel.Size = UDim2.new(1, -34, 1, 0)
         MsgLabel.Position = UDim2.new(0, 32, 0, 0)
@@ -106,16 +104,13 @@ local function AddKillFeedMessage(killer, victim, weaponName)
             MsgLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
 
-        -- แอนิเมชันเด้งเข้าแบบ ultra smooth (ใช้ Back / Quart Easing)
         local tweenIn = TweenService:Create(ItemFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Position = UDim2.new(0, 0, 0, 0)
         })
         tweenIn:Play()
 
-        -- คงอยู่ 2 วินาที
         task.wait(2)
 
-        -- แอนิเมชันจางหายและสไลด์ออก
         local tweenOut = TweenService:Create(ItemFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
             BackgroundTransparency = 1,
             Position = UDim2.new(-1.2, 0, 0, 0)
@@ -133,7 +128,6 @@ local function AddKillFeedMessage(killer, victim, weaponName)
     end)
 end
 
--- ระบบตรวจจับการตาย
 local function MonitorPlayer(player)
     player.CharacterAdded:Connect(function(char)
         local humanoid = char:WaitForChild("Humanoid", 5)
@@ -434,7 +428,7 @@ local function CreateCreditCard(parent, hubName, discordLink, themeColor)
     local Title = Instance.new("TextLabel", Card)
     Title.Size = UDim2.new(1, -12, 0, 20)
     Title.Position = UDim2.new(0, 8, 0, 6)
-    Title.Text = "เครดิตผู้สร้าง: " + hubName
+    Title.Text = "เครดิตผู้สร้าง: " .. hubName
     Title.TextColor3 = themeColor
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 11
@@ -498,7 +492,6 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- เพิ่มปุ่มเปิด/ปิด Kill Feed ในหมวดหมู่ UI
 CreateFeatureRow(UIPage, "แสดงหน้าต่างการตาย (Kill Feed)", "เปิด (ON)", Color3.fromRGB(0, 162, 255), function(btn)
     killFeedEnabled = not killFeedEnabled
     btn.Text = killFeedEnabled and "เปิด (ON)" or "ปิด (OFF)"
