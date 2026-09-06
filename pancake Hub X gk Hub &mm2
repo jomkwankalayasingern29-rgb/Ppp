@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHUB | Murder Mystery 2 (MM2) - Final Fixed
+-- 🥞 PancakeHUB | Murder Mystery 2 (MM2) - Fixed Button
 -- =======================================================
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -241,7 +241,7 @@ MainSec:Toggle({
 })
 
 MainSec:Toggle({
-    Name = "มองทะลุเส้น (Tracer)",
+    Name = "มองทะlุเส้น (Tracer)",
     Default = false,
     Callback = function(state)
         espTracer = state
@@ -256,29 +256,23 @@ MainSec:Toggle({
     end,
 })
 
--- ปุ่มลบสคริปต์และปิด UI อยู่ในเมนูฝั่งขวา
 local InfoSec = EspTab:Section({ Side = "Right", Title = "การจัดการสคริปต์" })
 
 InfoSec:Button({
-    Name = "ปิดสคริปต์และลบ UI ทั้งหมด",
+    Name = "ปิดสคริปต์ทั้งหมด",
     Callback = function()
         scriptRunning = false
-        
-        -- ลบปุ่มเปิด/ปิดลอยตัว
         if ToggleGui then ToggleGui:Destroy() end
-        
-        -- เคลียร์โฟลเดอร์ ESP 3D
         if highlightFolder then highlightFolder:Destroy() end
-        
-        -- เคลียร์เส้นและกล่อง Drawing ทั้งหมด
         clearDrawings()
         
-        -- ทำลายหน้าต่าง UI หลักของ MacLib ทิ้ง
-        if macGui then 
-            macGui:Destroy() 
-        else
-            -- เผื่อกรณีหา macGui ไม่เจอ ให้สั่งปิดผ่าน Window ของ MacLib โดยตรง
-            pcall(function() Window:Destroy() end)
+        -- ค้นหาและทำลายหน้าต่าง UI ของ MacLib ทั้งหมดใน Container ทึ่สแกนไว้
+        for _, container in pairs(containers) do
+            for _, v in pairs(container:GetChildren()) do
+                if v:IsA("ScreenGui") and (v.Name:lower():find("maclib") or v ~= ToggleGui) then
+                    pcall(function() v:Destroy() end)
+                end
+            end
         end
     end,
 })
