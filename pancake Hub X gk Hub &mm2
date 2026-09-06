@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Final Update + Pull Killer
+-- 🥞 PancakeHub X GKHub | MM2 Ultimate Pull & Auto Shoot Fix
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -318,10 +318,9 @@ CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4
 
 
 -- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (Hitbox 999 + ระบบดึงฆาตกรมาด้านหน้า)
+-- 7.2 หมวดหมู่ "โจมตี" (Hitbox 999 + ระบบดึงฆาตกรมาด้านหน้าแล้วยิงทันที)
 -- =======================================================
 
--- Helper ตรวจสอบอาวุธมีด
 local function ScanTools(container)
     local foundKnife, foundGun = false, false
     if container then
@@ -408,7 +407,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 2. ฟังก์ชันใหม่: ดึงฆาตกรมาด้านหน้า (Pull Killer/Knife)
+-- 2. ฟังก์ชันแก้ไข: ดึงฆาตกรมาด้านหน้า + ยิงโดน 100% ทันที (Pull & Shoot Killer)
 local pullKillerEnabled = false
 local PullFrame = Instance.new("Frame", AttackPage)
 PullFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -418,7 +417,7 @@ Instance.new("UICorner", PullFrame).CornerRadius = UDim.new(0, 6)
 local PullLabel = Instance.new("TextLabel", PullFrame)
 PullLabel.Size = UDim2.new(0, 210, 1, 0)
 PullLabel.Position = UDim2.new(0, 10, 0, 0)
-PullLabel.Text = "ดึงฆาตกรมาด้านหน้า (Pull Killer)"
+PullLabel.Text = "ดึงฆาตกรมาด้านหน้าแล้วยิง (Pull & Shoot)"
 PullLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 PullLabel.Font = Enum.Font.Gotham
 PullLabel.TextSize = 12
@@ -444,7 +443,7 @@ PullBtn.MouseButton1Click:Connect(function()
     PullBtn.TextColor3 = pullKillerEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
 end)
 
--- ลูปการทำงานดึงฆาตกรมาด้านหน้าตัวเราตลอดเวลาที่เปิดใช้งาน
+-- ระบบดึงฆาตกรมาไว้ด้านหน้าแบบเว้นระยะที่แม่นยำ และยิงอัตโนมัติ
 RunService.Stepped:Connect(function()
     if pullKillerEnabled then
         local myChar = LocalPlayer.Character
@@ -457,9 +456,38 @@ RunService.Stepped:Connect(function()
                     
                     if charKnife or packKnife then
                         local killerRoot = player.Character:FindFirstChild("HumanoidRootPart")
-                        if killerRoot then
-                            -- ดึงมาไว้ด้านหน้าตัวเรา (ระยะห่างประมาณ 4 สตั๊ด)
-                            killerRoot.CFrame = myRoot.CFrame * CFrame.new(0, 0, -4)
+                        local killerHead = player.Character:FindFirstChild("Head")
+                        if killerRoot and killerHead then
+                            -- ดึงมาไว้ด้านหน้า 5 สตั๊ด (กำลังดี ปืนไม่ทะลุตัวและมองเห็นหัวชัดเจน)
+                            killerRoot.CFrame = myRoot.CFrame * CFrame.new(0, 0, -5)
+                            
+                            -- สั่งยิงอัตโนมัติทันทีที่ดึงมา
+                            local gunTool = myChar:FindFirstChild("Gun")
+                            if not gunTool then
+                                for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
+                                    if item:IsA("Tool") and (string.lower(item.Name):find("gun") or item:FindFirstChild("GunScript") or item:FindFirstChild("Shoot")) then
+                                        item.Parent = myChar
+                                        gunTool = item
+                                        break
+                                    end
+                                end
+                            end
+                            
+                            if gunTool then
+                                local remote = nil
+                                for _, desc in pairs(gunTool:GetDescendants()) do
+                                    if desc:IsA("RemoteEvent") then
+                                        remote = desc
+                                        break
+                                    end
+                                end
+                                if remote then
+                                    remote:FireServer(killerHead.Position)
+                                else
+                                    gunTool.Parent = myChar
+                                    gunTool:Activate()
+                                end
+                            end
                         end
                     end
                 end
@@ -555,7 +583,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- เพิ่มฟังก์ชัน: กระโดดไม่จำกัด (Infinite Jump)
+-- กระโดดไม่จำกัด (Infinite Jump)
 local infJumpEnabled = false
 local InfJumpFrame = Instance.new("Frame", PlayerPage)
 InfJumpFrame.Size = UDim2.new(1, 0, 0, 45)
