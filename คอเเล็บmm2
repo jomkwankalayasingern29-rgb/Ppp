@@ -1,0 +1,916 @@
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+if CoreGui:FindFirstChild("DeltaCustomUI") then 
+    CoreGui.DeltaCustomUI:Destroy() 
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DeltaCustomUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "ToggleIcon"
+ToggleBtn.Size = UDim2.new(0, 40, 0, 40)
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleBtn.Text = "🥞"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 20
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+ToggleBtn.Parent = ScreenGui
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 8)
+
+local ToggleStroke = Instance.new("UIStroke", ToggleBtn)
+ToggleStroke.Color = Color3.fromRGB(255, 180, 50)
+ToggleStroke.Thickness = 1.5
+
+local baseWidth = 500
+local baseHeight = 320
+local currentScale = 1 
+local currentAlpha = 1 
+local textLabelData = {}
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, baseWidth, 0, baseHeight)
+MainFrame.Position = UDim2.new(0.5, -baseWidth/2, 0.5, -baseHeight/2)
+MainFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
+MainFrame.ClipsDescendants = true
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+
+MainFrame.BackgroundTransparency = 1 - currentAlpha
+
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Color = Color3.fromRGB(255, 180, 50)
+MainStroke.Thickness = 1.5
+
+local TopBar = Instance.new("Frame", MainFrame)
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+TopBar.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
+TopBar.BorderSizePixel = 0
+TopBar.BackgroundTransparency = 1 - currentAlpha
+
+local TitleText = Instance.new("TextLabel", TopBar)
+TitleText.Size = UDim2.new(0, 320, 1, 0)
+TitleText.Position = UDim2.new(0, 12, 0, 0)
+TitleText.Text = "🥞 PancakeHub X GKHub & mm2 (Zero Delay)"
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.Font = Enum.Font.GothamBold
+TitleText.TextSize = 13
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = TitleText, BaseSize = 13})
+
+local MinBtn = Instance.new("TextButton", TopBar)
+MinBtn.Size = UDim2.new(0, 28, 0, 28)
+MinBtn.Position = UDim2.new(1, -65, 0, 3.5)
+MinBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
+MinBtn.Text = "-"
+MinBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.TextSize = 16
+Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+table.insert(textLabelData, {Obj = MinBtn, BaseSize = 16})
+
+local CloseBtn = Instance.new("TextButton", TopBar)
+CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+CloseBtn.Position = UDim2.new(1, -33, 0, 3.5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 14
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+table.insert(textLabelData, {Obj = CloseBtn, BaseSize = 14})
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+local Sidebar = Instance.new("Frame", MainFrame)
+Sidebar.Name = "Sidebar"
+Sidebar.Size = UDim2.new(0, 120, 1, -35)
+Sidebar.Position = UDim2.new(0, 0, 0, 35)
+Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+Sidebar.BorderSizePixel = 0
+Sidebar.BackgroundTransparency = 1 - currentAlpha
+
+local SideLayout = Instance.new("UIListLayout", Sidebar)
+SideLayout.SortOrder = Enum.SortOrder.LayoutOrder
+SideLayout.Padding = UDim.new(0, 6)
+
+local SidePadding = Instance.new("UIPadding", Sidebar)
+SidePadding.PaddingTop = UDim.new(0, 10)
+SidePadding.PaddingLeft = UDim.new(0, 8)
+SidePadding.PaddingRight = UDim.new(0, 8)
+
+local ContentArea = Instance.new("Frame", MainFrame)
+ContentArea.Name = "ContentArea"
+ContentArea.Size = UDim2.new(1, -130, 1, -45)
+ContentArea.Position = UDim2.new(0, 125, 0, 40)
+ContentArea.BackgroundTransparency = 1
+
+local tabs = {}
+
+local function CreateTab(name)
+    local TabBtn = Instance.new("TextButton", Sidebar)
+    TabBtn.Size = UDim2.new(1, 0, 0, 32)
+    TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+    TabBtn.Text = name
+    TabBtn.TextColor3 = Color3.fromRGB(170, 170, 180)
+    TabBtn.Font = Enum.Font.GothamMedium
+    TabBtn.TextSize = 13
+    Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
+    table.insert(textLabelData, {Obj = TabBtn, BaseSize = 13})
+
+    local Page = Instance.new("ScrollingFrame", ContentArea)
+    Page.Name = name .. "Page"
+    Page.Size = UDim2.new(1, 0, 1, 0)
+    Page.BackgroundTransparency = 1
+    Page.Visible = false
+    Page.ScrollBarThickness = 3
+    Page.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    Page.BorderSizePixel = 0
+
+    local PageLayout = Instance.new("UIListLayout", Page)
+    PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    PageLayout.Padding = UDim.new(0, 8)
+
+    local PagePadding = Instance.new("UIPadding", Page)
+    PagePadding.PaddingRight = UDim.new(0, 6)
+
+    tabs[name] = {Btn = TabBtn, Page = Page}
+
+    TabBtn.MouseButton1Click:Connect(function()
+        for _, t in pairs(tabs) do
+            t.Page.Visible = false
+            t.Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+            t.Btn.TextColor3 = Color3.fromRGB(170, 170, 180)
+        end
+        Page.Visible = true
+        TabBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+        TabBtn.TextColor3 = Color3.fromRGB(240, 240, 255)
+    end)
+
+    return Page
+end
+
+local MainInfoPage = CreateTab("หลัก")
+local AttackPage = CreateTab("โจมตี")
+local HelperPage = CreateTab("ช่วยเล่น")
+local UIPage = CreateTab("UI")
+local PlayerPage = CreateTab("ตัวละคร")
+local ToolPage = CreateTab("เครื่องมือ")
+local ESPPage = CreateTab("ESP")
+
+tabs["หลัก"].Page.Visible = true
+tabs["หลัก"].Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+tabs["หลัก"].Btn.TextColor3 = Color3.fromRGB(240, 240, 255)
+
+local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffix, callback)
+    local SliderFrame = Instance.new("Frame", parent)
+    SliderFrame.Size = UDim2.new(1, 0, 0, 50)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+    Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
+
+    local Label = Instance.new("TextLabel", SliderFrame)
+    Label.Size = UDim2.new(0.6, 0, 0, 20)
+    Label.Position = UDim2.new(0, 10, 0, 6)
+    Label.Text = titleText
+    Label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 12
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.BackgroundTransparency = 1
+    table.insert(textLabelData, {Obj = Label, BaseSize = 12})
+
+    local ValueLabel = Instance.new("TextLabel", SliderFrame)
+    ValueLabel.Size = UDim2.new(0.3, 0, 0, 20)
+    ValueLabel.Position = UDim2.new(0.67, 0, 0, 6)
+    ValueLabel.Text = tostring(defaultVal) .. suffix
+    ValueLabel.TextColor3 = Color3.fromRGB(170, 170, 180)
+    ValueLabel.Font = Enum.Font.GothamBold
+    ValueLabel.TextSize = 12
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    ValueLabel.BackgroundTransparency = 1
+    table.insert(textLabelData, {Obj = ValueLabel, BaseSize = 12})
+
+    local SliderBar = Instance.new("Frame", SliderFrame)
+    SliderBar.Size = UDim2.new(1, -20, 0, 8)
+    SliderBar.Position = UDim2.new(0, 10, 0, 32)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    SliderBar.BorderSizePixel = 0
+    Instance.new("UICorner", SliderBar).CornerRadius = UDim.new(1, 0)
+
+    local SliderFill = Instance.new("Frame", SliderBar)
+    SliderFill.Size = UDim2.new((defaultVal - minVal)/(maxVal - minVal), 0, 1, 0)
+    SliderFill.BackgroundColor3 = Color3.fromRGB(255, 180, 50)
+    SliderFill.BorderSizePixel = 0
+    Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
+
+    local isDragging = false
+    local function updateSlider(input)
+        local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+        local val = math.floor(minVal + (maxVal - minVal) * pos)
+        SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+        ValueLabel.Text = tostring(val) .. suffix
+        callback(val)
+    end
+
+    SliderBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = true
+            updateSlider(input)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateSlider(input)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = false
+        end
+    end)
+end
+
+local function CreateCreditCard(parent, hubName, discordLink, themeColor)
+    local Card = Instance.new("Frame", parent)
+    Card.Size = UDim2.new(1, 0, 0, 75)
+    Card.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
+
+    local Stroke = Instance.new("UIStroke", Card)
+    Stroke.Color = themeColor
+    Stroke.Thickness = 1.5
+
+    local Title = Instance.new("TextLabel", Card)
+    Title.Size = UDim2.new(1, -16, 0, 22)
+    Title.Position = UDim2.new(0, 10, 0, 8)
+    Title.Text = "เครดิตผู้สร้าง: " .. hubName
+    Title.TextColor3 = themeColor
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 13
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.BackgroundTransparency = 1
+    table.insert(textLabelData, {Obj = Title, BaseSize = 13})
+
+    local CopyBtn = Instance.new("TextButton", Card)
+    CopyBtn.Size = UDim2.new(1, -20, 0, 30)
+    CopyBtn.Position = UDim2.new(0, 10, 0, 36)
+    CopyBtn.BackgroundColor3 = themeColor
+    CopyBtn.Text = "คัดลอกลิ้งดิส (Discord)"
+    CopyBtn.TextColor3 = Color3.fromRGB(20, 20, 24)
+    CopyBtn.Font = Enum.Font.GothamBold
+    CopyBtn.TextSize = 12
+    Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 5)
+    table.insert(textLabelData, {Obj = CopyBtn, BaseSize = 12})
+
+    CopyBtn.MouseButton1Click:Connect(function()
+        pcall(function() setclipboard(discordLink) end)
+        CopyBtn.Text = "คัดลอกสำเร็จ! (Copied)"
+        task.wait(1.5)
+        CopyBtn.Text = "คัดลอกลิ้งดิส (Discord)"
+    end)
+end
+
+CreateCreditCard(MainInfoPage, "ค่าย PancakeHub", "https://discord.gg/HfnJnAAM8e", Color3.fromRGB(255, 180, 50))
+CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4wqQ", Color3.fromRGB(80, 150, 220))
+
+local expandHitboxEnabled = false
+
+local HitboxFrame = Instance.new("Frame", AttackPage)
+HitboxFrame.Size = UDim2.new(1, 0, 0, 45)
+HitboxFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", HitboxFrame).CornerRadius = UDim.new(0, 6)
+
+local HitboxLabel = Instance.new("TextLabel", HitboxFrame)
+HitboxLabel.Size = UDim2.new(0, 210, 1, 0)
+HitboxLabel.Position = UDim2.new(0, 10, 0, 0)
+HitboxLabel.Text = "ฆ่าทั้งแมพ"
+HitboxLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+HitboxLabel.Font = Enum.Font.Gotham
+HitboxLabel.TextSize = 12
+HitboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+HitboxLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = HitboxLabel, BaseSize = 12})
+
+local HitboxBtn = Instance.new("TextButton", HitboxFrame)
+HitboxBtn.Size = UDim2.new(0, 80, 0, 26)
+HitboxBtn.Position = UDim2.new(1, -88, 0.5, -13)
+HitboxBtn.Font = Enum.Font.GothamBold
+HitboxBtn.TextSize = 11
+HitboxBtn.Text = "ปิด (OFF)"
+HitboxBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+HitboxBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", HitboxBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = HitboxBtn, BaseSize = 11})
+
+HitboxBtn.MouseButton1Click:Connect(function()
+    expandHitboxEnabled = not expandHitboxEnabled
+    HitboxBtn.Text = expandHitboxEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    HitboxBtn.BackgroundColor3 = expandHitboxEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(60, 60, 70)
+    HitboxBtn.TextColor3 = expandHitboxEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+    
+    if not expandHitboxEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local root = player.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    root.Size = Vector3.new(2, 2, 1)
+                    root.Transparency = 1
+                end
+            end
+        end
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if expandHitboxEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if otherRoot then
+                    otherRoot.Size = Vector3.new(999, 999, 999)
+                    otherRoot.Transparency = 1
+                    otherRoot.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+local autoFarmCoinsEnabled = false
+
+local AutoFarmFrame = Instance.new("Frame", HelperPage)
+AutoFarmFrame.Size = UDim2.new(1, 0, 0, 45)
+AutoFarmFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", AutoFarmFrame).CornerRadius = UDim.new(0, 6)
+
+local AutoFarmLabel = Instance.new("TextLabel", AutoFarmFrame)
+AutoFarmLabel.Size = UDim2.new(0, 200, 1, 0)
+AutoFarmLabel.Position = UDim2.new(0, 10, 0, 0)
+AutoFarmLabel.Text = "ออโต้เก็บเหรียญ (Zero Delay)"
+AutoFarmLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+AutoFarmLabel.Font = Enum.Font.Gotham
+AutoFarmLabel.TextSize = 12
+AutoFarmLabel.TextXAlignment = Enum.TextXAlignment.Left
+AutoFarmLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = AutoFarmLabel, BaseSize = 12})
+
+local AutoFarmBtn = Instance.new("TextButton", AutoFarmFrame)
+AutoFarmBtn.Size = UDim2.new(0, 80, 0, 26)
+AutoFarmBtn.Position = UDim2.new(1, -88, 0.5, -13)
+AutoFarmBtn.Font = Enum.Font.GothamBold
+AutoFarmBtn.TextSize = 11
+AutoFarmBtn.Text = "ปิด (OFF)"
+AutoFarmBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+AutoFarmBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", AutoFarmBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = AutoFarmBtn, BaseSize = 11})
+
+AutoFarmBtn.MouseButton1Click:Connect(function()
+    autoFarmCoinsEnabled = not autoFarmCoinsEnabled
+    AutoFarmBtn.Text = autoFarmCoinsEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    AutoFarmBtn.BackgroundColor3 = autoFarmCoinsEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    AutoFarmBtn.TextColor3 = autoFarmCoinsEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+end)
+
+local function GetInstantCoin()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            local name = string.lower(obj.Name)
+            if name == "coin" or name == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
+                return obj
+            end
+        end
+    end
+    for _, obj in pairs(Workspace:GetChildren()) do
+        if obj.Name == "CoinVisual" or obj.Name == "Coin" or (obj:IsA("Model") and obj:FindFirstChild("Coin")) then
+            if obj:IsA("Model") then
+                return obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+            else
+                return obj
+            end
+        end
+    end
+    return nil
+end
+
+RunService.RenderStepped:Connect(function()
+    if autoFarmCoinsEnabled then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local coinPart = GetInstantCoin()
+            if coinPart then
+                char.HumanoidRootPart.CFrame = coinPart.CFrame
+            end
+        end
+    end
+end)
+
+local TpCoinFrame = Instance.new("Frame", HelperPage)
+TpCoinFrame.Size = UDim2.new(1, 0, 0, 45)
+TpCoinFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", TpCoinFrame).CornerRadius = UDim.new(0, 6)
+
+local TpCoinLabel = Instance.new("TextLabel", TpCoinFrame)
+TpCoinLabel.Size = UDim2.new(0, 200, 1, 0)
+TpCoinLabel.Position = UDim2.new(0, 10, 0, 0)
+TpCoinLabel.Text = "วาร์ปไปเก็บเหรียญทันที"
+TpCoinLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+TpCoinLabel.Font = Enum.Font.Gotham
+TpCoinLabel.TextSize = 12
+TpCoinLabel.TextXAlignment = Enum.TextXAlignment.Left
+TpCoinLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = TpCoinLabel, BaseSize = 12})
+
+local TpCoinBtn = Instance.new("TextButton", TpCoinFrame)
+TpCoinBtn.Size = UDim2.new(0, 80, 0, 26)
+TpCoinBtn.Position = UDim2.new(1, -88, 0.5, -13)
+TpCoinBtn.Font = Enum.Font.GothamBold
+TpCoinBtn.TextSize = 11
+TpCoinBtn.Text = "วาร์ป"
+TpCoinBtn.BackgroundColor3 = Color3.fromRGB(80, 110, 180)
+TpCoinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", TpCoinBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = TpCoinBtn, BaseSize = 11})
+
+TpCoinBtn.MouseButton1Click:Connect(function()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local coinPart = GetInstantCoin()
+        if coinPart then
+            char.HumanoidRootPart.CFrame = coinPart.CFrame
+        end
+    end
+end)
+
+CreateSlider(UIPage, "ปรับความทึบของ UI", 1, 100, 100, "%", function(val)
+    currentAlpha = val / 100
+    local transparency = 1 - currentAlpha
+    MainFrame.BackgroundTransparency = transparency
+    TopBar.BackgroundTransparency = transparency
+    Sidebar.BackgroundTransparency = transparency
+end)
+
+CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 150, 100, "%", function(val)
+    currentScale = val / 100
+    local newW = baseWidth * currentScale
+    local newH = baseHeight * currentScale
+    MainFrame.Size = UDim2.new(0, newW, 0, newH)
+    MainFrame.Position = UDim2.new(0.5, -newW/2, 0.5, -newH/2)
+
+    for _, item in ipairs(textLabelData) do
+        if item.Obj and item.Obj.Parent then
+            item.Obj.TextSize = math.clamp(math.floor(item.BaseSize * currentScale), 8, 30)
+        end
+    end
+end)
+
+CreateSlider(PlayerPage, "ความเร็วในการวิ่ง (WalkSpeed)", 16, 250, 16, "", function(val)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = val
+    end
+end)
+
+CreateSlider(PlayerPage, "ความสูงในการกระโดด (JumpPower)", 50, 300, 50, "", function(val)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.UseJumpPower = true
+        char.Humanoid.JumpPower = val
+    end
+end)
+
+local noclipEnabled = false
+local NoclipFrame = Instance.new("Frame", PlayerPage)
+NoclipFrame.Size = UDim2.new(1, 0, 0, 45)
+NoclipFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", NoclipFrame).CornerRadius = UDim.new(0, 6)
+
+local NoclipLabel = Instance.new("TextLabel", NoclipFrame)
+NoclipLabel.Size = UDim2.new(0, 200, 1, 0)
+NoclipLabel.Position = UDim2.new(0, 10, 0, 0)
+NoclipLabel.Text = "เปิดทะลุกำแพง (Noclip)"
+NoclipLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+NoclipLabel.Font = Enum.Font.Gotham
+NoclipLabel.TextSize = 12
+NoclipLabel.TextXAlignment = Enum.TextXAlignment.Left
+NoclipLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = NoclipLabel, BaseSize = 12})
+
+local NoclipBtn = Instance.new("TextButton", NoclipFrame)
+NoclipBtn.Size = UDim2.new(0, 80, 0, 26)
+NoclipBtn.Position = UDim2.new(1, -88, 0.5, -13)
+NoclipBtn.Font = Enum.Font.GothamBold
+NoclipBtn.TextSize = 11
+NoclipBtn.Text = "ปิด (OFF)"
+NoclipBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+NoclipBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", NoclipBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = NoclipBtn, BaseSize = 11})
+
+NoclipBtn.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    NoclipBtn.Text = noclipEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    NoclipBtn.BackgroundColor3 = noclipEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    NoclipBtn.TextColor3 = noclipEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+end)
+
+RunService.Stepped:Connect(function()
+    if noclipEnabled then
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+        end
+    end
+end)
+
+local infJumpEnabled = false
+local InfJumpFrame = Instance.new("Frame", PlayerPage)
+InfJumpFrame.Size = UDim2.new(1, 0, 0, 45)
+InfJumpFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", InfJumpFrame).CornerRadius = UDim.new(0, 6)
+
+local InfJumpLabel = Instance.new("TextLabel", InfJumpFrame)
+InfJumpLabel.Size = UDim2.new(0, 200, 1, 0)
+InfJumpLabel.Position = UDim2.new(0, 10, 0, 0)
+InfJumpLabel.Text = "กระโดดไม่จำกัด (Infinite Jump)"
+InfJumpLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+InfJumpLabel.Font = Enum.Font.Gotham
+InfJumpLabel.TextSize = 12
+InfJumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+InfJumpLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = InfJumpLabel, BaseSize = 12})
+
+local InfJumpBtn = Instance.new("TextButton", InfJumpFrame)
+InfJumpBtn.Size = UDim2.new(0, 80, 0, 26)
+InfJumpBtn.Position = UDim2.new(1, -88, 0.5, -13)
+InfJumpBtn.Font = Enum.Font.GothamBold
+InfJumpBtn.TextSize = 11
+InfJumpBtn.Text = "ปิด (OFF)"
+InfJumpBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+InfJumpBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", InfJumpBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = InfJumpBtn, BaseSize = 11})
+
+InfJumpBtn.MouseButton1Click:Connect(function()
+    infJumpEnabled = not infJumpEnabled
+    InfJumpBtn.Text = infJumpEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    InfJumpBtn.BackgroundColor3 = infJumpEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    InfJumpBtn.TextColor3 = infJumpEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if infJumpEnabled then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+local ToolFrame = Instance.new("Frame", ToolPage)
+ToolFrame.Size = UDim2.new(1, 0, 0, 45)
+ToolFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", ToolFrame).CornerRadius = UDim.new(0, 6)
+
+local ToolLabel = Instance.new("TextLabel", ToolFrame)
+ToolLabel.Size = UDim2.new(0, 200, 1, 0)
+ToolLabel.Position = UDim2.new(0, 10, 0, 0)
+ToolLabel.Text = "รับไอเทมคลิกวาร์ป (Click TP)"
+ToolLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+ToolLabel.Font = Enum.Font.Gotham
+ToolLabel.TextSize = 12
+ToolLabel.TextXAlignment = Enum.TextXAlignment.Left
+ToolLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = ToolLabel, BaseSize = 12})
+
+local GetToolBtn = Instance.new("TextButton", ToolFrame)
+GetToolBtn.Size = UDim2.new(0, 80, 0, 26)
+GetToolBtn.Position = UDim2.new(1, -88, 0.5, -13)
+GetToolBtn.Font = Enum.Font.GothamBold
+GetToolBtn.TextSize = 11
+GetToolBtn.Text = "รับไอเทม"
+GetToolBtn.BackgroundColor3 = Color3.fromRGB(80, 110, 180)
+GetToolBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", GetToolBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = GetToolBtn, BaseSize = 11})
+
+GetToolBtn.MouseButton1Click:Connect(function()
+    local mouse = LocalPlayer:GetMouse()
+    local tool = Instance.new("Tool")
+    tool.Name = "Click TP Tool"
+    tool.RequiresHandle = false
+    tool.Parent = LocalPlayer.Backpack
+
+    tool.Activated:Connect(function()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local targetPos = mouse.Hit.Position + Vector3.new(0, 3, 0)
+            char.HumanoidRootPart.CFrame = CFrame.new(targetPos)
+        end
+    end)
+end)
+
+local espEnabled = false
+local SwitchFrame = Instance.new("Frame", ESPPage)
+SwitchFrame.Size = UDim2.new(1, 0, 0, 45)
+SwitchFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", SwitchFrame).CornerRadius = UDim.new(0, 6)
+
+local SwitchLabel = Instance.new("TextLabel", SwitchFrame)
+SwitchLabel.Size = UDim2.new(0, 200, 1, 0)
+SwitchLabel.Position = UDim2.new(0, 10, 0, 0)
+SwitchLabel.Text = "เปิดใช้งาน ESP ไฮไลท์ตัวละคร"
+SwitchLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+SwitchLabel.Font = Enum.Font.Gotham
+SwitchLabel.TextSize = 12
+SwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
+SwitchLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = SwitchLabel, BaseSize = 12})
+
+local SwitchBtn = Instance.new("TextButton", SwitchFrame)
+SwitchBtn.Size = UDim2.new(0, 80, 0, 26)
+SwitchBtn.Position = UDim2.new(1, -88, 0.5, -13)
+SwitchBtn.Font = Enum.Font.GothamBold
+SwitchBtn.TextSize = 11
+SwitchBtn.Text = "ปิด (OFF)"
+SwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+SwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", SwitchBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = SwitchBtn, BaseSize = 11})
+
+local gunEspEnabled = false
+local GunEspFrame = Instance.new("Frame", ESPPage)
+GunEspFrame.Size = UDim2.new(1, 0, 0, 45)
+GunEspFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", GunEspFrame).CornerRadius = UDim.new(0, 6)
+
+local GunEspLabel = Instance.new("TextLabel", GunEspFrame)
+GunEspLabel.Size = UDim2.new(0, 200, 1, 0)
+GunEspLabel.Position = UDim2.new(0, 10, 0, 0)
+GunEspLabel.Text = "ESPปืนตกพื้น (เฉพาะบนพื้น)"
+GunEspLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+GunEspLabel.Font = Enum.Font.Gotham
+GunEspLabel.TextSize = 12
+GunEspLabel.TextXAlignment = Enum.TextXAlignment.Left
+GunEspLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = GunEspLabel, BaseSize = 12})
+
+local GunEspBtn = Instance.new("TextButton", GunEspFrame)
+GunEspBtn.Size = UDim2.new(0, 80, 0, 26)
+GunEspBtn.Position = UDim2.new(1, -88, 0.5, -13)
+GunEspBtn.Font = Enum.Font.GothamBold
+GunEspBtn.TextSize = 11
+GunEspBtn.Text = "ปิด (OFF)"
+GunEspBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+GunEspBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", GunEspBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = GunEspBtn, BaseSize = 11})
+
+local InfoBox = Instance.new("Frame", ESPPage)
+InfoBox.Size = UDim2.new(1, 0, 0, 75)
+InfoBox.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+Instance.new("UICorner", InfoBox).CornerRadius = UDim.new(0, 6)
+
+local InfoText = Instance.new("TextLabel", InfoBox)
+InfoText.Size = UDim2.new(1, -16, 1, 0)
+InfoText.Position = UDim2.new(0, 10, 0, 0)
+InfoText.Text = "คำอธิบายสีไฮไลท์และชื่อ:\n• สีแดง = ถือ/มีมีดในตัว (Knife)\n• สีฟ้า = ถือ/มีปืนในตัว (Gun)\n• สีเขียว = คนปกติ\n• สีเหลืองทอง = ปืนตกพื้นเท่านั้น"
+InfoText.TextColor3 = Color3.fromRGB(180, 180, 190)
+InfoText.Font = Enum.Font.Gotham
+InfoText.TextSize = 11
+InfoText.TextYAlignment = Enum.TextYAlignment.Center
+InfoText.TextXAlignment = Enum.TextXAlignment.Left
+InfoText.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = InfoText, BaseSize = 11})
+
+local espTextObjects = {}
+
+local function ScanTools(container)
+    local foundKnife, foundGun = false, false
+    if container then
+        for _, item in pairs(container:GetChildren()) do
+            if item:IsA("Tool") then
+                local name = string.lower(item.Name)
+                if string.find(name, "knife") or string.find(name, "dagger") or string.find(name, "blade") or item:FindFirstChild("Knife") then
+                    foundKnife = true
+                elseif string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") or item:FindFirstChild("Gun") then
+                    foundGun = true
+                end
+            end
+        end
+    end
+    return foundKnife, foundGun
+end
+
+local function ClearAllHighlights()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character then
+            local highlight = player.Character:FindFirstChild("ESPHighlight")
+            if highlight then highlight:Destroy() end
+        end
+    end
+end
+
+local function ClearGunHighlights()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj.Name == "GunDropHighlight" then 
+            obj:Destroy() 
+        end
+    end
+end
+
+SwitchBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    SwitchBtn.Text = espEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    SwitchBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    SwitchBtn.TextColor3 = espEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+    if not espEnabled then 
+        ClearAllHighlights() 
+        for _, textObj in pairs(espTextObjects) do
+            textObj:Remove()
+        end
+        espTextObjects = {}
+    end
+end)
+
+GunEspBtn.MouseButton1Click:Connect(function()
+    gunEspEnabled = not gunEspEnabled
+    GunEspBtn.Text = gunEspEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    GunEspBtn.BackgroundColor3 = gunEspEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    GunEspBtn.TextColor3 = gunEspEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+    if not gunEspEnabled then ClearGunHighlights() end
+end)
+
+RunService.RenderStepped:Connect(function()
+    for _, textObj in pairs(espTextObjects) do
+        textObj:Remove()
+    end
+    espTextObjects = {}
+
+    if espEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local character = player.Character
+                local head = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
+                
+                if head then
+                    local pos, onScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.8, 0))
+                    local charKnife, charGun = ScanTools(character)
+                    local packKnife, packGun = ScanTools(player:FindFirstChild("Backpack"))
+
+                    local color = Color3.fromRGB(80, 200, 100)
+                    if charKnife or packKnife then
+                        color = Color3.fromRGB(220, 80, 80)
+                    elseif charGun or packGun then
+                        color = Color3.fromRGB(80, 150, 220)
+                    end
+
+                    local highlight = character:FindFirstChild("ESPHighlight")
+                    if not highlight then
+                        highlight = Instance.new("Highlight")
+                        highlight.Name = "ESPHighlight"
+                        highlight.Parent = character
+                    end
+                    highlight.FillColor = color
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.FillTransparency = 0.5
+                    highlight.OutlineTransparency = 0.2
+
+                    if onScreen then
+                        local textObj = Drawing.new("Text")
+                        textObj.Text = player.Name
+                        textObj.Color = color
+                        textObj.Position = Vector2.new(pos.X, pos.Y)
+                        textObj.Center = true
+                        textObj.Outline = true
+                        textObj.Size = 14
+                        textObj.Visible = true
+                        table.insert(espTextObjects, textObj)
+                    end
+                end
+            end
+        end
+    end
+
+    if gunEspEnabled then
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            local isDroppedGun = false
+            
+            if obj:IsA("Tool") or obj:IsA("Model") then
+                local n = string.lower(obj.Name)
+                if n:find("gun") or n:find("pistol") or n:find("revolver") or n:find("dropped") then
+                    local ancestor = obj.Parent
+                    local isInPlayer = false
+                    
+                    while ancestor and ancestor ~= game do
+                        if ancestor:IsA("Model") and Players:GetPlayerFromCharacter(ancestor) then
+                            isInPlayer = true
+                            break
+                        elseif ancestor:IsA("Backpack") then
+                            isInPlayer = true
+                            break
+                        end
+                        ancestor = ancestor.Parent
+                    end
+                    
+                    if not isInPlayer then
+                        isDroppedGun = true
+                    end
+                end
+            end
+
+            if isDroppedGun then
+                local targetPart = nil
+                if obj:IsA("Model") then
+                    targetPart = obj.PrimaryPart or obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")
+                elseif obj:IsA("Tool") then
+                    targetPart = obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")
+                end
+                
+                if targetPart and not targetPart:FindFirstChild("GunDropHighlight") then
+                    local gunHighlight = Instance.new("Highlight")
+                    gunHighlight.Name = "GunDropHighlight"
+                    gunHighlight.FillColor = Color3.fromRGB(255, 220, 0)
+                    gunHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    gunHighlight.FillTransparency = 0.3
+                    gunHighlight.OutlineTransparency = 0.1
+                    gunHighlight.Parent = targetPart
+                end
+            end
+        end
+    end
+end)
+
+local isOpen = false
+local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+local function ToggleUI()
+    isOpen = not isOpen
+    if isOpen then
+        MainFrame.Visible = true
+        MainFrame.Size = UDim2.new(0, 40, 0, 40)
+        MainFrame.Position = ToggleBtn.Position
+        MainFrame.BackgroundTransparency = 1
+        
+        local targetW = baseWidth * currentScale
+        local targetH = baseHeight * currentScale
+        
+        TweenService:Create(MainFrame, tweenInfo, {
+            Size = UDim2.new(0, targetW, 0, targetH),
+            Position = UDim2.new(0.5, -targetW/2, 0.5, -targetH/2),
+            BackgroundTransparency = 1 - currentAlpha
+        }):Play()
+    else
+        local closeTween = TweenService:Create(MainFrame, tweenInfo, {
+            Size = UDim2.new(0, 40, 0, 40),
+            Position = ToggleBtn.Position,
+            BackgroundTransparency = 1
+        })
+        closeTween:Play()
+        closeTween.Completed:Connect(function()
+            if not isOpen then MainFrame.Visible = false end
+        end)
+    end
+end
+
+ToggleBtn.MouseButton1Click:Connect(ToggleUI)
+MinBtn.MouseButton1Click:Connect(ToggleUI)
+
+local Dragging, DragStart, StartPos
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        Dragging = true; DragStart = input.Position; StartPos = MainFrame.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - DragStart
+        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + delta.X, StartPos.Y.Scale, StartPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then Dragging = false end
+end)
