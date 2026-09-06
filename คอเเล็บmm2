@@ -371,7 +371,7 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- **Attack Module (Fixed Hitbox / Optimized Range)**
+-- **Attack Module**
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
@@ -392,18 +392,15 @@ CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox)", "ปิ�
     end
 end)
 
--- ใช้ระบบขยายกล่องพอดีตัวและดึงระยะประชิดเสถียร ไม่แล็ก 100%
 RunService.Stepped:Connect(function()
     if expandHitboxEnabled then
         local myChar = LocalPlayer.Character
         if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-            local myRoot = myChar.HumanoidRootPart
             for _, player in pairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character then
                     local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                     local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                     if otherRoot and humanoid and humanoid.Health > 0 then
-                        -- ขยาย Hitbox พอดีๆ เพื่อให้โจมตีโดนง่ายและแม่นยำ ไม่ทำให้เกมแล็ก
                         otherRoot.Size = Vector3.new(6, 6, 6)
                         otherRoot.Transparency = 0.8
                         otherRoot.CanCollide = false
@@ -414,7 +411,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- **Helper Module**
+-- **Helper Module (Optimized Instant Coin Farm)**
 local autoFarmCoinsEnabled = false
 CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (Zero Delay)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoFarmCoinsEnabled = not autoFarmCoinsEnabled
@@ -422,25 +419,20 @@ CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (Zer
     btn.BackgroundColor3 = autoFarmCoinsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
 
-local function GetInstantCoin()
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("BasePart") then
-            local name = string.lower(obj.Name)
-            if name == "coin" or name == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
-                return obj
-            end
-        end
-    end
-    return nil
-end
-
-RunService.RenderStepped:Connect(function()
+-- ปรับปรุงระบบเก็บเหรียญให้กวาดทุกเหรียญในแมพทันทีด้วยความเร็วสูงสุดแบบไม่มีดีเลย์
+RunService.Stepped:Connect(function()
     if autoFarmCoinsEnabled then
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
-            local coinPart = GetInstantCoin()
-            if coinPart then
-                char.HumanoidRootPart.CFrame = coinPart.CFrame
+            local hrp = char.HumanoidRootPart
+            for _, obj in pairs(Workspace:GetDescendants()) do
+                if obj:IsA("BasePart") then
+                    local name = string.lower(obj.Name)
+                    if name == "coin" or name == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
+                        -- ดึงเหรียญมาไว้ที่ตัวละครทันทีเพื่อเก็บแบบรวดเร็วไร้ดีเลย์
+                        obj.CFrame = hrp.CFrame
+                    end
+                end
             end
         end
     end
@@ -449,9 +441,14 @@ end)
 CreateFeatureRow(HelperPage, "วาร์ปไปเก็บเหรียญทันที", "วาร์ป", Color3.fromRGB(0, 162, 255), function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
-        local coinPart = GetInstantCoin()
-        if coinPart then
-            char.HumanoidRootPart.CFrame = coinPart.CFrame
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                local name = string.lower(obj.Name)
+                if name == "coin" or name == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
+                    char.HumanoidRootPart.CFrame = obj.CFrame
+                    break
+                end
+            end
         end
     end
 end)
