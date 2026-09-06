@@ -39,7 +39,7 @@ task.spawn(function()
 task.wait(0.5)
 for _, container in pairs(containers) do
 for _, v in pairs(container:GetChildren()) do
-if not existingGuis[v] and v:IsA("ScreenGui") and v.Name ~= "TouchGui" and v.Name ~= "PancakeHUB_MobileToggle" then
+if not existingGuis[v] and v:IsA("ScreenGui") and v.Name ~= "TouchGui" and v.Name ~= "PancakeHUB_MobileToggle" and v.Name ~= "PancakeHUB_TrashToggle" then
 macGui = v
 end
 end
@@ -76,7 +76,48 @@ uiVisible = not uiVisible
 macGui.Enabled = uiVisible
 end
 end)
-​-- 🛠️ 5. ตัวแปรเปิด/ปิด สวิตช์
+​-- 🗑️ 5. ปุ่มถุงขยะ 🗑️ (สำหรับลบ UI และปิดสคริปต์ทั้งหมด)
+​local TrashGui = Instance.new("ScreenGui")
+local TrashButton = Instance.new("TextButton")
+local TrashCorner = Instance.new("UICorner")
+local TrashStroke = Instance.new("UIStroke")
+​TrashGui.Name = "PancakeHUB_TrashToggle"
+TrashGui.Parent = CoreGui
+TrashGui.ResetOnSpawn = false
+​TrashButton.Name = "TrashButton"
+TrashButton.Parent = TrashGui
+TrashButton.Position = UDim2.new(0, 15, 0.48, 0) -- อยู่ใต้ปุ่มแพนเค้กเล็กน้อย
+TrashButton.Size = UDim2.new(0, 42, 0, 42)
+TrashButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+TrashButton.Text = "🗑️"
+TrashButton.TextSize = 20
+TrashButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TrashButton.Active = true
+TrashButton.Draggable = true
+​TrashCorner.CornerRadius = UDim.new(0, 10)
+TrashCorner.Parent = TrashButton
+TrashStroke.Color = Color3.fromRGB(255, 80, 80)
+TrashStroke.Thickness = 2
+TrashStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+TrashStroke.Parent = TrashButton
+​-- ตัวแปรสถานะการทำงาน
+local scriptRunning = true
+​-- ฟังก์ชันลบสคริปต์และ UI ทั้งหมดทิ้ง
+TrashButton.MouseButton1Click:Connect(function()
+scriptRunning = false
+​-- ทำลายปุ่มลอยตัว
+if ToggleGui then ToggleGui:Destroy() end
+if TrashGui then TrashGui:Destroy() end
+​-- ทำลาย Folder ESP 3D
+local oldFolder = CoreGui:FindFirstChild("PancakeHUB_3DESP")
+if oldFolder then oldFolder:Destroy() end
+​-- ลบ Drawing ทั้งหมด
+for _, line in pairs(tracerPool) do if line.Remove then line:Remove() end end
+for _, box in pairs(boxPool) do if box.Remove then box:Remove() end end
+​-- ลบหน้าต่าง MacLib UI หลัก
+if macGui then macGui:Destroy() end
+end)
+​-- 🛠️ 6. ตัวแปรเปิด/ปิด สวิตช์ ESP
 ​local esp3D = false
 local espTracer = false
 local espGreenbox = false
@@ -111,7 +152,7 @@ end
 for _, line in pairs(tracerPool) do line.Visible = false end
 for _, box in pairs(boxPool) do box.Visible = false end
 end
-​-- 🔍 6. ฟังก์ชันเช็คบทบาท MM2 (Role Checker ที่เสถียรขึ้น)
+​-- 🔍 7. ฟังก์ชันเช็คบทบาท MM2 (Role Checker ที่เสถียรขึ้น)
 ​local function getPlayerRoleColor(player)
 if not player then return Color3.fromRGB(0, 255, 0) end
 ​local char = player.Character
@@ -138,9 +179,10 @@ else
 return Color3.fromRGB(50, 255, 50) -- 🟢 ประชาชนบริสุทธิ์
 end
 end
-​-- 🔄 7. Main Render Loop (อัปเดตระบบ ESP ตลอดเวลา)
+​-- 🔄 8. Main Render Loop (อัปเดตระบบ ESP ตลอดเวลา)
 ​RunService.RenderStepped:Connect(function()
-highlightFolder:ClearAllChildren()
+if not scriptRunning then return end
+​highlightFolder:ClearAllChildren()
 hideAllDrawings()
 ​if not esp3D and not espTracer and not espGreenbox then return end
 ​local tracerIndex = 0
@@ -202,7 +244,7 @@ end
 end
 end
 end)
-​-- 🎨 8. สร้าง UI หน้าต่างเมนู (ขนาดเล็กเหมาะกับมือถือ)
+​-- 🎨 9. สร้าง UI หน้าต่างเมนู (ขนาดเล็กเหมาะกับมือถือ)
 ​local TabGroup = Window:TabGroup()
 ​local EspTab = TabGroup:Tab({ Name = "ESP", Image = "rbxassetid://10709782582" })
 local MainSec = EspTab:Section({ Side = "Left", Title = "ระบบมองทะลุ" })
