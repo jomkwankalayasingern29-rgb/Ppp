@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 (KillFeed Repositioned Fix) ====================
+-- ==================== GKHub X PancakeHub & MM2 (KillFeed Top-Left with Touch Passthrough) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -108,7 +108,7 @@ LogoG.ZIndex = 4
 local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 380, 1, 0)
 TitleText.Position = UDim2.new(0, 38, 0, 0)
-TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Repositioned Fix)"
+TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Top-Left Passthrough)"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 12
@@ -384,11 +384,11 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- ==================== ระบบแถบสาเหตุการตาย (ย้ายหนีมุมซ้ายบนเพื่อแก้ปัญหาจิ้มเดินไม่ได้) ====================
+-- ==================== ระบบแถบสาเหตุการตาย (มุมซ้ายบน + เปิดระบบทะลุตลอดตัว) ====================
 local KillFeedHolder = Instance.new("Frame", ScreenGui)
 KillFeedHolder.Name = "KillFeedHolder"
-KillFeedHolder.Size = UDim2.new(0, 320, 0, 220)
-KillFeedHolder.Position = UDim2.new(0.5, -160, 0, 45) -- ย้ายมาตรงกลางด้านบน ไม่ทับจอยสติ๊กเดิน
+KillFeedHolder.Size = UDim2.new(0, 310, 0, 200)
+KillFeedHolder.Position = UDim2.new(0, 10, 0, 50) -- ชิดซ้ายบน
 KillFeedHolder.BackgroundTransparency = 1
 KillFeedHolder.BorderSizePixel = 0
 KillFeedHolder.Visible = true
@@ -413,9 +413,9 @@ local function ShowDeathFeed(killerName, killerRole, victimName, victimRole, wea
     if not KillFeedHolder.Visible then return end
 
     local FeedItem = Instance.new("Frame", KillFeedScroll)
-    FeedItem.Size = UDim2.new(1, 0, 0, 30)
+    FeedItem.Size = UDim2.new(1, 0, 0, 28)
     FeedItem.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
-    FeedItem.BackgroundTransparency = 0.2
+    FeedItem.BackgroundTransparency = 0.3
     FeedItem.ZIndex = 6
     FeedItem.Active = false
     Instance.new("UICorner", FeedItem).CornerRadius = UDim.new(0, 6)
