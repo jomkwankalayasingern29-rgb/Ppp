@@ -408,9 +408,9 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- **Helper Module (Instant Teleport Coin Farm - WITH 1 SECOND DELAY)**
+-- **Helper Module (Instant Teleport Coin Farm - FIXED 1 SECOND DELAY)**
 local autoFarmCoinsEnabled = false
-CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (วาร์ปเก็บแบบปลอดภัย)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(HelperPage, "ออโต้เก็บเหรียญ (ดีเลย์ 1 วิ)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoFarmCoinsEnabled = not autoFarmCoinsEnabled
     btn.Text = autoFarmCoinsEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = autoFarmCoinsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
@@ -429,14 +429,14 @@ task.spawn(function()
                             local name = string.lower(obj.Name)
                             if name == "coin" or name == "cd" or name == "coinvisual" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
                                 hrp.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
-                                task.wait(1) -- ปรับดีเลย์เป็น 1 วินาทีแล้วเพื่อป้องกันระบบเกมเตะ
+                                task.wait(1) -- ล็อกบังคับดีเลย์ 1 วินาทีต่อการวาร์ปแต่ละเหรียญอย่างแน่นอน
                             end
                         end
                     end
                 end
             end)
         end
-        task.wait(0.1)
+        task.wait(1)
     end
 end)
 
