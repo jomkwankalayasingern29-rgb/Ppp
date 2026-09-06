@@ -371,7 +371,7 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- **Attack Module (Fixed Hitbox 250 & Kill All Map)**
+-- **Attack Module (Fixed Hitbox 250, Invisible & No Collision to prevent glitching)**
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
@@ -399,9 +399,9 @@ RunService.RenderStepped:Connect(function()
                 local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                 if otherRoot and humanoid and humanoid.Health > 0 then
-                    otherRoot.Size = Vector3.new(250, 250, 250) -- ปรับขนาด Hitbox เป็น 250 จริงๆ แล้วตรงนี้
-                    otherRoot.Transparency = 0.95
-                    otherRoot.CanCollide = false
+                    otherRoot.Size = Vector3.new(250, 250, 250) -- ขนาด 250
+                    otherRoot.Transparency = 1                  -- ล่องหนสนิท
+                    otherRoot.CanCollide = false                -- ปิดการชนเพื่อไม่ให้ดันตัวละครเรากระเด็นออกนอกแมพ
                 end
             end
         end
