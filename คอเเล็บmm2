@@ -478,11 +478,11 @@ CreateSlider(UIPage, "ขนาดความใหญ่ UI", 50, 150, 100, "%
     end
 end)
 
--- **UI Bottom Section: MM2 Realtime Profiles & Counter (Murderer -> Sheriff -> Innocent)**
+-- **UI Bottom Section: MM2 Realtime Profiles & Counter**
 local HeaderSummary = Instance.new("TextLabel", UIPage)
 HeaderSummary.Size = UDim2.new(0.96, 0, 0, 24)
 HeaderSummary.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
-HeaderSummary.Text = "เกมยังไม่เริ่ม"
+HeaderSummary.Text = "เกมยังไม่เริ่ม (แสดงผลสรุปตาที่แล้ว)"
 HeaderSummary.TextColor3 = Color3.fromRGB(0, 162, 255)
 HeaderSummary.Font = Enum.Font.GothamBold
 HeaderSummary.TextSize = 11
@@ -517,12 +517,9 @@ local function ScanToolsForRole(container)
     return hasKnife, hasGun
 end
 
--- ตัวแปรเก็บสถานะรอบเกมและการแคชข้อมูลรอบที่แล้ว
-local GameState = "Waiting" 
-local TimerActive = false
 local lastPlayerRoleData = {}
-local lastAliveCount = 0
-local lastDeadCount = 0
+local isCountingDown = false
+local gameActive = false
 
 local function RenderPlayerList(dataList)
     for _, guiObj in pairs(StatusContainer:GetChildren()) do
@@ -628,46 +625,43 @@ RunService.RenderStepped:Connect(function()
             return a.Player.Name < b.Player.Name
         end)
 
-        local rs = Workspace:FindFirstChild("RoundState") or Workspace:FindFirstChild("GameStatus")
-        local statusVal = rs and tostring(rs.Value) or ""
-        local isGamePlaying = (aliveCount > 1 and statusVal ~= "Waiting" and statusVal ~= "Intermission") or (statusVal == "Playing")
-
-        if not isGamePlaying and GameState == "Playing" then
-            -- บันทึกข้อมูลตาที่แล้วไว้เมื่อเกมจบ
-            lastPlayerRoleData = playerRoleData
-            lastAliveCount = aliveCount
-            lastDeadCount = deadCount
-            GameState = "Waiting"
+        -- ตรวจสอบเงื่อนไขเกมเริ่ม (มีผู้เล่นถือมีดหรือปืน หรือมีคนรอดชีวิตมากกว่า 1 คน)
+        local hasActiveRole = false
+        for _, d in ipairs(playerRoleData) do
+            if d.RoleType < 3 then
+                hasActiveRole = true
+                break
+            end
         end
 
-        if not isGamePlaying then
-            if GameState == "Waiting" and not TimerActive then
-                if #lastPlayerRoleData > 0 then
-                    HeaderSummary.Text = "เกมยังไม่เริ่ม (แสดงผลสรุปตาที่แล้ว)"
-                    RenderPlayerList(lastPlayerRoleData)
-                else
-                    HeaderSummary.Text = "เกมยังไม่เริ่ม"
-                    RenderPlayerList(playerRoleData)
-                end
-                
-                -- เช็คสัญญาณเริ่มเกมเพื่อเริ่มนับถอยหลัง 10 วิ
-                if statusVal == "Starting" or statusVal == "Intermission" then
-                    GameState = "Starting"
-                    TimerActive = true
-                    task.spawn(function()
-                        for i = 10, 1, -1 do
-                            HeaderSummary.Text = "กำลังหา... เริ่มใน " .. i .. " วินาที"
-                            task.wait(1)
-                        end
-                        TimerActive = false
-                        GameState = "Playing"
-                    end)
-                end
-            end
-        else
-            GameState = "Playing"
+        if hasActiveRole then
+            gameActive = true
+            isCountingDown = false
             HeaderSummary.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
             RenderPlayerList(playerRoleData)
+            lastPlayerRoleData = playerRoleData
+        else
+            if gameActive then
+                gameActive = false
+            end
+            
+            if not isCountingDown then
+                isCountingDown = true
+                task.spawn(function()
+                    for i = 10, 1, -1 do
+                        if gameActive then break end
+                        HeaderSummary.Text = "กำลังหา... เริ่มใน " .. i .. " วินาที"
+                        task.wait(1)
+                    end
+                    if not gameActive then
+                        HeaderSummary.Text = "เกมยังไม่เริ่ม (แสดงผลตาที่แล้ว)"
+                        if #lastPlayerRoleData > 0 then
+                            RenderPlayerList(lastPlayerRoleData)
+                        end
+                    end
+                    isCountingDown = false
+                end)
+            end
         end
     end)
 end)
