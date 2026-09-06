@@ -1,12 +1,10 @@
 -- =======================================================
--- 🥞 PancakeHUB | Murder Mystery 2 (Delta UI System)
+-- 🥞 PancakeHUB | Murder Mystery 2 (MacLib Fixed Version)
 -- =======================================================
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -25,14 +23,14 @@ for _, container in pairs(containers) do
 end
 
 -- -------------------------------------------------------
--- 📦 2. โหลด MacLib UI (คงรูปแบบเดิมที่คุณชอบ ขนาดพอดี ไม่รก)
+-- 📦 2. โหลด MacLib UI
 -- -------------------------------------------------------
 local MacLib = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 
 local Window = MacLib:Window({
-    Title = "PancakeHUB | Delta",
-    Subtitle = "MM2 Ultimate Hub",
-    Size = UDim2.fromOffset(500, 320), -- ขนาดมาตรฐานตามที่คุณต้องการ
+    Title = "PancakeHUB | MM2",
+    Subtitle = "Ultimate Hub",
+    Size = UDim2.fromOffset(520, 340),
     DragStyle = 1,
     Keybind = Enum.KeyCode.RightControl,
     AcrylicBlur = false,
@@ -92,7 +90,7 @@ ToggleButton.MouseButton1Click:Connect(function()
 end)
 
 -- -------------------------------------------------------
--- 🛠️ 5. ตัวแปรระบบฟังก์ชันทั้งหมด (จากโค้ดDeltaที่คุณให้มา)
+-- 🛠️ 5. ตัวแปรระบบฟังก์ชัน
 -- -------------------------------------------------------
 local espEnabled = false
 local noclipEnabled = false
@@ -100,11 +98,9 @@ local autoShootEnabled = false
 local miniShootGui = nil
 local espTextObjects = {}
 
--- Folder สำหรับเก็บ Highlight ESP
 local highlightFolder = Instance.new("Folder", CoreGui)
 highlightFolder.Name = "PancakeHUB_Highlights"
 
--- ฟังก์ชันเช็คปืนและมีด
 local function ScanTools(container)
     local foundKnife, foundGun = false, false
     if container then
@@ -131,7 +127,6 @@ local function ClearAllHighlights()
     end
 end
 
--- ฟังก์ชันสั่งยิงอัตโนมัติ MM2
 local function TriggerMM2Shoot()
     local myChar = LocalPlayer.Character
     if not myChar then return end
@@ -183,33 +178,20 @@ local function TriggerMM2Shoot()
 end
 
 -- -------------------------------------------------------
--- 🎨 6. สร้างหมวดหมู่เมนู UI (จัดหมวดหมู่แยกชัดเจน + ไม่ตัดคำ)
+-- 🎨 6. สร้างหมวดหมู่แท็บ UI (MacLib Style)
 -- -------------------------------------------------------
 local TabGroup = Window:TabGroup()
 
--- 1. หมวดหมู่ UI Setting
-local UiTab = TabGroup:Tab({ Name = "ตั้งค่า UI", Image = "rbxassetid://10723424687" })
-local UiSec = UiTab:Section({ Side = "Left", Title = "ปรับแต่งหน้าต่าง" })
-
-UiSec:Slider({
-    Name = "ความทึบ UI (%)",
-    Default = 100,
-    Min = 20,
-    Max = 100,
-    Callback = function(val)
-        -- ปรับแต่งผ่าน MacLib ตามความเหมาะสม
-    end,
-})
-
--- 2. หมวดหมู่ ตัวละคร (Player)
+-- 📌 แท็บ 1: ตัวละคร (Player)
 local PlayerTab = TabGroup:Tab({ Name = "ตัวละคร", Image = "rbxassetid://10709791437" })
-local PlayerSec = PlayerTab:Section({ Side = "Left", Title = "ความสามารถตัวละคร" })
+local PlayerSec = PlayerTab:Section({ Side = "Left", Title = "ตั้งค่าตัวละคร" })
 
 PlayerSec:Slider({
     Name = "ความเร็ววิ่ง",
     Default = 16,
     Min = 16,
     Max = 250,
+    Skin = "TextBox",
     Callback = function(val)
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("Humanoid") then
@@ -223,6 +205,7 @@ PlayerSec:Slider({
     Default = 50,
     Min = 50,
     Max = 300,
+    Skin = "TextBox",
     Callback = function(val)
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("Humanoid") then
@@ -251,7 +234,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 3. หมวดหมู่ เครื่องมือ (Tools)
+-- 📌 แท็บ 2: เครื่องมือ (Tools)
 local ToolTab = TabGroup:Tab({ Name = "เครื่องมือ", Image = "rbxassetid://10723434515" })
 local ToolSec = ToolTab:Section({ Side = "Left", Title = "ไอเทมพิเศษ" })
 
@@ -274,9 +257,9 @@ ToolSec:Button({
     end,
 })
 
--- 4. หมวดหมู่ ESP
+-- 📌 แท็บ 3: ระบบ ESP
 local EspTab = TabGroup:Tab({ Name = "ระบบ ESP", Image = "rbxassetid://10709782582" })
-local EspSec = EspTab:Section({ Side = "Left", Title = "ตั้งค่าการมองทะลุ" })
+local EspSec = EspTab:Section({ Side = "Left", Title = "ฟังก์ชันมองทะลุ" })
 
 EspSec:Toggle({
     Name = "เปิด ESP ไฮไลท์ตัวละคร",
@@ -287,7 +270,7 @@ EspSec:Toggle({
     end,
 })
 
-local EspInfoSec = EspTab:Section({ Side = "Right", Title = "คำอธิบายสี" })
+local EspInfoSec = EspTab:Section({ Side = "Right", Title = "สัญลักษณ์สี" })
 EspInfoSec:Paragraph({ Title = "🔴 สีแดง", Content = "ฆาตกร (Murderer)" })
 EspInfoSec:Paragraph({ Title = "🔵 สีฟ้า", Content = "นายอำเภอ (Sheriff)" })
 EspInfoSec:Paragraph({ Title = "🟢 สีเขียว", Content = "คนปกติ (Innocent)" })
@@ -342,7 +325,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 5. หมวดหมู่ Auto Shoot (ยิงอัตโนมัติ)
+-- 📌 แท็บ 4: Auto Shoot
 local ShootTab = TabGroup:Tab({ Name = "Auto Shoot", Image = "rbxassetid://10734950309" })
 local ShootSec = ShootTab:Section({ Side = "Left", Title = "ระบบยิงออโต้ MM2" })
 
