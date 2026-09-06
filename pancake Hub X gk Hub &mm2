@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Script (Turbo Auto Farm)
+-- 🥞 PancakeHub X GKHub | MM2 Script (Zero Delay Turbo Farm)
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -74,7 +74,7 @@ TopBar.BackgroundTransparency = 1 - currentAlpha
 local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 320, 1, 0)
 TitleText.Position = UDim2.new(0, 12, 0, 0)
-TitleText.Text = "🥞 PancakeHub X GKHub & mm2 (Full)"
+TitleText.Text = "🥞 PancakeHub X GKHub & mm2 (Zero Delay)"
 TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 13
@@ -179,7 +179,7 @@ local function CreateTab(name)
     return Page
 end
 
--- สร้างแท็บตามลำดับ (ช่องที่ 3 คือ ช่วยเล่น)
+-- สร้างแท็บตามลำดับ
 local MainInfoPage = CreateTab("หลัก")
 local AttackPage = CreateTab("โจมตี")
 local HelperPage = CreateTab("ช่วยเล่น")
@@ -378,7 +378,7 @@ end)
 
 
 -- =======================================================
--- 7.3 หมวดหมู่ "ช่วยเล่น" (Turbo Auto Farm แบบเร็วปรู๊ปรปร้าพ)
+-- 7.3 หมวดหมู่ "ช่วยเล่น" (Zero Delay Instant Auto Farm)
 -- =======================================================
 local autoFarmCoinsEnabled = false
 
@@ -390,7 +390,7 @@ Instance.new("UICorner", AutoFarmFrame).CornerRadius = UDim.new(0, 6)
 local AutoFarmLabel = Instance.new("TextLabel", AutoFarmFrame)
 AutoFarmLabel.Size = UDim2.new(0, 200, 1, 0)
 AutoFarmLabel.Position = UDim2.new(0, 10, 0, 0)
-AutoFarmLabel.Text = "ออโต้เก็บเหรียญ (Turbo Auto Farm)"
+AutoFarmLabel.Text = "ออโต้เก็บเหรียญ (Zero Delay)"
 AutoFarmLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 AutoFarmLabel.Font = Enum.Font.Gotham
 AutoFarmLabel.TextSize = 12
@@ -416,11 +416,14 @@ AutoFarmBtn.MouseButton1Click:Connect(function()
     AutoFarmBtn.TextColor3 = autoFarmCoinsEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
 end)
 
--- ฟังก์ชันค้นหาเหรียญทั้งหมดแบบรวดเร็ว
-local function GetFastCoin()
+-- ฟังก์ชันค้นหาเหรียญแบบทันที (ไม่จำกัดเงื่อนไขเวลา)
+local function GetInstantCoin()
     for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and (string.lower(obj.Name) == "coin" or string.lower(obj.Name) == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin")) then
-            return obj
+        if obj:IsA("BasePart") then
+            local name = string.lower(obj.Name)
+            if name == "coin" or name == "cd" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
+                return obj
+            end
         end
     end
     for _, obj in pairs(Workspace:GetChildren()) do
@@ -435,12 +438,12 @@ local function GetFastCoin()
     return nil
 end
 
--- เร่งความเร็วสูงสุดด้วย RenderStepped (วาปข้ามไปเก็บทันทีทุกๆ เฟรม)
+-- วาปทันทีแบบไม่มีดีเลย์ทุกเฟรมภาพ
 RunService.RenderStepped:Connect(function()
     if autoFarmCoinsEnabled then
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
-            local coinPart = GetFastCoin()
+            local coinPart = GetInstantCoin()
             if coinPart then
                 char.HumanoidRootPart.CFrame = coinPart.CFrame
             end
@@ -448,7 +451,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ปุ่มวาร์ปด่วน (กดปุ๊บไปปั๊บ)
+-- ปุ่มวาร์ปด่วนพิเศษ
 local TpCoinFrame = Instance.new("Frame", HelperPage)
 TpCoinFrame.Size = UDim2.new(1, 0, 0, 45)
 TpCoinFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
@@ -479,7 +482,7 @@ table.insert(textLabelData, {Obj = TpCoinBtn, BaseSize = 11})
 TpCoinBtn.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
-        local coinPart = GetFastCoin()
+        local coinPart = GetInstantCoin()
         if coinPart then
             char.HumanoidRootPart.CFrame = coinPart.CFrame
         end
