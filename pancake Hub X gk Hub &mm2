@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Script (Final Adjusted)
+-- 🥞 PancakeHub X GKHub | MM2 Script (Fixed ESP Text Loop)
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -7,6 +7,7 @@ local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
@@ -309,7 +310,7 @@ CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4
 
 
 -- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (มีเฉพาะฟังก์ชัน "ฆ่าทั้งแมพ" ฮิตบ็อกซ์ล่องหน 100%)
+-- 7.2 หมวดหมู่ "โจมตี" (ฟังก์ชัน "ฆ่าทั้งแมพ")
 -- =======================================================
 local expandHitboxEnabled = false
 
@@ -366,7 +367,7 @@ RunService.Stepped:Connect(function()
                 local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 if otherRoot then
                     otherRoot.Size = Vector3.new(999, 999, 999)
-                    otherRoot.Transparency = 1 -- ตั้งค่าความจางเป็น 100% (ล่องหน) ตั้งแต่แรก
+                    otherRoot.Transparency = 1
                     otherRoot.CanCollide = false
                 end
             end
@@ -551,7 +552,7 @@ GetToolBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- 9. หมวดหมู่ ESP
+-- 9. หมวดหมู่ ESP (รวม ESP ตัวละคร + ESPปืน)
 local espEnabled = false
 local SwitchFrame = Instance.new("Frame", ESPPage)
 SwitchFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -579,6 +580,35 @@ SwitchBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 SwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
 Instance.new("UICorner", SwitchBtn).CornerRadius = UDim.new(0, 5)
 table.insert(textLabelData, {Obj = SwitchBtn, BaseSize = 11})
+
+-- ฟังก์ชัน ESPปืน (ตรวจจับปืนที่ตกอยู่บนพื้น)
+local gunEspEnabled = false
+local GunEspFrame = Instance.new("Frame", ESPPage)
+GunEspFrame.Size = UDim2.new(1, 0, 0, 45)
+GunEspFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+Instance.new("UICorner", GunEspFrame).CornerRadius = UDim.new(0, 6)
+
+local GunEspLabel = Instance.new("TextLabel", GunEspFrame)
+GunEspLabel.Size = UDim2.new(0, 200, 1, 0)
+GunEspLabel.Position = UDim2.new(0, 10, 0, 0)
+GunEspLabel.Text = "ESPปืน (ปืนที่ตกพื้น)"
+GunEspLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+GunEspLabel.Font = Enum.Font.Gotham
+GunEspLabel.TextSize = 12
+GunEspLabel.TextXAlignment = Enum.TextXAlignment.Left
+GunEspLabel.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = GunEspLabel, BaseSize = 12})
+
+local GunEspBtn = Instance.new("TextButton", GunEspFrame)
+GunEspBtn.Size = UDim2.new(0, 80, 0, 26)
+GunEspBtn.Position = UDim2.new(1, -88, 0.5, -13)
+GunEspBtn.Font = Enum.Font.GothamBold
+GunEspBtn.TextSize = 11
+GunEspBtn.Text = "ปิด (OFF)"
+GunEspBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+GunEspBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+Instance.new("UICorner", GunEspBtn).CornerRadius = UDim.new(0, 5)
+table.insert(textLabelData, {Obj = GunEspBtn, BaseSize = 11})
 
 local InfoBox = Instance.new("Frame", ESPPage)
 InfoBox.Size = UDim2.new(1, 0, 0, 75)
@@ -625,58 +655,108 @@ local function ClearAllHighlights()
     end
 end
 
+local function ClearGunHighlights()
+    for _, obj in pairs(Workspace:GetChildren()) do
+        if obj.Name == "GunDrop" or obj.Name == "Gun" or (obj:IsA("Tool") and not obj.Parent:IsA("Model")) then
+            local hl = obj:FindFirstChild("GunDropHighlight")
+            if hl then hl:Destroy() end
+        end
+    end
+end
+
 SwitchBtn.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
     SwitchBtn.Text = espEnabled and "เปิด (ON)" or "ปิด (OFF)"
     SwitchBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
     SwitchBtn.TextColor3 = espEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
-    if not espEnabled then ClearAllHighlights() end
+    if not espEnabled then 
+        ClearAllHighlights() 
+        for _, textObj in pairs(espTextObjects) do
+            textObj:Remove()
+        end
+        espTextObjects = {}
+    end
+end)
+
+GunEspBtn.MouseButton1Click:Connect(function()
+    gunEspEnabled = not gunEspEnabled
+    GunEspBtn.Text = gunEspEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    GunEspBtn.BackgroundColor3 = gunEspEnabled and Color3.fromRGB(80, 150, 100) or Color3.fromRGB(60, 60, 70)
+    GunEspBtn.TextColor3 = gunEspEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
+    if not gunEspEnabled then ClearGunHighlights() end
 end)
 
 RunService.RenderStepped:Connect(function()
-    for _, v in pairs(espTextObjects) do pcall(function() v:Remove() end) end
+    -- เคลียร์ข้อความ Drawing เก่าทิ้งทุกเฟรมอย่างถูกต้อง
+    for _, textObj in pairs(espTextObjects) do
+        textObj:Remove()
+    end
     espTextObjects = {}
 
-    if not espEnabled then return end
+    -- ESP ตัวละคร
+    if espEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local character = player.Character
+                local head = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
+                
+                if head then
+                    local pos, onScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.8, 0))
+                    local charKnife, charGun = ScanTools(character)
+                    local packKnife, packGun = ScanTools(player:FindFirstChild("Backpack"))
 
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local character = player.Character
-            local head = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
-            
-            if head then
-                local pos, onScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.8, 0))
-                local charKnife, charGun = ScanTools(character)
-                local packKnife, packGun = ScanTools(player:FindFirstChild("Backpack"))
+                    local color = Color3.fromRGB(80, 200, 100)
+                    if charKnife or packKnife then
+                        color = Color3.fromRGB(220, 80, 80)
+                    elseif charGun or packGun then
+                        color = Color3.fromRGB(80, 150, 220)
+                    end
 
-                local color = Color3.fromRGB(80, 200, 100)
-                if charKnife or packKnife then
-                    color = Color3.fromRGB(220, 80, 80)
-                elseif charGun or packGun then
-                    color = Color3.fromRGB(80, 150, 220)
+                    local highlight = character:FindFirstChild("ESPHighlight")
+                    if not highlight then
+                        highlight = Instance.new("Highlight")
+                        highlight.Name = "ESPHighlight"
+                        highlight.Parent = character
+                    end
+                    highlight.FillColor = color
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.FillTransparency = 0.5
+                    highlight.OutlineTransparency = 0.2
+
+                    if onScreen then
+                        local textObj = Drawing.new("Text")
+                        textObj.Text = player.Name
+                        textObj.Color = color
+                        textObj.Position = Vector2.new(pos.X, pos.Y)
+                        textObj.Center = true
+                        textObj.Outline = true
+                        textObj.Size = 14
+                        textObj.Visible = true
+                        table.insert(espTextObjects, textObj)
+                    end
                 end
+            end
+        end
+    end
 
-                local highlight = character:FindFirstChild("ESPHighlight")
-                if not highlight then
-                    highlight = Instance.new("Highlight")
-                    highlight.Name = "ESPHighlight"
-                    highlight.Parent = character
-                end
-                highlight.FillColor = color
-                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                highlight.FillTransparency = 0.5
-                highlight.OutlineTransparency = 0.2
-
-                if onScreen then
-                    local textObj = Drawing.new("Text")
-                    textObj.Text = player.Name
-                    textObj.Color = color
-                    textObj.Position = Vector2.new(pos.X, pos.Y)
-                    textObj.Center = true
-                    textObj.Outline = true
-                    textObj.Size = 14
-                    textObj.Visible = true
-                    table.Inst(espTextObjects, textObj)
+    -- ESP ปืนที่ตกอยู่บนพื้น
+    if gunEspEnabled then
+        for _, obj in pairs(Workspace:GetChildren()) do
+            local isGunDrop = (obj.Name == "GunDrop" or obj.Name == "Gun" or (obj:IsA("Tool") and not obj.Parent:IsA("Model")))
+            if isGunDrop then
+                local targetPart = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")) or (obj:IsA("BasePart") and obj)
+                
+                if targetPart then
+                    local gunHighlight = obj:FindFirstChild("GunDropHighlight")
+                    if not gunHighlight then
+                        gunHighlight = Instance.new("Highlight")
+                        gunHighlight.Name = "GunDropHighlight"
+                        gunHighlight.Parent = obj
+                    end
+                    gunHighlight.FillColor = Color3.fromRGB(255, 220, 0)
+                    gunHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    gunHighlight.FillTransparency = 0.3
+                    gunHighlight.OutlineTransparency = 0.1
                 end
             end
         end
