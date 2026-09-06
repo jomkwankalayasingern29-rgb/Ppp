@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Ultimate Pull, Fling & Auto Shoot (Mobile Fix)
+-- 🥞 PancakeHub X GKHub | MM2 Ultimate Orbit Fling (Super Fast Fix)
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -318,7 +318,7 @@ CreateCreditCard(MainInfoPage, "ค่าย GKHub", "https://discord.gg/Ugssja4
 
 
 -- =======================================================
--- 7.2 หมวดหมู่ "โจมตี" (Hitbox 999, Pull & Shoot, และ Orbit Fling Killer)
+-- 7.2 หมวดหมู่ "โจมตี"
 -- =======================================================
 
 local function ScanTools(container)
@@ -493,7 +493,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 3. ฟังก์ชันใหม่แก้ปัญหา: ดีดฆาตกรออกนอกแมพแบบวิ่งวนรอบตัว (Orbit Fling Killer)
+-- 3. อัปเกรด: ระบบวิ่งวนรอบตัวฆาตกรแบบสปีดนรกและแม่นยำขึ้น (Super Fast Orbit Fling)
 local flingKillerEnabled = false
 local originalPosition = nil
 local FlingFrame = Instance.new("Frame", AttackPage)
@@ -504,7 +504,7 @@ Instance.new("UICorner", FlingFrame).CornerRadius = UDim.new(0, 6)
 local FlingLabel = Instance.new("TextLabel", FlingFrame)
 FlingLabel.Size = UDim2.new(0, 210, 1, 0)
 FlingLabel.Position = UDim2.new(0, 10, 0, 0)
-FlingLabel.Text = "ดีดฆาตกรออกนอกแมพ (Orbit Fling)"
+FlingLabel.Text = "ดีดฆาตกรออกนอกแมพ (Super Fast Orbit)"
 FlingLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 FlingLabel.Font = Enum.Font.Gotham
 FlingLabel.TextSize = 12
@@ -542,7 +542,7 @@ FlingBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ระบบวิ่งวนรอบตัวฆาตกรเพื่อกระแทก (Orbit Fling)
+-- ระบบวิ่งวนรอบตัวฆาตกรความเร็วสูงพิเศษ (Super Fast Orbit)
 RunService.Stepped:Connect(function()
     if flingKillerEnabled then
         local myChar = LocalPlayer.Character
@@ -556,9 +556,9 @@ RunService.Stepped:Connect(function()
                     if charKnife or packKnife then
                         local killerRoot = player.Character:FindFirstChild("HumanoidRootPart")
                         if killerRoot then
-                            -- คำนวณมุมหมุนรอบตัวฆาตกร (Orbit) ด้วยความเร็วสูง
-                            local angle = tick() * 35 
-                            local radius = 2.5 -- รัศมีวงโคจรติดชิดตัวฆาตกรพอดี
+                            -- เพิ่มความเร็วในการหมุนเป็น 120 และรัศมีชิดติดตัว 1.2 เพื่อให้โดนตัวฆาตกรเต็มๆ
+                            local angle = tick() * 120 
+                            local radius = 1.2 
                             local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
                             
                             myRoot.CFrame = killerRoot.CFrame + offset
