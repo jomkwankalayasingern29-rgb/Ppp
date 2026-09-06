@@ -1,10 +1,11 @@
--- ==================== GKHub X PancakeHub & MM2 (Final Fix) ====================
+-- ==================== GKHub X PancakeHub & MM2 (Fixed Version) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
 if CoreGui:FindFirstChild("DeltaCustomUI") then 
@@ -18,158 +19,10 @@ ScreenGui.Parent = CoreGui
 
 local writeClipboard = setclipboard or toclipboard or function() end
 
--- ==================== KILL FEED SYSTEM ====================
-local KillFeedContainer = Instance.new("Frame", ScreenGui)
-KillFeedContainer.Name = "KillFeedContainer"
-KillFeedContainer.Size = UDim2.new(0, 320, 0, 250)
-KillFeedContainer.Position = UDim2.new(0, 10, 0, 10)
-KillFeedContainer.BackgroundTransparency = 1
-KillFeedContainer.ClipsDescendants = false
-
-local KillFeedLayout = Instance.new("UIListLayout", KillFeedContainer)
-KillFeedLayout.SortOrder = Enum.SortOrder.LayoutOrder
-KillFeedLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-KillFeedLayout.Padding = UDim.new(0, 6)
-
-local killFeedEnabled = true
-
-local function GetPlayerRole(player)
-    local function ScanTools(container)
-        if not container then return false, false end
-        local hasKnife, hasGun = false, false
-        for _, item in pairs(container:GetChildren()) do
-            if item:IsA("Tool") then
-                local n = string.lower(item.Name)
-                if n:find("knife") or n:find("dagger") or n:find("blade") then hasKnife = true end
-                if n:find("gun") or n:find("pistol") or n:find("revolver") then hasGun = true end
-            end
-        end
-        return hasKnife, hasGun
-    end
-
-    local cKnife, cGun = ScanTools(player.Character)
-    local bKnife, bGun = ScanTools(player.Backpack)
-
-    if cKnife or bKnife then
-        return "ฆาตกร", Color3.fromRGB(255, 60, 60)
-    elseif cGun or bGun then
-        return "นายอำเภอ", Color3.fromRGB(0, 162, 255)
-    else
-        return "ผู้บริสุทธิ์", Color3.fromRGB(220, 220, 220)
-    end
-end
-
-local function AddKillFeedMessage(killer, victim, weaponName)
-    if not killFeedEnabled then return end
-    task.spawn(function()
-        local kRole, kColor = GetPlayerRole(killer)
-        local vRole, vColor = GetPlayerRole(victim)
-
-        local ItemFrame = Instance.new("Frame", KillFeedContainer)
-        ItemFrame.Size = UDim2.new(1, 0, 0, 32)
-        ItemFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
-        ItemFrame.BackgroundTransparency = 0.2
-        ItemFrame.Position = UDim2.new(-1.2, 0, 0, 0)
-        ItemFrame.ClipsDescendants = true
-
-        Instance.new("UICorner", ItemFrame).CornerRadius = UDim.new(0, 6)
-        local stroke = Instance.new("UIStroke", ItemFrame)
-        stroke.Color = kColor
-        stroke.Thickness = 1.2
-
-        local KillerHead = Instance.new("ImageLabel", ItemFrame)
-        KillerHead.Size = UDim2.new(0, 24, 0, 24)
-        KillerHead.Position = UDim2.new(0, 4, 0.5, -12)
-        KillerHead.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-        Instance.new("UICorner", KillerHead).CornerRadius = UDim.new(1, 0)
-
-        -- ดึงรูปโปรไฟล์แบบแยกเธรด ป้องกันเกมค้าง
-        task.spawn(function()
-            pcall(function()
-                local content = Players:GetUserThumbnailAsync(killer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-                KillerHead.Image = content
-            end)
-        end)
-
-        local MsgLabel = Instance.new("TextLabel", ItemFrame)
-        MsgLabel.Size = UDim2.new(1, -34, 1, 0)
-        MsgLabel.Position = UDim2.new(0, 32, 0, 0)
-        MsgLabel.BackgroundTransparency = 1
-        MsgLabel.Font = Enum.Font.GothamBold
-        MsgLabel.TextSize = 10
-        MsgLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-        if killer == victim then
-            MsgLabel.Text = killer.Name .. " ตายด้วยตนเอง (" .. weaponName .. ")"
-            MsgLabel.TextColor3 = vColor
-        else
-            MsgLabel.Text = killer.Name .. " ฆ่า " .. victim.Name .. " ด้วย " .. weaponName
-            MsgLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        end
-
-        local tweenIn = TweenService:Create(ItemFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, 0, 0, 0)
-        })
-        tweenIn:Play()
-
-        task.wait(2)
-
-        local tweenOut = TweenService:Create(ItemFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-            BackgroundTransparency = 1,
-            Position = UDim2.new(-1.2, 0, 0, 0)
-        })
-        local strokeFade = TweenService:Create(stroke, TweenInfo.new(0.4), {Transparency = 1})
-        local textFade = TweenService:Create(MsgLabel, TweenInfo.new(0.4), {TextTransparency = 1})
-        
-        tweenOut:Play()
-        strokeFade:Play()
-        textFade:Play()
-
-        tweenOut.Completed:Connect(function()
-            ItemFrame:Destroy()
-        end)
-    end)
-end
-
-local function MonitorPlayer(player)
-    player.CharacterAdded:Connect(function(char)
-        local humanoid = char:WaitForChild("Humanoid", 5)
-        if humanoid then
-            humanoid.Died:Connect(function()
-                local killer = player
-                local weapon = "ความตาย"
-                
-                for _, other in pairs(Players:GetPlayers()) do
-                    if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
-                        local oRoot = other.Character.HumanoidRootPart
-                        local pRoot = char:FindFirstChild("HumanoidRootPart")
-                        if pRoot and (oRoot.Position - pRoot.Position).Magnitude < 35 then
-                            killer = other
-                            local kKnife, kGun = GetPlayerRole(other)
-                            if kKnife == "ฆาตกร" then weapon = "มีด" 
-                            elseif kGun == "นายอำเภอ" then weapon = "ปืน" 
-                            else weapon = "อาวุธ" end
-                            break
-                        end
-                    end
-                end
-
-                AddKillFeedMessage(killer, player, weapon)
-            end)
-        end
-    end)
-end
-
-for _, p in pairs(Players:GetPlayers()) do
-    MonitorPlayer(p)
-end
-Players.PlayerAdded:Connect(MonitorPlayer)
-
--- ==================== UI หลัก (แยกทำงานอิสระ) ====================
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
-LoadFrame.Size = UDim2.new(0, 300, 0, 65)
-LoadFrame.Position = UDim2.new(0.5, -150, 0.5, -32)
+LoadFrame.Size = UDim2.new(0, 300, 0, 75)
+LoadFrame.Position = UDim2.new(0.5, -150, 0.5, -37)
 LoadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 LoadFrame.BorderSizePixel = 0
 LoadFrame.Parent = ScreenGui
@@ -181,13 +34,23 @@ LoadStroke.Thickness = 1.5
 
 local LoadText = Instance.new("TextLabel")
 LoadText.Name = "LoadText"
-LoadText.Size = UDim2.new(1, 0, 1, 0)
+LoadText.Size = UDim2.new(1, 0, 0, 40)
 LoadText.BackgroundTransparency = 1
 LoadText.Font = Enum.Font.GothamBold
 LoadText.Text = "กำลังโหลด..."
 LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
-LoadText.TextSize = 16
+LoadText.TextSize = 15
 LoadText.Parent = LoadFrame
+
+local SkipBtn = Instance.new("TextButton", LoadFrame)
+SkipBtn.Size = UDim2.new(0, 120, 0, 22)
+SkipBtn.Position = UDim2.new(0.5, -60, 0, 45)
+SkipBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+SkipBtn.Text = "ข้าม / เข้าทันที"
+SkipBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SkipBtn.Font = Enum.Font.GothamBold
+SkipBtn.TextSize = 11
+Instance.new("UICorner", SkipBtn).CornerRadius = UDim.new(0, 4)
 
 local baseWidth = 520
 local baseHeight = 360
@@ -205,7 +68,7 @@ MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
-MainFrame.BackgroundTransparency = 1
+MainFrame.BackgroundTransparency = 0
 
 local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(0, 162, 255)
@@ -237,7 +100,7 @@ LogoG.TextSize = 14
 local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 380, 1, 0)
 TitleText.Position = UDim2.new(0, 38, 0, 0)
-TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Kill Feed)"
+TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Full Version)"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 12
@@ -341,6 +204,7 @@ local AttackPage = CreateTab("โจมตี")
 local HelperPage = CreateTab("ช่วยเล่น")
 local UIPage = CreateTab("UI")
 local PlayerPage = CreateTab("ตัวละคร")
+local ToolPage = CreateTab("เครื่องมือ")
 local ESPPage = CreateTab("ESP")
 
 tabs["หลัก"].Page.Visible = true
@@ -494,13 +358,6 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
-CreateFeatureRow(UIPage, "แสดงหน้าต่างการตาย (Kill Feed)", "เปิด (ON)", Color3.fromRGB(0, 162, 255), function(btn)
-    killFeedEnabled = not killFeedEnabled
-    btn.Text = killFeedEnabled and "เปิด (ON)" or "ปิด (OFF)"
-    btn.BackgroundColor3 = killFeedEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
-    KillFeedContainer.Visible = killFeedEnabled
-end)
-
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
@@ -555,6 +412,21 @@ task.spawn(function()
     end
 end)
 
+CreateFeatureRow(HelperPage, "วาร์ปไปเก็บเหรียญ 1 ครั้ง", "วาร์ป", Color3.fromRGB(0, 162, 255), function()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                local name = string.lower(obj.Name)
+                if name == "coin" or name == "cd" or name == "coinvisual" or obj.Parent.Name == "CoinContainer" or obj:FindFirstChild("Coin") then
+                    char.HumanoidRootPart.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
+                    break
+                end
+            end
+        end
+    end
+end)
+
 CreateSlider(UIPage, "ความทึบของ UI", 1, 100, 100, "%", function(val)
     currentAlpha = val / 100
     local transparency = 1 - currentAlpha
@@ -577,6 +449,198 @@ CreateSlider(UIPage, "ขนาดความใหญ่ UI", 50, 150, 100, "%
     end
 end)
 
+local HeaderSummary = Instance.new("TextLabel", UIPage)
+HeaderSummary.Size = UDim2.new(0.96, 0, 0, 24)
+HeaderSummary.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+HeaderSummary.Text = "ผู้รอดชีวิต: 0 คน | ตายไปแล้ว: 0 คน"
+HeaderSummary.TextColor3 = Color3.fromRGB(0, 162, 255)
+HeaderSummary.Font = Enum.Font.GothamBold
+HeaderSummary.TextSize = 11
+HeaderSummary.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = HeaderSummary, BaseSize = 11})
+
+local StatusContainer = Instance.new("ScrollingFrame", UIPage)
+StatusContainer.Name = "StatusContainer"
+StatusContainer.Size = UDim2.new(0.96, 0, 0, 175)
+StatusContainer.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+StatusContainer.BorderSizePixel = 0
+StatusContainer.ScrollBarThickness = 2
+StatusContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+StatusContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Instance.new("UICorner", StatusContainer).CornerRadius = UDim.new(0, 6)
+
+local StatusLayout = Instance.new("UIListLayout", StatusContainer)
+StatusLayout.SortOrder = Enum.SortOrder.LayoutOrder
+StatusLayout.Padding = UDim.new(0, 4)
+StatusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local function ScanToolsForRole(container)
+    if not container then return false, false end
+    local hasKnife, hasGun = false, false
+    for _, item in pairs(container:GetChildren()) do
+        if item:IsA("Tool") then
+            local n = string.lower(item.Name)
+            if n:find("knife") or n:find("dagger") or n:find("blade") then hasKnife = true end
+            if n:find("gun") or n:find("pistol") or n:find("revolver") then hasGun = true end
+        end
+    end
+    return hasKnife, hasGun
+end
+
+local playerCardPool = {}
+local playerLastChar = {}
+
+task.spawn(function()
+    while true do
+        pcall(function()
+            local aliveCount = 0
+            local deadCount = 0
+            local playerRoleData = {}
+
+            for _, player in pairs(Players:GetPlayers()) do
+                local char = player.Character
+                local isAlive = false
+                
+                if playerLastChar[player] ~= char then
+                    playerLastChar[player] = char
+                end
+
+                if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                    local head = char:FindFirstChild("Head")
+                    if not head or head.Transparency < 1 then
+                        isAlive = true
+                        aliveCount = aliveCount + 1
+                    else
+                        deadCount = deadCount + 1
+                    end
+                else
+                    deadCount = deadCount + 1
+                end
+
+                local cKnife, cGun = ScanToolsForRole(char)
+                local bKnife, bGun = false, false
+                local bp = player:FindFirstChild("Backpack")
+                if bp then
+                    bKnife, bGun = ScanToolsForRole(bp)
+                end
+                
+                local roleType = 3
+                local roleNameStr = "ผู้บริสุทธิ์"
+                local roleColor = Color3.fromRGB(200, 200, 200)
+
+                if cKnife or bKnife then
+                    roleType = 1
+                    roleNameStr = "ฆาตกร"
+                    roleColor = Color3.fromRGB(255, 60, 60)
+                elseif cGun or bGun then
+                    roleType = 2
+                    roleNameStr = "นายอำเภอ"
+                    roleColor = Color3.fromRGB(0, 162, 255)
+                end
+
+                table.insert(playerRoleData, {
+                    Player = player,
+                    IsAlive = isAlive,
+                    RoleType = roleType,
+                    RoleName = roleNameStr,
+                    RoleColor = roleColor
+                })
+            end
+
+            HeaderSummary.Text = string.format("ผู้รอดชีวิต: %d คน | ตายไปแล้ว: %d คน", aliveCount, deadCount)
+
+            table.sort(playerRoleData, function(a, b)
+                if a.RoleType ~= b.RoleType then
+                    return a.RoleType < b.RoleType
+                end
+                return a.Player.Name < b.Player.Name
+            end)
+
+            for _, card in pairs(playerCardPool) do
+                card.Visible = false
+            end
+
+            for i, data in ipairs(playerRoleData) do
+                local pCard = playerCardPool[i]
+                if not pCard then
+                    pCard = Instance.new("Frame", StatusContainer)
+                    pCard.Size = UDim2.new(0.96, 0, 0, 32)
+                    pCard.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
+                    Instance.new("UICorner", pCard).CornerRadius = UDim.new(0, 5)
+
+                    local headshot = Instance.new("ImageLabel", pCard)
+                    headshot.Name = "Headshot"
+                    headshot.Size = UDim2.new(0, 24, 0, 24)
+                    headshot.Position = UDim2.new(0, 4, 0.5, -12)
+                    headshot.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                    Instance.new("UICorner", headshot).CornerRadius = UDim.new(1, 0)
+
+                    local deadX = Instance.new("TextLabel", headshot)
+                    deadX.Name = "DeadX"
+                    deadX.Size = UDim2.new(1, 0, 1, 0)
+                    deadX.BackgroundTransparency = 1
+                    deadX.Text = "X"
+                    deadX.TextColor3 = Color3.fromRGB(255, 50, 50)
+                    deadX.Font = Enum.Font.GothamBold
+                    deadX.TextSize = 16
+                    deadX.TextXAlignment = Enum.TextXAlignment.Center
+                    deadX.TextYAlignment = Enum.TextYAlignment.Center
+
+                    local nameLabel = Instance.new("TextLabel", pCard)
+                    nameLabel.Name = "NameLabel"
+                    nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+                    nameLabel.Position = UDim2.new(0, 34, 0, 0)
+                    nameLabel.BackgroundTransparency = 1
+                    nameLabel.Font = Enum.Font.GothamBold
+                    nameLabel.TextSize = 10
+                    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+                    local stateLabel = Instance.new("TextLabel", pCard)
+                    stateLabel.Name = "StateLabel"
+                    stateLabel.Size = UDim2.new(0.3, 0, 1, 0)
+                    stateLabel.Position = UDim2.new(0.68, 0, 0, 0)
+                    stateLabel.BackgroundTransparency = 1
+                    stateLabel.Font = Enum.Font.GothamBold
+                    stateLabel.TextSize = 10
+                    stateLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+                    playerCardPool[i] = pCard
+                end
+
+                pCard.Visible = true
+                pCard.LayoutOrder = i
+
+                local headshot = pCard:FindFirstChild("Headshot")
+                local deadX = headshot and headshot:FindFirstChild("DeadX")
+                local nameLabel = pCard:FindFirstChild("NameLabel")
+                local stateLabel = pCard:FindFirstChild("StateLabel")
+
+                if headshot then
+                    pcall(function()
+                        local content, isReady = Players:GetUserThumbnailAsync(data.Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+                        if isReady then headshot.Image = content end
+                    end)
+                end
+
+                if deadX then
+                    deadX.Visible = not data.IsAlive
+                end
+
+                if nameLabel then
+                    nameLabel.Text = data.Player.Name .. " (" .. data.RoleName .. ")"
+                    nameLabel.TextColor3 = data.RoleColor
+                end
+
+                if stateLabel then
+                    stateLabel.Text = data.IsAlive and "รอดชีวิต" or "ตายแล้ว"
+                    stateLabel.TextColor3 = data.IsAlive and Color3.fromRGB(80, 220, 100) or Color3.fromRGB(220, 80, 80)
+                end
+            end
+        end)
+        task.wait(1)
+    end
+end)
+
 CreateSlider(PlayerPage, "ความเร็วในการวิ่ง (WalkSpeed)", 16, 250, 16, "", function(val)
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
@@ -589,6 +653,28 @@ CreateSlider(PlayerPage, "ความสูงในการกระโดด
     if char and char:FindFirstChild("Humanoid") then
         char.Humanoid.UseJumpPower = true
         char.Humanoid.JumpPower = val
+    end
+end)
+
+local passPlayersEnabled = false
+CreateFeatureRow(PlayerPage, "กันโปรเตะออกแมพ", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+    passPlayersEnabled = not passPlayersEnabled
+    btn.Text = passPlayersEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    btn.BackgroundColor3 = passPlayersEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
+end)
+
+RunService.Stepped:Connect(function()
+    if passPlayersEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                for _, part in pairs(player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                        part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end
+        end
     end
 end)
 
@@ -610,12 +696,72 @@ RunService.Stepped:Connect(function()
     end
 end)
 
+local infJumpEnabled = false
+CreateFeatureRow(PlayerPage, "กระโดดไม่จำกัด (Inf Jump)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+    infJumpEnabled = not infJumpEnabled
+    btn.Text = infJumpEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    btn.BackgroundColor3 = infJumpEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if infJumpEnabled then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+CreateFeatureRow(ToolPage, "รับไอเทมคลิกวาร์ป (Click TP)", "รับไอเทม", Color3.fromRGB(0, 162, 255), function()
+    local mouse = LocalPlayer:GetMouse()
+    local tool = Instance.new("Tool")
+    tool.Name = "Click TP Tool"
+    tool.RequiresHandle = false
+    tool.Parent = LocalPlayer.Backpack
+
+    tool.Activated:Connect(function()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local targetPos = mouse.Hit.Position + Vector3.new(0, 3, 0)
+            char.HumanoidRootPart.CFrame = CFrame.new(targetPos)
+        end
+    end)
+end)
+
 local espEnabled = false
 CreateFeatureRow(ESPPage, "เปิดใช้งาน ESP ไฮไลท์ตัวละคร", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     espEnabled = not espEnabled
     btn.Text = espEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = espEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
+    
+    if not espEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character then
+                local hl = player.Character:FindFirstChild("ESPHighlight")
+                if hl then hl:Destroy() end
+                local bg = player.Character:FindFirstChild("ESPBillboard")
+                if bg then bg:Destroy() end
+            end
+        end
+    end
 end)
+
+local InfoBox = Instance.new("Frame", ESPPage)
+InfoBox.Size = UDim2.new(0.96, 0, 0, 75)
+InfoBox.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+Instance.new("UICorner", InfoBox).CornerRadius = UDim.new(0, 6)
+
+local InfoText = Instance.new("TextLabel", InfoBox)
+InfoText.Size = UDim2.new(1, -12, 1, 0)
+InfoText.Position = UDim2.new(0, 6, 0, 0)
+InfoText.Text = "• สีแดง = มีมีด (Knife / ฆาตกร)\n• สีฟ้า = มีปืน (Gun / นายอำเภอ)\n• สีเทา = คนปกติ (ผู้บริสุทธิ์)"
+InfoText.TextColor3 = Color3.fromRGB(180, 180, 190)
+InfoText.Font = Enum.Font.Gotham
+InfoText.TextSize = 10
+InfoText.TextYAlignment = Enum.TextYAlignment.Center
+InfoText.TextXAlignment = Enum.TextXAlignment.Left
+InfoText.BackgroundTransparency = 1
+table.insert(textLabelData, {Obj = InfoText, BaseSize = 10})
 
 local function ScanTools(container)
     local foundKnife, foundGun = false, false
@@ -662,6 +808,30 @@ RunService.RenderStepped:Connect(function()
                     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
                     highlight.FillTransparency = 0.5
                     highlight.OutlineTransparency = 0.2
+
+                    local billboard = character:FindFirstChild("ESPBillboard")
+                    if not billboard then
+                        billboard = Instance.new("BillboardGui")
+                        billboard.Name = "ESPBillboard"
+                        billboard.Size = UDim2.new(0, 100, 0, 30)
+                        billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+                        billboard.AlwaysOnTop = true
+                        billboard.Parent = character
+
+                        local nameLabel = Instance.new("TextLabel", billboard)
+                        nameLabel.Name = "NameLabel"
+                        nameLabel.Size = UDim2.new(1, 0, 1, 0)
+                        nameLabel.BackgroundTransparency = 1
+                        nameLabel.Font = Enum.Font.GothamBold
+                        nameLabel.TextSize = 12
+                        nameLabel.TextStrokeTransparency = 0
+                    end
+
+                    local textLabel = billboard:FindFirstChild("NameLabel")
+                    if textLabel then
+                        textLabel.Text = player.Name
+                        textLabel.TextColor3 = color
+                    end
                 end
             end
         end
@@ -670,20 +840,27 @@ end)
 
 local isMinimized = false
 local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-MinBtn.MouseButton1Click:Connect(function()
+
+local function ToggleMinimize()
     isMinimized = not isMinimized
     if isMinimized then
-        TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, baseWidth * currentScale, 0, 35)}):Play()
+        TweenService:Create(MainFrame, tweenInfo, {
+            Size = UDim2.new(0, baseWidth * currentScale, 0, 35)
+        }):Play()
         Sidebar.Visible = false
         ContentArea.Visible = false
         MinBtn.Text = "+"
     else
         Sidebar.Visible = true
         ContentArea.Visible = true
-        TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, baseWidth * currentScale, 0, baseHeight * currentScale)}):Play()
+        TweenService:Create(MainFrame, tweenInfo, {
+            Size = UDim2.new(0, baseWidth * currentScale, 0, baseHeight * currentScale)
+        }):Play()
         MinBtn.Text = "-"
     end
-end)
+end
+
+MinBtn.MouseButton1Click:Connect(ToggleMinimize)
 
 local Dragging, DragStart, StartPos
 TopBar.InputBegan:Connect(function(input)
@@ -701,13 +878,40 @@ UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then Dragging = false end
 end)
 
-task.spawn(function()
-    task.wait(1.5)
-    LoadFrame:Destroy()
+-- ระบบโหลดที่แก้ไขไม่ให้ค้าง และเพิ่มปุ่มกดข้าม
+local isLoadingDone = false
+
+local function FinishLoading()
+    if isLoadingDone then return end
+    isLoadingDone = true
+    
+    pcall(function()
+        writeClipboard("https://discord.gg/Ugssja4wqQ")
+    end)
+    
+    if LoadFrame and LoadFrame.Parent then
+        LoadFrame:Destroy()
+    end
+    
     MainFrame.Visible = true
-    MainFrame.Size = UDim2.new(0, 320, 0, 180)
-    TweenService:Create(MainFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, baseWidth, 0, baseHeight),
-        BackgroundTransparency = 0
-    }):Play()
+end
+
+SkipBtn.MouseButton1Click:Connect(FinishLoading)
+
+task.spawn(function()
+    local dots = {"", ".", "..", "..."}
+    for i = 1, 3 do
+        if isLoadingDone then break end
+        for _, d in ipairs(dots) do
+            if isLoadingDone then break end
+            LoadText.Text = "กำลังโหลดทรัพยากร" .. d
+            task.wait(0.3)
+        end
+    end
+    
+    if not isLoadingDone then
+        LoadText.Text = "คัดลอกลิงก์ Discord แล้ว!"
+        task.wait(1)
+        FinishLoading()
+    end
 end)
