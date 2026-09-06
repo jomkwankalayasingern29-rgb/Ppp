@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 (Mobile Touch Fixed Version) ====================
+-- ==================== GKHub X PancakeHub & MM2 (KillFeed Touch Fixed Version) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -108,7 +108,7 @@ LogoG.ZIndex = 4
 local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 380, 1, 0)
 TitleText.Position = UDim2.new(0, 38, 0, 0)
-TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Mobile Fix)"
+TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Fix Touch)"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 12
@@ -384,7 +384,7 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- ==================== KILL FEED SYSTEM (LEFT-TOP BLACK THEME) ====================
+-- ==================== KILL FEED SYSTEM (PASS-THROUGH TOUCH FIX) ====================
 local KillFeedHolder = Instance.new("ScrollingFrame", ScreenGui)
 KillFeedHolder.Name = "KillFeedHolder"
 KillFeedHolder.Size = UDim2.new(0, 320, 0, 220)
@@ -396,8 +396,7 @@ KillFeedHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
 KillFeedHolder.AutomaticCanvasSize = Enum.AutomaticSize.Y
 KillFeedHolder.Visible = true
 KillFeedHolder.ZIndex = 5
-KillFeedHolder.Active = false
-KillFeedHolder.Selectable = false
+KillFeedHolder.Active = false -- ป้องกันไม่ให้บล็อกการสัมผัสจอ (ทำให้ทะลุไปเดิน/เลื่อนจอได้)
 
 local KillFeedLayout = Instance.new("UIListLayout", KillFeedHolder)
 KillFeedLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -412,6 +411,7 @@ local function ShowDeathFeed(killerName, killerRole, victimName, victimRole, wea
     FeedItem.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
     FeedItem.BackgroundTransparency = 0.2
     FeedItem.ZIndex = 6
+    FeedItem.Active = false -- ป้องกันบล็อกทัช
     Instance.new("UICorner", FeedItem).CornerRadius = UDim.new(0, 6)
 
     local Stroke = Instance.new("UIStroke", FeedItem)
@@ -428,6 +428,7 @@ local function ShowDeathFeed(killerName, killerRole, victimName, victimRole, wea
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.RichText = true
     Label.ZIndex = 7
+    Label.Active = false -- ป้องกันบล็อกทัช
 
     local function getRoleColorHex(role)
         if role == 1 then return "#FF3C3C"
