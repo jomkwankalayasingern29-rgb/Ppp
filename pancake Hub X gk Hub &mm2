@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHUB | Murder Mystery 2 (MM2) - Final Stable
+-- 🥞 PancakeHUB | Murder Mystery 2 (MM2) - Stable Version
 -- =======================================================
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -16,7 +16,7 @@ for _, v in pairs(container:GetChildren()) do
 existingGuis[v] = true
 end
 end
-​-- 📦 2. โหลด MacLib UI (ขนาดพอดี ไม่ล้นหน้าจอ)
+​-- 📦 2. โหลด MacLib UI
 ​local success, MacLib = pcall(function()
 return loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 end)
@@ -27,7 +27,7 @@ end
 ​local Window = MacLib:Window({
 Title = "PancakeHUB | MM2",
 Subtitle = "Mobile Version",
-Size = UDim2.fromOffset(500, 280), -- 📱 ปรับขนาดให้พอดี ไม่เล็กเกินไปจนคอมโพเนนต์พัง
+Size = UDim2.fromOffset(500, 280),
 DragStyle = 1,
 Keybind = Enum.KeyCode.RightControl,
 AcrylicBlur = false,
@@ -209,8 +209,7 @@ scriptRunning = false
 if ToggleGui then ToggleGui:Destroy() end
 if highlightFolder then highlightFolder:Destroy() end
 clearDrawings()
-​-- ปิดหน้าต่าง MacLib และ GUI ทั้งหมด
-if macGui then macGui:Destroy() end
+​if macGui then macGui:Destroy() end
 pcall(function() Window:Destroy() end)
 end,
 })
