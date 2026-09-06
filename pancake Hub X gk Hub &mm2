@@ -1,282 +1,235 @@
--- STREAMING_CHUNK:Initializing services and environment...
+-- =============================================================================
+-- PancakeHUB | MM2 (Delta Mobile Fixed Version)
+-- =============================================================================
+if not game:IsLoaded() then game.Loaded:Wait() end
+
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-​-- STREAMING_CHUNK:Configuring mobile containers...
-local containers = {CoreGui, PlayerGui}
-if gethui then table.insert(containers, gethui()) end
-​local existingGuis = {}
-for _, container in pairs(containers) do
-for _, v in pairs(container:GetChildren()) do
-existingGuis[v] = true
-end
-end
-​-- STREAMING_CHUNK:Loading MacLib UI library safely...
-local success, MacLib = pcall(function()
-return loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
-end)
-​if not success or not MacLib then
-warn("PancakeHUB: Failed to load MacLib!")
-return
-end
-​-- STREAMING_CHUNK:Creating window with compact mobile size...
-local Window = MacLib:Window({
-Title = "🥞 PancakeHUB | MM2",
-Subtitle = "Mobile Optimized",
-Size = UDim2.fromOffset(400, 240), -- 📱 ปรับขนาดหน้าต่างให้เล็กลงกะทัดรัด ไม่บังจอ
-DragStyle = 1, -- รองรับการลากหน้าต่างเมนู
-Keybind = Enum.KeyCode.RightControl,
-AcrylicBlur = false, -- ปิดความเบลอ ป้องกันมือถือแครช
-})
-​-- STREAMING_CHUNK:Scanning for UI elements...
-local macGui = nil
-task.spawn(function()
-task.wait(0.5)
-for _, container in pairs(containers) do
-for _, v in pairs(container:GetChildren()) do
-if not existingGuis[v] and v:IsA("ScreenGui") and v.Name ~= "TouchGui" and v.Name ~= "PancakeHUB_MobileToggle" and v.Name ~= "PancakeHUB_TrashToggle" then
-macGui = v
-end
-end
-end
-end)
-​-- STREAMING_CHUNK:Rendering toggle button...
-local ToggleGui = Instance.new("ScreenGui")
-local ToggleButton = Instance.new("TextButton")
-local UICorner = Instance.new("UICorner")
-local UIStroke = Instance.new("UIStroke")
-​ToggleGui.Name = "PancakeHUB_MobileToggle"
-ToggleGui.Parent = CoreGui
-ToggleGui.ResetOnSpawn = false
-​ToggleButton.Name = "ToggleButton"
-ToggleButton.Parent = ToggleGui
-ToggleButton.Position = UDim2.new(0, 15, 0.35, 0)
-ToggleButton.Size = UDim2.new(0, 42, 0, 42) -- ขนาดปุ่มกะทัดรัด
-ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-ToggleButton.Text = "🥞"
-ToggleButton.TextSize = 20
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.Active = true
-ToggleButton.Draggable = true
-​UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = ToggleButton
-UIStroke.Color = Color3.fromRGB(255, 180, 50)
-UIStroke.Thickness = 2
-UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-UIStroke.Parent = ToggleButton
-​local uiVisible = true
-ToggleButton.MouseButton1Click:Connect(function()
-if macGui then
-uiVisible = not uiVisible
-macGui.Enabled = uiVisible
-end
-end)
-​-- STREAMING_CHUNK:Rendering trash button...
-local TrashGui = Instance.new("ScreenGui")
-local TrashButton = Instance.new("TextButton")
-local TrashCorner = Instance.new("UICorner")
-local TrashStroke = Instance.new("UIStroke")
-​TrashGui.Name = "PancakeHUB_TrashToggle"
-TrashGui.Parent = CoreGui
-TrashGui.ResetOnSpawn = false
-​TrashButton.Name = "TrashButton"
-TrashButton.Parent = TrashGui
-TrashButton.Position = UDim2.new(0, 15, 0.48, 0) -- อยู่ใต้ปุ่มแพนเค้กเล็กน้อย
-TrashButton.Size = UDim2.new(0, 42, 0, 42)
-TrashButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrashButton.Text = "🗑️"
-TrashButton.TextSize = 20
-TrashButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-TrashButton.Active = true
-TrashButton.Draggable = true
-​TrashCorner.CornerRadius = UDim.new(0, 10)
-TrashCorner.Parent = TrashButton
-TrashStroke.Color = Color3.fromRGB(255, 80, 80)
-TrashStroke.Thickness = 2
-TrashStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-TrashStroke.Parent = TrashButton
-​-- ตัวแปรสถานะการทำงาน
-local scriptRunning = true
-​-- ฟังก์ชันลบสคริปต์และ UI ทั้งหมดทิ้ง
-TrashButton.MouseButton1Click:Connect(function()
-scriptRunning = false
-​-- ทำลายปุ่มลอยตัว
-if ToggleGui then ToggleGui:Destroy() end
-if TrashGui then TrashGui:Destroy() end
-​-- ทำลาย Folder ESP 3D
+
+-- ลบ UI เก่าทิ้งก่อนรันใหม่
+if CoreGui:FindFirstChild("PancakeHUB_MobileToggle") then CoreGui.PancakeHUB_MobileToggle:Destroy() end
+if CoreGui:FindFirstChild("PancakeHUB_TrashToggle") then CoreGui.PancakeHUB_TrashToggle:Destroy() end
+if CoreGui:FindFirstChild("PancakeHUB_MainUI") then CoreGui.PancakeHUB_MainUI:Destroy() end
 local oldFolder = CoreGui:FindFirstChild("PancakeHUB_3DESP")
 if oldFolder then oldFolder:Destroy() end
-​-- ลบ Drawing ทั้งหมด
-for _, line in pairs(tracerPool) do if line.Remove then line:Remove() end end
-for _, box in pairs(boxPool) do if box.Remove then box:Remove() end end
-​-- ลบหน้าต่าง MacLib UI หลัก
-if macGui then macGui:Destroy() end
-end)
-​-- STREAMING_CHUNK:Defining ESP variables and pools...
+
+-- สร้างหน้าต่าง UI หลักแบบเรียบง่าย (รองรับมือถือ)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PancakeHUB_MainUI"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 260, 0, 220)
+MainFrame.Position = UDim2.new(0.5, -130, 0.5, -110)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner", MainFrame)
+MainCorner.CornerRadius = UDim.new(0, 8)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.Text = "🥞 PancakeHUB | MM2"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.Font = Enum.Font.GothamBold
+Title.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner", Title)
+TitleCorner.CornerRadius = UDim.new(0, 8)
+
+-- ตัวแปรสถานะ ESP
 local esp3D = false
 local espTracer = false
 local espGreenbox = false
-​-- Folder สำหรับเก็บ Highlight 3D
+
+-- ฟังก์ชันสร้างปุ่มเปิด/ปิดฟังก์ชันใน UI
+local function createButton(name, posY, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 35)
+    btn.Position = UDim2.new(0.05, 0, 0, posY)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.Text = name .. ": ปิด"
+    btn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    btn.TextSize, btn.Font = 12, Enum.Font.GothamBold
+    btn.Parent = MainFrame
+    
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0, 6)
+    
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        if state then
+            btn.Text = name .. ": เปิด"
+            btn.TextColor3 = Color3.fromRGB(100, 255, 100)
+        else
+            btn.Text = name .. ": ปิด"
+            btn.TextColor3 = Color3.fromRGB(255, 100, 100)
+        end
+        callback(state)
+    end)
+end
+
+createButton("มองทะลุ 3D (Highlight)", 45, function(state) esp3D = state end)
+createButton("มองทะลุเส้น (Tracer)", 85, function(state) espTracer = state end)
+createButton("มองทะลุ Greenbox", 125, function(state) espGreenbox = state end)
+
+-- ปุ่มปิดสคริปต์
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0.9, 0, 0, 30)
+CloseBtn.Position = UDim2.new(0.05, 0, 0, 175)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+CloseBtn.Text = "🗑️ ปิดสคริปต์ทั้งหมด"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize, CloseBtn.Font = 11, Enum.Font.GothamBold
+CloseBtn.Parent = MainFrame
+local CloseCorner = Instance.new("UICorner", CloseBtn)
+CloseCorner.CornerRadius = UDim.new(0, 6)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+    if oldFolder then oldFolder:Destroy() end
+end)
+
+-- Folder สำหรับเก็บ Highlight 3D
 local highlightFolder = Instance.new("Folder", CoreGui)
 highlightFolder.Name = "PancakeHUB_3DESP"
-​-- ตรวจสอบ Drawing Library
+
+-- ตรวจสอบ Drawing Library
 local hasDrawing = (typeof(Drawing) == "table" and Drawing.new ~= nil)
-​-- Object Pools สำหรับลดการสร้างวัตถุซ้ำซ้อน (Performance Boost บนมือถือ)
 local tracerPool = {}
 local boxPool = {}
-​local function getTracer(index)
-if not tracerPool[index] and hasDrawing then
-local line = Drawing.new("Line")
-line.Thickness = 1.2
-line.Transparency = 1
-tracerPool[index] = line
+
+local function getTracer(index)
+    if not tracerPool[index] and hasDrawing then
+        local line = Drawing.new("Line")
+        line.Thickness, line.Transparency = 1.2, 1
+        tracerPool[index] = line
+    end
+    return tracerPool[index]
 end
-return tracerPool[index]
+
+local function getBox(index)
+    if not boxPool[index] and hasDrawing then
+        local box = Drawing.new("Square")
+        box.Thickness, box.Filled, box.Transparency = 1.2, false, 1
+        boxPool[index] = box
+    end
+    return boxPool[index]
 end
-​local function getBox(index)
-if not boxPool[index] and hasDrawing then
-local box = Drawing.new("Square")
-box.Thickness = 1.2
-box.Filled = false
-box.Transparency = 1
-boxPool[index] = box
+
+local function hideAllDrawings()
+    for _, line in pairs(tracerPool) do line.Visible = false end
+    for _, box in pairs(boxPool) do box.Visible = false end
 end
-return boxPool[index]
-end
-​local function hideAllDrawings()
-for _, line in pairs(tracerPool) do line.Visible = false end
-for _, box in pairs(boxPool) do box.Visible = false end
-end
-​-- STREAMING_CHUNK:Implementing MM2 role detection...
+
+-- ฟังก์ชันเช็กบทบาท MM2 (ฆาตกร, นายอำเภอ, คนบริสุทธิ์)
 local function getPlayerRoleColor(player)
-if not player then return Color3.fromRGB(0, 255, 0) end
-​local char = player.Character
-local backpack = player:FindFirstChild("Backpack")
-​local hasKnife = false
-local hasGun = false
-​local function checkItem(container)
-if not container then return end
-for _, item in pairs(container:GetChildren()) do
-if item:IsA("Tool") then
-local name = item.Name:lower()
-if name:find("knife") then hasKnife = true end
-if name:find("gun") or name:find("revolver") then hasGun = true end
+    if not player then return Color3.fromRGB(0, 255, 0) end
+    local char = player.Character
+    local backpack = player:FindFirstChild("Backpack")
+    local hasKnife, hasGun = false, false
+    
+    local function checkItem(container)
+        if not container then return end
+        for _, item in pairs(container:GetChildren()) do
+            if item:IsA("Tool") then
+                local name = item.Name:lower()
+                if name:find("knife") then hasKnife = true end
+                if name:find("gun") or name:find("revolver") then hasGun = true end
+            end
+        end
+    end
+    
+    if char then checkItem(char) end
+    if backpack then checkItem(backpack) end
+    
+    if hasKnife then
+        return Color3.fromRGB(255, 50, 50) -- 🔴 ฆาตกร
+    elseif hasGun then
+        return Color3.fromRGB(50, 150, 255) -- 🔵 นายอำเภอ
+    else
+        return Color3.fromRGB(50, 255, 50) -- 🟢 ประชาชนบริสุทธิ์
+    end
 end
-end
-end
-​if char then checkItem(char) end
-if backpack then checkItem(backpack) end
-​if hasKnife then
-return Color3.fromRGB(255, 50, 50) -- 🔴 ฆาตกร
-elseif hasGun then
-return Color3.fromRGB(50, 150, 255) -- 🔵 นายอำเภอ
-else
-return Color3.fromRGB(50, 255, 50) -- 🟢 ประชาชนบริสุทธิ์
-end
-end
-​-- STREAMING_CHUNK:Setting up main render loop...
+
+-- ลูปการทำงาน ESP
 RunService.RenderStepped:Connect(function()
-if not scriptRunning then return end
-​highlightFolder:ClearAllChildren()
-hideAllDrawings()
-​if not esp3D and not espTracer and not espGreenbox then return end
-​local tracerIndex = 0
-local boxIndex = 0
-​for _, plr in pairs(Players:GetPlayers()) do
-if plr ~= LocalPlayer and plr.Character then
-local char = plr.Character
-local root = char:FindFirstChild("HumanoidRootPart")
-local hum = char:FindFirstChildOfClass("Humanoid")
-​if root and hum and hum.Health > 0 then
-local color = getPlayerRoleColor(plr)
-​-- 🟢 1. มองทะลุ 3D (Highlight)
-if esp3D then
-local hl = Instance.new("Highlight")
-hl.Name = plr.Name .. "_3D"
-hl.Adornee = char
-hl.FillColor = color
-hl.FillTransparency = 0.45
-hl.OutlineColor = color
-hl.OutlineTransparency = 0
-hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-hl.Parent = highlightFolder
-end
-​if espTracer or espGreenbox then
-local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-​if onScreen then
--- 📏 2. มองทะลุเป็นเส้น (Tracer)
-if espTracer and hasDrawing then
-tracerIndex = tracerIndex + 1
-local line = getTracer(tracerIndex)
-if line then
-line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-line.To = Vector2.new(pos.X, pos.Y)
-line.Color = color
-line.Visible = true
-end
-end
-​-- 📦 3. มองทะลุ Greenbox (Box ESP)
-if espGreenbox and hasDrawing then
-local head = char:FindFirstChild("Head")
-if head then
-local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
-​local height = math.abs(headPos.Y - legPos.Y)
-local width = height / 1.6
-​boxIndex = boxIndex + 1
-local box = getBox(boxIndex)
-if box then
-box.Size = Vector2.new(width, height)
-box.Position = Vector2.new(pos.X - (width / 2), pos.Y - (height / 2))
-box.Color = Color3.fromRGB(50, 255, 50)
-box.Visible = true
-end
-end
-end
-end
-end
-end
-end
-end
+    highlightFolder:ClearAllChildren()
+    hideAllDrawings()
+    
+    if not esp3D and not espTracer and not espGreenbox then return end
+    
+    local tracerIndex, boxIndex = 0, 0
+    
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            local char = plr.Character
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            
+            if root and hum and hum.Health > 0 then
+                local color = getPlayerRoleColor(plr)
+                
+                -- 1. 3D Highlight
+                if esp3D then
+                    local hl = Instance.new("Highlight")
+                    hl.Adornee = char
+                    hl.FillColor = color
+                    hl.FillTransparency = 0.45
+                    hl.OutlineColor = color
+                    hl.OutlineTransparency = 0
+                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    hl.Parent = highlightFolder
+                end
+                
+                if espTracer or espGreenbox then
+                    local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+                    if onScreen then
+                        -- 2. Tracer
+                        if espTracer and hasDrawing then
+                            tracerIndex = tracerIndex + 1
+                            local line = getTracer(tracerIndex)
+                            if line then
+                                line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                                line.To = Vector2.new(pos.X, pos.Y)
+                                line.Color = color
+                                line.Visible = true
+                            end
+                        end
+                        
+                        -- 3. Greenbox
+                        if espGreenbox and hasDrawing then
+                            local head = char:FindFirstChild("Head")
+                            if head then
+                                local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                                local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
+                                local height = math.abs(headPos.Y - legPos.Y)
+                                local width = height / 1.6
+                                
+                                boxIndex = boxIndex + 1
+                                local box = getBox(boxIndex)
+                                if box then
+                                    box.Size = Vector2.new(width, height)
+                                    box.Position = Vector2.new(pos.X - (width / 2), pos.Y - (height / 2))
+                                    box.Color = Color3.fromRGB(50, 255, 50)
+                                    box.Visible = true
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
 end)
-​-- STREAMING_CHUNK:Building UI tabs and components...
-local TabGroup = Window:TabGroup()
-​local EspTab = TabGroup:Tab({ Name = "ESP", Image = "rbxassetid://10709782582" })
-local MainSec = EspTab:Section({ Side = "Left", Title = "ระบบมองทะลุ" })
-​MainSec:Toggle({
-Name = "มองทะลุ 3D (ตามบทบาท)",
-Default = false,
-Callback = function(state)
-esp3D = state
-end,
-})
-​MainSec:Toggle({
-Name = "มองทะลุเส้น (Tracer)",
-Default = false,
-Callback = function(state)
-espTracer = state
-end,
-})
-​MainSec:Toggle({
-Name = "มองทะลุ Greenbox",
-Default = false,
-Callback = function(state)
-espGreenbox = state
-end,
-})
-​local InfoSec = EspTab:Section({ Side = "Right", Title = "สถานะสีบทบาท" })
-​InfoSec:Paragraph({
-Title = "🔴 สีแดง: ฆาตกร",
-Content = "มีด (Murderer)",
-})
-​InfoSec:Paragraph({
-Title = "🔵 สีฟ้า: นายอำเภอ",
-Content = "ปืน (Sheriff)",
-})
-​InfoSec:Paragraph({
-Title = "🟢 สีเขียว: คนบริสุทธิ์",
-Content = "ประชาชน (Innocent)",
-})
