@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHUB | Murder Mystery 2 (Delta Optimized Version)
+-- 🥞 PancakeHUB | Murder Mystery 2 (Full Fixed Original UI)
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -11,37 +11,38 @@ local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
 -- 1. ทำความสะอาด UI เก่า ป้องกันการรันซ้อน
-if CoreGui:FindFirstChild("PancakeHUB_UI") then 
-    CoreGui.PancakeHUB_UI:Destroy() 
+if CoreGui:FindFirstChild("DeltaCustomUI") then 
+    CoreGui.DeltaCustomUI:Destroy() 
 end
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PancakeHUB_UI"
+ScreenGui.Name = "DeltaCustomUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- 2. ปุ่มไอคอนตัว "🥞" สี่เหลี่ยมมน ขนาด 45x45
+-- 2. ปุ่มไอคอนตัว "🥞" สี่เหลี่ยมมน ขนาด 40x40
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Name = "ToggleIcon"
-ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+ToggleBtn.Size = UDim2.new(0, 40, 0, 40)
 ToggleBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 ToggleBtn.Text = "🥞"
-ToggleBtn.TextSize = 24
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 20
 ToggleBtn.Active = true
 ToggleBtn.Draggable = true
 ToggleBtn.Parent = ScreenGui
-Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 8)
 
 local ToggleStroke = Instance.new("UIStroke", ToggleBtn)
 ToggleStroke.Color = Color3.fromRGB(255, 180, 50)
-ToggleStroke.Thickness = 2
+ToggleStroke.Thickness = 1.5
 
 local baseWidth = 500
 local baseHeight = 320
-local currentScale = 1
-local currentAlpha = 1
+local currentScale = 1 
+local currentAlpha = 1 
 local textLabelData = {}
 
 -- 3. หน้าต่างหลัก (MainFrame)
@@ -114,7 +115,7 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- 5. Sidebar และ Content Area
+-- 5. แถบหมวดหมู่ซ้ายมือ (Sidebar)
 local Sidebar = Instance.new("Frame", MainFrame)
 Sidebar.Name = "Sidebar"
 Sidebar.Size = UDim2.new(0, 120, 1, -35)
@@ -132,6 +133,7 @@ SidePadding.PaddingTop = UDim.new(0, 10)
 SidePadding.PaddingLeft = UDim.new(0, 8)
 SidePadding.PaddingRight = UDim.new(0, 8)
 
+-- 6. พื้นที่ฟังชั่นขวามือ (Content Area)
 local ContentArea = Instance.new("Frame", MainFrame)
 ContentArea.Name = "ContentArea"
 ContentArea.Size = UDim2.new(1, -130, 1, -45)
@@ -184,16 +186,19 @@ local function CreateTab(name)
     return Page
 end
 
+-- สร้างครบทุกหมวดหมู่ (UI, ตัวละคร, เครื่องมือ, ESP, Auto Shoot)
+local UIPage = CreateTab("UI")
 local PlayerPage = CreateTab("ตัวละคร")
 local ToolPage = CreateTab("เครื่องมือ")
 local ESPPage = CreateTab("ESP")
 local AutoShootPage = CreateTab("Auto Shoot")
 
-tabs["ตัวละคร"].Page.Visible = true
-tabs["ตัวละคร"].Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
-tabs["ตัวละคร"].Btn.TextColor3 = Color3.fromRGB(240, 240, 255)
+-- เปิดหมวดหมู่ UI เป็นหน้าแรก
+tabs["UI"].Page.Visible = true
+tabs["UI"].Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+tabs["UI"].Btn.TextColor3 = Color3.fromRGB(240, 240, 255)
 
--- ฟังก์ชันสร้าง Slider
+-- 7. ระบบสร้าง Slider คอมโพเนนต์
 local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffix, callback)
     local SliderFrame = Instance.new("Frame", parent)
     SliderFrame.Size = UDim2.new(1, 0, 0, 50)
@@ -264,7 +269,30 @@ local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, suffi
     end)
 end
 
--- ฟังก์ชันระบบตัวละคร
+-- เพิ่ม Slider ในหมวดหมู่ UI
+CreateSlider(UIPage, "ปรับความทึบของ UI", 1, 100, 100, "%", function(val)
+    currentAlpha = val / 100
+    local transparency = 1 - currentAlpha
+    MainFrame.BackgroundTransparency = transparency
+    TopBar.BackgroundTransparency = transparency
+    Sidebar.BackgroundTransparency = transparency
+end)
+
+CreateSlider(UIPage, "ปรับขนาดความใหญ่ UI", 50, 150, 100, "%", function(val)
+    currentScale = val / 100
+    local newW = baseWidth * currentScale
+    local newH = baseHeight * currentScale
+    MainFrame.Size = UDim2.new(0, newW, 0, newH)
+    MainFrame.Position = UDim2.new(0.5, -newW/2, 0.5, -newH/2)
+
+    for _, item in ipairs(textLabelData) do
+        if item.Obj and item.Obj.Parent then
+            item.Obj.TextSize = math.clamp(math.floor(item.BaseSize * currentScale), 8, 30)
+        end
+    end
+end)
+
+-- 8. หมวดหมู่ตัวละคร: วิ่งเร็ว, กระโดดสูง, ทะลุกำแพง (Noclip)
 CreateSlider(PlayerPage, "ความเร็วในการวิ่ง (WalkSpeed)", 16, 250, 16, "", function(val)
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
@@ -326,7 +354,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- ฟังก์ชันเครื่องมือ (Click TP)
+-- 8.5 หมวดหมู่เครื่องมือ: ระบบคลิกวาร์ป (Click TP Tool)
 local ToolFrame = Instance.new("Frame", ToolPage)
 ToolFrame.Size = UDim2.new(1, 0, 0, 45)
 ToolFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
@@ -370,7 +398,7 @@ GetToolBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- ฟังก์ชัน ESP
+-- 9. หมวดหมู่ ESP
 local espEnabled = false
 local SwitchFrame = Instance.new("Frame", ESPPage)
 SwitchFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -502,7 +530,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ฟังก์ชัน Auto Shoot & ปุ่มยิงด่วน
+-- 10. หมวดหมู่ Auto Shoot & ปุ่มยิงด่วน
 local autoShootEnabled = false
 local miniShootGui = nil
 
@@ -630,7 +658,7 @@ ShootSwitchBtn.MouseButton1Click:Connect(function()
     ToggleMiniShootUI(autoShootEnabled)
 end)
 
--- ระบบเปิด-ปิดหน้าต่างหลัก
+-- 11. ระบบ Animation ย่อ/กาง UI เข้าหาไอคอน Pancake
 local isOpen = false
 local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
@@ -666,7 +694,7 @@ end
 ToggleBtn.MouseButton1Click:Connect(ToggleUI)
 MinBtn.MouseButton1Click:Connect(ToggleUI)
 
--- ระบบลากหน้าต่าง
+-- ระบบลากหน้าต่างผ่าน TopBar
 local Dragging, DragStart, StartPos
 TopBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
