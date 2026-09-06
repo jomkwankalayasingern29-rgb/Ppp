@@ -1,15 +1,12 @@
--- =======================================================
--- 🥞 PancakeHUB | Murder Mystery 2 (MM2) [Mobile Optimized]
--- 🏢 สตูดิโอ: PancakeHUB Studio (Mobile Supported / Delta)
--- =======================================================
-​local CoreGui = game:GetService("CoreGui")
+-- STREAMING_CHUNK:Initializing services and environment...
+local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-​-- 🔍 1. ระบบรักษาปุ่มมือถือ (ป้องกันทัชหาย)
-​local containers = {CoreGui, PlayerGui}
+​-- STREAMING_CHUNK:Configuring mobile containers...
+local containers = {CoreGui, PlayerGui}
 if gethui then table.insert(containers, gethui()) end
 ​local existingGuis = {}
 for _, container in pairs(containers) do
@@ -17,15 +14,16 @@ for _, v in pairs(container:GetChildren()) do
 existingGuis[v] = true
 end
 end
-​-- 📦 2. โหลด MacLib UI พร้อมปรับขนาดให้เล็กเหมาะกับมือถือ
-​local success, MacLib = pcall(function()
+​-- STREAMING_CHUNK:Loading MacLib UI library safely...
+local success, MacLib = pcall(function()
 return loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 end)
 ​if not success or not MacLib then
 warn("PancakeHUB: Failed to load MacLib!")
 return
 end
-​local Window = MacLib:Window({
+​-- STREAMING_CHUNK:Creating window with compact mobile size...
+local Window = MacLib:Window({
 Title = "🥞 PancakeHUB | MM2",
 Subtitle = "Mobile Optimized",
 Size = UDim2.fromOffset(400, 240), -- 📱 ปรับขนาดหน้าต่างให้เล็กลงกะทัดรัด ไม่บังจอ
@@ -33,8 +31,8 @@ DragStyle = 1, -- รองรับการลากหน้าต่าง�
 Keybind = Enum.KeyCode.RightControl,
 AcrylicBlur = false, -- ปิดความเบลอ ป้องกันมือถือแครช
 })
-​-- 🎯 3. สแกนหา UI ของ MacLib เพื่อสั่งซ่อนบนมือถือ
-​local macGui = nil
+​-- STREAMING_CHUNK:Scanning for UI elements...
+local macGui = nil
 task.spawn(function()
 task.wait(0.5)
 for _, container in pairs(containers) do
@@ -45,8 +43,8 @@ end
 end
 end
 end)
-​-- 🔘 4. ปุ่ม 🥞 เปิด/ปิด UI บนมือถือ (ปรับขนาดให้กดง่าย)
-​local ToggleGui = Instance.new("ScreenGui")
+​-- STREAMING_CHUNK:Rendering toggle button...
+local ToggleGui = Instance.new("ScreenGui")
 local ToggleButton = Instance.new("TextButton")
 local UICorner = Instance.new("UICorner")
 local UIStroke = Instance.new("UIStroke")
@@ -76,8 +74,8 @@ uiVisible = not uiVisible
 macGui.Enabled = uiVisible
 end
 end)
-​-- 🗑️ 5. ปุ่มถุงขยะ 🗑️ (สำหรับลบ UI และปิดสคริปต์ทั้งหมด)
-​local TrashGui = Instance.new("ScreenGui")
+​-- STREAMING_CHUNK:Rendering trash button...
+local TrashGui = Instance.new("ScreenGui")
 local TrashButton = Instance.new("TextButton")
 local TrashCorner = Instance.new("UICorner")
 local TrashStroke = Instance.new("UIStroke")
@@ -117,8 +115,8 @@ for _, box in pairs(boxPool) do if box.Remove then box:Remove() end end
 ​-- ลบหน้าต่าง MacLib UI หลัก
 if macGui then macGui:Destroy() end
 end)
-​-- 🛠️ 6. ตัวแปรเปิด/ปิด สวิตช์ ESP
-​local esp3D = false
+​-- STREAMING_CHUNK:Defining ESP variables and pools...
+local esp3D = false
 local espTracer = false
 local espGreenbox = false
 ​-- Folder สำหรับเก็บ Highlight 3D
@@ -152,8 +150,8 @@ end
 for _, line in pairs(tracerPool) do line.Visible = false end
 for _, box in pairs(boxPool) do box.Visible = false end
 end
-​-- 🔍 7. ฟังก์ชันเช็คบทบาท MM2 (Role Checker ที่เสถียรขึ้น)
-​local function getPlayerRoleColor(player)
+​-- STREAMING_CHUNK:Implementing MM2 role detection...
+local function getPlayerRoleColor(player)
 if not player then return Color3.fromRGB(0, 255, 0) end
 ​local char = player.Character
 local backpack = player:FindFirstChild("Backpack")
@@ -179,8 +177,8 @@ else
 return Color3.fromRGB(50, 255, 50) -- 🟢 ประชาชนบริสุทธิ์
 end
 end
-​-- 🔄 8. Main Render Loop (อัปเดตระบบ ESP ตลอดเวลา)
-​RunService.RenderStepped:Connect(function()
+​-- STREAMING_CHUNK:Setting up main render loop...
+RunService.RenderStepped:Connect(function()
 if not scriptRunning then return end
 ​highlightFolder:ClearAllChildren()
 hideAllDrawings()
@@ -244,8 +242,8 @@ end
 end
 end
 end)
-​-- 🎨 9. สร้าง UI หน้าต่างเมนู (ขนาดเล็กเหมาะกับมือถือ)
-​local TabGroup = Window:TabGroup()
+​-- STREAMING_CHUNK:Building UI tabs and components...
+local TabGroup = Window:TabGroup()
 ​local EspTab = TabGroup:Tab({ Name = "ESP", Image = "rbxassetid://10709782582" })
 local MainSec = EspTab:Section({ Side = "Left", Title = "ระบบมองทะลุ" })
 ​MainSec:Toggle({
