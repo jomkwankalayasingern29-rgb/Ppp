@@ -1,5 +1,5 @@
 -- =======================================================
--- 🥞 PancakeHub X GKHub | MM2 Script (Full Version + Fixed Gun ESP)
+-- 🥞 PancakeHub X GKHub | MM2 Script (Full Version + Fixed Gun Drop ESP)
 -- =======================================================
 
 local TweenService = game:GetService("TweenService")
@@ -552,7 +552,7 @@ GetToolBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- 9. หมวดหมู่ ESP (รวม ESP ตัวละคร + ESPปืนที่ตกพื้นแบบอัปเดต)
+-- 9. หมวดหมู่ ESP (ESP ตัวละคร + ESPปืนตกพื้นแบบกรองแล้ว)
 local espEnabled = false
 local SwitchFrame = Instance.new("Frame", ESPPage)
 SwitchFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -581,7 +581,7 @@ SwitchBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
 Instance.new("UICorner", SwitchBtn).CornerRadius = UDim.new(0, 5)
 table.insert(textLabelData, {Obj = SwitchBtn, BaseSize = 11})
 
--- ฟังก์ชัน ESPปืน (ตรวจจับปืนที่ตกอยู่บนพื้น)
+-- ESPปืนตกพื้น (เฉพาะปืนที่ตกพื้นจริงๆ เท่านั้น)
 local gunEspEnabled = false
 local GunEspFrame = Instance.new("Frame", ESPPage)
 GunEspFrame.Size = UDim2.new(1, 0, 0, 45)
@@ -591,7 +591,7 @@ Instance.new("UICorner", GunEspFrame).CornerRadius = UDim.new(0, 6)
 local GunEspLabel = Instance.new("TextLabel", GunEspFrame)
 GunEspLabel.Size = UDim2.new(0, 200, 1, 0)
 GunEspLabel.Position = UDim2.new(0, 10, 0, 0)
-GunEspLabel.Text = "ESPปืน (ปืนที่ตกพื้น)"
+GunEspLabel.Text = "ESPปืนตกพื้น (เฉพาะบนพื้น)"
 GunEspLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 GunEspLabel.Font = Enum.Font.Gotham
 GunEspLabel.TextSize = 12
@@ -618,7 +618,7 @@ Instance.new("UICorner", InfoBox).CornerRadius = UDim.new(0, 6)
 local InfoText = Instance.new("TextLabel", InfoBox)
 InfoText.Size = UDim2.new(1, -16, 1, 0)
 InfoText.Position = UDim2.new(0, 10, 0, 0)
-InfoText.Text = "คำอธิบายสีไฮไลท์และชื่อ:\n• สีแดง = ถือ/มีมีดในตัว (Knife)\n• สีฟ้า = ถือ/มีปืนในตัว (Gun)\n• สีเขียว = คนปกติ\n• สีเหลืองทอง = ปืนตกพื้น"
+InfoText.Text = "คำอธิบายสีไฮไลท์และชื่อ:\n• สีแดง = ถือ/มีมีดในตัว (Knife)\n• สีฟ้า = ถือ/มีปืนในตัว (Gun)\n• สีเขียว = คนปกติ\n• สีเหลืองทอง = ปืนตกพื้นเท่านั้น"
 InfoText.TextColor3 = Color3.fromRGB(180, 180, 190)
 InfoText.Font = Enum.Font.Gotham
 InfoText.TextSize = 11
@@ -686,7 +686,7 @@ GunEspBtn.MouseButton1Click:Connect(function()
 end)
 
 RunService.RenderStepped:Connect(function()
-    -- เคลียร์ข้อความ Drawing เก่าทิ้งทุกเฟรมอย่างถูกต้อง ป้องกันชื่อซ้อนรัวๆ
+    -- เคลียร์ข้อความ Drawing เก่าทิ้งทุกเฟรมอย่างถูกต้อง
     for _, textObj in pairs(espTextObjects) do
         textObj:Remove()
     end
@@ -738,18 +738,35 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ESP ปืนที่ตกอยู่บนพื้น (เวอร์ชันครอบคลุมทุกเงื่อนไข)
+    -- ESP ปืนที่ตกอยู่บนพื้นเท่านั้น (กรองไม่ให้จับปืนที่คนถืออยู่)
     if gunEspEnabled then
         for _, obj in pairs(Workspace:GetDescendants()) do
-            local isGun = false
+            local isDroppedGun = false
+            
             if obj:IsA("Tool") or obj:IsA("Model") then
                 local n = string.lower(obj.Name)
-                if n:find("gun") or n:find("pistol") or n:find("revolver") or n:find("drop") then
-                    isGun = true
+                if n:find("gun") or n:find("pistol") or n:find("revolver") or n:find("dropped") then
+                    local ancestor = obj.Parent
+                    local isInPlayer = false
+                    
+                    while ancestor and ancestor ~= game do
+                        if ancestor:IsA("Model") and Players:GetPlayerFromCharacter(ancestor) then
+                            isInPlayer = true
+                            break
+                        elseif ancestor:IsA("Backpack") then
+                            isInPlayer = true
+                            break
+                        end
+                        ancestor = ancestor.Parent
+                    end
+                    
+                    if not isInPlayer then
+                        isDroppedGun = true
+                    end
                 end
             end
 
-            if isGun then
+            if isDroppedGun then
                 local targetPart = nil
                 if obj:IsA("Model") then
                     targetPart = obj.PrimaryPart or obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")
