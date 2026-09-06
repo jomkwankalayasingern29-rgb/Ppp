@@ -1,4 +1,4 @@
--- ==================== GKHub X PancakeHub & MM2 (KillFeed Top-Left with Touch Passthrough) ====================
+-- ==================== GKHub X PancakeHub & MM2 (Added Mass Kill V2 Function) ====================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
@@ -108,7 +108,7 @@ LogoG.ZIndex = 4
 local TitleText = Instance.new("TextLabel", TopBar)
 TitleText.Size = UDim2.new(0, 380, 1, 0)
 TitleText.Position = UDim2.new(0, 38, 0, 0)
-TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Top-Left Passthrough)"
+TitleText.Text = "ค่ายGKHub X ค่ายPancakeHub & MM2 (Mass Kill V2)"
 TitleText.TextColor3 = Color3.fromRGB(240, 240, 240)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 12
@@ -384,11 +384,11 @@ local function CreateFeatureRow(parent, labelText, buttonText, buttonColor, call
     return Frame, Btn
 end
 
--- ==================== ระบบแถบสาเหตุการตาย (มุมซ้ายบน + เปิดระบบทะลุตลอดตัว) ====================
+-- ==================== ระบบแถบสาเหตุการตาย (ซ้ายบน + ทะลุตลอดตัว) ====================
 local KillFeedHolder = Instance.new("Frame", ScreenGui)
 KillFeedHolder.Name = "KillFeedHolder"
 KillFeedHolder.Size = UDim2.new(0, 310, 0, 200)
-KillFeedHolder.Position = UDim2.new(0, 10, 0, 50) -- ชิดซ้ายบน
+KillFeedHolder.Position = UDim2.new(0, 10, 0, 50)
 KillFeedHolder.BackgroundTransparency = 1
 KillFeedHolder.BorderSizePixel = 0
 KillFeedHolder.Visible = true
@@ -479,6 +479,38 @@ CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ป
     btn.Text = expandHitboxEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = expandHitboxEnabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(50, 50, 60)
 end)
+
+-- ==================== ฟังก์ชันใหม่: ฆ่าทั้งแมพ V2 (ดึงตัวผู้เล่นทุกคนมาหน้าเราแล้วฟัน) ====================
+local massKillV2Enabled = false
+CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ V2", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+    massKillV2Enabled = not massKillV2Enabled
+    btn.Text = massKillV2Enabled and "เปิด (ON)" or "ปิด (OFF)"
+    btn.BackgroundColor3 = massKillV2Enabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(50, 50, 60)
+end)
+
+RunService.RenderStepped:Connect(function()
+    if massKillV2Enabled then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local hrp = char.HumanoidRootPart
+            local frontPos = hrp.CFrame + (hrp.CFrame.LookVector * 4) -- ตำแหน่งด้านหน้าเรา 4 สตั๊ด
+            
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                    if otherRoot and humanoid and humanoid.Health > 0 then
+                        -- ดึงตัวผู้เล่นมาไว้ข้างหน้าเรา
+                        otherRoot.CFrame = frontPos
+                        otherRoot.CanCollide = false
+                        otherRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end
+        end
+    end
+end)
+-- ==========================================================================================
 
 RunService.RenderStepped:Connect(function()
     if expandHitboxEnabled then
@@ -1031,7 +1063,7 @@ local function FinishLoading()
     MainFrame.Visible = true
 end
 
-SkipBtn.MouseButton1Click:Connect(FinishLoading)
+SkipBtn.MouseButton1Click:Connect(FinishLayout or FinishLoading)
 
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
