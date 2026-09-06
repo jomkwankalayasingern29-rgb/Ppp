@@ -51,7 +51,6 @@ LoadText.Parent = LoadFrame
 local baseWidth = 460
 local baseHeight = 280
 local currentScale = 1
-local currentAlpha = 0
 local textLabelData = {}
 
 local MainFrame = Instance.new("Frame")
@@ -93,7 +92,6 @@ FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 FixTopBar.BorderSizePixel = 0
 FixTopBar.Parent = TopBar
 
--- โลโก้ตัว "G"
 local LogoG = Instance.new("TextLabel")
 LogoG.Size = UDim2.new(0, 20, 0, 20)
 LogoG.Position = UDim2.new(0, 8, 0, 6)
@@ -226,7 +224,6 @@ local PlayerPage = createContainer("ตัวละคร")
 local ToolPage = createContainer("เครื่องมือ")
 local ESPPage = createContainer("ESP")
 
--- ฟังก์ชันสร้างปุ่มสลับหมวดหมู่
 local tabButtons = {}
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
@@ -276,7 +273,7 @@ createCategoryButton("ESP")
 
 switchTab("หลัก")
 
--- ==================== ฟังก์ชันส่วนประกอบ UI ย่อย ====================
+-- ==================== สร้างองค์ประกอบฟังก์ชัน ====================
 local function CreateCreditCard(parent, hubName, discordLink, themeColor)
     local Card = Instance.new("Frame", parent)
     Card.Size = UDim2.new(0.94, 0, 0, 65)
@@ -379,7 +376,7 @@ local function CreateActionRow(parent, titleText, btnText, callback)
     ActionBtn.Size = UDim2.new(0, 75, 0, 22)
     ActionBtn.Position = UDim2.new(1, -83, 0.5, -11)
     ActionBtn.Font = Enum.Font.GothamBold
-ActionBtn.TextSize = 10
+    ActionBtn.TextSize = 10
     ActionBtn.Text = btnText
     ActionBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
     ActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
