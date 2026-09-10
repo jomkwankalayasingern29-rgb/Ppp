@@ -19,6 +19,12 @@ getgenv().CamLockEnabled = false
 getgenv().CamLockTarget = "Head"
 getgenv().CamLockSpeedPercent = 100
 
+-- ฟังก์ชันใหม่: หันหน้าหาศัตรู (Character LookAt)
+getgenv().LookAtEnabled = false
+
+-- ฟังก์ชันใหม่: กดทุกอย่าง 0 วิ (ProximityPrompt ทุกตัวในเกม)
+getgenv().InstantAllPromptEnabled = false
+
 getgenv().CircleRadius = 120
 getgenv().CustomFOV = Camera.FieldOfView
 
@@ -94,6 +100,26 @@ local function GetTargetPart(targetType)
     return targetPart
 end
 
+-- ฟังก์ชันหาตัวละครที่อยู่ใกล้ที่สุด (สำหรับโหมดหันหน้า)
+local function GetNearestRootPart()
+    local nearestPart = nil
+    local shortestDist = math.huge
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local myPos = LocalPlayer.Character.HumanoidRootPart.Position
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+                local targetRoot = player.Character.HumanoidRootPart
+                local dist = (myPos - targetRoot.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    nearestPart = targetRoot
+                end
+            end
+        end
+    end
+    return nearestPart
+end
+
 -- 1. ระบบกระสุนเลี้ยว (Silent Aim Hook)
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
@@ -120,7 +146,7 @@ oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     return oldNamecall(self, unpack(args))
 end)
 
--- 2. ระบบจอล็อก (Cam Lock)
+-- 2. ระบบจอล็อก (Cam Lock) & ระบบหันหน้าหาศัตรู (LookAt)
 RunService.RenderStepped:Connect(function()
     if getgenv().CamLockEnabled then
         local target = GetTargetPart(getgenv().CamLockTarget)
@@ -132,6 +158,46 @@ RunService.RenderStepped:Connect(function()
                 Camera.CFrame = targetCFrame
             else
                 Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, speedAlpha)
+            end
+        end
+    end
+
+    -- ฟังก์ชันหันหน้าหาศัตรู (ตัวละครหัน แต่จอไม่หันตาม)
+    if getgenv().LookAtEnabled then
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+            local targetRoot = GetNearestRootPart()
+            if targetRoot then
+                local myRoot = myChar.HumanoidRootPart
+                local lookAtPos = Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z)
+                myRoot.CFrame = CFrame.new(myRoot.Position, lookAtPos)
+            end
+        end
+    end
+
+    -- ฟังก์ชันกดทุกอย่าง 0 วิ (ProximityPrompt ทุกอันใน Workspace)
+    if getgenv().InstantAllPromptEnabled then
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+            local myPos = myChar.HumanoidRootPart.Position
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("ProximityPrompt") then
+                    if obj.HoldDuration > 0 then
+                        obj.HoldDuration = 0
+                    end
+                    -- เช็คระยะทางและสั่งกดอัตโนมัติทุกปุ่มในเกม
+                    local parent = obj.Parent
+                    local partPos = nil
+                    if parent and parent:IsA("BasePart") then
+                        partPos = parent.Position
+                    elseif parent and parent:IsA("Model") and parent.PrimaryPart then
+                        partPos = parent.PrimaryPart.Position
+                    end
+                    
+                    if partPos and (myPos - partPos).Magnitude <= obj.MaxActivationDistance then
+                        fireproximityprompt(obj)
+                    end
+                end
             end
         end
     end
@@ -474,7 +540,7 @@ LeftSide.Size = UDim2.new(0.32, 0, 1, -38)
 LeftSide.Position = UDim2.new(0, 6, 0, 34)
 LeftSide.BackgroundTransparency = 1
 LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 100)
+LeftSide.CanvasSize = UDim2.new(0, 0, 0, 140)
 LeftSide.ScrollBarThickness = 1
 LeftSide.Parent = MainFrame
 
@@ -623,6 +689,13 @@ createStyleRow(LockContainer, "เป้าหมายจอล็อก (ห�
     btn.Text = getgenv().CamLockTarget == "Head" and "หัว" or "ตัว"
 end)
 
+createSectionTitle(LockContainer, ">> หันตัวละครอัตโนมัติ <<", Color3.fromRGB(150, 50, 255))
+createStyleRow(LockContainer, "หันหน้าหาศัตรู (จอไม่หัน)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+    getgenv().LookAtEnabled = not getgenv().LookAtEnabled
+    btn.Text = getgenv().LookAtEnabled and "เปิด" or "ปิด"
+    btn.BackgroundColor3 = getgenv().LookAtEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
+end)
+
 -- หมวด 3: ESP
 local ESPContainer = createContainer("ESP")
 createSectionTitle(ESPContainer, ">> ระบบ ESP <<", Color3.fromRGB(0, 255, 128))
@@ -636,6 +709,15 @@ createStyleRow(ESPContainer, "เปิดใช้งาน ESP 2D", "ปิด
     getgenv().ESP2DEnabled = not getgenv().ESP2DEnabled
     btn.Text = getgenv().ESP2DEnabled and "เปิด" or "ปิด"
     btn.BackgroundColor3 = getgenv().ESP2DEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
+end)
+
+-- หมวด 4: ฟังก์ชัน 0 วิ
+local FastContainer = createContainer("กด 0 วิ")
+createSectionTitle(FastContainer, ">> ระบบกด 0 วิ (ทุกปุ่ม) <<", Color3.fromRGB(255, 215, 0))
+createStyleRow(FastContainer, "กดทุกอย่าง 0 วิ (Auto Prompt)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+    getgenv().InstantAllPromptEnabled = not getgenv().InstantAllPromptEnabled
+    btn.Text = getgenv().InstantAllPromptEnabled and "เปิด" or "ปิด"
+    btn.BackgroundColor3 = getgenv().InstantAllPromptEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
 local function switchTab(tabName)
@@ -667,6 +749,7 @@ end
 createCategoryButton("เมนูหลัก")
 createCategoryButton("ล็อกหัว-ตัว")
 createCategoryButton("ESP")
+createCategoryButton("กด 0 วิ")
 
 switchTab("เมนูหลัก")
 
