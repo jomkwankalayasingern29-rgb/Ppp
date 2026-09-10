@@ -143,35 +143,45 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 3. ระบบฟังก์ชันอมตะ (Max Health, God Mode, Auto Heal)
-task.spawn(function()
-    while true do
-        local char = LocalPlayer.Character
-        if char then
-            local humanoid = char:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                -- แบบที่ 1: เพิ่มเลือด 999,999,999
-                if getgenv().MaxHealthEnabled then
-                    if humanoid.MaxHealth ~= 999999999 then
-                        humanoid.MaxHealth = 999999999
-                        humanoid.Health = 999999999
-                    end
+-- 3. ระบบฟังก์ชันอมตะ (ปรับปรุงให้ซิงค์กับเกม Blox Fruits แบบเรียลไทม์)
+RunService.Stepped:Connect(function()
+    local char = LocalPlayer.Character
+    if char then
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            -- แบบที่ 1: เพิ่มเลือด 999,999,999 (บังคับซิงค์ MaxHealth และ Health ตลอดเวลา)
+            if getgenv().MaxHealthEnabled then
+                if humanoid.MaxHealth ~= 999999999 then
+                    humanoid.MaxHealth = 999999999
                 end
-
-                -- แบบที่ 2: บังคับไม่ให้เลือดลด (God Mode)
-                if getgenv().GodModeEnabled then
-                    if humanoid.Health < humanoid.MaxHealth then
-                        humanoid.Health = humanoid.MaxHealth
-                    end
+                if humanoid.Health < 999999999 then
+                    humanoid.Health = 999999999
                 end
+            end
 
-                -- แบบที่ 3: เด้งเลือดรัวๆ ความเร็ว 0.1 วินาที ให้เต็มหลอด
-                if getgenv().AutoHealEnabled then
+            -- แบบที่ 2: บังคับไม่ให้เลือดลด (God Mode - ล็อกค่าเลือดให้เท่ากับ MaxHealth เสมอ)
+            if getgenv().GodModeEnabled then
+                if humanoid.Health < humanoid.MaxHealth then
                     humanoid.Health = humanoid.MaxHealth
                 end
             end
         end
-        task.wait(getgenv().AutoHealEnabled and 0.1 or 0.5)
+    end
+end)
+
+-- แบบที่ 3: ฮีลเลือดรัวๆ ความเร็ว 0.1 วินาที ให้เต็มหลอด (ใช้ task.spawn แยกทำงานแบบอิสระ)
+task.spawn(function()
+    while true do
+        if getgenv().AutoHealEnabled then
+            local char = LocalPlayer.Character
+            if char then
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if humanoid and humanoid.Health > 0 then
+                    humanoid.Health = humanoid.MaxHealth
+                end
+            end
+        end
+        task.wait(0.1)
     end
 end)
 
@@ -293,7 +303,7 @@ RunService.RenderStepped:Connect(function()
 
                             for _, line in ipairs(data.Box2D) do line.Visible = true end
 
-                            -- เส้น Tracer เชื่อมจากล่างจอตรงกลาง ไปยังตัวละคร (ตรงกึ่งกลางล่างของกรอบ 2D)
+                            -- เส้น Tracer เชื่อมจากล่างจอตรงกลาง ไปยังตัวละคร
                             local screenSize = Camera.ViewportSize
                             data.Tracer.From = Vector2.new(screenSize.X / 2, screenSize.Y)
                             data.Tracer.To = Vector2.new(x + (width / 2), y + height)
