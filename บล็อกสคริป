@@ -176,7 +176,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ==================== ระบบกด 0 วิ (แบบปรับปรุงให้ไม่แล็กบนมือถือ) ====================
+-- ==================== ระบบกด 0 วิ (รวมโค้ดเสริมทำงานทันที + ป้องกันแล็ก) ====================
 workspace.DescendantAdded:Connect(function(obj)
     if getgenv().InstantPromptOnly and obj:IsA("ProximityPrompt") then
         if obj.HoldDuration > 0 then
@@ -185,6 +185,7 @@ workspace.DescendantAdded:Connect(function(obj)
     end
 end)
 
+-- ระบบลูปตรวจสอบพื้นฐาน (จากโค้ดเดิมของคุณเพื่อความเสถียร)
 task.spawn(function()
     while true do
         if getgenv().InstantPromptOnly then
@@ -197,6 +198,21 @@ task.spawn(function()
             end
         end
         task.wait(1) -- หน่วงเวลา 1 วินาที ลดอาการแล็กบนมือถือ
+    end
+end)
+
+-- โค้ดเสริมพิเศษ: สั่งปรับทันทีที่เปิดสคริปต์ และลูปความถี่สูง 0.1 วินาที (จากโค้ดที่คุณต้องการนำมาใส่)
+task.spawn(function()
+    while task.wait(0.1) do
+        if getgenv().InstantPromptOnly then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("ProximityPrompt") then
+                    if obj.HoldDuration > 0 then
+                        obj.HoldDuration = 0
+                    end
+                end
+            end
+        end
     end
 end)
 
