@@ -8,6 +8,7 @@ end
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
@@ -101,22 +102,50 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ==================== สร้าง UI (ขนาดกระชับสำหรับมือถือ) ====================
+-- ==================== สร้าง UI (พร้อมอนิเมชั่นและหน้าจอโหลด) ====================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- หน้าต่างหลัก (ปรับลดขนาดให้พอดีมือถือ: กว้าง 440, สูง 250)
+-- หน้าต่างโหลด (Loading Frame)
+local LoadFrame = Instance.new("Frame")
+LoadFrame.Name = "LoadFrame"
+LoadFrame.Size = UDim2.new(0, 260, 0, 55)
+LoadFrame.Position = UDim2.new(0.5, -130, 0.5, -27)
+LoadFrame.BackgroundColor3 = Color3.fromRGB(13, 13, 16)
+LoadFrame.BorderSizePixel = 0
+LoadFrame.Parent = ScreenGui
+
+local LoadCorner = Instance.new("UICorner")
+LoadCorner.CornerRadius = UDim.new(0, 6)
+LoadCorner.Parent = LoadFrame
+
+local LoadStroke = Instance.new("UIStroke")
+LoadStroke.Color = Color3.fromRGB(0, 150, 255)
+LoadStroke.Thickness = 1.5
+LoadStroke.Parent = LoadFrame
+
+local LoadText = Instance.new("TextLabel")
+LoadText.Size = UDim2.new(1, 0, 1, 0)
+LoadText.BackgroundTransparency = 1
+LoadText.Font = Enum.Font.GothamBold
+LoadText.Text = "กำลังโหลด..."
+LoadText.TextColor3 = Color3.fromRGB(240, 240, 240)
+LoadText.TextSize = 12
+LoadText.Parent = LoadFrame
+
+-- หน้าต่างหลัก (Main Frame) - ซ่อนไว้ก่อนรอโหลดเสร็จ
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 440, 0, 250)
 MainFrame.Position = UDim2.new(0.5, -220, 0.5, -125)
-MainFrame.BackgroundColor3 = Color3.fromRGB(13, 13, 16) -- โทนสีมืดสไตล์ Hub เป๊ะๆ
+MainFrame.BackgroundColor3 = Color3.fromRGB(13, 13, 16)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Visible = true
+MainFrame.Visible = false
+MainFrame.BackgroundTransparency = 1
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
@@ -167,7 +196,7 @@ TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- ปุ่มปิด (X) สีแดงมุมขวา
+-- ปุ่มปิด (X) พร้อมอนิเมชั่นตอนปิดหน้าต่าง
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
 CloseButton.Position = UDim2.new(1, -28, 0, 4)
@@ -179,6 +208,14 @@ CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
 
 CloseButton.MouseButton1Click:Connect(function()
+    -- อนิเมชั่นย่อก่อนปิด
+    local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        BackgroundTransparency = 1
+    })
+    closeTween:Play()
+    closeTween.Completed:Wait()
     FOVCircle:Remove()
     ScreenGui:Destroy()
 end)
@@ -203,10 +240,11 @@ MinimizeButton.MouseButton1Click:Connect(function()
         MinimizeButton.Text = "+"
         if LeftSideRef then LeftSideRef.Visible = false end
         if RightSideRef then RightSideRef.Visible = false end
-        MainFrame.Size = UDim2.new(0, 440, 0, 32)
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 440, 0, 32)}):Play()
     else
         MinimizeButton.Text = "-"
-        MainFrame.Size = UDim2.new(0, 440, 0, 250)
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 440, 0, 250)}):Play()
+        task.wait(0.2)
         if LeftSideRef then LeftSideRef.Visible = true end
         if RightSideRef then RightSideRef.Visible = true end
     end
@@ -246,7 +284,7 @@ local function createContainer(name)
     container.BackgroundTransparency = 1
     container.BorderSizePixel = 0
     container.ScrollBarThickness = 3
-    container.ScrollingEnabled = true -- เปิดให้เลื่อนขึ้นลงได้อิสระ
+    container.ScrollingEnabled = true
     container.Visible = false
     container.Parent = RightSide
 
@@ -256,7 +294,6 @@ local function createContainer(name)
     layout.Padding = UDim.new(0, 6)
     layout.Parent = container
 
-    -- ระบบคำนวณความสูงอัตโนมัติเพื่อให้เลื่อนหน้าจอได้สุดจริง ๆ ไม่ติดขัด
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         container.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 25)
     end)
@@ -270,7 +307,7 @@ local MainMenuContainer = createContainer("เมนูหลัก")
 
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.96, 0, 0, 34)
-DiscordBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
 DiscordBtn.BorderSizePixel = 0
 DiscordBtn.Font = Enum.Font.Gotham
 DiscordBtn.Text = "คัดลอกลิงก์ Discord"
@@ -289,14 +326,13 @@ DiscordBtn.MouseButton1Click:Connect(function()
 end)
 
 
--- ==================== หมวดที่ 2: ล็อกหัว-ตัว (ดีไซน์ตามรูปต้นฉบับเป๊ะ) ====================
+-- ==================== หมวดที่ 2: ล็อกหัว-ตัว ====================
 local LockContainer = createContainer("ล็อกหัว-ตัว")
 
--- ฟังก์ชันสร้างกล่องฟังก์ชันแถวยาว (ซ้ายชื่อ / ขวาปุ่มสถานะสีแดง-เขียว)
 local function createStyleRow(parent, titleText, initialText, initialColor, callback)
     local row = Instance.new("Frame")
     row.Size = UDim2.new(0.96, 0, 0, 36)
-    row.BackgroundColor3 = Color3.fromRGB(20, 20, 26) -- สีกล่องเข้มกลมกลืน
+    row.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
     row.BorderSizePixel = 0
     row.Parent = parent
 
@@ -337,7 +373,6 @@ local function createStyleRow(parent, titleText, initialText, initialColor, call
     return row
 end
 
--- หัวข้อหมวดย่อยแบบมีลูกศรชี้นำ (สไตล์ภาพที่คุณส่งมา)
 local function createSectionTitle(parent, text, textColor)
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(0.96, 0, 0, 20)
@@ -351,7 +386,6 @@ local function createSectionTitle(parent, text, textColor)
     return title
 end
 
--- สร้างรายการฟังก์ชันในหมวดล็อกหัว-ตัว
 createSectionTitle(LockContainer, ">> ฟังก์ชันพิเศษ <<", Color3.fromRGB(0, 150, 255))
 
 createStyleRow(LockContainer, "เปิดใช้งาน Silent Aim", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
@@ -400,7 +434,6 @@ end)
 
 createSectionTitle(LockContainer, ">> ตั้งค่าขนาดวงกลม <<", Color3.fromRGB(0, 220, 120))
 
--- แถบปรับขนาดวงกลม FOV แบบสไลด์
 local SliderFrame = Instance.new("Frame")
 SliderFrame.Size = UDim2.new(0.96, 0, 0, 42)
 SliderFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
@@ -469,8 +502,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
-
--- ระบบสลับหน้าแท็บซ้าย
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
         container.Visible = (name == tabName)
@@ -500,5 +531,38 @@ end
 createCategoryButton("เมนูหลัก")
 createCategoryButton("ล็อกหัว-ตัว")
 
--- เปิดเริ่มต้นที่หน้า "เมนูหลัก"
 switchTab("เมนูหลัก")
+
+-- ==================== ระบบอนิเมชั่นโหลดและเปิดหน้าต่าง ====================
+task.spawn(function()
+    local dots = {"", ".", "..", "..."}
+    local startTime = tick()
+    
+    while tick() - startTime < 1.5 do
+        for _, d in ipairs(dots) do
+            LoadText.Text = "กำลังโหลด" .. d
+            task.wait(0.25)
+        end
+    end
+    
+    LoadText.Text = "โหลดเสร็จสิ้น!"
+    task.wait(0.5)
+    
+    -- เฟดและย่อหน้าจอโหลดออก
+    TweenService:Create(LoadFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
+    TweenService:Create(LoadText, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+    task.wait(0.3)
+    LoadFrame:Destroy()
+    
+    -- แสดงหน้าต่างหลักพร้อมอนิเมชั่นเด้งขยายออกสมูทๆ
+    MainFrame.Visible = true
+    MainFrame.Size = UDim2.new(0, 0, 0, 0)
+    MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    
+    local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 440, 0, 250),
+        Position = UDim2.new(0.5, -220, 0.5, -125),
+        BackgroundTransparency = 0
+    })
+    openTween:Play()
+end)
