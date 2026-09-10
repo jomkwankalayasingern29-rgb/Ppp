@@ -18,10 +18,36 @@ getgenv().SilentAimTarget = "Head"
 
 getgenv().CamLockEnabled = false
 getgenv().CamLockTarget = "Head"
-getgenv().CamLockSpeedPercent = 100 -- ค่าความเร็วล็อก 1-100% (เริ่มต้น 100% เหนียวแน่น)
+getgenv().CamLockSpeedPercent = 100 -- ค่าความเร็วล็อก 1-100%
 
 getgenv().CircleRadius = 120
-getgenv().CustomFOV = Camera.FieldOfView -- ค่า FOV ปัจจุบัน
+getgenv().CustomFOV = Camera.FieldOfView
+
+-- ค่าตัวแปรระบบ ESP
+getgenv().ESP3DEnabled = false
+getgenv().ESP2DEnabled = false
+
+-- ตารางเก็บ Drawing สำหรับ ESP
+local ESPObjects = {}
+
+local function RemoveESP(player)
+    if ESPObjects[player] then
+        if ESPObjects[player].Box3D then
+            for _, line in pairs(ESPObjects[player].Box3D) do
+                line:Remove()
+            end
+        end
+        if ESPObjects[player].Box2D then
+            for _, line in pairs(ESPObjects[player].Box2D) do
+                line:Remove()
+            end
+        end
+        if ESPObjects[player].NameTag then
+            ESPObjects[player].NameTag:Remove()
+        end
+        ESPObjects[player] = nil
+    end
+end
 
 -- สร้างวงกลม FOV ตรงกลางจอ
 local FOVCircle = Drawing.new("Circle")
@@ -92,7 +118,7 @@ oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     return oldNamecall(self, unpack(args))
 end)
 
--- 2. ระบบจอล็อก (Cam Lock) พร้อมความเร็ว 1-100%
+-- 2. ระบบจอล็อก (Cam Lock)
 RunService.RenderStepped:Connect(function()
     if getgenv().CamLockEnabled then
         local target = GetTargetPart(getgenv().CamLockTarget)
@@ -107,6 +133,141 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
+end)
+
+-- 3. ระบบ ESP (3D & 2D)
+RunService.RenderStepped:Connect(function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local character = player.Character
+            local humanoid = character and character:FindFirstChild("Humanoid")
+            local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+            
+            if character and humanoid and rootPart and humanoid.Health > 0 then
+                if not ESPObjects[player] then
+                    -- สร้าง Drawing สำหรับ ESP 3D (12 เส้นโครงร่างกล่อง)
+                    local box3D = {}
+                    for i = 1, 12 do
+                        local line = Drawing.new("Line")
+                        line.Visible = false
+                        line.Thickness = 1.5
+                        line.Color = Color3.fromRGB(0, 255, 128)
+                        table.insert(box3D, line)
+                    end
+
+                    -- สร้าง Drawing สำหรับ ESP 2D (4 เส้นกรอบสี่เหลี่ยม Bounding Box)
+                    local box2D = {}
+                    for i = 1, 4 do
+                        local line = Drawing.new("Line")
+                        line.Visible = false
+                        line.Thickness = 1.5
+                        line.Color = Color3.fromRGB(255, 255, 255)
+                        table.insert(box2D, line)
+                    end
+
+                    -- ชื่อผู้เล่นด้านบน
+                    local nameTag = Drawing.new("Text")
+                    nameTag.Visible = false
+                    nameTag.Center = true
+                    nameTag.Outline = true
+                    nameTag.Size = 13 -- ขนาดตัวอักษรไม่ใหญ่จนเกินไป
+                    nameTag.Color = Color3.fromRGB(255, 255, 255)
+
+                    ESPObjects[player] = {Box3D = box3D, Box2D = box2D, NameTag = nameTag}
+                end
+
+                local data = ESPObjects[player]
+
+                -- จัดการ ESP 3D
+                if getgenv().ESP3DEnabled then
+                    local cf = rootPart.CFrame
+                    local size = Vector3.new(2, 3, 1) -- ขนาดกล่องตัวละครคร่าวๆ
+                    local corners = {
+                        cf * CFrame.new(-size.X, size.Y, -size.Z),
+                        cf * CFrame.new(size.X, size.Y, -size.Z),
+                        cf * CFrame.new(size.X, size.Y, size.Z),
+                        cf * CFrame.new(-size.X, size.Y, size.Z),
+                        cf * CFrame.new(-size.X, -size.Y, -size.Z),
+                        cf * CFrame.new(size.X, -size.Y, -size.Z),
+                        cf * CFrame.new(size.X, -size.Y, size.Z),
+                        cf * CFrame.new(-size.X, -size.Y, size.Z),
+                    }
+                    local screenCorners = {}
+                    local allOnScreen = true
+                    for i, corner in ipairs(corners) do
+                        local pos, onScreen = Camera:WorldToViewportPoint(corner.Position)
+                        screenCorners[i] = Vector2.new(pos.X, pos.Y)
+                        if not onScreen then allOnScreen = false end
+                    end
+
+                    local connections = {
+                        {1,2}, {2,3}, {3,4}, {4,1},
+                        {5,6}, {6,7}, {7,8}, {8,5},
+                        {1,5}, {2,6}, {3,7}, {4,8}
+                    }
+
+                    for i, conn in ipairs(connections) do
+                        local line = data.Box3D[i]
+                        if allOnScreen then
+                            line.From = screenCorners[conn[1]]
+                            line.To = screenCorners[conn[2]]
+                            line.Visible = true
+                        else
+                            line.Visible = false
+                        end
+                    end
+                else
+                    for _, line in ipairs(data.Box3D) do line.Visible = false end
+                end
+
+                -- จัดการ ESP 2D & NameTag
+                if getgenv().ESP2DEnabled then
+                    local head = character:FindFirstChild("Head")
+                    if head then
+                        local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                        local legPos, legOnScreen = Camera:WorldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0))
+                        
+                        if headOnScreen or legOnScreen then
+                            local height = math.abs(headPos.Y - legPos.Y)
+                            local width = height / 2
+                            local x = headPos.X - (width / 2)
+                            local y = headPos.Y
+
+                            -- 4 เส้นขอบ Bounding Box 2D
+                            data.Box2D[1].From = Vector2.new(x, y)
+                            data.Box2D[2].From = Vector2.new(x + width, y)
+                            data.Box2D[3].From = Vector2.new(x, y + height)
+                            data.Box2D[4].From = Vector2.new(x, y + height)
+
+                            data.Box2D[1].To = Vector2.new(x + width, y)
+                            data.Box2D[2].To = Vector2.new(x + width, y + height)
+                            data.Box2D[3].To = Vector2.new(x + width, y + height)
+                            data.Box2D[4].To = Vector2.new(x, y)
+
+                            for _, line in ipairs(data.Box2D) do line.Visible = true end
+
+                            -- ชื่อผู้ เล่นเหนือจอ
+                            data.NameTag.Text = player.Name
+                            data.NameTag.Position = Vector2.new(headPos.X, y - 18)
+                            data.NameTag.Visible = true
+                        else
+                            for _, line in ipairs(data.Box2D) do line.Visible = false end
+                            data.NameTag.Visible = false
+                        end
+                    end
+                else
+                    for _, line in ipairs(data.Box2D) do line.Visible = false end
+                    data.NameTag.Visible = false
+                end
+            else
+                RemoveESP(player)
+            end
+        end
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    RemoveESP(player)
 end)
 
 -- ==================== สร้าง UI (พร้อมอนิเมชั่นและหน้าจอโหลด) ====================
@@ -145,7 +306,7 @@ LoadText.Parent = LoadFrame
 -- หน้าต่างหลัก (Main Frame)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 440, 0, 280) -- ขยายความสูงเพิ่มนิดหน่อยเพื่อให้พอดีกับเมนูใหม่
+MainFrame.Size = UDim2.new(0, 440, 0, 280)
 MainFrame.Position = UDim2.new(0.5, -220, 0.5, -140)
 MainFrame.BackgroundColor3 = Color3.fromRGB(13, 13, 16)
 MainFrame.BorderSizePixel = 0
@@ -223,6 +384,9 @@ CloseButton.MouseButton1Click:Connect(function()
     closeTween:Play()
     closeTween.Completed:Wait()
     FOVCircle:Remove()
+    for _, player in ipairs(Players:GetPlayers()) do
+        RemoveESP(player)
+    end
     ScreenGui:Destroy()
 end)
 
@@ -438,7 +602,7 @@ createStyleRow(LockContainer, "เป้าหมายจอล็อก (ห�
     end
 end)
 
--- ==================== เพิ่มฟังก์ชัน: ปรับความเร็วล็อก (1 - 100%) ====================
+-- ความเร็วล็อกเป้า (1 - 100%)
 createSectionTitle(LockContainer, ">> ความเร็วล็อกเป้า (1-100%) <<", Color3.fromRGB(255, 80, 80))
 
 local SpeedSliderFrame = Instance.new("Frame")
@@ -475,7 +639,7 @@ SpeedBarCorner.Parent = SpeedBar
 
 local SpeedButton = Instance.new("TextButton")
 SpeedButton.Size = UDim2.new(0, 12, 0, 16)
-SpeedButton.Position = UDim2.new(1, -6, 0, -5) -- เริ่มต้น 100% อยู่ขวา
+SpeedButton.Position = UDim2.new(1, -6, 0, -5)
 SpeedButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 SpeedButton.BorderSizePixel = 0
 SpeedButton.Text = ""
@@ -501,14 +665,13 @@ UserInputService.InputChanged:Connect(function(input)
         local percentage = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
         
         SpeedButton.Position = UDim2.new(percentage, -6, 0, -5)
-        local newSpeedVal = math.floor(percentage * 99) + 1 -- ปรับตั้งแต่ 1 ถึง 100
+        local newSpeedVal = math.floor(percentage * 99) + 1
         getgenv().CamLockSpeedPercent = newSpeedVal
         SpeedLabel.Text = "Lock Speed: " .. newSpeedVal .. "%" .. (newSpeedVal == 100 and " (เหนียวสุดๆ)" or "")
     end
 end)
 
-
--- ==================== ตั้งค่าขนาดวงกลม FOV (สูงสุด 1000) ====================
+-- ตั้งค่าขนาดวงกลม FOV (สูงสุด 1000)
 createSectionTitle(LockContainer, ">> ตั้งค่า FOV (สูงสุด 1000) <<", Color3.fromRGB(0, 220, 120))
 
 local SliderFrame = Instance.new("Frame")
@@ -572,13 +735,42 @@ UserInputService.InputChanged:Connect(function(input)
         local percentage = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
         
         SliderButton.Position = UDim2.new(percentage, -6, 0, -5)
-        local newRadius = math.floor(10 + (percentage * 990)) -- รองรับสูงสุดถึง 1000
+        local newRadius = math.floor(10 + (percentage * 990))
         getgenv().CircleRadius = newRadius
         FOVCircle.Radius = newRadius
-        Camera.FieldOfView = math.clamp(newRadius, 1, 120) -- ปรับมุมกล้อง FieldOfView ของเกมตาม (แนะนำจำกัดไม่ให้เกิน 120 เพื่อไม่ให้จอแตก แต่ถ้าต้องการให้กว้างสุดๆ ปลดล็อกได้เลย)
+        Camera.FieldOfView = math.clamp(newRadius, 1, 120)
         SizeLabel.Text = "FOV / Radius: " .. newRadius
     end
 end)
+
+
+-- ==================== หมวดที่ 3: ESP ====================
+local ESPContainer = createContainer("ESP")
+
+createSectionTitle(ESPContainer, ">> ระบบ ESP <<", Color3.fromRGB(0, 255, 128))
+
+createStyleRow(ESPContainer, "เปิดใช้งาน ESP 3D", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+    getgenv().ESP3DEnabled = not getgenv().ESP3DEnabled
+    if getgenv().ESP3DEnabled then
+        btn.Text = "เปิด"
+        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
+    else
+        btn.Text = "ปิด"
+        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+createStyleRow(ESPContainer, "เปิดใช้งาน ESP 2D", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+    getgenv().ESP2DEnabled = not getgenv().ESP2DEnabled
+    if getgenv().ESP2DEnabled then
+        btn.Text = "เปิด"
+        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
+    else
+        btn.Text = "ปิด"
+        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
 
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
@@ -608,6 +800,7 @@ end
 
 createCategoryButton("เมนูหลัก")
 createCategoryButton("ล็อกหัว-ตัว")
+createCategoryButton("ESP")
 
 switchTab("เมนูหลัก")
 
