@@ -174,16 +174,29 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
+end)
 
-    -- ฟังก์ชันปรับ HoldDuration เป็น 0 (ให้เรากดปุ่มค้างเองแบบไม่ต้องรอนาน แต่ไม่กดรัวให้เอง)
-    if getgenv().InstantPromptOnly then
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("ProximityPrompt") then
-                if obj.HoldDuration > 0 then
-                    obj.HoldDuration = 0
+-- ==================== ระบบกด 0 วิ (แบบปรับปรุงให้ไม่แล็กบนมือถือ) ====================
+workspace.DescendantAdded:Connect(function(obj)
+    if getgenv().InstantPromptOnly and obj:IsA("ProximityPrompt") then
+        if obj.HoldDuration > 0 then
+            obj.HoldDuration = 0
+        end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        if getgenv().InstantPromptOnly then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("ProximityPrompt") then
+                    if obj.HoldDuration > 0 then
+                        obj.HoldDuration = 0
+                    end
                 end
             end
         end
+        task.wait(1) -- หน่วงเวลา 1 วินาที ลดอาการแล็กบนมือถือ
     end
 end)
 
