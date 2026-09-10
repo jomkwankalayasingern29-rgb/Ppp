@@ -8,7 +8,6 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local CollectionService = game:GetService("CollectionService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
@@ -21,7 +20,7 @@ getgenv().CamLockTarget = "Head"
 getgenv().CamLockSpeedPercent = 100
 
 getgenv().LookAtEnabled = false
-getgenv().InstantPromptOnly = false -- ระบบ 0 วิ ขั้นเทพ (ไม่แล็กแน่นอน)
+getgenv().InstantPromptOnly = false -- ระบบกดอัตโนมัติแบบไม่โดนบล็อก
 
 getgenv().CircleRadius = 120
 getgenv().CustomFOV = Camera.FieldOfView
@@ -162,61 +161,45 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ==================== ระบบกด 0 วิ สำหรับแมพปุ่มเยอะโดยเฉพาะ (Ultra-Optimized) ====================
-local OptimizedPrompts = {}
+-- ==================== ระบบกดอัตโนมัติ (ไม่โดนบล็อก + ไม่แลก) ====================
+local activePrompts = {}
 
-local function registerPrompt(prompt)
-    if prompt:IsA("ProximityPrompt") then
-        OptimizedPrompts[prompt] = true
-        if getgenv().InstantPromptOnly then
-            prompt.HoldDuration = 0
-        end
-    end
-end
-
--- ดักจับปุ่มที่ถูกสร้างขึ้นมาใหม่ทันทีโดยไม่ต้องวนลูปหาทั้งแมพ
 workspace.DescendantAdded:Connect(function(obj)
-    registerPrompt(obj)
-end)
-
-workspace.DescendantRemoving:Connect(function(obj)
-    if OptimizedPrompts[obj] then
-        OptimizedPrompts[obj] = nil
+    if obj:IsA("ProximityPrompt") then
+        table.insert(activePrompts, obj)
     end
 end)
 
--- กวาดเก็บข้อมูลครั้งแรกตอนเริ่มสคริปต์แบบแยกเธรด (ไม่กินแรงเครื่อง)
 task.spawn(function()
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("ProximityPrompt") then
-            registerPrompt(obj)
+            table.insert(activePrompts, obj)
         end
     end
 end)
 
--- ควบคุมการเปิด/ปิด 0 วิ แบบประหยัด CPU 100% (เช็คเฉพาะตอนสลับสถานะเท่านั้น)
-local lastInstantState = false
 RunService.Heartbeat:Connect(function()
-    if getgenv().InstantPromptOnly ~= lastInstantState then
-        lastInstantState = getgenv().InstantPromptOnly
-        task.spawn(function()
-            for prompt, _ in pairs(OptimizedPrompts) do
+    if getgenv().InstantPromptOnly then
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+            local myPos = myChar.HumanoidRootPart.Position
+            for _, prompt in ipairs(activePrompts) do
                 if prompt and prompt.Parent then
-                    prompt.HoldDuration = lastInstantState and 0 or prompt:GetAttribute("OriginalHoldDuration") or 1
+                    local part = prompt.Parent
+                    if part:IsA("BasePart") then
+                        if (myPos - part.Position).Magnitude <= (prompt.MaxActivationDistance or 10) then
+                            pcall(function()
+                                prompt:InputHoldBegin()
+                                task.wait()
+                                prompt:InputHoldEnd()
+                            end)
+                        end
+                    end
                 end
             end
-        end)
-    end
-end)
-
--- บันทึกค่า HoldDuration เดิมไว้ตอนปุ่มเกิดใหม่ (เผื่อปิดฟังก์ชัน)
-for _, obj in ipairs(workspace:GetDescendants()) do
-    if obj:IsA("ProximityPrompt") then
-        if not obj:GetAttribute("OriginalHoldDuration") then
-            obj:SetAttribute("OriginalHoldDuration", obj.HoldDuration)
         end
     end
-end
+end)
 
 -- 3. ระบบ ESP
 RunService.RenderStepped:Connect(function()
@@ -410,7 +393,7 @@ NoticeContent.Size = UDim2.new(1, -24, 0, 130)
 NoticeContent.Position = UDim2.new(0, 12, 0, 38)
 NoticeContent.BackgroundTransparency = 1
 NoticeContent.Font = Enum.Font.Gotham
-NoticeContent.Text = "• แมพ Block Script ที่มีปุ่มกดจำนวนมาก ถูกปรับแต่งระบบ 0 วิใหม่ให้ใช้ Cache Memory (ไม่ลูปสแกนหน้าจอ)\n• มั่นใจได้ว่ากดเปิดฟังก์ชันแล้วจะไม่เกิดอาการกระตุกหรือแลค 100%\n• รองรับปุ่มนับหมื่นชิ้นในแมพอย่างลื่นไหล"
+NoticeContent.Text = "• ระบบกดอัตโนมัติได้รับการปรับแต่งใหม่สำหรับแมพปุ่มเยอะโดยเฉพาะ\n• แก้ไขปัญหาข้อความ 'ไม่สามารถยืนยันการโต้ตอบได้' เรียบร้อย\n• ไม่แลค ทำงานลื่นไหลแม้ในแมพที่มีวัตถุกดจำนวนมาก"
 NoticeContent.TextColor3 = Color3.fromRGB(200, 200, 200)
 NoticeContent.TextSize = 10
 NoticeContent.TextXAlignment = Enum.TextXAlignment.Left
@@ -712,8 +695,8 @@ end)
 
 -- กด 0 วิ
 local FastContainer = createContainer("กด 0 วิ")
-createSectionTitle(FastContainer, ">> ระบบกด 0 วิ (Block-Map Optimized) <<", Color3.fromRGB(255, 215, 0))
-createStyleRow(FastContainer, "ปรับปุ่ม 0 วิ (ไม่แลก)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+createSectionTitle(FastContainer, ">> ระบบกดอัตโนมัติ (Anti-Block) <<", Color3.fromRGB(255, 215, 0))
+createStyleRow(FastContainer, "เปิดใช้งานกดอัตโนมัติ", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
     getgenv().InstantPromptOnly = not getgenv().InstantPromptOnly
     btn.Text = getgenv().InstantPromptOnly and "เปิด" or "ปิด"
     btn.BackgroundColor3 = getgenv().InstantPromptOnly and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
