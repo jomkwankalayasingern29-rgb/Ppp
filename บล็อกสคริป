@@ -18,7 +18,7 @@ getgenv().SilentAimTarget = "Head"
 
 getgenv().CamLockEnabled = false
 getgenv().CamLockTarget = "Head"
-getgenv().CamLockSpeedPercent = 100 -- ค่าความเร็วล็อก 1-100%
+getgenv().CamLockSpeedPercent = 100
 
 getgenv().CircleRadius = 120
 getgenv().CustomFOV = Camera.FieldOfView
@@ -41,6 +41,9 @@ local function RemoveESP(player)
             for _, line in pairs(ESPObjects[player].Box2D) do
                 line:Remove()
             end
+        end
+        if ESPObjects[player].Tracer then
+            ESPObjects[player].Tracer:Remove()
         end
         if ESPObjects[player].NameTag then
             ESPObjects[player].NameTag:Remove()
@@ -135,7 +138,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 3. ระบบ ESP (3D & 2D)
+-- 3. ระบบ ESP (3D & 2D พร้อม Tracer เส้นเชื่อมไปหาเป้าหมาย)
 RunService.RenderStepped:Connect(function()
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
@@ -145,7 +148,7 @@ RunService.RenderStepped:Connect(function()
             
             if character and humanoid and rootPart and humanoid.Health > 0 then
                 if not ESPObjects[player] then
-                    -- สร้าง Drawing สำหรับ ESP 3D (12 เส้นโครงร่างกล่อง)
+                    -- สร้าง Drawing สำหรับ ESP 3D
                     local box3D = {}
                     for i = 1, 12 do
                         local line = Drawing.new("Line")
@@ -155,7 +158,7 @@ RunService.RenderStepped:Connect(function()
                         table.insert(box3D, line)
                     end
 
-                    -- สร้าง Drawing สำหรับ ESP 2D (4 เส้นกรอบสี่เหลี่ยม Bounding Box)
+                    -- สร้าง Drawing สำหรับ ESP 2D
                     local box2D = {}
                     for i = 1, 4 do
                         local line = Drawing.new("Line")
@@ -165,15 +168,22 @@ RunService.RenderStepped:Connect(function()
                         table.insert(box2D, line)
                     end
 
+                    -- เส้น Tracer เชื่อมจากล่างจอไปหาตัวละคร
+                    local tracer = Drawing.new("Line")
+                    tracer.Visible = false
+                    tracer.Thickness = 1
+                    tracer.Color = Color3.fromRGB(255, 255, 255)
+                    tracer.Transparency = 0.7
+
                     -- ชื่อผู้เล่นด้านบน
                     local nameTag = Drawing.new("Text")
                     nameTag.Visible = false
                     nameTag.Center = true
                     nameTag.Outline = true
-                    nameTag.Size = 13 -- ขนาดตัวอักษรไม่ใหญ่จนเกินไป
+                    nameTag.Size = 13
                     nameTag.Color = Color3.fromRGB(255, 255, 255)
 
-                    ESPObjects[player] = {Box3D = box3D, Box2D = box2D, NameTag = nameTag}
+                    ESPObjects[player] = {Box3D = box3D, Box2D = box2D, Tracer = tracer, NameTag = nameTag}
                 end
 
                 local data = ESPObjects[player]
@@ -181,7 +191,7 @@ RunService.RenderStepped:Connect(function()
                 -- จัดการ ESP 3D
                 if getgenv().ESP3DEnabled then
                     local cf = rootPart.CFrame
-                    local size = Vector3.new(2, 3, 1) -- ขนาดกล่องตัวละครคร่าวๆ
+                    local size = Vector3.new(2, 3, 1)
                     local corners = {
                         cf * CFrame.new(-size.X, size.Y, -size.Z),
                         cf * CFrame.new(size.X, size.Y, -size.Z),
@@ -220,7 +230,7 @@ RunService.RenderStepped:Connect(function()
                     for _, line in ipairs(data.Box3D) do line.Visible = false end
                 end
 
-                -- จัดการ ESP 2D & NameTag
+                -- จัดการ ESP 2D, Tracer & NameTag
                 if getgenv().ESP2DEnabled then
                     local head = character:FindFirstChild("Head")
                     if head then
@@ -246,17 +256,25 @@ RunService.RenderStepped:Connect(function()
 
                             for _, line in ipairs(data.Box2D) do line.Visible = true end
 
-                            -- ชื่อผู้ เล่นเหนือจอ
+                            -- เส้น Tracer เชื่อมจากล่างจอตรงกลาง ไปยังตัวละคร (ตรงกึ่งกลางล่างของกรอบ 2D)
+                            local screenSize = Camera.ViewportSize
+                            data.Tracer.From = Vector2.new(screenSize.X / 2, screenSize.Y)
+                            data.Tracer.To = Vector2.new(x + (width / 2), y + height)
+                            data.Tracer.Visible = true
+
+                            -- ชื่อผู้เล่นเหนือจอ
                             data.NameTag.Text = player.Name
                             data.NameTag.Position = Vector2.new(headPos.X, y - 18)
                             data.NameTag.Visible = true
                         else
                             for _, line in ipairs(data.Box2D) do line.Visible = false end
+                            data.Tracer.Visible = false
                             data.NameTag.Visible = false
                         end
                     end
                 else
                     for _, line in ipairs(data.Box2D) do line.Visible = false end
+                    data.Tracer.Visible = false
                     data.NameTag.Visible = false
                 end
             else
