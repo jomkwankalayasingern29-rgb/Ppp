@@ -27,6 +27,11 @@ getgenv().CustomFOV = Camera.FieldOfView
 getgenv().ESP3DEnabled = false
 getgenv().ESP2DEnabled = false
 
+-- ค่าตัวแปรระบบ อมตะ (God Mode & Health)
+getgenv().MaxHealthEnabled = false
+getgenv().GodModeEnabled = false
+getgenv().AutoHealEnabled = false
+
 -- ตารางเก็บ Drawing สำหรับ ESP
 local ESPObjects = {}
 
@@ -138,7 +143,39 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 3. ระบบ ESP (3D & 2D พร้อม Tracer เส้นเชื่อมไปหาเป้าหมาย)
+-- 3. ระบบฟังก์ชันอมตะ (Max Health, God Mode, Auto Heal)
+task.spawn(function()
+    while true do
+        local char = LocalPlayer.Character
+        if char then
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                -- แบบที่ 1: เพิ่มเลือด 999,999,999
+                if getgenv().MaxHealthEnabled then
+                    if humanoid.MaxHealth ~= 999999999 then
+                        humanoid.MaxHealth = 999999999
+                        humanoid.Health = 999999999
+                    end
+                end
+
+                -- แบบที่ 2: บังคับไม่ให้เลือดลด (God Mode)
+                if getgenv().GodModeEnabled then
+                    if humanoid.Health < humanoid.MaxHealth then
+                        humanoid.Health = humanoid.MaxHealth
+                    end
+                end
+
+                -- แบบที่ 3: เด้งเลือดรัวๆ ความเร็ว 0.1 วินาที ให้เต็มหลอด
+                if getgenv().AutoHealEnabled then
+                    humanoid.Health = humanoid.MaxHealth
+                end
+            end
+        end
+        task.wait(getgenv().AutoHealEnabled and 0.1 or 0.5)
+    end
+end)
+
+-- 4. ระบบ ESP (3D & 2D พร้อม Tracer เส้นเชื่อมไปหาเป้าหมาย)
 RunService.RenderStepped:Connect(function()
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
@@ -445,7 +482,7 @@ LeftSide.Size = UDim2.new(0.32, 0, 1, -38)
 LeftSide.Position = UDim2.new(0, 6, 0, 34)
 LeftSide.BackgroundTransparency = 1
 LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 100)
+LeftSide.CanvasSize = UDim2.new(0, 0, 0, 140)
 LeftSide.ScrollBarThickness = 1
 LeftSide.Parent = MainFrame
 
@@ -790,6 +827,45 @@ createStyleRow(ESPContainer, "เปิดใช้งาน ESP 2D", "ปิด
 end)
 
 
+-- ==================== หมวดที่ 4: อมตะ ====================
+local ImmortalContainer = createContainer("อมตะ")
+
+createSectionTitle(ImmortalContainer, ">> ระบบเพิ่มพลังชีวิตและความอมตะ <<", Color3.fromRGB(255, 50, 100))
+
+createStyleRow(ImmortalContainer, "1. เพิ่มเลือด (999,999,999)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+    getgenv().MaxHealthEnabled = not getgenv().MaxHealthEnabled
+    if getgenv().MaxHealthEnabled then
+        btn.Text = "เปิด"
+        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
+    else
+        btn.Text = "ปิด"
+        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+createStyleRow(ImmortalContainer, "2. ล็อกเลือดไม่ลด (God Mode)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+    getgenv().GodModeEnabled = not getgenv().GodModeEnabled
+    if getgenv().GodModeEnabled then
+        btn.Text = "เปิด"
+        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
+    else
+        btn.Text = "ปิด"
+        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+createStyleRow(ImmortalContainer, "3. ฮีลเลือดรัวๆ (ทุก 0.1 วิ)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+    getgenv().AutoHealEnabled = not getgenv().AutoHealEnabled
+    if getgenv().AutoHealEnabled then
+        btn.Text = "เปิด"
+        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
+    else
+        btn.Text = "ปิด"
+        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
         container.Visible = (name == tabName)
@@ -819,6 +895,7 @@ end
 createCategoryButton("เมนูหลัก")
 createCategoryButton("ล็อกหัว-ตัว")
 createCategoryButton("ESP")
+createCategoryButton("อมตะ")
 
 switchTab("เมนูหลัก")
 
