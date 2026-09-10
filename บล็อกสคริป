@@ -22,8 +22,8 @@ getgenv().CamLockSpeedPercent = 100
 -- ฟังก์ชันใหม่: หันหน้าหาศัตรู (Character LookAt)
 getgenv().LookAtEnabled = false
 
--- ฟังก์ชันใหม่: กดทุกอย่าง 0 วิ (ProximityPrompt ทุกตัวในเกม)
-getgenv().InstantAllPromptEnabled = false
+-- ฟังก์ชันใหม่: ปรับ ProximityPrompt ให้เป็น 0 วิ (ไม่กดอัตโนมัติ ให้เรากดเอง)
+getgenv().InstantPromptOnly = false
 
 getgenv().CircleRadius = 120
 getgenv().CustomFOV = Camera.FieldOfView
@@ -175,28 +175,12 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ฟังก์ชันกดทุกอย่าง 0 วิ (ProximityPrompt ทุกอันใน Workspace)
-    if getgenv().InstantAllPromptEnabled then
-        local myChar = LocalPlayer.Character
-        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-            local myPos = myChar.HumanoidRootPart.Position
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("ProximityPrompt") then
-                    if obj.HoldDuration > 0 then
-                        obj.HoldDuration = 0
-                    end
-                    -- เช็คระยะทางและสั่งกดอัตโนมัติทุกปุ่มในเกม
-                    local parent = obj.Parent
-                    local partPos = nil
-                    if parent and parent:IsA("BasePart") then
-                        partPos = parent.Position
-                    elseif parent and parent:IsA("Model") and parent.PrimaryPart then
-                        partPos = parent.PrimaryPart.Position
-                    end
-                    
-                    if partPos and (myPos - partPos).Magnitude <= obj.MaxActivationDistance then
-                        fireproximityprompt(obj)
-                    end
+    -- ฟังก์ชันปรับ HoldDuration เป็น 0 (ให้เรากดปุ่มค้างเองแบบไม่ต้องรอนาน แต่ไม่กดรัวให้เอง)
+    if getgenv().InstantPromptOnly then
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("ProximityPrompt") then
+                if obj.HoldDuration > 0 then
+                    obj.HoldDuration = 0
                 end
             end
         end
@@ -711,13 +695,13 @@ createStyleRow(ESPContainer, "เปิดใช้งาน ESP 2D", "ปิด
     btn.BackgroundColor3 = getgenv().ESP2DEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
--- หมวด 4: ฟังก์ชัน 0 วิ
+-- หมวด 4: กด 0 วิ (แบบกดเอง)
 local FastContainer = createContainer("กด 0 วิ")
-createSectionTitle(FastContainer, ">> ระบบกด 0 วิ (ทุกปุ่ม) <<", Color3.fromRGB(255, 215, 0))
-createStyleRow(FastContainer, "กดทุกอย่าง 0 วิ (Auto Prompt)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
-    getgenv().InstantAllPromptEnabled = not getgenv().InstantAllPromptEnabled
-    btn.Text = getgenv().InstantAllPromptEnabled and "เปิด" or "ปิด"
-    btn.BackgroundColor3 = getgenv().InstantAllPromptEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
+createSectionTitle(FastContainer, ">> ระบบกด 0 วิ (กดเอง) <<", Color3.fromRGB(255, 215, 0))
+createStyleRow(FastContainer, "ปรับปุ่ม 0 วิ (ไม่ต้องรอค้าง)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+    getgenv().InstantPromptOnly = not getgenv().InstantPromptOnly
+    btn.Text = getgenv().InstantPromptOnly and "เปิด" or "ปิด"
+    btn.BackgroundColor3 = getgenv().InstantPromptOnly and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
 local function switchTab(tabName)
