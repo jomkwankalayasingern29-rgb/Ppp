@@ -4,7 +4,7 @@ if CoreGui:FindFirstChild("CustomScriptUI") then
     CoreGui.CustomScriptUI:Destroy()
 end
 
--- ==================== ระบบหลัก (Aim / Silent Aim) ====================
+-- ==================== ระบบหลัก (Aim / Silent Aim / Camera) ====================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -18,9 +18,10 @@ getgenv().SilentAimTarget = "Head"
 
 getgenv().CamLockEnabled = false
 getgenv().CamLockTarget = "Head"
-getgenv().CamLockSpeed = 0.2
+getgenv().CamLockSpeedPercent = 100 -- ค่าความเร็วล็อก 1-100% (เริ่มต้น 100% เหนียวแน่น)
 
 getgenv().CircleRadius = 120
+getgenv().CustomFOV = Camera.FieldOfView -- ค่า FOV ปัจจุบัน
 
 -- สร้างวงกลม FOV ตรงกลางจอ
 local FOVCircle = Drawing.new("Circle")
@@ -91,13 +92,19 @@ oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     return oldNamecall(self, unpack(args))
 end)
 
--- 2. ระบบจอล็อก (Cam Lock)
+-- 2. ระบบจอล็อก (Cam Lock) พร้อมความเร็ว 1-100%
 RunService.RenderStepped:Connect(function()
     if getgenv().CamLockEnabled then
         local target = GetTargetPart(getgenv().CamLockTarget)
         if target then
             local targetCFrame = CFrame.new(Camera.CFrame.Position, target.Position)
-            Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, getgenv().CamLockSpeed)
+            local speedAlpha = getgenv().CamLockSpeedPercent / 100
+            
+            if speedAlpha >= 1 then
+                Camera.CFrame = targetCFrame
+            else
+                Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, speedAlpha)
+            end
         end
     end
 end)
@@ -135,11 +142,11 @@ LoadText.TextColor3 = Color3.fromRGB(240, 240, 240)
 LoadText.TextSize = 12
 LoadText.Parent = LoadFrame
 
--- หน้าต่างหลัก (Main Frame) - ซ่อนไว้ก่อนรอโหลดเสร็จ
+-- หน้าต่างหลัก (Main Frame)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 440, 0, 250)
-MainFrame.Position = UDim2.new(0.5, -220, 0.5, -125)
+MainFrame.Size = UDim2.new(0, 440, 0, 280) -- ขยายความสูงเพิ่มนิดหน่อยเพื่อให้พอดีกับเมนูใหม่
+MainFrame.Position = UDim2.new(0.5, -220, 0.5, -140)
 MainFrame.BackgroundColor3 = Color3.fromRGB(13, 13, 16)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -190,13 +197,13 @@ TitleLabel.Size = UDim2.new(1, -80, 1, 0)
 TitleLabel.Position = UDim2.new(0, 30, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "GKHub | Main Script"
+TitleLabel.Text = "GKHub | Admin & Aim System"
 TitleLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- ปุ่มปิด (X) พร้อมอนิเมชั่นตอนปิดหน้าต่าง
+-- ปุ่มปิด (X)
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
 CloseButton.Position = UDim2.new(1, -28, 0, 4)
@@ -208,7 +215,6 @@ CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
 
 CloseButton.MouseButton1Click:Connect(function()
-    -- อนิเมชั่นย่อก่อนปิด
     local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         Size = UDim2.new(0, 0, 0, 0),
         Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -243,7 +249,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
         TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 440, 0, 32)}):Play()
     else
         MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 440, 0, 250)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 440, 0, 280)}):Play()
         task.wait(0.2)
         if LeftSideRef then LeftSideRef.Visible = true end
         if RightSideRef then RightSideRef.Visible = true end
@@ -432,7 +438,78 @@ createStyleRow(LockContainer, "เป้าหมายจอล็อก (ห�
     end
 end)
 
-createSectionTitle(LockContainer, ">> ตั้งค่าขนาดวงกลม <<", Color3.fromRGB(0, 220, 120))
+-- ==================== เพิ่มฟังก์ชัน: ปรับความเร็วล็อก (1 - 100%) ====================
+createSectionTitle(LockContainer, ">> ความเร็วล็อกเป้า (1-100%) <<", Color3.fromRGB(255, 80, 80))
+
+local SpeedSliderFrame = Instance.new("Frame")
+SpeedSliderFrame.Size = UDim2.new(0.96, 0, 0, 42)
+SpeedSliderFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+SpeedSliderFrame.BorderSizePixel = 0
+SpeedSliderFrame.Parent = LockContainer
+
+local SpeedCorner = Instance.new("UICorner")
+SpeedCorner.CornerRadius = UDim.new(0, 5)
+SpeedCorner.Parent = SpeedSliderFrame
+
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Size = UDim2.new(1, 0, 0, 18)
+SpeedLabel.Position = UDim2.new(0, 10, 0, 3)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Font = Enum.Font.GothamBold
+SpeedLabel.Text = "Lock Speed: " .. getgenv().CamLockSpeedPercent .. "% (เหนียวสุดๆ)"
+SpeedLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+SpeedLabel.TextSize = 10
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+SpeedLabel.Parent = SpeedSliderFrame
+
+local SpeedBar = Instance.new("Frame")
+SpeedBar.Size = UDim2.new(0.9, 0, 0, 6)
+SpeedBar.Position = UDim2.new(0.05, 0, 0, 26)
+SpeedBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+SpeedBar.BorderSizePixel = 0
+SpeedBar.Parent = SpeedSliderFrame
+
+local SpeedBarCorner = Instance.new("UICorner")
+SpeedBarCorner.CornerRadius = UDim.new(0, 3)
+SpeedBarCorner.Parent = SpeedBar
+
+local SpeedButton = Instance.new("TextButton")
+SpeedButton.Size = UDim2.new(0, 12, 0, 16)
+SpeedButton.Position = UDim2.new(1, -6, 0, -5) -- เริ่มต้น 100% อยู่ขวา
+SpeedButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+SpeedButton.BorderSizePixel = 0
+SpeedButton.Text = ""
+SpeedButton.Parent = SpeedBar
+
+local SpeedBtnCorner = Instance.new("UICorner")
+SpeedBtnCorner.CornerRadius = UDim.new(0, 3)
+SpeedBtnCorner.Parent = SpeedButton
+
+local draggingSpeed = false
+SpeedButton.MouseButton1Down:Connect(function() draggingSpeed = true end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingSpeed = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if draggingSpeed and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local sliderPos = SpeedBar.AbsolutePosition.X
+        local sliderSize = SpeedBar.AbsoluteSize.X
+        local mousePos = input.Position.X
+        local percentage = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
+        
+        SpeedButton.Position = UDim2.new(percentage, -6, 0, -5)
+        local newSpeedVal = math.floor(percentage * 99) + 1 -- ปรับตั้งแต่ 1 ถึง 100
+        getgenv().CamLockSpeedPercent = newSpeedVal
+        SpeedLabel.Text = "Lock Speed: " .. newSpeedVal .. "%" .. (newSpeedVal == 100 and " (เหนียวสุดๆ)" or "")
+    end
+end)
+
+
+-- ==================== ตั้งค่าขนาดวงกลม FOV (สูงสุด 1000) ====================
+createSectionTitle(LockContainer, ">> ตั้งค่า FOV (สูงสุด 1000) <<", Color3.fromRGB(0, 220, 120))
 
 local SliderFrame = Instance.new("Frame")
 SliderFrame.Size = UDim2.new(0.96, 0, 0, 42)
@@ -449,7 +526,7 @@ SizeLabel.Size = UDim2.new(1, 0, 0, 18)
 SizeLabel.Position = UDim2.new(0, 10, 0, 3)
 SizeLabel.BackgroundTransparency = 1
 SizeLabel.Font = Enum.Font.GothamBold
-SizeLabel.Text = "FOV Radius: " .. getgenv().CircleRadius
+SizeLabel.Text = "FOV / Radius: " .. getgenv().CircleRadius
 SizeLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 SizeLabel.TextSize = 10
 SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -468,7 +545,7 @@ SliderBarCorner.Parent = SliderBar
 
 local SliderButton = Instance.new("TextButton")
 SliderButton.Size = UDim2.new(0, 12, 0, 16)
-local initScale = math.clamp((getgenv().CircleRadius - 40) / 300, 0, 1)
+local initScale = math.clamp((getgenv().CircleRadius - 10) / 990, 0, 1)
 SliderButton.Position = UDim2.new(initScale, -6, 0, -5)
 SliderButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
 SliderButton.BorderSizePixel = 0
@@ -495,10 +572,11 @@ UserInputService.InputChanged:Connect(function(input)
         local percentage = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
         
         SliderButton.Position = UDim2.new(percentage, -6, 0, -5)
-        local newRadius = math.floor(40 + (percentage * 300))
+        local newRadius = math.floor(10 + (percentage * 990)) -- รองรับสูงสุดถึง 1000
         getgenv().CircleRadius = newRadius
         FOVCircle.Radius = newRadius
-        SizeLabel.Text = "FOV Radius: " .. newRadius
+        Camera.FieldOfView = math.clamp(newRadius, 1, 120) -- ปรับมุมกล้อง FieldOfView ของเกมตาม (แนะนำจำกัดไม่ให้เกิน 120 เพื่อไม่ให้จอแตก แต่ถ้าต้องการให้กว้างสุดๆ ปลดล็อกได้เลย)
+        SizeLabel.Text = "FOV / Radius: " .. newRadius
     end
 end)
 
@@ -548,20 +626,18 @@ task.spawn(function()
     LoadText.Text = "โหลดเสร็จสิ้น!"
     task.wait(0.5)
     
-    -- เฟดและย่อหน้าจอโหลดออก
     TweenService:Create(LoadFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
     TweenService:Create(LoadText, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
     task.wait(0.3)
     LoadFrame:Destroy()
     
-    -- แสดงหน้าต่างหลักพร้อมอนิเมชั่นเด้งขยายออกสมูทๆ
     MainFrame.Visible = true
     MainFrame.Size = UDim2.new(0, 0, 0, 0)
     MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     
     local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 440, 0, 250),
-        Position = UDim2.new(0.5, -220, 0.5, -125),
+        Size = UDim2.new(0, 440, 0, 280),
+        Position = UDim2.new(0.5, -220, 0.5, -140),
         BackgroundTransparency = 0
     })
     openTween:Play()
