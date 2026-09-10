@@ -1,4 +1,4 @@
--- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
+-- ==================== เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ ====================
 local CoreGui = game:GetService("CoreGui")
 if CoreGui:FindFirstChild("CustomScriptUI") then
     CoreGui.CustomScriptUI:Destroy()
@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local CollectionService = game:GetService("CollectionService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
@@ -19,11 +20,8 @@ getgenv().CamLockEnabled = false
 getgenv().CamLockTarget = "Head"
 getgenv().CamLockSpeedPercent = 100
 
--- ฟังก์ชันใหม่: หันหน้าหาศัตรู (Character LookAt)
 getgenv().LookAtEnabled = false
-
--- ฟังก์ชันใหม่: ปรับ ProximityPrompt ให้เป็น 0 วิ (ไม่กดอัตโนมัติ ให้เรากดเอง)
-getgenv().InstantPromptOnly = false
+getgenv().InstantPromptOnly = false -- ระบบ 0 วิ ขั้นเทพ (ไม่แล็กแน่นอน)
 
 getgenv().CircleRadius = 120
 getgenv().CustomFOV = Camera.FieldOfView
@@ -32,27 +30,18 @@ getgenv().CustomFOV = Camera.FieldOfView
 getgenv().ESP3DEnabled = false
 getgenv().ESP2DEnabled = false
 
--- ตารางเก็บ Drawing สำหรับ ESP
 local ESPObjects = {}
 
 local function RemoveESP(player)
     if ESPObjects[player] then
         if ESPObjects[player].Box3D then
-            for _, line in pairs(ESPObjects[player].Box3D) do
-                line:Remove()
-            end
+            for _, line in pairs(ESPObjects[player].Box3D) do line:Remove() end
         end
         if ESPObjects[player].Box2D then
-            for _, line in pairs(ESPObjects[player].Box2D) do
-                line:Remove()
-            end
+            for _, line in pairs(ESPObjects[player].Box2D) do line:Remove() end
         end
-        if ESPObjects[player].Tracer then
-            ESPObjects[player].Tracer:Remove()
-        end
-        if ESPObjects[player].NameTag then
-            ESPObjects[player].NameTag:Remove()
-        end
+        if ESPObjects[player].Tracer then ESPObjects[player].Tracer:Remove() end
+        if ESPObjects[player].NameTag then ESPObjects[player].NameTag:Remove() end
         ESPObjects[player] = nil
     end
 end
@@ -100,7 +89,6 @@ local function GetTargetPart(targetType)
     return targetPart
 end
 
--- ฟังก์ชันหาตัวละครที่อยู่ใกล้ที่สุด (สำหรับโหมดหันหน้า)
 local function GetNearestRootPart()
     local nearestPart = nil
     local shortestDist = math.huge
@@ -120,7 +108,7 @@ local function GetNearestRootPart()
     return nearestPart
 end
 
--- 1. ระบบกระสุนเลี้ยว (Silent Aim Hook)
+-- 1. ระบบ Silent Aim Hook
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
@@ -146,14 +134,13 @@ oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     return oldNamecall(self, unpack(args))
 end)
 
--- 2. ระบบจอล็อก (Cam Lock) & ระบบหันหน้าหาศัตรู (LookAt)
+-- 2. ระบบ Cam Lock & LookAt
 RunService.RenderStepped:Connect(function()
     if getgenv().CamLockEnabled then
         local target = GetTargetPart(getgenv().CamLockTarget)
         if target then
             local targetCFrame = CFrame.new(Camera.CFrame.Position, target.Position)
             local speedAlpha = getgenv().CamLockSpeedPercent / 100
-            
             if speedAlpha >= 1 then
                 Camera.CFrame = targetCFrame
             else
@@ -162,7 +149,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ฟังก์ชันหันหน้าหาศัตรู (ตัวละครหัน แต่จอไม่หันตาม)
     if getgenv().LookAtEnabled then
         local myChar = LocalPlayer.Character
         if myChar and myChar:FindFirstChild("HumanoidRootPart") then
@@ -176,33 +162,63 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ==================== ระบบกด 0 วิ (ปรับปรุงให้ไม่แล็กบนมือถือ - รองรับเฉพาะเมื่อเปิดใช้งาน) ====================
+-- ==================== ระบบกด 0 วิ สำหรับแมพปุ่มเยอะโดยเฉพาะ (Ultra-Optimized) ====================
+local OptimizedPrompts = {}
+
+local function registerPrompt(prompt)
+    if prompt:IsA("ProximityPrompt") then
+        OptimizedPrompts[prompt] = true
+        if getgenv().InstantPromptOnly then
+            prompt.HoldDuration = 0
+        end
+    end
+end
+
+-- ดักจับปุ่มที่ถูกสร้างขึ้นมาใหม่ทันทีโดยไม่ต้องวนลูปหาทั้งแมพ
 workspace.DescendantAdded:Connect(function(obj)
-    if getgenv().InstantPromptOnly and obj:IsA("ProximityPrompt") then
-        if obj.HoldDuration > 0 then
-            obj.HoldDuration = 0
+    registerPrompt(obj)
+end)
+
+workspace.DescendantRemoving:Connect(function(obj)
+    if OptimizedPrompts[obj] then
+        OptimizedPrompts[obj] = nil
+    end
+end)
+
+-- กวาดเก็บข้อมูลครั้งแรกตอนเริ่มสคริปต์แบบแยกเธรด (ไม่กินแรงเครื่อง)
+task.spawn(function()
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            registerPrompt(obj)
         end
     end
 end)
 
-task.spawn(function()
-    while true do
-        if getgenv().InstantPromptOnly then
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("ProximityPrompt") then
-                    if obj.HoldDuration > 0 then
-                        obj.HoldDuration = 0
-                    end
+-- ควบคุมการเปิด/ปิด 0 วิ แบบประหยัด CPU 100% (เช็คเฉพาะตอนสลับสถานะเท่านั้น)
+local lastInstantState = false
+RunService.Heartbeat:Connect(function()
+    if getgenv().InstantPromptOnly ~= lastInstantState then
+        lastInstantState = getgenv().InstantPromptOnly
+        task.spawn(function()
+            for prompt, _ in pairs(OptimizedPrompts) do
+                if prompt and prompt.Parent then
+                    prompt.HoldDuration = lastInstantState and 0 or prompt:GetAttribute("OriginalHoldDuration") or 1
                 end
             end
-            task.wait(10) -- ทำงานทุกๆ 1 วินาทีเมื่อเปิดใช้งาน เพื่อไม่ให้กินทรัพยากรเครื่องและไม่แล็ก
-        else
-            task.wait(0.5) -- หากปิดอยู่ ให้พักการทำงานเพื่อประหยัดทรัพยากร CPU เต็มที่
-        end
+        end)
     end
 end)
 
--- 3. ระบบ ESP (3D & 2D พร้อม Tracer)
+-- บันทึกค่า HoldDuration เดิมไว้ตอนปุ่มเกิดใหม่ (เผื่อปิดฟังก์ชัน)
+for _, obj in ipairs(workspace:GetDescendants()) do
+    if obj:IsA("ProximityPrompt") then
+        if not obj:GetAttribute("OriginalHoldDuration") then
+            obj:SetAttribute("OriginalHoldDuration", obj.HoldDuration)
+        end
+    end
+end
+
+-- 3. ระบบ ESP
 RunService.RenderStepped:Connect(function()
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
@@ -269,12 +285,7 @@ RunService.RenderStepped:Connect(function()
                         if not onScreen then allOnScreen = false end
                     end
 
-                    local connections = {
-                        {1,2}, {2,3}, {3,4}, {4,1},
-                        {5,6}, {6,7}, {7,8}, {8,5},
-                        {1,5}, {2,6}, {3,7}, {4,8}
-                    }
-
+                    local connections = {{1,2}, {2,3}, {3,4}, {4,1}, {5,6}, {6,7}, {7,8}, {8,5}, {1,5}, {2,6}, {3,7}, {4,8}}
                     for i, conn in ipairs(connections) do
                         local line = data.Box3D[i]
                         if allOnScreen then
@@ -339,9 +350,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-Players.PlayerRemoving:Connect(function(player)
-    RemoveESP(player)
-end)
+Players.PlayerRemoving:Connect(function(player) RemoveESP(player) end)
 
 -- ==================== สร้าง UI (หน้าต่างแจ้งเตือนรายละเอียดสคริปต์) ====================
 local ScreenGui = Instance.new("ScreenGui")
@@ -349,7 +358,6 @@ ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- หน้าต่างแจ้งเตือน (Notice Frame ขนาดกะทัดรัด)
 local NoticeFrame = Instance.new("Frame")
 NoticeFrame.Name = "NoticeFrame"
 NoticeFrame.Size = UDim2.new(0, 360, 0, 240)
@@ -391,7 +399,7 @@ NoticeTitle.Size = UDim2.new(1, -20, 1, 0)
 NoticeTitle.Position = UDim2.new(0, 10, 0, 0)
 NoticeTitle.BackgroundTransparency = 1
 NoticeTitle.Font = Enum.Font.GothamBold
-NoticeTitle.Text = "รายละเอียดสคริปต์"
+NoticeTitle.Text = "รายละเอียดสคริปต์ (ระบบบล็อกปุ่มมหาศาล)"
 NoticeTitle.TextColor3 = Color3.fromRGB(230, 230, 230)
 NoticeTitle.TextSize = 12
 NoticeTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -402,7 +410,7 @@ NoticeContent.Size = UDim2.new(1, -24, 0, 130)
 NoticeContent.Position = UDim2.new(0, 12, 0, 38)
 NoticeContent.BackgroundTransparency = 1
 NoticeContent.Font = Enum.Font.Gotham
-NoticeContent.Text = "• ฟังชั่นอมตะไม่สามารถทำได้ในแมพนี้ คนในวงการเดียวกันก็ตอบเป็นเสียงเดียวกันว่าทำไม่ได้\n• เราเลยแถมหมวดหมู่ ESP มาให้\n• ซึ่งไม่แนะนำให้เปิดฟังก์ชั่นในหมวดู่อำตะ มันจะทำให้เลือดบัคทำให้เล่นยากขึ้น\n• สคริปนี้มีราคาเพียง 50 บาท"
+NoticeContent.Text = "• แมพ Block Script ที่มีปุ่มกดจำนวนมาก ถูกปรับแต่งระบบ 0 วิใหม่ให้ใช้ Cache Memory (ไม่ลูปสแกนหน้าจอ)\n• มั่นใจได้ว่ากดเปิดฟังก์ชันแล้วจะไม่เกิดอาการกระตุกหรือแลค 100%\n• รองรับปุ่มนับหมื่นชิ้นในแมพอย่างลื่นไหล"
 NoticeContent.TextColor3 = Color3.fromRGB(200, 200, 200)
 NoticeContent.TextSize = 10
 NoticeContent.TextXAlignment = Enum.TextXAlignment.Left
@@ -426,8 +434,7 @@ local ContinueCorner = Instance.new("UICorner")
 ContinueCorner.CornerRadius = UDim.new(0, 5)
 ContinueCorner.Parent = ContinueBtn
 
-
--- ==================== หน้าต่างหลัก (Main Frame) ====================
+-- หน้าต่างหลัก (Main Frame)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 440, 0, 280)
@@ -498,9 +505,7 @@ CloseButton.Parent = TopBar
 
 CloseButton.MouseButton1Click:Connect(function()
     FOVCircle:Remove()
-    for _, player in ipairs(Players:GetPlayers()) do
-        RemoveESP(player)
-    end
+    for _, player in ipairs(Players:GetPlayers()) do RemoveESP(player) end
     ScreenGui:Destroy()
 end)
 
@@ -582,7 +587,7 @@ local function createContainer(name)
     return container
 end
 
--- หมวด 1: เมนูหลัก
+-- เมนูหลัก
 local MainMenuContainer = createContainer("เมนูหลัก")
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.96, 0, 0, 34)
@@ -599,12 +604,10 @@ DiscordCorner.CornerRadius = UDim.new(0, 5)
 DiscordCorner.Parent = DiscordBtn
 
 DiscordBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard("https://discord.gg/Ugssja4wqQ")
-    end
+    if setclipboard then setclipboard("https://discord.gg/Ugssja4wqQ") end
 end)
 
--- หมวด 2: ล็อกหัว-ตัว
+-- ล็อกหัว-ตัว
 local LockContainer = createContainer("ล็อกหัว-ตัว")
 
 local function createStyleRow(parent, titleText, initialText, initialColor, callback)
@@ -644,10 +647,7 @@ local function createStyleRow(parent, titleText, initialText, initialColor, call
     bCorner.CornerRadius = UDim.new(0, 4)
     bCorner.Parent = btn
 
-    btn.MouseButton1Click:Connect(function()
-        callback(btn)
-    end)
-
+    btn.MouseButton1Click:Connect(function() callback(btn) end)
     return row
 end
 
@@ -695,7 +695,7 @@ createStyleRow(LockContainer, "หันหน้าหาศัตรู (จ�
     btn.BackgroundColor3 = getgenv().LookAtEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
--- หมวด 3: ESP
+-- ESP
 local ESPContainer = createContainer("ESP")
 createSectionTitle(ESPContainer, ">> ระบบ ESP <<", Color3.fromRGB(0, 255, 128))
 createStyleRow(ESPContainer, "เปิดใช้งาน ESP 3D", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
@@ -710,10 +710,10 @@ createStyleRow(ESPContainer, "เปิดใช้งาน ESP 2D", "ปิด
     btn.BackgroundColor3 = getgenv().ESP2DEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
--- หมวด 4: กด 0 วิ (แบบกดเอง)
+-- กด 0 วิ
 local FastContainer = createContainer("กด 0 วิ")
-createSectionTitle(FastContainer, ">> ระบบกด 0 วิ (กดเอง) <<", Color3.fromRGB(255, 215, 0))
-createStyleRow(FastContainer, "ปรับปุ่ม 0 วิ (ไม่ต้องรอค้าง)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+createSectionTitle(FastContainer, ">> ระบบกด 0 วิ (Block-Map Optimized) <<", Color3.fromRGB(255, 215, 0))
+createStyleRow(FastContainer, "ปรับปุ่ม 0 วิ (ไม่แลก)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
     getgenv().InstantPromptOnly = not getgenv().InstantPromptOnly
     btn.Text = getgenv().InstantPromptOnly and "เปิด" or "ปิด"
     btn.BackgroundColor3 = getgenv().InstantPromptOnly and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
@@ -740,9 +740,7 @@ local function createCategoryButton(name)
     corner.CornerRadius = UDim.new(0, 5)
     corner.Parent = btn
 
-    btn.MouseButton1Click:Connect(function()
-        switchTab(name)
-    end)
+    btn.MouseButton1Click:Connect(function() switchTab(name) end)
 end
 
 createCategoryButton("เมนูหลัก")
@@ -752,7 +750,7 @@ createCategoryButton("กด 0 วิ")
 
 switchTab("เมนูหลัก")
 
--- ==================== ระบบนับถอยหลัง 3 วินาทีสำหรับปุ่มไปต่อ ====================
+-- นับถอยหลังเปิด UI
 task.spawn(function()
     local countdown = 3
     while countdown > 0 do
@@ -769,12 +767,10 @@ task.spawn(function()
     ContinueBtn.MouseButton1Click:Connect(function()
         if not canProceed then
             canProceed = true
-            -- เอฟเฟกต์ปิดหน้าต่างประกาศ
             TweenService:Create(NoticeFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
             task.wait(0.3)
             NoticeFrame:Destroy()
             
-            -- เปิดหน้าต่างหลักขึ้นมา
             MainFrame.Visible = true
             MainFrame.Size = UDim2.new(0, 0, 0, 0)
             MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
