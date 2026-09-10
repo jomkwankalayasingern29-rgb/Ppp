@@ -4,7 +4,6 @@ if CoreGui:FindFirstChild("CustomScriptUI") then
     CoreGui.CustomScriptUI:Destroy()
 end
 
--- ==================== ระบบหลัก (Aim / Silent Aim / Camera) ====================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -26,11 +25,6 @@ getgenv().CustomFOV = Camera.FieldOfView
 -- ค่าตัวแปรระบบ ESP
 getgenv().ESP3DEnabled = false
 getgenv().ESP2DEnabled = false
-
--- ค่าตัวแปรระบบ อมตะ (God Mode & Health)
-getgenv().MaxHealthEnabled = false
-getgenv().GodModeEnabled = false
-getgenv().AutoHealEnabled = false
 
 -- ตารางเก็บ Drawing สำหรับ ESP
 local ESPObjects = {}
@@ -143,49 +137,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 3. ระบบฟังก์ชันอมตะ (ปรับปรุงให้ซิงค์กับเกม Blox Fruits แบบเรียลไทม์)
-RunService.Stepped:Connect(function()
-    local char = LocalPlayer.Character
-    if char then
-        local humanoid = char:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            -- แบบที่ 1: เพิ่มเลือด 999,999,999 (บังคับซิงค์ MaxHealth และ Health ตลอดเวลา)
-            if getgenv().MaxHealthEnabled then
-                if humanoid.MaxHealth ~= 999999999 then
-                    humanoid.MaxHealth = 999999999
-                end
-                if humanoid.Health < 999999999 then
-                    humanoid.Health = 999999999
-                end
-            end
-
-            -- แบบที่ 2: บังคับไม่ให้เลือดลด (God Mode - ล็อกค่าเลือดให้เท่ากับ MaxHealth เสมอ)
-            if getgenv().GodModeEnabled then
-                if humanoid.Health < humanoid.MaxHealth then
-                    humanoid.Health = humanoid.MaxHealth
-                end
-            end
-        end
-    end
-end)
-
--- แบบที่ 3: ฮีลเลือดรัวๆ ความเร็ว 0.1 วินาที ให้เต็มหลอด (ใช้ task.spawn แยกทำงานแบบอิสระ)
-task.spawn(function()
-    while true do
-        if getgenv().AutoHealEnabled then
-            local char = LocalPlayer.Character
-            if char then
-                local humanoid = char:FindFirstChildOfClass("Humanoid")
-                if humanoid and humanoid.Health > 0 then
-                    humanoid.Health = humanoid.MaxHealth
-                end
-            end
-        end
-        task.wait(0.1)
-    end
-end)
-
--- 4. ระบบ ESP (3D & 2D พร้อม Tracer เส้นเชื่อมไปหาเป้าหมาย)
+-- 3. ระบบ ESP (3D & 2D พร้อม Tracer)
 RunService.RenderStepped:Connect(function()
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
@@ -195,7 +147,6 @@ RunService.RenderStepped:Connect(function()
             
             if character and humanoid and rootPart and humanoid.Health > 0 then
                 if not ESPObjects[player] then
-                    -- สร้าง Drawing สำหรับ ESP 3D
                     local box3D = {}
                     for i = 1, 12 do
                         local line = Drawing.new("Line")
@@ -205,7 +156,6 @@ RunService.RenderStepped:Connect(function()
                         table.insert(box3D, line)
                     end
 
-                    -- สร้าง Drawing สำหรับ ESP 2D
                     local box2D = {}
                     for i = 1, 4 do
                         local line = Drawing.new("Line")
@@ -215,14 +165,12 @@ RunService.RenderStepped:Connect(function()
                         table.insert(box2D, line)
                     end
 
-                    -- เส้น Tracer เชื่อมจากล่างจอไปหาตัวละคร
                     local tracer = Drawing.new("Line")
                     tracer.Visible = false
                     tracer.Thickness = 1
                     tracer.Color = Color3.fromRGB(255, 255, 255)
                     tracer.Transparency = 0.7
 
-                    -- ชื่อผู้เล่นด้านบน
                     local nameTag = Drawing.new("Text")
                     nameTag.Visible = false
                     nameTag.Center = true
@@ -235,7 +183,6 @@ RunService.RenderStepped:Connect(function()
 
                 local data = ESPObjects[player]
 
-                -- จัดการ ESP 3D
                 if getgenv().ESP3DEnabled then
                     local cf = rootPart.CFrame
                     local size = Vector3.new(2, 3, 1)
@@ -277,7 +224,6 @@ RunService.RenderStepped:Connect(function()
                     for _, line in ipairs(data.Box3D) do line.Visible = false end
                 end
 
-                -- จัดการ ESP 2D, Tracer & NameTag
                 if getgenv().ESP2DEnabled then
                     local head = character:FindFirstChild("Head")
                     if head then
@@ -290,7 +236,6 @@ RunService.RenderStepped:Connect(function()
                             local x = headPos.X - (width / 2)
                             local y = headPos.Y
 
-                            -- 4 เส้นขอบ Bounding Box 2D
                             data.Box2D[1].From = Vector2.new(x, y)
                             data.Box2D[2].From = Vector2.new(x + width, y)
                             data.Box2D[3].From = Vector2.new(x, y + height)
@@ -303,13 +248,11 @@ RunService.RenderStepped:Connect(function()
 
                             for _, line in ipairs(data.Box2D) do line.Visible = true end
 
-                            -- เส้น Tracer เชื่อมจากล่างจอตรงกลาง ไปยังตัวละคร
                             local screenSize = Camera.ViewportSize
                             data.Tracer.From = Vector2.new(screenSize.X / 2, screenSize.Y)
                             data.Tracer.To = Vector2.new(x + (width / 2), y + height)
                             data.Tracer.Visible = true
 
-                            -- ชื่อผู้เล่นเหนือจอ
                             data.NameTag.Text = player.Name
                             data.NameTag.Position = Vector2.new(headPos.X, y - 18)
                             data.NameTag.Visible = true
@@ -335,40 +278,91 @@ Players.PlayerRemoving:Connect(function(player)
     RemoveESP(player)
 end)
 
--- ==================== สร้าง UI (พร้อมอนิเมชั่นและหน้าจอโหลด) ====================
+-- ==================== สร้าง UI (หน้าต่างแจ้งเตือนรายละเอียดสคริปต์) ====================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- หน้าต่างโหลด (Loading Frame)
-local LoadFrame = Instance.new("Frame")
-LoadFrame.Name = "LoadFrame"
-LoadFrame.Size = UDim2.new(0, 260, 0, 55)
-LoadFrame.Position = UDim2.new(0.5, -130, 0.5, -27)
-LoadFrame.BackgroundColor3 = Color3.fromRGB(13, 13, 16)
-LoadFrame.BorderSizePixel = 0
-LoadFrame.Parent = ScreenGui
+-- หน้าต่างแจ้งเตือน (Notice Frame ขนาดกะทัดรัด)
+local NoticeFrame = Instance.new("Frame")
+NoticeFrame.Name = "NoticeFrame"
+NoticeFrame.Size = UDim2.new(0, 360, 0, 240)
+NoticeFrame.Position = UDim2.new(0.5, -180, 0.5, -120)
+NoticeFrame.BackgroundColor3 = Color3.fromRGB(13, 13, 16)
+NoticeFrame.BorderSizePixel = 0
+NoticeFrame.Active = true
+NoticeFrame.Draggable = true
+NoticeFrame.Parent = ScreenGui
 
-local LoadCorner = Instance.new("UICorner")
-LoadCorner.CornerRadius = UDim.new(0, 6)
-LoadCorner.Parent = LoadFrame
+local NoticeCorner = Instance.new("UICorner")
+NoticeCorner.CornerRadius = UDim.new(0, 6)
+NoticeCorner.Parent = NoticeFrame
 
-local LoadStroke = Instance.new("UIStroke")
-LoadStroke.Color = Color3.fromRGB(0, 150, 255)
-LoadStroke.Thickness = 1.5
-LoadStroke.Parent = LoadFrame
+local NoticeStroke = Instance.new("UIStroke")
+NoticeStroke.Color = Color3.fromRGB(0, 150, 255)
+NoticeStroke.Thickness = 1.5
+NoticeStroke.Parent = NoticeFrame
 
-local LoadText = Instance.new("TextLabel")
-LoadText.Size = UDim2.new(1, 0, 1, 0)
-LoadText.BackgroundTransparency = 1
-LoadText.Font = Enum.Font.GothamBold
-LoadText.Text = "กำลังโหลด..."
-LoadText.TextColor3 = Color3.fromRGB(240, 240, 240)
-LoadText.TextSize = 12
-LoadText.Parent = LoadFrame
+local NoticeTopBar = Instance.new("Frame")
+NoticeTopBar.Size = UDim2.new(1, 0, 0, 30)
+NoticeTopBar.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+NoticeTopBar.BorderSizePixel = 0
+NoticeTopBar.Parent = NoticeFrame
 
--- หน้าต่างหลัก (Main Frame)
+local NoticeTopBarCorner = Instance.new("UICorner")
+NoticeTopBarCorner.CornerRadius = UDim.new(0, 6)
+NoticeTopBarCorner.Parent = NoticeTopBar
+
+local NoticeFix = Instance.new("Frame")
+NoticeFix.Size = UDim2.new(1, 0, 0, 6)
+NoticeFix.Position = UDim2.new(0, 0, 1, -6)
+NoticeFix.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+NoticeFix.BorderSizePixel = 0
+NoticeFix.Parent = NoticeTopBar
+
+local NoticeTitle = Instance.new("TextLabel")
+NoticeTitle.Size = UDim2.new(1, -20, 1, 0)
+NoticeTitle.Position = UDim2.new(0, 10, 0, 0)
+NoticeTitle.BackgroundTransparency = 1
+NoticeTitle.Font = Enum.Font.GothamBold
+NoticeTitle.Text = "รายละเอียดสคริปต์"
+NoticeTitle.TextColor3 = Color3.fromRGB(230, 230, 230)
+NoticeTitle.TextSize = 12
+NoticeTitle.TextXAlignment = Enum.TextXAlignment.Left
+NoticeTitle.Parent = NoticeTopBar
+
+local NoticeContent = Instance.new("TextLabel")
+NoticeContent.Size = UDim2.new(1, -24, 0, 130)
+NoticeContent.Position = UDim2.new(0, 12, 0, 38)
+NoticeContent.BackgroundTransparency = 1
+NoticeContent.Font = Enum.Font.Gotham
+NoticeContent.Text = "• ฟังชั่นอมตะไม่สามารถทำได้ในแมพนี้ คนในวงการเดียวกันก็ตอบเป็นเสียงเดียวกันว่าทำไม่ได้\n• เราเลยแถมหมวดหมู่ ESP มาให้\n• ซึ่งไม่แนะนำให้เปิดฟังก์ชั่นในหมวดู่อำตะ มันจะทำให้เลือดบัคทำให้เล่นยากขึ้น\n• สคริปนี้มีราคาเพียง 50 บาท"
+NoticeContent.TextColor3 = Color3.fromRGB(200, 200, 200)
+NoticeContent.TextSize = 10
+NoticeContent.TextXAlignment = Enum.TextXAlignment.Left
+NoticeContent.TextYAlignment = Enum.TextYAlignment.Top
+NoticeContent.TextWrapped = true
+NoticeContent.Parent = NoticeFrame
+
+local ContinueBtn = Instance.new("TextButton")
+ContinueBtn.Size = UDim2.new(1, -24, 0, 32)
+ContinueBtn.Position = UDim2.new(0, 12, 1, -40)
+ContinueBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+ContinueBtn.BorderSizePixel = 0
+ContinueBtn.Font = Enum.Font.GothamBold
+ContinueBtn.Text = "กรุณารอสักครู่ (3)"
+ContinueBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+ContinueBtn.TextSize = 11
+ContinueBtn.AutoButtonColor = false
+ContinueBtn.Parent = NoticeFrame
+
+local ContinueCorner = Instance.new("UICorner")
+ContinueCorner.CornerRadius = UDim.new(0, 5)
+ContinueCorner.Parent = ContinueBtn
+
+
+-- ==================== หน้าต่างหลัก (Main Frame) ====================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 440, 0, 280)
@@ -378,7 +372,6 @@ MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Visible = false
-MainFrame.BackgroundTransparency = 1
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
@@ -390,7 +383,6 @@ MainStroke.Color = Color3.fromRGB(35, 35, 45)
 MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
--- แถบหัวข้อด้านบน (TopBar)
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 32)
 TopBar.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
@@ -429,7 +421,6 @@ TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- ปุ่มปิด (X)
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
 CloseButton.Position = UDim2.new(1, -28, 0, 4)
@@ -441,13 +432,6 @@ CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
 
 CloseButton.MouseButton1Click:Connect(function()
-    local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-        Size = UDim2.new(0, 0, 0, 0),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        BackgroundTransparency = 1
-    })
-    closeTween:Play()
-    closeTween.Completed:Wait()
     FOVCircle:Remove()
     for _, player in ipairs(Players:GetPlayers()) do
         RemoveESP(player)
@@ -455,7 +439,6 @@ CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- ปุ่มย่อหน้าต่าง (-)
 local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
 MinimizeButton.Position = UDim2.new(1, -54, 0, 4)
@@ -485,14 +468,13 @@ MinimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== เมนูด้านซ้าย (หมวดหมู่) ====================
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Name = "LeftSide"
 LeftSide.Size = UDim2.new(0.32, 0, 1, -38)
 LeftSide.Position = UDim2.new(0, 6, 0, 34)
 LeftSide.BackgroundTransparency = 1
 LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 140)
+LeftSide.CanvasSize = UDim2.new(0, 0, 0, 100)
 LeftSide.ScrollBarThickness = 1
 LeftSide.Parent = MainFrame
 
@@ -502,7 +484,6 @@ LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 5)
 LeftLayout.Parent = LeftSide
 
--- ==================== เมนูด้านขวา (ฟังก์ชัน) ====================
 local RightSide = Instance.new("Frame")
 RightSide.Name = "RightSide"
 RightSide.Size = UDim2.new(0.66, 0, 1, -38)
@@ -519,7 +500,6 @@ local function createContainer(name)
     container.BackgroundTransparency = 1
     container.BorderSizePixel = 0
     container.ScrollBarThickness = 3
-    container.ScrollingEnabled = true
     container.Visible = false
     container.Parent = RightSide
 
@@ -537,9 +517,8 @@ local function createContainer(name)
     return container
 end
 
--- ==================== หมวดที่ 1: เมนูหลัก ====================
+-- หมวด 1: เมนูหลัก
 local MainMenuContainer = createContainer("เมนูหลัก")
-
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.96, 0, 0, 34)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
@@ -560,8 +539,7 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-
--- ==================== หมวดที่ 2: ล็อกหัว-ตัว ====================
+-- หมวด 2: ล็อกหัว-ตัว
 local LockContainer = createContainer("ล็อกหัว-ตัว")
 
 local function createStyleRow(parent, titleText, initialText, initialColor, callback)
@@ -622,259 +600,43 @@ local function createSectionTitle(parent, text, textColor)
 end
 
 createSectionTitle(LockContainer, ">> ฟังก์ชันพิเศษ <<", Color3.fromRGB(0, 150, 255))
-
 createStyleRow(LockContainer, "เปิดใช้งาน Silent Aim", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
     getgenv().SilentAimEnabled = not getgenv().SilentAimEnabled
-    if getgenv().SilentAimEnabled then
-        btn.Text = "เปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
-    else
-        btn.Text = "ปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    end
+    btn.Text = getgenv().SilentAimEnabled and "เปิด" or "ปิด"
+    btn.BackgroundColor3 = getgenv().SilentAimEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
 createStyleRow(LockContainer, "เป้าหมาย (หัว / ตัว)", "หัว", Color3.fromRGB(40, 110, 190), function(btn)
-    if getgenv().SilentAimTarget == "Head" then
-        getgenv().SilentAimTarget = "Body"
-        btn.Text = "ตัว"
-    else
-        getgenv().SilentAimTarget = "Head"
-        btn.Text = "หัว"
-    end
+    getgenv().SilentAimTarget = getgenv().SilentAimTarget == "Head" and "Body" or "Head"
+    btn.Text = getgenv().SilentAimTarget == "Head" and "หัว" or "ตัว"
 end)
 
 createSectionTitle(LockContainer, ">> จอล็อก (Cam Lock) <<", Color3.fromRGB(255, 128, 0))
-
 createStyleRow(LockContainer, "เปิดใช้งาน Cam Lock", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
     getgenv().CamLockEnabled = not getgenv().CamLockEnabled
-    if getgenv().CamLockEnabled then
-        btn.Text = "เปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
-    else
-        btn.Text = "ปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    end
+    btn.Text = getgenv().CamLockEnabled and "เปิด" or "ปิด"
+    btn.BackgroundColor3 = getgenv().CamLockEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
 createStyleRow(LockContainer, "เป้าหมายจอล็อก (หัว / ตัว)", "หัว", Color3.fromRGB(40, 110, 190), function(btn)
-    if getgenv().CamLockTarget == "Head" then
-        getgenv().CamLockTarget = "Body"
-        btn.Text = "ตัว"
-    else
-        getgenv().CamLockTarget = "Head"
-        btn.Text = "หัว"
-    end
+    getgenv().CamLockTarget = getgenv().CamLockTarget == "Head" and "Body" or "Head"
+    btn.Text = getgenv().CamLockTarget == "Head" and "หัว" or "ตัว"
 end)
 
--- ความเร็วล็อกเป้า (1 - 100%)
-createSectionTitle(LockContainer, ">> ความเร็วล็อกเป้า (1-100%) <<", Color3.fromRGB(255, 80, 80))
-
-local SpeedSliderFrame = Instance.new("Frame")
-SpeedSliderFrame.Size = UDim2.new(0.96, 0, 0, 42)
-SpeedSliderFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
-SpeedSliderFrame.BorderSizePixel = 0
-SpeedSliderFrame.Parent = LockContainer
-
-local SpeedCorner = Instance.new("UICorner")
-SpeedCorner.CornerRadius = UDim.new(0, 5)
-SpeedCorner.Parent = SpeedSliderFrame
-
-local SpeedLabel = Instance.new("TextLabel")
-SpeedLabel.Size = UDim2.new(1, 0, 0, 18)
-SpeedLabel.Position = UDim2.new(0, 10, 0, 3)
-SpeedLabel.BackgroundTransparency = 1
-SpeedLabel.Font = Enum.Font.GothamBold
-SpeedLabel.Text = "Lock Speed: " .. getgenv().CamLockSpeedPercent .. "% (เหนียวสุดๆ)"
-SpeedLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-SpeedLabel.TextSize = 10
-SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
-SpeedLabel.Parent = SpeedSliderFrame
-
-local SpeedBar = Instance.new("Frame")
-SpeedBar.Size = UDim2.new(0.9, 0, 0, 6)
-SpeedBar.Position = UDim2.new(0.05, 0, 0, 26)
-SpeedBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-SpeedBar.BorderSizePixel = 0
-SpeedBar.Parent = SpeedSliderFrame
-
-local SpeedBarCorner = Instance.new("UICorner")
-SpeedBarCorner.CornerRadius = UDim.new(0, 3)
-SpeedBarCorner.Parent = SpeedBar
-
-local SpeedButton = Instance.new("TextButton")
-SpeedButton.Size = UDim2.new(0, 12, 0, 16)
-SpeedButton.Position = UDim2.new(1, -6, 0, -5)
-SpeedButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-SpeedButton.BorderSizePixel = 0
-SpeedButton.Text = ""
-SpeedButton.Parent = SpeedBar
-
-local SpeedBtnCorner = Instance.new("UICorner")
-SpeedBtnCorner.CornerRadius = UDim.new(0, 3)
-SpeedBtnCorner.Parent = SpeedButton
-
-local draggingSpeed = false
-SpeedButton.MouseButton1Down:Connect(function() draggingSpeed = true end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        draggingSpeed = false
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if draggingSpeed and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local sliderPos = SpeedBar.AbsolutePosition.X
-        local sliderSize = SpeedBar.AbsoluteSize.X
-        local mousePos = input.Position.X
-        local percentage = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
-        
-        SpeedButton.Position = UDim2.new(percentage, -6, 0, -5)
-        local newSpeedVal = math.floor(percentage * 99) + 1
-        getgenv().CamLockSpeedPercent = newSpeedVal
-        SpeedLabel.Text = "Lock Speed: " .. newSpeedVal .. "%" .. (newSpeedVal == 100 and " (เหนียวสุดๆ)" or "")
-    end
-end)
-
--- ตั้งค่าขนาดวงกลม FOV (สูงสุด 1000)
-createSectionTitle(LockContainer, ">> ตั้งค่า FOV (สูงสุด 1000) <<", Color3.fromRGB(0, 220, 120))
-
-local SliderFrame = Instance.new("Frame")
-SliderFrame.Size = UDim2.new(0.96, 0, 0, 42)
-SliderFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
-SliderFrame.BorderSizePixel = 0
-SliderFrame.Parent = LockContainer
-
-local SliderCorner = Instance.new("UICorner")
-SliderCorner.CornerRadius = UDim.new(0, 5)
-SliderCorner.Parent = SliderFrame
-
-local SizeLabel = Instance.new("TextLabel")
-SizeLabel.Size = UDim2.new(1, 0, 0, 18)
-SizeLabel.Position = UDim2.new(0, 10, 0, 3)
-SizeLabel.BackgroundTransparency = 1
-SizeLabel.Font = Enum.Font.GothamBold
-SizeLabel.Text = "FOV / Radius: " .. getgenv().CircleRadius
-SizeLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-SizeLabel.TextSize = 10
-SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
-SizeLabel.Parent = SliderFrame
-
-local SliderBar = Instance.new("Frame")
-SliderBar.Size = UDim2.new(0.9, 0, 0, 6)
-SliderBar.Position = UDim2.new(0.05, 0, 0, 26)
-SliderBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-SliderBar.BorderSizePixel = 0
-SliderBar.Parent = SliderFrame
-
-local SliderBarCorner = Instance.new("UICorner")
-SliderBarCorner.CornerRadius = UDim.new(0, 3)
-SliderBarCorner.Parent = SliderBar
-
-local SliderButton = Instance.new("TextButton")
-SliderButton.Size = UDim2.new(0, 12, 0, 16)
-local initScale = math.clamp((getgenv().CircleRadius - 10) / 990, 0, 1)
-SliderButton.Position = UDim2.new(initScale, -6, 0, -5)
-SliderButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-SliderButton.BorderSizePixel = 0
-SliderButton.Text = ""
-SliderButton.Parent = SliderBar
-
-local SliderBtnCorner = Instance.new("UICorner")
-SliderBtnCorner.CornerRadius = UDim.new(0, 3)
-SliderBtnCorner.Parent = SliderButton
-
-local draggingFOV = false
-SliderButton.MouseButton1Down:Connect(function() draggingFOV = true end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        draggingFOV = false
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if draggingFOV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local sliderPos = SliderBar.AbsolutePosition.X
-        local sliderSize = SliderBar.AbsoluteSize.X
-        local mousePos = input.Position.X
-        local percentage = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
-        
-        SliderButton.Position = UDim2.new(percentage, -6, 0, -5)
-        local newRadius = math.floor(10 + (percentage * 990))
-        getgenv().CircleRadius = newRadius
-        FOVCircle.Radius = newRadius
-        Camera.FieldOfView = math.clamp(newRadius, 1, 120)
-        SizeLabel.Text = "FOV / Radius: " .. newRadius
-    end
-end)
-
-
--- ==================== หมวดที่ 3: ESP ====================
+-- หมวด 3: ESP
 local ESPContainer = createContainer("ESP")
-
 createSectionTitle(ESPContainer, ">> ระบบ ESP <<", Color3.fromRGB(0, 255, 128))
-
 createStyleRow(ESPContainer, "เปิดใช้งาน ESP 3D", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
     getgenv().ESP3DEnabled = not getgenv().ESP3DEnabled
-    if getgenv().ESP3DEnabled then
-        btn.Text = "เปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
-    else
-        btn.Text = "ปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    end
+    btn.Text = getgenv().ESP3DEnabled and "เปิด" or "ปิด"
+    btn.BackgroundColor3 = getgenv().ESP3DEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
 createStyleRow(ESPContainer, "เปิดใช้งาน ESP 2D", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
     getgenv().ESP2DEnabled = not getgenv().ESP2DEnabled
-    if getgenv().ESP2DEnabled then
-        btn.Text = "เปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
-    else
-        btn.Text = "ปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    end
+    btn.Text = getgenv().ESP2DEnabled and "เปิด" or "ปิด"
+    btn.BackgroundColor3 = getgenv().ESP2DEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
-
-
--- ==================== หมวดที่ 4: อมตะ ====================
-local ImmortalContainer = createContainer("อมตะ")
-
-createSectionTitle(ImmortalContainer, ">> ระบบเพิ่มพลังชีวิตและความอมตะ <<", Color3.fromRGB(255, 50, 100))
-
-createStyleRow(ImmortalContainer, "1. เพิ่มเลือด (999,999,999)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
-    getgenv().MaxHealthEnabled = not getgenv().MaxHealthEnabled
-    if getgenv().MaxHealthEnabled then
-        btn.Text = "เปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
-    else
-        btn.Text = "ปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    end
-end)
-
-createStyleRow(ImmortalContainer, "2. ล็อกเลือดไม่ลด (God Mode)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
-    getgenv().GodModeEnabled = not getgenv().GodModeEnabled
-    if getgenv().GodModeEnabled then
-        btn.Text = "เปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
-    else
-        btn.Text = "ปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    end
-end)
-
-createStyleRow(ImmortalContainer, "3. ฮีลเลือดรัวๆ (ทุก 0.1 วิ)", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
-    getgenv().AutoHealEnabled = not getgenv().AutoHealEnabled
-    if getgenv().AutoHealEnabled then
-        btn.Text = "เปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(45, 180, 80)
-    else
-        btn.Text = "ปิด"
-        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    end
-end)
-
 
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
@@ -905,38 +667,41 @@ end
 createCategoryButton("เมนูหลัก")
 createCategoryButton("ล็อกหัว-ตัว")
 createCategoryButton("ESP")
-createCategoryButton("อมตะ")
 
 switchTab("เมนูหลัก")
 
--- ==================== ระบบอนิเมชั่นโหลดและเปิดหน้าต่าง ====================
+-- ==================== ระบบนับถอยหลัง 3 วินาทีสำหรับปุ่มไปต่อ ====================
 task.spawn(function()
-    local dots = {"", ".", "..", "..."}
-    local startTime = tick()
-    
-    while tick() - startTime < 1.5 do
-        for _, d in ipairs(dots) do
-            LoadText.Text = "กำลังโหลด" .. d
-            task.wait(0.25)
-        end
+    local countdown = 3
+    while countdown > 0 do
+        ContinueBtn.Text = "กรุณารอสักครู่ (" .. countdown .. ")"
+        task.wait(1)
+        countdown = countdown - 1
     end
     
-    LoadText.Text = "โหลดเสร็จสิ้น!"
-    task.wait(0.5)
+    ContinueBtn.Text = "ไปต่อ"
+    ContinueBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ContinueBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
     
-    TweenService:Create(LoadFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
-    TweenService:Create(LoadText, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-    task.wait(0.3)
-    LoadFrame:Destroy()
-    
-    MainFrame.Visible = true
-    MainFrame.Size = UDim2.new(0, 0, 0, 0)
-    MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    
-    local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 440, 0, 280),
-        Position = UDim2.new(0.5, -220, 0.5, -140),
-        BackgroundTransparency = 0
-    })
-    openTween:Play()
+    local canProceed = false
+    ContinueBtn.MouseButton1Click:Connect(function()
+        if not canProceed then
+            canProceed = true
+            -- เอฟเฟกต์ปิดหน้าต่างประกาศ
+            TweenService:Create(NoticeFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
+            task.wait(0.3)
+            NoticeFrame:Destroy()
+            
+            -- เปิดหน้าต่างหลักขึ้นมา
+            MainFrame.Visible = true
+            MainFrame.Size = UDim2.new(0, 0, 0, 0)
+            MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+            
+            local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 440, 0, 280),
+                Position = UDim2.new(0.5, -220, 0.5, -140)
+            })
+            openTween:Play()
+        end
+    end)
 end)
