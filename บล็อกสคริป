@@ -20,7 +20,6 @@ getgenv().CamLockTarget = "Head"
 getgenv().CamLockSpeedPercent = 100
 
 getgenv().LookAtEnabled = false
-getgenv().InstantPromptOnly = false -- ระบบกดอัตโนมัติ (ไม่รัวซ้ำ)
 
 getgenv().CircleRadius = 120
 getgenv().CustomFOV = Camera.FieldOfView
@@ -156,59 +155,6 @@ RunService.RenderStepped:Connect(function()
                 local myRoot = myChar.HumanoidRootPart
                 local lookAtPos = Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z)
                 myRoot.CFrame = CFrame.new(myRoot.Position, lookAtPos)
-            end
-        end
-    end
-end)
-
--- ==================== ระบบกดอัตโนมัติ (แก้ไขปัญหากดรัวๆ) ====================
-local activePrompts = {}
-local promptStates = {} -- ใช้จำสถานะว่าปุ่มไหนเคยถูกกดไปแล้วบ้าง
-
-workspace.DescendantAdded:Connect(function(obj)
-    if obj:IsA("ProximityPrompt") then
-        table.insert(activePrompts, obj)
-    end
-end)
-
-task.spawn(function()
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") then
-            table.insert(activePrompts, obj)
-        end
-    end
-end)
-
-RunService.Heartbeat:Connect(function()
-    if getgenv().InstantPromptOnly then
-        local myChar = LocalPlayer.Character
-        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-            local myPos = myChar.HumanoidRootPart.Position
-            for _, prompt in ipairs(activePrompts) do
-                if prompt and prompt.Parent then
-                    local part = prompt.Parent
-                    if part:IsA("BasePart") then
-                        local distance = (myPos - part.Position).Magnitude
-                        local maxDist = prompt.MaxActivationDistance or 10
-                        
-                        if distance <= maxDist then
-                            -- ถ้ายังไม่เคยถูกกดในรอบนี้ ให้กดครั้งเดียว
-                            if not promptStates[prompt] then
-                                promptStates[prompt] = true
-                                pcall(function()
-                                    prompt:InputHoldBegin()
-                                    task.wait(0.05)
-                                    prompt:InputHoldEnd()
-                                end)
-                            end
-                        else
-                            -- ถ้าเดินออกห่างจากปุ่มแล้ว ให้รีเซ็ตสถานะเพื่อให้สามารถกดใหม่ได้เมื่อเดินกลับมา
-                            if promptStates[prompt] then
-                                promptStates[prompt] = nil
-                            end
-                        end
-                    end
-                end
             end
         end
     end
@@ -395,7 +341,7 @@ NoticeTitle.Size = UDim2.new(1, -20, 1, 0)
 NoticeTitle.Position = UDim2.new(0, 10, 0, 0)
 NoticeTitle.BackgroundTransparency = 1
 NoticeTitle.Font = Enum.Font.GothamBold
-NoticeTitle.Text = "รายละเอียดสคริปต์ (ระบบแก้ปัญหาปุ่มรัว)"
+NoticeTitle.Text = "รายละเอียดสคริปต์ (เวอร์ชันอัปเดต)"
 NoticeTitle.TextColor3 = Color3.fromRGB(230, 230, 230)
 NoticeTitle.TextSize = 12
 NoticeTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -406,7 +352,7 @@ NoticeContent.Size = UDim2.new(1, -24, 0, 130)
 NoticeContent.Position = UDim2.new(0, 12, 0, 38)
 NoticeContent.BackgroundTransparency = 1
 NoticeContent.Font = Enum.Font.Gotham
-NoticeContent.Text = "• เพิ่มระบบ Debounce ป้องกันการรัวปุ่มซ้ำซ้อนเมื่อเดินเข้าไปใกล้\n• กดอัตโนมัติเพียงครั้งเดียวต่อการเข้าใกล้ 1 จุด\n• ลื่นไหล ไม่แลก และไม่โดนบล็อกคำสั่งจากเซิร์ฟเวอร์"
+NoticeContent.Text = "• นำฟังก์ชันและหมวดหมู่ 'กด 0 วิ' ออกเรียบร้อยแล้ว\n• คงเหลือระบบ Silent Aim, Cam Lock และ ESP ไว้ใช้งานปกติ\n• ทำงานเบาขึ้นและไม่มีปัญหาติดขัดกับระบบป้องกันของแมพ"
 NoticeContent.TextColor3 = Color3.fromRGB(200, 200, 200)
 NoticeContent.TextSize = 10
 NoticeContent.TextXAlignment = Enum.TextXAlignment.Left
@@ -540,7 +486,7 @@ LeftSide.Size = UDim2.new(0.32, 0, 1, -38)
 LeftSide.Position = UDim2.new(0, 6, 0, 34)
 LeftSide.BackgroundTransparency = 1
 LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 140)
+LeftSide.CanvasSize = UDim2.new(0, 0, 0, 110)
 LeftSide.ScrollBarThickness = 1
 LeftSide.Parent = MainFrame
 
@@ -706,15 +652,6 @@ createStyleRow(ESPContainer, "เปิดใช้งาน ESP 2D", "ปิด
     btn.BackgroundColor3 = getgenv().ESP2DEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
--- กด 0 วิ
-local FastContainer = createContainer("กด 0 วิ")
-createSectionTitle(FastContainer, ">> ระบบกดอัตโนมัติ (Anti-Spam) <<", Color3.fromRGB(255, 215, 0))
-createStyleRow(FastContainer, "เปิดใช้งานกดอัตโนมัติ", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
-    getgenv().InstantPromptOnly = not getgenv().InstantPromptOnly
-    btn.Text = getgenv().InstantPromptOnly and "เปิด" or "ปิด"
-    btn.BackgroundColor3 = getgenv().InstantPromptOnly and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
-end)
-
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
         container.Visible = (name == tabName)
@@ -742,7 +679,6 @@ end
 createCategoryButton("เมนูหลัก")
 createCategoryButton("ล็อกหัว-ตัว")
 createCategoryButton("ESP")
-createCategoryButton("กด 0 วิ")
 
 switchTab("เมนูหลัก")
 
