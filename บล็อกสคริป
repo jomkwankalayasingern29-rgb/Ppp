@@ -20,7 +20,7 @@ getgenv().CamLockTarget = "Head"
 getgenv().CamLockSpeedPercent = 100
 
 getgenv().LookAtEnabled = false
-getgenv().InstantPromptOnly = false -- ระบบกดอัตโนมัติแบบไม่โดนบล็อก
+getgenv().InstantPromptOnly = false -- ระบบกดอัตโนมัติ (ไม่รัวซ้ำ)
 
 getgenv().CircleRadius = 120
 getgenv().CustomFOV = Camera.FieldOfView
@@ -161,8 +161,9 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ==================== ระบบกดอัตโนมัติ (ไม่โดนบล็อก + ไม่แลก) ====================
+-- ==================== ระบบกดอัตโนมัติ (แก้ไขปัญหากดรัวๆ) ====================
 local activePrompts = {}
+local promptStates = {} -- ใช้จำสถานะว่าปุ่มไหนเคยถูกกดไปแล้วบ้าง
 
 workspace.DescendantAdded:Connect(function(obj)
     if obj:IsA("ProximityPrompt") then
@@ -187,12 +188,24 @@ RunService.Heartbeat:Connect(function()
                 if prompt and prompt.Parent then
                     local part = prompt.Parent
                     if part:IsA("BasePart") then
-                        if (myPos - part.Position).Magnitude <= (prompt.MaxActivationDistance or 10) then
-                            pcall(function()
-                                prompt:InputHoldBegin()
-                                task.wait()
-                                prompt:InputHoldEnd()
-                            end)
+                        local distance = (myPos - part.Position).Magnitude
+                        local maxDist = prompt.MaxActivationDistance or 10
+                        
+                        if distance <= maxDist then
+                            -- ถ้ายังไม่เคยถูกกดในรอบนี้ ให้กดครั้งเดียว
+                            if not promptStates[prompt] then
+                                promptStates[prompt] = true
+                                pcall(function()
+                                    prompt:InputHoldBegin()
+                                    task.wait(0.05)
+                                    prompt:InputHoldEnd()
+                                end)
+                            end
+                        else
+                            -- ถ้าเดินออกห่างจากปุ่มแล้ว ให้รีเซ็ตสถานะเพื่อให้สามารถกดใหม่ได้เมื่อเดินกลับมา
+                            if promptStates[prompt] then
+                                promptStates[prompt] = nil
+                            end
                         end
                     end
                 end
@@ -382,7 +395,7 @@ NoticeTitle.Size = UDim2.new(1, -20, 1, 0)
 NoticeTitle.Position = UDim2.new(0, 10, 0, 0)
 NoticeTitle.BackgroundTransparency = 1
 NoticeTitle.Font = Enum.Font.GothamBold
-NoticeTitle.Text = "รายละเอียดสคริปต์ (ระบบบล็อกปุ่มมหาศาล)"
+NoticeTitle.Text = "รายละเอียดสคริปต์ (ระบบแก้ปัญหาปุ่มรัว)"
 NoticeTitle.TextColor3 = Color3.fromRGB(230, 230, 230)
 NoticeTitle.TextSize = 12
 NoticeTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -393,7 +406,7 @@ NoticeContent.Size = UDim2.new(1, -24, 0, 130)
 NoticeContent.Position = UDim2.new(0, 12, 0, 38)
 NoticeContent.BackgroundTransparency = 1
 NoticeContent.Font = Enum.Font.Gotham
-NoticeContent.Text = "• ระบบกดอัตโนมัติได้รับการปรับแต่งใหม่สำหรับแมพปุ่มเยอะโดยเฉพาะ\n• แก้ไขปัญหาข้อความ 'ไม่สามารถยืนยันการโต้ตอบได้' เรียบร้อย\n• ไม่แลค ทำงานลื่นไหลแม้ในแมพที่มีวัตถุกดจำนวนมาก"
+NoticeContent.Text = "• เพิ่มระบบ Debounce ป้องกันการรัวปุ่มซ้ำซ้อนเมื่อเดินเข้าไปใกล้\n• กดอัตโนมัติเพียงครั้งเดียวต่อการเข้าใกล้ 1 จุด\n• ลื่นไหล ไม่แลก และไม่โดนบล็อกคำสั่งจากเซิร์ฟเวอร์"
 NoticeContent.TextColor3 = Color3.fromRGB(200, 200, 200)
 NoticeContent.TextSize = 10
 NoticeContent.TextXAlignment = Enum.TextXAlignment.Left
@@ -695,7 +708,7 @@ end)
 
 -- กด 0 วิ
 local FastContainer = createContainer("กด 0 วิ")
-createSectionTitle(FastContainer, ">> ระบบกดอัตโนมัติ (Anti-Block) <<", Color3.fromRGB(255, 215, 0))
+createSectionTitle(FastContainer, ">> ระบบกดอัตโนมัติ (Anti-Spam) <<", Color3.fromRGB(255, 215, 0))
 createStyleRow(FastContainer, "เปิดใช้งานกดอัตโนมัติ", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
     getgenv().InstantPromptOnly = not getgenv().InstantPromptOnly
     btn.Text = getgenv().InstantPromptOnly and "เปิด" or "ปิด"
