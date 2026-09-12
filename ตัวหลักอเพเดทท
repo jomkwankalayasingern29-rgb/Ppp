@@ -905,7 +905,7 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn1000.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
@@ -1023,7 +1023,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
