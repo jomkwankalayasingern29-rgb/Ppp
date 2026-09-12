@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: FIXED & UPDATED WITH TIME STOP & POWER TAB ]] --
+-- [[ GKHub v1.4.25: UPDATED WITH TIME STOP & POWER TAB ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -9,6 +9,7 @@ local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
@@ -660,7 +661,6 @@ DiscordBtn.MouseButton1Click:Connect(function()
     showNotification("คัดลอกลิงก์ Discord สำเร็จ!", true)
 end)
 
--- หมวดหมู่: ล็อกเป้า
 createHeader(">> ฟังก์ชั่นพิเศษ <<", AimbotTab)
 local FullLockToggle = createToggle("FullLock", "ล็อกหัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
 local FullLockTorsoToggle = createToggle("FullLockTorso", "ล็อกตัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
@@ -679,7 +679,6 @@ local WallCheckButton = createToggle("WallCheck", "ไม่ล็อกตั�
 local SliderBack, SliderBtn, SliderLabel = createSlider("FOV: 100", AimbotTab)
 local SpeedBack, SpeedBtn, SpeedLabel = createSlider("ความเร็วดูด: 50", AimbotTab)
 
--- หมวดหมู่: ESP
 createHeader(">> ระบบมองทะลุสีทึบ (Chams) <<", EspTab)
 local PlayerEspChamsToggle = createToggle("PlayerEspChams", "เปิดใช้งานมองทะลุกำแพง (คน)", EspTab)
 local NpcEspChamsToggle = createToggle("NpcEspChams", "เปิดใช้งานมองทะลุกำแพง (NPC)", EspTab)
@@ -689,7 +688,6 @@ local MasterEsp2DToggle = createToggle("MasterEsp2D", "เปิดใช้ง�
 local PlayerEsp2DToggle = createToggle("PlayerEsp2D", "เปิดใช้งาน 2D ESP + เส้น (คน)", EspTab)
 local NpcEsp2DToggle = createToggle("NpcEsp2D", "เปิดใช้งาน 2D ESP + เส้น (NPC)", EspTab)
 
--- หมวดหมู่: ตัวละคร
 createHeader(">> ความเร็วผู้เล่น <<", CharacterTab)
 local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", CharacterTab)
 local CurrentWalkSpeed = 16
@@ -729,7 +727,6 @@ ResetBtn.Parent = ResetFrame
 table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
 
--- หมวดหมู่: วาร์ป
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", TeleportTab)
 
@@ -801,7 +798,6 @@ GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
 
--- หมวดหมู่: เครื่องมือ
 createHeader(">> กดใช้งานทันที (0 วิ) <<", ToolTab)
 local InstantActionToggle = createToggle("InstantAction", "เปิดใช้งานกดค้างทันที (0 วิ)", ToolTab)
 
@@ -816,7 +812,6 @@ local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInputA
     HitboxConfig.Size = val
 end)
 
--- หมวดหมู่: FPS
 createHeader(">> ระบบภาพดินน้ำมัน (Plastic) <<", FpsTab)
 local ClayGraphicsToggle = createToggle("ClayGraphics", "เปิดใช้งานภาพดินน้ำมัน", FpsTab)
 
@@ -832,7 +827,6 @@ local SelectiveFpsToggle = createToggle("SelectiveFps", "เปิดใช้�
 createHeader(">> ลบสิ่งที่ไม่จำเป็น (หิน/เศษเอฟเฟค) <<", FpsTab)
 local RemoveJunkToggle = createToggle("RemoveJunk", "ลบหิน/เศษเอฟเฟคการโจมตี", FpsTab)
 
--- หมวดหมู่: Auto Exec
 createHeader(">> ใส่โค้ดที่ต้องการรัน <<", AutoExecTab)
 local CodeBoxFrame = Instance.new("Frame")
 CodeBoxFrame.Size = UDim2.new(0.92, 0, 0, 85)
@@ -1112,7 +1106,9 @@ end
 
 -- หมวดหมู่: พลังวิเศษ (Time Stop)
 createHeader(">> พลังวิเศษพิเศษ <<", PowerTab)
+
 local TimeStopToggle = createToggle("TimeStop", "เปิดใช้งานหยุดเวลา (ไม่หลุดจากเกม)", PowerTab)
+
 local isTimeStopped = false
 
 TimeStopToggle.MouseButton1Click:Connect(function()
@@ -1125,12 +1121,14 @@ TimeStopToggle.MouseButton1Click:Connect(function()
     pcall(function()
         if isTimeStopped then
             settings():GetService("NetworkSettings").IncomingReplicationLag = 999999
+            
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                 LocalPlayer.Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
             end
         else
             settings():GetService("NetworkSettings").IncomingReplicationLag = 0
+            
             local char = LocalPlayer.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
                 local hrp = char.HumanoidRootPart
@@ -1195,10 +1193,12 @@ end)
 
 RunService.Stepped:Connect(function()
     local char = LocalPlayer.Character
-    if char and NoclipConfig.Enabled then
-        for _, part in ipairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
+    if char then
+        if NoclipConfig.Enabled then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
             end
         end
     end
@@ -1218,15 +1218,16 @@ task.spawn(function()
         if not ScreenGui.Parent then break end
         if InstantActionConfig.Enabled then
             for _, obj in ipairs(Workspace:GetDescendants()) do
-                if obj:IsA("ProximityPrompt") and obj.HoldDuration > 0 then
-                    obj.HoldDuration = 0
+                if obj:IsA("ProximityPrompt") then
+                    if obj.HoldDuration > 0 then
+                        obj.HoldDuration = 0
+                    end
                 end
             end
         end
     end
 end)
 
--- ระบบ Auto TP Back
 local AutoTpBackConfig = { Enabled = false }
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
@@ -1262,7 +1263,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ระบบปรับคูลดาวน์
 local CooldownConfig = { Enabled = false, Time = 0 }
 CooldownToggle.MouseButton1Click:Connect(function()
     CooldownConfig.Enabled = not CooldownConfig.Enabled
@@ -1301,7 +1301,6 @@ task.spawn(function()
     end
 end)
 
--- ระบบขยาย Hitbox
 local OriginalSizes = {}
 HitboxToggle.MouseButton1Click:Connect(function()
     HitboxConfig.Enabled = not HitboxConfig.Enabled
@@ -1353,7 +1352,6 @@ task.spawn(function()
     end
 end)
 
--- ระบบกราฟิกดินน้ำมัน
 local ClayGraphicsEnabled = false
 local originalMaterials = {}
 
@@ -1395,7 +1393,6 @@ ClayGraphicsToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- ระบบเพิ่ม FPS เจาะลึก
 local SelectiveFpsEnabled = false
 local optimizedParts = {}
 
@@ -1454,7 +1451,6 @@ SelectiveFpsToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- ระบบ Fullbright
 local FullbrightEnabled = false
 local oldBrightness = Lighting.Brightness
 local oldClockTime = Lighting.ClockTime
@@ -1488,7 +1484,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ระบบ FPS Boost (ลบ Particle/Effect)
 local FpsBoostEnabled = false
 local effectConnection = nil
 
@@ -1525,7 +1520,6 @@ FpsBoostToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- ระบบลบสิ่งที่ไม่จำเป็น
 local RemoveJunkEnabled = false
 local junkConnection = nil
 
@@ -1574,7 +1568,6 @@ RemoveJunkToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- ปุ่มแจกไอเท็ม Teleport Tool
 GiveToolBtn.MouseButton1Click:Connect(function()
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
     local character = LocalPlayer.Character
@@ -1615,7 +1608,6 @@ GiveToolBtn.MouseButton1Click:Connect(function()
     showNotification("รับไอเท็ม 'อุปกรณ์คลิกวาร์ป' สำเร็จ!", true)
 end)
 
--- วงกลม FOV
 local FOV_Circle = Instance.new("Frame")
 FOV_Circle.Name = "FOV_Circle"
 FOV_Circle.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1628,7 +1620,6 @@ local FOV_Corner, FOV_Stroke = Instance.new("UICorner"), Instance.new("UIStroke"
 FOV_Corner.CornerRadius = UDim.new(1, 0); FOV_Corner.Parent = FOV_Circle
 FOV_Stroke.Color = Color3.fromRGB(0, 162, 255); FOV_Stroke.Thickness = 1; FOV_Stroke.Parent = FOV_Circle
 
--- โหลดหน้าต่าง GUI
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
@@ -1737,19 +1728,16 @@ PlayerHeadToggle.MouseButton1Click:Connect(function()
     if LockConfig.PlayerHead then LockConfig.PlayerTorso = false; PlayerTorsoToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); PlayerTorsoToggle.Text = "ปิด" end
     updateVisuals(PlayerHeadToggle, LockConfig.PlayerHead, "ล็อกหัวคน")
 end)
-
 PlayerTorsoToggle.MouseButton1Click:Connect(function()
     LockConfig.PlayerTorso = not LockConfig.PlayerTorso
     if LockConfig.PlayerTorso then LockConfig.PlayerHead = false; PlayerHeadToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); PlayerHeadToggle.Text = "ปิด" end
     updateVisuals(PlayerTorsoToggle, LockConfig.PlayerTorso, "ล็อกตัวคน")
 end)
-
 NPCHeadToggle.MouseButton1Click:Connect(function()
     LockConfig.NPCHead = not LockConfig.NPCHead
     if LockConfig.NPCHead then LockConfig.NPCTorso = false; NPCTorsoToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); NPCTorsoToggle.Text = "ปิด" end
     updateVisuals(NPCHeadToggle, LockConfig.NPCHead, "ล็อกหัว NPC")
 end)
-
 NPCTorsoToggle.MouseButton1Click:Connect(function()
     LockConfig.NPCTorso = not LockConfig.NPCTorso
     if LockConfig.NPCTorso then LockConfig.NPCHead = false; NPCHeadToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); NPCHeadToggle.Text = "ปิด" end
@@ -1790,14 +1778,10 @@ end)
 ResetBtn.MouseButton1Click:Connect(function()
     CurrentWalkSpeed = 16
     CurrentJumpPower = 50
-    SetWalkSpeedFunc(16, true)
-    SetJumpPowerFunc(50, true)
-    LockConfig.EnableSpeed = false
-    LockConfig.EnableJump = false
-    EnableSpeedToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-    EnableSpeedToggle.Text = "ปิด"
-    EnableJumpToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-    EnableJumpToggle.Text = "ปิด"
+    WalkSpeedInput.Text = "16"
+    JumpPowerInput.Text = "50"
+    WalkSpeedBtn.Position = UDim2.new(0, 0, 0, -4)
+    JumpPowerBtn.Position = UDim2.new(0, 0, 0, -4)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         local humanoid = LocalPlayer.Character.Humanoid
         humanoid.WalkSpeed = 16
@@ -1860,6 +1844,42 @@ UserInputService.InputChanged:Connect(function(input)
             local textDesc = (CooldownConfig.Time == 0) and " (ไม่มีดีเลย์)" or ""
             CooldownLabel.Text = "เวลาคูลดาวน์: " .. CooldownConfig.Time .. " วิ" .. textDesc
         end
+    end
+end)
+
+WalkSpeedInput.FocusLost:Connect(function()
+    local num = tonumber(WalkSpeedInput.Text)
+    if num then
+        CurrentWalkSpeed = math.clamp(math.floor(num), 16, 800)
+        WalkSpeedInput.Text = tostring(CurrentWalkSpeed)
+        local percentage = (CurrentWalkSpeed - 16) / (800 - 16)
+        WalkSpeedBtn.Position = UDim2.new(percentage, -6, 0, -4)
+    else
+        WalkSpeedInput.Text = tostring(CurrentWalkSpeed)
+    end
+end)
+
+JumpPowerInput.FocusLost:Connect(function()
+    local num = tonumber(JumpPowerInput.Text)
+    if num then
+        CurrentJumpPower = math.clamp(math.floor(num), 50, 500)
+        JumpPowerInput.Text = tostring(CurrentJumpPower)
+        local percentage = (CurrentJumpPower - 50) / (500 - 50)
+        JumpPowerBtn.Position = UDim2.new(percentage, -6, 0, -4)
+    else
+        JumpPowerInput.Text = tostring(CurrentJumpPower)
+    end
+end)
+
+HitboxInput.FocusLost:Connect(function()
+    local num = tonumber(HitboxInput.Text)
+    if num then
+        HitboxConfig.Size = math.clamp(math.floor(num), 1, 1000)
+        HitboxInput.Text = tostring(HitboxConfig.Size)
+        local percentage = (HitboxConfig.Size - 1) / (1000 - 1)
+        HitboxBtn.Position = UDim2.new(percentage, -6, 0, -4)
+    else
+        HitboxInput.Text = tostring(HitboxConfig.Size)
     end
 end)
 
@@ -1932,12 +1952,7 @@ local function removeDrawingObject(model)
         Active2D[model] = nil
     end
 end
-
-local function clearAllDrawings() 
-    for model, _ in pairs(Active2D) do 
-        removeDrawingObject(model) 
-    end 
-end
+local function clearAllDrawings() for model, _ in pairs(Active2D) do removeDrawingObject(model) end end
 
 RunService.RenderStepped:Connect(function()
     if not Drawing then return end
@@ -2091,7 +2106,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ปุ่มปิด/ทำลาย UI
 YesButton.MouseButton1Click:Connect(function()
     for k, _ in pairs(LockConfig) do LockConfig[k] = false end
     WallCheckEnabled = false
