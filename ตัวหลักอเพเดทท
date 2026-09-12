@@ -349,7 +349,8 @@ local MainFuncTab = createContainer("ฟังก์ชั่นหลัก")
 local AimbotTab = createContainer("ระบบล็อกเป้า")
 local EspTab = createContainer("ระบบ ESP & Chams")
 local SpeedTab = createContainer("ความเร็ว & กระโดด")
-local ToolTab = createContainer("เครื่องมือ & FPS")
+local ToolTab = createContainer("เครื่องมือ")
+local FpsTab = createContainer("ระบบ FPS")
 local AutoExecTab = createContainer("รันโค้ดอัตโนมัติ")
 
 local categoryButtons = {}
@@ -387,7 +388,8 @@ btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
 createCategoryButton("ระบบล็อกเป้า", AimbotTab)
 createCategoryButton("ระบบ ESP & Chams", EspTab)
 createCategoryButton("ความเร็ว & กระโดด", SpeedTab)
-createCategoryButton("เครื่องมือ & FPS", ToolTab)
+createCategoryButton("เครื่องมือ", ToolTab)
+createCategoryButton("ระบบ FPS", FpsTab)
 createCategoryButton("รันโค้ดอัตโนมัติ", AutoExecTab)
 
 MainFuncTab.Visible = true
@@ -710,21 +712,6 @@ local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInputA
     HitboxConfig.Size = val
 end)
 
-createHeader(">> ระบบภาพดินน้ำมัน (Plastic) <<", ToolTab)
-local ClayGraphicsToggle = createToggle("ClayGraphics", "เปิดใช้งานภาพดินน้ำมัน", ToolTab)
-
-createHeader(">> แสงสว่างแผนที่ (Fullbright) <<", ToolTab)
-local FullbrightToggle = createToggle("Fullbright", "เปิดใช้งานแมพสว่างสุดๆ", ToolTab)
-
-createHeader(">> เพิ่ม FPS (ลบเอฟเฟค & ควัน) <<", ToolTab)
-local FpsBoostToggle = createToggle("FpsBoost", "ลบเอฟเฟคทั้งหมด/ควัน/ละออง", ToolTab)
-
-createHeader(">> เพิ่ม FPS แบบเจาะลึก <<", ToolTab)
-local SelectiveFpsToggle = createToggle("SelectiveFps", "เปิดใช้งานแก้แลคเฉพาะจุด", ToolTab)
-
-createHeader(">> ลบสิ่งที่ไม่จำเป็น (หิน/เศษเอฟเฟค) <<", ToolTab)
-local RemoveJunkToggle = createToggle("RemoveJunk", "ลบหิน/เศษเอฟเฟคการโจมตี", ToolTab)
-
 createHeader(">> เครื่องมือคลิกวาร์ป <<", ToolTab)
 local GiveToolFrame = Instance.new("Frame")
 GiveToolFrame.Size = UDim2.new(0.92, 0, 0, 34)
@@ -744,6 +731,22 @@ GiveToolBtn.TextSize = 10
 GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
+
+-- หมวดหมู่: ระบบ FPS
+createHeader(">> ระบบภาพดินน้ำมัน (Plastic) <<", FpsTab)
+local ClayGraphicsToggle = createToggle("ClayGraphics", "เปิดใช้งานภาพดินน้ำมัน", FpsTab)
+
+createHeader(">> แสงสว่างแผนที่ (Fullbright) <<", FpsTab)
+local FullbrightToggle = createToggle("Fullbright", "เปิดใช้งานแมพสว่างสุดๆ", FpsTab)
+
+createHeader(">> เพิ่ม FPS (ลบเอฟเฟค & ควัน) <<", FpsTab)
+local FpsBoostToggle = createToggle("FpsBoost", "ลบเอฟเฟคทั้งหมด/ควัน/ละออง", FpsTab)
+
+createHeader(">> เพิ่ม FPS แบบเจาะลึก <<", FpsTab)
+local SelectiveFpsToggle = createToggle("SelectiveFps", "เปิดใช้งานแก้แลคเฉพาะจุด", FpsTab)
+
+createHeader(">> ลบสิ่งที่ไม่จำเป็น (หิน/เศษเอฟเฟค) <<", FpsTab)
+local RemoveJunkToggle = createToggle("RemoveJunk", "ลบหิน/เศษเอฟเฟคการโจมตี", FpsTab)
 
 -- หมวดหมู่: รันโค้ดอัตโนมัติ
 createHeader(">> ใส่โค้ดที่ต้องการรัน <<", AutoExecTab)
@@ -826,7 +829,7 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn1000.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
