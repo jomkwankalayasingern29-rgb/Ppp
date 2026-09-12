@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.22: FIXED & OPTIMIZED UPDATE (ADDED TELEPORT TAB) ]] --
+-- [[ GKHub v1.4.23: FIXED & OPTIMIZED UPDATE (ADDED PERMANENT CODE STORAGE) ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
@@ -23,12 +24,35 @@ for _, uiName in ipairs(oldUIs) do
 end
 
 local DiscordLink = "https://discord.gg/Ugssja4wqQ"
+local SaveFileName = "GKHub_SavedCodes.json"
 
 local function copyToClipboard(text)
     pcall(function()
         if setclipboard then setclipboard(text) elseif toclipboard then toclipboard(text) end
     end)
 end
+
+local function loadSavedData()
+    local success, result = pcall(function()
+        if readfile and isfile and isfile(SaveFileName) then
+            return HttpService:JSONDecode(readfile(SaveFileName))
+        end
+    end)
+    if success and type(result) == "table" then
+        return result
+    end
+    return {}
+end
+
+local function saveSavedData(data)
+    pcall(function()
+        if writefile then
+            writefile(SaveFileName, HttpService:JSONEncode(data))
+        end
+    end)
+end
+
+local savedDatabase = loadSavedData()
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
@@ -349,7 +373,7 @@ local MainFuncTab = createContainer("ฟังก์ชั่นหลัก")
 local AimbotTab = createContainer("ระบบล็อกเป้า")
 local EspTab = createContainer("ระบบ ESP & Chams")
 local CharacterTab = createContainer("ตัวละคร")
-local TeleportTab = createContainer("วาป") -- หมวดหมู่ใหม่: วาป
+local TeleportTab = createContainer("วาป")
 local ToolTab = createContainer("เครื่องมือ")
 local FpsTab = createContainer("ระบบ FPS")
 local AutoExecTab = createContainer("รันโค้ดอัตโนมัติ")
@@ -389,7 +413,7 @@ btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
 createCategoryButton("ระบบล็อกเป้า", AimbotTab)
 createCategoryButton("ระบบ ESP & Chams", EspTab)
 createCategoryButton("ตัวละคร", CharacterTab)
-createCategoryButton("วาป", TeleportTab) -- เพิ่มปุ่มเมนูหมวดหมู่ วาป
+createCategoryButton("วาป", TeleportTab)
 createCategoryButton("เครื่องมือ", ToolTab)
 createCategoryButton("ระบบ FPS", FpsTab)
 createCategoryButton("รันโค้ดอัตโนมัติ", AutoExecTab)
@@ -700,7 +724,6 @@ ResetBtn.Parent = ResetFrame
 table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
 
--- หมวดหมู่: วาป (ย้ายฟังก์ชันมาไว้ที่นี่)
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด", TeleportTab)
 
@@ -724,7 +747,6 @@ GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
 
--- หมวดหมู่: เครื่องมือ
 createHeader(">> กดใช้งานทันที (0 วิ) <<", ToolTab)
 local InstantActionToggle = createToggle("InstantAction", "เปิดใช้งานกดค้างทันที (0 วิ)", ToolTab)
 
@@ -739,7 +761,6 @@ local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInputA
     HitboxConfig.Size = val
 end)
 
--- หมวดหมู่: ระบบ FPS
 createHeader(">> ระบบภาพดินน้ำมัน (Plastic) <<", FpsTab)
 local ClayGraphicsToggle = createToggle("ClayGraphics", "เปิดใช้งานภาพดินน้ำมัน", FpsTab)
 
@@ -755,7 +776,6 @@ local SelectiveFpsToggle = createToggle("SelectiveFps", "เปิดใช้�
 createHeader(">> ลบสิ่งที่ไม่จำเป็น (หิน/เศษเอฟเฟค) <<", FpsTab)
 local RemoveJunkToggle = createToggle("RemoveJunk", "ลบหิน/เศษเอฟเฟคการโจมตี", FpsTab)
 
--- หมวดหมู่: รันโค้ดอัตโนมัติ
 createHeader(">> ใส่โค้ดที่ต้องการรัน <<", AutoExecTab)
 local CodeBoxFrame = Instance.new("Frame")
 CodeBoxFrame.Size = UDim2.new(0.92, 0, 0, 85)
@@ -863,9 +883,15 @@ task.spawn(function()
     end
 end)
 
+createHeader(">> บันทึกโค้ด/ตั้งชื่อห้อง (ช่องบันทึก 5 ช่อง) <<", AutoExecTab)
+
 local subLoopStates = {false, false, false, false, false}
 
 for i = 1, 5 do
+    if not savedDatabase[tostring(i)] then
+        savedDatabase[tostring(i)] = {Title = "รันสคริปต์อัตโนมัติ-" .. i, Code = ""}
+    end
+
     local dropHeader = Instance.new("Frame")
     dropHeader.Size = UDim2.new(0.92, 0, 0, 28)
     dropHeader.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -877,7 +903,7 @@ for i = 1, 5 do
     nameBox.Size = UDim2.new(1, -60, 1, 0)
     nameBox.Position = UDim2.new(0, 8, 0, 0)
     nameBox.BackgroundTransparency = 1
-    nameBox.Text = "รันสคริปต์อัตโนมัติ-" .. i
+    nameBox.Text = savedDatabase[tostring(i)].Title
     nameBox.TextColor3 = Color3.fromRGB(0, 162, 255)
     nameBox.Font = Enum.Font.GothamBold
     nameBox.TextSize = 10
@@ -910,7 +936,7 @@ for i = 1, 5 do
     subBox.BorderSizePixel = 0
     subBox.MultiLine = true
     subBox.PlaceholderText = "-- พิมพ์โค้ดสคริปต์ช่องที่ " .. i .. "..."
-    subBox.Text = ""
+    subBox.Text = savedDatabase[tostring(i)].Code
     subBox.TextColor3 = Color3.fromRGB(240, 240, 240)
     subBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
     subBox.TextSize = 9
@@ -948,7 +974,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -965,22 +991,33 @@ for i = 1, 5 do
     autoBtn.Size = UDim2.new(0, 45, 0, 16); autoBtn.Position = UDim2.new(1, -48, 0.5, -8); autoBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60); autoBtn.Text = "ปิด"; autoBtn.TextColor3 = Color3.fromRGB(255,255,255); autoBtn.Font = Enum.Font.GothamBold; autoBtn.TextSize = 8; autoBtn.Parent = subAutoRow
     Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 3)
 
-    local savedCodeStorage = ""
-
     saveBtn.MouseButton1Click:Connect(function()
-        savedCodeStorage = subBox.Text
-        showNotification("เซฟโค้ดช่อง " .. i .. " สำเร็จ!", true)
+        savedDatabase[tostring(i)] = {
+            Title = nameBox.Text,
+            Code = subBox.Text
+        }
+        saveSavedData(savedDatabase)
+        showNotification("เซฟโค้ดและชื่อห้องช่อง " .. i .. " สำเร็จ!", true)
     end)
 
     clearBtn.MouseButton1Click:Connect(function()
         subBox.Text = ""
-        savedCodeStorage = ""
+        savedDatabase[tostring(i)] = {
+            Title = nameBox.Text,
+            Code = ""
+        }
+        saveSavedData(savedDatabase)
         showNotification("ล้างโค้ดช่อง " .. i .. " แล้ว", true)
     end)
 
     copyBtn.MouseButton1Click:Connect(function()
         copyToClipboard(subBox.Text)
         showNotification("คัดลอกโค้ดช่อง " .. i .. " แล้ว!", true)
+    end)
+
+    nameBox.FocusLost:Connect(function()
+        savedDatabase[tostring(i)].Title = nameBox.Text
+        saveSavedData(savedDatabase)
     end)
 
     s1.MouseButton1Click:Connect(function() executeCodeString(subBox.Text, 1) end)
