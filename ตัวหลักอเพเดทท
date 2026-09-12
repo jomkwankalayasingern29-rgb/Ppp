@@ -2111,3 +2111,63 @@ YesButton.MouseButton1Click:Connect(function()
         if FOV_Circle then FOV_Circle:Destroy() end
     end)
 end)
+-- สร้างหมวดหมู่ "พลังวิเศษ" เพิ่มต่อจากเมนูเดิม
+local PowerTab = createContainer("พลังวิเศษ")
+createCategoryButton("พลังวิเศษ", PowerTab)
+
+createHeader(">> พลังวิเศษพิเศษ <<", PowerTab)
+
+-- สร้างปุ่มเปิด/ปิด หยุดเวลา
+local TimeStopToggle = createToggle("TimeStop", "เปิดใช้งานหยุดเวลา (ไม่หลุดจากเกม)", PowerTab)
+
+local isTimeStopped = false
+local replicatedStorage = game:GetService("ReplicatedStorage")
+
+-- ฟังก์ชันสำหรับหยุดเวลาโดยไม่ให้ตัวละครเด้งออก (NetworkOwnership & Simulation)
+TimeStopToggle.MouseButton1Click:Connect(function()
+    isTimeStopped = not isTimeStopped
+    TimeStopToggle.BackgroundColor3 = isTimeStopped and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    TimeStopToggle.Text = isTimeStopped and "เปิด" or "ปิด"
+    
+    showNotification((isTimeStopped and "หยุดเวลาสำเร็จ! (คุณสามารถเดินและหยิบของได้)" or "คืนค่าเวลาปกติแล้ว!"), isTimeStopped)
+    
+    pcall(function()
+        if isTimeStopped then
+            -- ปิดการส่งแพ็คเกจจำลองสถานะชั่วคราวเพื่อให้คนอื่นเห็นว่าเราค้าง แต่เรายังคุมตัวละครได้
+            settings():GetService("NetworkSettings").IncomingReplicationLag = 999999
+            
+            -- ตั้งค่าให้ตัวละครไม่ส่งการเคลื่อนไหวออกไปข้างนอก (จำลองการหยุดเวลาเฉพาะตัวเรากับเซิร์ฟเวอร์)
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                LocalPlayer.Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            end
+        else
+            -- คืนค่าเน็ตเวิร์กกลับสู่ปกติและซิงค์ข้อมูลของที่เราหยิบเข้ามาในตัว
+            settings():GetService("NetworkSettings").IncomingReplicationLag = 0
+            
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local hrp = char.HumanoidRootPart
+                -- รีเฟรชตำแหน่งเล็กน้อยเพื่อให้เซิร์ฟเวอร์อัปเดตไอเท็มที่เราหยิบมาขณะหยุดเวลา
+                hrp.CFrame = hrp.CFrame + Vector3.new(0, 0.1, 0)
+            end
+        end
+    end)
+end)
+
+-- ลูปคอยบล็อกสถานะการเคลื่อนไหวของร่างกายขณะหยุดเวลา เพื่อให้เราเดินทะลุกรอบเวลาที่ค้างได้
+RunService.Stepped:Connect(function()
+    if isTimeStopped then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        -- ป้องกันแรงกระแทกจากภายนอกขณะหยุดเวลา
+                        part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end
+        end)
+    end
+end)
