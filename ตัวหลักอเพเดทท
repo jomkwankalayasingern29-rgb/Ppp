@@ -231,10 +231,6 @@ YesButton.ZIndex = 12
 YesButton.Parent = ConfirmBox
 local YesCorner = Instance.new("UICorner"); YesCorner.CornerRadius = UDim.new(0, 4); YesCorner.Parent = YesButton
 
-YesButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
 local NoButton = Instance.new("TextButton")
 NoButton.Size = UDim2.new(0, 100, 0, 32)
 NoButton.Position = UDim2.new(1, -120, 1, -42)
@@ -637,6 +633,7 @@ local function createSlider(labelText, parentTab)
     return Back, Btn, Label
 end
 
+-- หมวดหมู่: ฟังก์ชั่นหลัก
 createHeader(">> คอมมิวนิตี้ <<", MainFuncTab)
 local DiscordFrame = Instance.new("Frame")
 DiscordFrame.Size = UDim2.new(0.92, 0, 0, 36)
@@ -1007,7 +1004,7 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn100.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
@@ -1125,7 +1122,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1204,6 +1201,7 @@ for i = 1, 5 do
     end)
 end
 
+-- ระบบกระโดดไม่จำกัด (Inf Jump)
 local InfJumpConfig = { Enabled = false }
 InfJumpToggle.MouseButton1Click:Connect(function()
     InfJumpConfig.Enabled = not InfJumpConfig.Enabled
@@ -1221,6 +1219,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
+-- ระบบทะลุกำแพง (Noclip)
 local NoclipConfig = { Enabled = false }
 NoclipToggle.MouseButton1Click:Connect(function()
     NoclipConfig.Enabled = not NoclipConfig.Enabled
@@ -1253,6 +1252,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
+-- ระบบ Instant Action
 local InstantActionConfig = { Enabled = false }
 InstantActionToggle.MouseButton1Click:Connect(function()
     InstantActionConfig.Enabled = not InstantActionConfig.Enabled
@@ -1720,6 +1720,9 @@ CloseButton.MouseButton1Click:Connect(function()
     if not isMinimized then ConfirmOverlay.Visible = true end
 end)
 NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
+YesButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
 
 local LockConfig = {
     FullLock = false, FullLockTorso = false, FullLockTorsoWallCheck = false, PlayerHead = false, PlayerTorso = false, NPCHead = false, NPCTorso = false,
@@ -2070,99 +2073,18 @@ RunService.RenderStepped:Connect(function()
     end
 
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then 
-            drawESP(player.Character, false) 
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            drawESP(player.Character, false)
+        else
+            if player.Character then removeDrawingObject(player.Character) end
         end
     end
-    for _, desc in ipairs(Workspace:GetDescendants()) do
-        if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then 
-            if desc:FindFirstChild("HumanoidRootPart") then
-                drawESP(desc, true) 
+
+    if LockConfig.NpcEsp2D then
+        for _, desc in ipairs(Workspace:GetDescendants()) do
+            if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and desc:FindFirstChild("HumanoidRootPart") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then
+                drawESP(desc, true)
             end
         end
-    end
-end)
-
-local function getClosestTarget()
-    local closestPart, shortestDist = nil, math.huge
-    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return nil end
-    local myRootPos = LocalPlayer.Character.HumanoidRootPart.Position
-
-    if LockConfig.FullLock then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-                local head = p.Character.Head
-                if not LockConfig.FullLockTorsoWallCheck or isVisible(head, p.Character) then
-                    local dist = (head.Position - myRootPos).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closestPart = head
-                    end
-                end
-            end
-        end
-        return closestPart
-    end
-
-    if LockConfig.FullLockTorso then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-                local torso = p.Character.HumanoidRootPart
-                if not LockConfig.FullLockTorsoWallCheck or isVisible(torso, p.Character) then
-                    local dist = (torso.Position - myRootPos).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closestPart = torso
-                    end
-                end
-            end
-        end
-        return closestPart
-    end
-
-    local function processModel(model, isNpc)
-        local pName = (isNpc and (LockConfig.NPCHead and "Head" or LockConfig.NPCTorso and "HumanoidRootPart")) or (LockConfig.PlayerHead and "Head" or LockConfig.PlayerTorso and "HumanoidRootPart")
-        if not pName then return end
-        local part = model:FindFirstChild(pName) or (pName == "HumanoidRootPart" and (model:FindFirstChild("UpperTorso") or model:FindFirstChild("Torso")))
-        if part and model:FindFirstChild("Humanoid") and model.Humanoid.Health > 0 then
-            local partPos, onScreen = Camera:WorldToViewportPoint(part.Position)
-            if onScreen then
-                local screenPos = Vector2.new(partPos.X, partPos.Y)
-                local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-                local dist = (screenPos - center).Magnitude
-                if dist <= FOV_Radius then
-                    if not WallCheckEnabled or isVisible(part, model) then
-                        if dist < shortestDist then
-                            shortestDist = dist
-                            closestPart = part
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character then
-            processModel(p.Character, false)
-        end
-    end
-
-    for _, desc in ipairs(Workspace:GetDescendants()) do
-        if desc:IsA("Model") and desc ~= LocalPlayer.Character and not Players:GetPlayerFromCharacter(desc) then
-            processModel(desc, true)
-        end
-    end
-
-    return closestPart
-end
-
-RunService.RenderStepped:Connect(function()
-    local target = getClosestTarget()
-    if target then
-        local camPos = Camera.CFrame.Position
-        local targetPos = target.Position
-        local lookAtCFrame = CFrame.new(camPos, targetPos)
-        Camera.CFrame = Camera.CFrame:Lerp(lookAtCFrame, LockSpeed / 100)
     end
 end)
