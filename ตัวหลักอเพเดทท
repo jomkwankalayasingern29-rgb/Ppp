@@ -1,3 +1,4 @@
+ช่วย้ขียนโค้ด
 -- [[ GKHub v1.4.25: FIXED & UPDATED WITH TIME STOP & POWER TAB ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -58,19 +59,6 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
--- สร้างวงกลม FOV ไว้ล่วงหน้าเพื่อป้องกัน Error การอ้างถึง
-local FOV_Circle = Instance.new("Frame")
-FOV_Circle.Name = "FOV_Circle"
-FOV_Circle.AnchorPoint = Vector2.new(0.5, 0.5)
-FOV_Circle.Position = UDim2.new(0.5, 0, 0.5, 0)
-FOV_Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-FOV_Circle.BackgroundTransparency = 0.96
-FOV_Circle.Visible = false
-FOV_Circle.Parent = ScreenGui
-local FOV_Corner, FOV_Stroke = Instance.new("UICorner"), Instance.new("UIStroke")
-FOV_Corner.CornerRadius = UDim.new(1, 0); FOV_Corner.Parent = FOV_Circle
-FOV_Stroke.Color = Color3.fromRGB(0, 162, 255); FOV_Stroke.Thickness = 1; FOV_Stroke.Parent = FOV_Circle
 
 local NotifContainer = Instance.new("Frame")
 NotifContainer.Name = "NotifContainer"
@@ -256,10 +244,6 @@ NoButton.BorderSizePixel = 0
 NoButton.ZIndex = 12
 NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
-
-YesButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
 
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
@@ -575,7 +559,6 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     BtnCorner.CornerRadius = UDim.new(1, 0)
     BtnCorner.Parent = Btn
 
-    local dragging = false
     local function applyValue(val, updateInput)
         val = math.clamp(val, minVal, maxVal)
         if updateInput then
@@ -585,20 +568,6 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
         Btn.Position = UDim2.new(percentage, -6, 0, -4)
         if callback then callback(val) end
     end
-
-    Btn.MouseButton1Down:Connect(function() dragging = true end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local relX = math.clamp(input.Position.X - Back.AbsolutePosition.X, 0, Back.AbsoluteSize.X)
-            local val = math.floor(minVal + (relX / Back.AbsoluteSize.X) * (maxVal - minVal))
-            applyValue(val, true)
-        end
-    end)
 
     InputBox.FocusLost:Connect(function()
         local num = tonumber(InputBox.Text)
@@ -612,11 +581,7 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     return Back, Btn, InputBox, applyValue
 end
 
-local function createSlider(labelText, parentTab, minVal, maxVal, defaultVal, callback)
-    minVal = minVal or 10
-    maxVal = maxVal or 500
-    defaultVal = defaultVal or 100
-
+local function createSlider(labelText, parentTab)
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0.92, 0, 0, 42)
     Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -668,27 +633,6 @@ local function createSlider(labelText, parentTab, minVal, maxVal, defaultVal, ca
     BtnCorner.CornerRadius = UDim.new(1, 0)
     BtnCorner.Parent = Btn
 
-    local dragging = false
-    local function updateValue(inputPos)
-        local relX = math.clamp(inputPos - Back.AbsolutePosition.X, 0, Back.AbsoluteSize.X)
-        local pct = relX / Back.AbsoluteSize.X
-        local val = math.floor(minVal + pct * (maxVal - minVal))
-        Btn.Position = UDim2.new(pct, -6, 0, -4)
-        if callback then callback(val) end
-    end
-
-    Btn.MouseButton1Down:Connect(function() dragging = true end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            updateValue(input.Position.X)
-        end
-    end)
-
     return Back, Btn, Label
 end
 
@@ -733,23 +677,8 @@ local NPCTorsoToggle = createToggle("NPCTorso", "เปิดใช้งาน�
 
 createHeader(">> ตั้งค่าระบบล็อก <<", AimbotTab)
 local WallCheckButton = createToggle("WallCheck", "ไม่ล็อกตัวหลังกำแพง", AimbotTab)
-
-local FOV_Radius = 100
-local LockSpeed = 50 
-local WallCheckEnabled = false
-
-local SliderBack, SliderBtn, SliderLabel = createSlider("FOV: 100", AimbotTab, 10, 500, 100, function(val)
-    FOV_Radius = val
-    SliderLabel.Text = "FOV: " .. math.floor(val)
-    if FOV_Circle then
-        FOV_Circle.Size = UDim2.new(0, val * 2, 0, val * 2)
-    end
-end)
-
-local SpeedBack, SpeedBtn, SpeedLabel = createSlider("ความเร็วดูด: 50", AimbotTab, 1, 100, 50, function(val)
-    LockSpeed = val
-    SpeedLabel.Text = "ความเร็วดูด: " .. math.floor(val)
-end)
+local SliderBack, SliderBtn, SliderLabel = createSlider("FOV: 100", AimbotTab)
+local SpeedBack, SpeedBtn, SpeedLabel = createSlider("ความเร็วดูด: 50", AimbotTab)
 
 -- หมวดหมู่: ESP
 createHeader(">> ระบบมองทะลุสีทึบ (Chams) <<", EspTab)
@@ -800,19 +729,6 @@ ResetBtn.TextSize = 10
 ResetBtn.Parent = ResetFrame
 table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
-
-ResetBtn.MouseButton1Click:Connect(function()
-    CurrentWalkSpeed = 16
-    CurrentJumpPower = 50
-    SetWalkSpeedFunc(16, true)
-    SetJumpPowerFunc(50, true)
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChildOfClass("Humanoid") then
-        char.Humanoid.WalkSpeed = 16
-        char.Humanoid.JumpPower = 50
-    end
-    showNotification("รีเซ็ตค่าผู้เล่นเป็นปกติแล้ว!", true)
-end)
 
 -- หมวดหมู่: วาร์ป
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
@@ -892,7 +808,7 @@ local InstantActionToggle = createToggle("InstantAction", "เปิดใช้
 
 createHeader(">> ลบคูลดาวน์อุปกรณ์ <<", ToolTab)
 local CooldownToggle = createToggle("CooldownToggle", "เปิดใช้งานลบ/ปรับคูลดาวน์", ToolTab)
-local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาคูลดาวน์: 0 วิ (ไม่มีดีเลย์)", ToolTab, 0, 10, 0)
+local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาคูลดาวน์: 0 วิ (ไม่มีดีเลย์)", ToolTab)
 
 createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", ToolTab)
 local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
@@ -1116,7 +1032,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1700,6 +1616,19 @@ GiveToolBtn.MouseButton1Click:Connect(function()
     showNotification("รับไอเท็ม 'อุปกรณ์คลิกวาร์ป' สำเร็จ!", true)
 end)
 
+-- วงกลม FOV
+local FOV_Circle = Instance.new("Frame")
+FOV_Circle.Name = "FOV_Circle"
+FOV_Circle.AnchorPoint = Vector2.new(0.5, 0.5)
+FOV_Circle.Position = UDim2.new(0.5, 0, 0.5, 0)
+FOV_Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+FOV_Circle.BackgroundTransparency = 0.96
+FOV_Circle.Visible = false
+FOV_Circle.Parent = ScreenGui
+local FOV_Corner, FOV_Stroke = Instance.new("UICorner"), Instance.new("UIStroke")
+FOV_Corner.CornerRadius = UDim.new(1, 0); FOV_Corner.Parent = FOV_Circle
+FOV_Stroke.Color = Color3.fromRGB(0, 162, 255); FOV_Stroke.Thickness = 1; FOV_Stroke.Parent = FOV_Circle
+
 -- โหลดหน้าต่าง GUI
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
@@ -1759,6 +1688,17 @@ local LockConfig = {
     MasterEsp2D = false, PlayerEsp2D = false, NpcEsp2D = false,
     EnableSpeed = false, EnableJump = false
 }
+
+local WallCheckEnabled = false
+local FOV_Radius = 100
+local LockSpeed = 50 
+
+local function updateFOV(radius)
+    FOV_Radius = radius
+    FOV_Circle.Size = UDim2.new(0, radius * 2, 0, radius * 2)
+    SliderLabel.Text = "FOV: " .. math.floor(radius)
+end
+updateFOV(FOV_Radius)
 
 local function updateVisuals(btn, state, funcName)
     btn.BackgroundColor3 = state and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
@@ -1823,139 +1763,397 @@ MasterEsp2DToggle.MouseButton1Click:Connect(function() LockConfig.MasterEsp2D = 
 PlayerEsp2DToggle.MouseButton1Click:Connect(function() LockConfig.PlayerEsp2D = not LockConfig.PlayerEsp2D; updateVisuals(PlayerEsp2DToggle, LockConfig.PlayerEsp2D, "2D ESP (คน)") end)
 NpcEsp2DToggle.MouseButton1Click:Connect(function() LockConfig.NpcEsp2D = not LockConfig.NpcEsp2D; updateVisuals(NpcEsp2DToggle, LockConfig.NpcEsp2D, "2D ESP (NPC)") end)
 
-EnableSpeedToggle.MouseButton1Click:Connect(function() LockConfig.EnableSpeed = not LockConfig.EnableSpeed; updateVisuals(EnableSpeedToggle, LockConfig.EnableSpeed, "วิ่งเร็ว") end)
-EnableJumpToggle.MouseButton1Click:Connect(function() LockConfig.EnableJump = not LockConfig.EnableJump; updateVisuals(EnableJumpToggle, LockConfig.EnableJump, "กระโดดสูง") end)
-
 WallCheckButton.MouseButton1Click:Connect(function()
     WallCheckEnabled = not WallCheckEnabled
     WallCheckButton.BackgroundColor3 = WallCheckEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
     WallCheckButton.Text = WallCheckEnabled and "เปิด" or "ปิด"
-    showNotification((WallCheckEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ไม่ล็อกตัวหลังกำแพง', WallCheckEnabled)
+    showNotification((WallCheckEnabled and 'เปิดใช้งาน "' or 'ปิดใช้งาน "') .. 'ไม่ล็อกหลังกำแพง"', WallCheckEnabled)
 end)
 
--- ระบบล็อกเป้าและควบคุมตัวละคร (Main Render Loop)
-local function isVisible(targetPart)
-    if not WallCheckEnabled and not LockConfig.FullLockTorsoWallCheck then return true end
-    local origin = Camera.CFrame.Position
-    local ray = Ray.new(origin, (targetPart.Position - origin).Unit * 500)
-    local hit = Workspace:FindPartOnWithIgnoreList(ray, {LocalPlayer.Character, targetPart.Parent})
-    return hit == nil or hit:IsDescendantOf(targetPart.Parent)
+EnableSpeedToggle.MouseButton1Click:Connect(function()
+    LockConfig.EnableSpeed = not LockConfig.EnableSpeed
+    updateVisuals(EnableSpeedToggle, LockConfig.EnableSpeed, "วิ่งเร็ว")
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = LockConfig.EnableSpeed and CurrentWalkSpeed or 16
+    end
+end)
+
+EnableJumpToggle.MouseButton1Click:Connect(function()
+    LockConfig.EnableJump = not LockConfig.EnableJump
+    updateVisuals(EnableJumpToggle, LockConfig.EnableJump, "กระโดดสูง")
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = LocalPlayer.Character.Humanoid
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = LockConfig.EnableJump and CurrentJumpPower or 50
+    end
+end)
+
+ResetBtn.MouseButton1Click:Connect(function()
+    CurrentWalkSpeed = 16
+    CurrentJumpPower = 50
+    SetWalkSpeedFunc(16, true)
+    SetJumpPowerFunc(50, true)
+    LockConfig.EnableSpeed = false
+    LockConfig.EnableJump = false
+    EnableSpeedToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+    EnableSpeedToggle.Text = "ปิด"
+    EnableJumpToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+    EnableJumpToggle.Text = "ปิด"
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = LocalPlayer.Character.Humanoid
+        humanoid.WalkSpeed = 16
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = 50
+    end
+    showNotification("รีเซ็ตค่าความเร็ว/กระโดดสำเร็จ", true)
+end)
+
+local fovDragging, speedDragging, walkSpeedDragging, jumpPowerDragging, hitboxDragging, cooldownDragging = false, false, false, false, false, false
+
+SliderBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then fovDragging = true end end)
+SpeedBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then speedDragging = true end end)
+WalkSpeedBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then walkSpeedDragging = true end end)
+JumpPowerBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then jumpPowerDragging = true end end)
+HitboxBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then hitboxDragging = true end end)
+CooldownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then cooldownDragging = true end end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
+        fovDragging = false; speedDragging = false; walkSpeedDragging = false; jumpPowerDragging = false; hitboxDragging = false; cooldownDragging = false
+    end 
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if fovDragging then
+            local percentage = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
+            SliderBtn.Position = UDim2.new(percentage, -6, 0, -4)
+            updateFOV(50 + (percentage * 550))
+        end
+        if speedDragging then
+            local percentage = math.clamp((input.Position.X - SpeedBack.AbsolutePosition.X) / SpeedBack.AbsoluteSize.X, 0, 1)
+            SpeedBtn.Position = UDim2.new(percentage, -6, 0, -4)
+            LockSpeed = math.floor(1 + (percentage * 99))
+            SpeedLabel.Text = "ความเร็วดูด: " .. LockSpeed
+        end
+        if walkSpeedDragging then
+            local percentage = math.clamp((input.Position.X - WalkSpeedBack.AbsolutePosition.X) / WalkSpeedBack.AbsoluteSize.X, 0, 1)
+            CurrentWalkSpeed = math.floor(16 + (percentage * (800 - 16)))
+            WalkSpeedInput.Text = tostring(CurrentWalkSpeed)
+            WalkSpeedBtn.Position = UDim2.new(percentage, -6, 0, -4)
+        end
+        if jumpPowerDragging then
+            local percentage = math.clamp((input.Position.X - JumpPowerBack.AbsolutePosition.X) / JumpPowerBack.AbsoluteSize.X, 0, 1)
+            CurrentJumpPower = math.floor(50 + (percentage * (500 - 50)))
+            JumpPowerInput.Text = tostring(CurrentJumpPower)
+            JumpPowerBtn.Position = UDim2.new(percentage, -6, 0, -4)
+        end
+        if hitboxDragging then
+            local percentage = math.clamp((input.Position.X - HitboxBack.AbsolutePosition.X) / HitboxBack.AbsoluteSize.X, 0, 1)
+            HitboxConfig.Size = math.floor(1 + (percentage * 999))
+            HitboxInput.Text = tostring(HitboxConfig.Size)
+            HitboxBtn.Position = UDim2.new(percentage, -6, 0, -4)
+        end
+        if cooldownDragging then
+            local percentage = math.clamp((input.Position.X - CooldownBack.AbsolutePosition.X) / CooldownBack.AbsoluteSize.X, 0, 1)
+            CooldownBtn.Position = UDim2.new(percentage, -6, 0, -4)
+            CooldownConfig.Time = math.floor((percentage * 5) * 10) / 10
+            local textDesc = (CooldownConfig.Time == 0) and " (ไม่มีดีเลย์)" or ""
+            CooldownLabel.Text = "เวลาคูลดาวน์: " .. CooldownConfig.Time .. " วิ" .. textDesc
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if not ScreenGui.Parent then break end
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            local humanoid = char.Humanoid
+            if LockConfig.EnableSpeed then
+                humanoid.WalkSpeed = CurrentWalkSpeed
+            end
+            if LockConfig.EnableJump then
+                humanoid.UseJumpPower = true
+                humanoid.JumpPower = CurrentJumpPower
+            end
+        end
+    end
+end)
+
+local function isVisible(targetPartInstance, targetChar)
+    local localCharacter = LocalPlayer.Character
+    if not localCharacter or not localCharacter:FindFirstChild("HumanoidRootPart") then return false end
+    local startPosition = Camera.CFrame.Position
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+    raycastParams.FilterDescendantsInstances = {localCharacter, targetChar}
+    raycastParams.IgnoreWater = true
+    local raycastResult = Workspace:Raycast(startPosition, targetPartInstance.Position - startPosition, raycastParams)
+    return raycastResult == nil
+end
+
+task.spawn(function()
+    while task.wait(0.2) do
+        if not ScreenGui.Parent then break end
+        
+        if LockConfig.PlayerEspChams then
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+                    local cham = player.Character:FindFirstChild("GKHub_Cham") or Instance.new("Highlight")
+                    cham.Name = "GKHub_Cham"; cham.FillTransparency = 0.5; cham.OutlineTransparency = 0; cham.OutlineColor = Color3.fromRGB(255, 255, 255); cham.Parent = player.Character
+                    cham.FillColor = isVisible(player.Character.HumanoidRootPart, player.Character) and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(220, 60, 60)
+                else
+                    if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end
+                end
+            end
+        else
+            for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end end
+        end
+
+        if LockConfig.NpcEspChams then
+            for _, desc in ipairs(Workspace:GetDescendants()) do
+                if desc:IsA("Model") and desc:FindFirstChild("HumanoidRootPart") and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then
+                    local ncham = desc:FindFirstChild("GKHub_NpcCham") or Instance.new("Highlight")
+                    ncham.Name = "GKHub_NpcCham"; ncham.FillTransparency = 0.5; ncham.OutlineTransparency = 0; ncham.OutlineColor = Color3.fromRGB(255, 255, 255); ncham.Parent = desc
+                    ncham.FillColor = isVisible(desc.HumanoidRootPart, desc) and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(0, 80, 200)
+                end
+            end
+        else
+            for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("GKHub_NpcCham") then desc.GKHub_NpcCham:Destroy() end end
+        end
+    end
+end)
+
+local Active2D = {}
+local function removeDrawingObject(model)
+    if Active2D[model] then
+        if Active2D[model].Box then pcall(function() Active2D[model].Box:Remove() end) end
+        if Active2D[model].Tracer then pcall(function() Active2D[model].Tracer:Remove() end) end
+        Active2D[model] = nil
+    end
+end
+
+local function clearAllDrawings() 
+    for model, _ in pairs(Active2D) do 
+        removeDrawingObject(model) 
+    end 
 end
 
 RunService.RenderStepped:Connect(function()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChildOfClass("Humanoid") then
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if LockConfig.EnableSpeed then
-            hum.WalkSpeed = CurrentWalkSpeed
-        end
-        if LockConfig.EnableJump then
-            hum.JumpPower = CurrentJumpPower
+    if not Drawing then return end
+    if not ScreenGui.Parent or not LockConfig.MasterEsp2D then 
+        if next(Active2D) then clearAllDrawings() end
+        return 
+    end
+
+    for model, _ in pairs(Active2D) do
+        if not model or not model.Parent or not model:FindFirstChild("Humanoid") or model.Humanoid.Health <= 0 then 
+            removeDrawingObject(model) 
         end
     end
 
-    -- ตรรกะ Aimbot
-    local closestTargetPart = nil
-    local shortestDistance = FOV_Radius
-    local centerScreen = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-
-    local function checkCharacter(model, isNPC)
-        if not model or model == LocalPlayer.Character then return end
-        local hum = model:FindFirstChildOfClass("Humanoid")
-        if not hum or hum.Health <= 0 then return end
-
-        local head = model:FindFirstChild("Head")
-        local torso = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
-
-        local targetPart = nil
-        if isNPC then
-            if LockConfig.NPCHead then targetPart = head
-            elseif LockConfig.NPCTorso then targetPart = torso end
-        else
-            if LockConfig.FullLock or LockConfig.PlayerHead then targetPart = head
-            elseif LockConfig.FullLockTorso or LockConfig.PlayerTorso then targetPart = torso end
+    local function drawESP(model, isNpc)
+        local isEnabled = isNpc and LockConfig.NpcEsp2D or (not isNpc and LockConfig.PlayerEsp2D)
+        if not isEnabled then 
+            removeDrawingObject(model)
+            return 
         end
 
-        if targetPart and isVisible(targetPart) then
-            if LockConfig.FullLock or LockConfig.FullLockTorso then
-                closestTargetPart = targetPart
+        if not Active2D[model] and Drawing then
+            local successBox, box = pcall(function() return Drawing.new("Square") end)
+            local successTracer, tracer = pcall(function() return Drawing.new("Line") end)
+            if successBox and successTracer then
+                box.Visible = false; box.Thickness = 1.2; box.Filled = false
+                tracer.Visible = false; tracer.Thickness = 1.2
+                Active2D[model] = {Box = box, Tracer = tracer}
+            end
+        end
+        
+        local hrp = model:FindFirstChild("HumanoidRootPart")
+        local head = model:FindFirstChild("Head") or model:FindFirstChild("UpperTorso")
+        local data = Active2D[model]
+        
+        if hrp and head and data and data.Box and data.Tracer then
+            local hrpPos, hrpOnScreen = Camera:WorldToViewportPoint(hrp.Position)
+            local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.8, 0))
+            local legPos, legOnScreen = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
+            
+            if hrpOnScreen or headOnScreen or legOnScreen then
+                local visible = isVisible(hrp, model)
+                local col = visible and (isNpc and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(0, 255, 100)) or (isNpc and Color3.fromRGB(0, 80, 200) or Color3.fromRGB(220, 60, 60))
+                
+                data.Box.Color = col
+                data.Tracer.Color = col
+                
+                local height = math.abs(headPos.Y - legPos.Y)
+                local width = height * 0.55
+                
+                data.Box.Size = Vector2.new(width, height)
+                data.Box.Position = Vector2.new(hrpPos.X - width / 2, headPos.Y)
+                data.Box.Visible = true
+                
+                data.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                data.Tracer.To = Vector2.new(hrpPos.X, legPos.Y)
+                data.Tracer.Visible = true
             else
-                local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
-                if onScreen then
-                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - centerScreen).Magnitude
-                    if dist < shortestDistance then
-                        shortestDistance = dist
-                        closestTargetPart = targetPart
+                data.Box.Visible = false
+                data.Tracer.Visible = false
+            end
+        elseif data and data.Box and data.Tracer then
+            data.Box.Visible = false
+            data.Tracer.Visible = false
+        end
+    end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then 
+            drawESP(player.Character, false) 
+        end
+    end
+    for _, desc in ipairs(Workspace:GetDescendants()) do
+        if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then 
+            if desc:FindFirstChild("HumanoidRootPart") then
+                drawESP(desc, true) 
+            end
+        end
+    end
+end)
+
+local function getClosestTarget()
+    local closestPart, shortestDist = nil, math.huge
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return nil end
+    local myRootPos = LocalPlayer.Character.HumanoidRootPart.Position
+
+    if LockConfig.FullLock then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                local head = p.Character.Head
+                if not LockConfig.FullLockTorsoWallCheck or isVisible(head, p.Character) then
+                    local dist = (head.Position - myRootPos).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        closestPart = head
                     end
                 end
             end
         end
+        return closestPart
     end
 
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p.Character then checkCharacter(p.Character, false) end
-    end
-
-    for _, obj in ipairs(Workspace:GetChildren()) do
-        if obj:IsA("Model") and not Players:GetPlayerFromCharacter(obj) then
-            checkCharacter(obj, true)
-        end
-    end
-
-    if closestTargetPart then
-        local targetCFrame = CFrame.new(Camera.CFrame.Position, closestTargetPart.Position)
-        if LockConfig.FullLock or LockConfig.FullLockTorso then
-            Camera.CFrame = targetCFrame
-        else
-            Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, LockSpeed / 100)
-        end
-    end
-end)
-
--- ระบบ ESP Highlights (Chams)
-local function applyChams(model, color)
-    local hl = model:FindFirstChild("GK_Highlight")
-    if not hl then
-        hl = Instance.new("Highlight")
-        hl.Name = "GK_Highlight"
-        hl.FillColor = color
-        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-        hl.FillTransparency = 0.5
-        hl.OutlineTransparency = 0
-        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-        hl.Parent = model
-    end
-end
-
-local function removeChams(model)
-    local hl = model:FindFirstChild("GK_Highlight")
-    if hl then hl:Destroy() end
-end
-
-task.spawn(function()
-    while task.wait(0.5) do
-        if not ScreenGui.Parent then break end
-
-        -- Chams สำหรับคน
+    if LockConfig.FullLockTorso then
         for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character then
-                if LockConfig.PlayerEspChams then
-                    applyChams(p.Character, Color3.fromRGB(0, 162, 255))
-                else
-                    removeChams(p.Character)
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                local torso = p.Character.HumanoidRootPart
+                if not LockConfig.FullLockTorsoWallCheck or isVisible(torso, p.Character) then
+                    local dist = (torso.Position - myRootPos).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        closestPart = torso
+                    end
                 end
             end
         end
+        return closestPart
+    end
 
-        -- Chams สำหรับ NPC
-        for _, obj in ipairs(Workspace:GetChildren()) do
-            if obj:IsA("Model") and not Players:GetPlayerFromCharacter(obj) and obj:FindFirstChildOfClass("Humanoid") then
-                if LockConfig.NpcEspChams then
-                    applyChams(obj, Color3.fromRGB(255, 162, 0))
-                else
-                    removeChams(obj)
+    local function processModel(model, isNpc)
+        local pName = (isNpc and (LockConfig.NPCHead and "Head" or LockConfig.NPCTorso and "HumanoidRootPart")) or (LockConfig.PlayerHead and "Head" or LockConfig.PlayerTorso and "HumanoidRootPart")
+        if not pName then return end
+        local part = model:FindFirstChild(pName) or (pName == "HumanoidRootPart" and (model:FindFirstChild("UpperTorso") or model:FindFirstChild("Torso")))
+        if part and model:FindFirstChild("Humanoid") and model.Humanoid.Health > 0 then
+            local partPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+            if onScreen then
+                local dist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if dist <= FOV_Radius and dist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
+                    shortestDist = dist; closestPart = part
                 end
             end
         end
     end
+
+    for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character then processModel(p.Character, false) end end
+    for _, d in ipairs(Workspace:GetDescendants()) do if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then processModel(d, true) end end
+    return closestPart
+end
+
+RunService.RenderStepped:Connect(function()
+    if not ScreenGui.Parent then return end
+    local anyLockEnabled = LockConfig.PlayerHead or LockConfig.PlayerTorso or LockConfig.NPCHead or LockConfig.NPCTorso or LockConfig.FullLock or LockConfig.FullLockTorso
+    if not anyLockEnabled then return end
+    
+    local targetPart = getClosestTarget()
+    if targetPart then 
+        if LockConfig.FullLock or LockConfig.FullLockTorso then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
+        else
+            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, targetPart.Position), math.clamp(LockSpeed / 100, 0.02, 1)) 
+        end
+    end
 end)
+
+-- ปุ่มปิด/ทำลาย UI
+YesButton.MouseButton1Click:Connect(function()
+    for k, _ in pairs(LockConfig) do LockConfig[k] = false end
+    WallCheckEnabled = false
+    FullbrightEnabled = false
+    FpsBoostEnabled = false
+    SelectiveFpsEnabled = false
+    RemoveJunkEnabled = false
+    HitboxConfig.Enabled = false
+    CooldownConfig.Enabled = false
+    AutoTpBackConfig.Enabled = false
+    ClayGraphicsEnabled = false
+    InstantActionConfig.Enabled = false
+    InfJumpConfig.Enabled = false
+    NoclipConfig.Enabled = false
+    
+    if isTimeStopped then
+        isTimeStopped = false
+        pcall(function()
+            settings():GetService("NetworkSettings").IncomingReplicationLag = 0
+        end)
+    end
+    
+    restoreMaterials()
+    restoreLaggyObjects()
+    
+    for char, origSize in pairs(OriginalSizes) do
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.Size = origSize
+            char.HumanoidRootPart.Transparency = 1
+            char.HumanoidRootPart.Material = Enum.Material.Plastic
+            char.CanCollide = true
+        end
+    end
+    OriginalSizes = {}
+
+    if effectConnection then effectConnection:Disconnect() end
+    if junkConnection then junkConnection:Disconnect() end
+    clearAllDrawings()
+
+    Lighting.Brightness = oldBrightness
+    Lighting.ClockTime = oldClockTime
+    Lighting.FogEnd = oldFogEnd
+    Lighting.GlobalShadows = oldGlobalShadows
+    Lighting.Ambient = oldAmbient
+    Lighting.OutdoorAmbient = oldOutdoorAmbient
+
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = LocalPlayer.Character.Humanoid
+        humanoid.WalkSpeed = 16
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = 50
+    end
+
+    for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end end
+    for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("GKHub_NpcCham") then desc.GKHub_NpcCham:Destroy() end end
+
+    local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 440, 0, 0), BackgroundTransparency = 1})
+    closeTween:Play()
+    closeTween.Completed:Connect(function() 
+        ScreenGui:Destroy()
+        if FOV_Circle then FOV_Circle:Destroy() end
+    end)
+end)
+ช่วยเพื่มหมวดหมู่ใหม่มาชื่อว่า พลังวิเศษ ใน นั้น จะ มี ฟังก์ชัน หยุด เวลา ซึ่ง หยุด เวลา จะ ทํา ให้ เกม หยุด เหมือน เน็ต เรา เหมือน เรา ปิด เน็ต นั่น แหละ แต่ ที่ แตก ต่าง คือ เรา จะ ไม่ เด้ง ออก และ สมมุติ ว่า ถ้า เรา หยิบ ของ อยู่ ตอน กด เปิด ฟังก์ชัน หยุด เวลา แล้ว กด ปิด ฟังก์ชัน หยุด เวลา เรา ยัง ถือ ของ นั้น อยู่ โดยทำให้ฟังชั่นทั้งหมดยังทำงานได้อย่างปกติ ห้ามตัดโค้ด ห้ามย่อโค้ด ห้ามลบโค้ด
