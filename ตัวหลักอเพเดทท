@@ -231,6 +231,10 @@ YesButton.ZIndex = 12
 YesButton.Parent = ConfirmBox
 local YesCorner = Instance.new("UICorner"); YesCorner.CornerRadius = UDim.new(0, 4); YesCorner.Parent = YesButton
 
+YesButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
 local NoButton = Instance.new("TextButton")
 NoButton.Size = UDim2.new(0, 100, 0, 32)
 NoButton.Position = UDim2.new(1, -120, 1, -42)
@@ -633,7 +637,6 @@ local function createSlider(labelText, parentTab)
     return Back, Btn, Label
 end
 
--- หมวดหมู่: ฟังก์ชั่นหลัก
 createHeader(">> คอมมิวนิตี้ <<", MainFuncTab)
 local DiscordFrame = Instance.new("Frame")
 DiscordFrame.Size = UDim2.new(0.92, 0, 0, 36)
@@ -1004,7 +1007,7 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn100.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
@@ -1122,7 +1125,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1201,7 +1204,6 @@ for i = 1, 5 do
     end)
 end
 
--- ระบบกระโดดไม่จำกัด (Inf Jump)
 local InfJumpConfig = { Enabled = false }
 InfJumpToggle.MouseButton1Click:Connect(function()
     InfJumpConfig.Enabled = not InfJumpConfig.Enabled
@@ -1219,7 +1221,6 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ระบบทะลุกำแพง (Noclip)
 local NoclipConfig = { Enabled = false }
 NoclipToggle.MouseButton1Click:Connect(function()
     NoclipConfig.Enabled = not NoclipConfig.Enabled
@@ -1252,7 +1253,6 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- ระบบ Instant Action
 local InstantActionConfig = { Enabled = false }
 InstantActionToggle.MouseButton1Click:Connect(function()
     InstantActionConfig.Enabled = not InstantActionConfig.Enabled
@@ -2127,86 +2127,42 @@ local function getClosestTarget()
         if part and model:FindFirstChild("Humanoid") and model.Humanoid.Health > 0 then
             local partPos, onScreen = Camera:WorldToViewportPoint(part.Position)
             if onScreen then
-                local dist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                if dist <= FOV_Radius and dist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
-                    shortestDist = dist; closestPart = part
+                local screenPos = Vector2.new(partPos.X, partPos.Y)
+                local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                local dist = (screenPos - center).Magnitude
+                if dist <= FOV_Radius then
+                    if not WallCheckEnabled or isVisible(part, model) then
+                        if dist < shortestDist then
+                            shortestDist = dist
+                            closestPart = part
+                        end
+                    end
                 end
             end
         end
     end
 
-    for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character then processModel(p.Character, false) end end
-    for _, d in ipairs(Workspace:GetDescendants()) do if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then processModel(d, true) end end
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            processModel(p.Character, false)
+        end
+    end
+
+    for _, desc in ipairs(Workspace:GetDescendants()) do
+        if desc:IsA("Model") and desc ~= LocalPlayer.Character and not Players:GetPlayerFromCharacter(desc) then
+            processModel(desc, true)
+        end
+    end
+
     return closestPart
 end
 
 RunService.RenderStepped:Connect(function()
-    if not ScreenGui.Parent then return end
-    local anyLockEnabled = LockConfig.PlayerHead or LockConfig.PlayerTorso or LockConfig.NPCHead or LockConfig.NPCTorso or LockConfig.FullLock or LockConfig.FullLockTorso
-    if not anyLockEnabled then return end
-    
-    local targetPart = getClosestTarget()
-    if targetPart then 
-        if LockConfig.FullLock or LockConfig.FullLockTorso then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
-        else
-            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, targetPart.Position), math.clamp(LockSpeed / 100, 0.02, 1)) 
-        end
+    local target = getClosestTarget()
+    if target then
+        local camPos = Camera.CFrame.Position
+        local targetPos = target.Position
+        local lookAtCFrame = CFrame.new(camPos, targetPos)
+        Camera.CFrame = Camera.CFrame:Lerp(lookAtCFrame, LockSpeed / 100)
     end
-end)
-
-YesButton.MouseButton1Click:Connect(function()
-    for k, _ in pairs(LockConfig) do LockConfig[k] = false end
-    WallCheckEnabled = false
-    FullbrightEnabled = false
-    FpsBoostEnabled = false
-    SelectiveFpsEnabled = false
-    RemoveJunkEnabled = false
-    HitboxConfig.Enabled = false
-    CooldownConfig.Enabled = false
-    AutoTpBackConfig.Enabled = false
-    ClayGraphicsEnabled = false
-    InstantActionConfig.Enabled = false
-    InfJumpConfig.Enabled = false
-    NoclipConfig.Enabled = false
-    restoreMaterials()
-    restoreLaggyObjects()
-    
-    for char, origSize in pairs(OriginalSizes) do
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.Size = origSize
-            char.HumanoidRootPart.Transparency = 1
-            char.HumanoidRootPart.Material = Enum.Material.Plastic
-            char.CanCollide = true
-        end
-    end
-    OriginalSizes = {}
-
-    if effectConnection then effectConnection:Disconnect() end
-    if junkConnection then junkConnection:Disconnect() end
-    clearAllDrawings()
-
-    Lighting.Brightness = oldBrightness
-    Lighting.ClockTime = oldClockTime
-    Lighting.FogEnd = oldFogEnd
-    Lighting.GlobalShadows = oldGlobalShadows
-    Lighting.Ambient = oldAmbient
-    Lighting.OutdoorAmbient = oldOutdoorAmbient
-
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        local humanoid = LocalPlayer.Character.Humanoid
-        humanoid.WalkSpeed = 16
-        humanoid.UseJumpPower = true
-        humanoid.JumpPower = 50
-    end
-
-    for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end end
-    for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("GKHub_NpcCham") then desc.GKHub_NpcCham:Destroy() end end
-
-    local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 440, 0, 0), BackgroundTransparency = 1})
-    closeTween:Play()
-    closeTween.Completed:Connect(function() 
-        ScreenGui:Destroy()
-        if FOV_Circle then FOV_Circle:Destroy() end
-    end)
 end)
