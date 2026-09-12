@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: BUTTON TRIGGER UPDATE ]] --
+-- [[ GKHub v1.4.25: UPDATED TELEPORT BUTTONS ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -76,7 +76,7 @@ local NotifPadding = Instance.new("UIPadding")
 NotifPadding.PaddingBottom = UDim.new(0, 15)
 NotifPadding.Parent = NotifContainer
 
-local function showNotification(text)
+local function showNotification(text, isEnabled)
     if not ScreenGui.Parent then return end
     local card = Instance.new("Frame")
     card.Size = UDim2.new(1, 0, 0, 50)
@@ -90,7 +90,7 @@ local function showNotification(text)
     corner.Parent = card
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(0, 162, 255)
+    stroke.Color = isEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
     stroke.Thickness = 1.2
     stroke.Parent = card
 
@@ -118,7 +118,7 @@ local function showNotification(text)
 
     local barFill = Instance.new("Frame")
     barFill.Size = UDim2.new(1, 0, 1, 0)
-    barFill.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+    barFill.BackgroundColor3 = isEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
     barFill.BorderSizePixel = 0
     barFill.Parent = barBack
 
@@ -441,9 +441,9 @@ local function createHeader(text, parentTab)
     table.insert(allTextLabels, HeaderLabel)
 end
 
-local function createActionButton(labelText, buttonText, parentTab, callback)
+local function createToggle(name, labelText, parentTab)
     local RowFrame = Instance.new("Frame")
-    RowFrame.Size = UDim2.new(0.92, 0, 0, 28)
+    RowFrame.Size = UDim2.new(0.92, 0, 0, 26)
     RowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     RowFrame.BorderSizePixel = 0
     RowFrame.Parent = parentTab
@@ -458,7 +458,7 @@ local function createActionButton(labelText, buttonText, parentTab, callback)
     RowStroke.Parent = RowFrame
 
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0.60, 0, 1, 0)
+    Label.Size = UDim2.new(0.65, 0, 1, 0)
     Label.Position = UDim2.new(0, 8, 0, 0)
     Label.BackgroundTransparency = 1
     Label.Text = labelText
@@ -470,10 +470,11 @@ local function createActionButton(labelText, buttonText, parentTab, callback)
     table.insert(allTextLabels, Label)
 
     local Button = Instance.new("TextButton")
-    Button.Size = UDim2.new(0, 75, 0, 20)
-    Button.Position = UDim2.new(1, -79, 0.5, -10)
-    Button.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-    Button.Text = buttonText
+    Button.Name = name .. "Button"
+    Button.Size = UDim2.new(0, 50, 0, 18)
+    Button.Position = UDim2.new(1, -54, 0.5, -9)
+    Button.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+    Button.Text = "ปิด"
     Button.TextColor3 = Color3.fromRGB(255, 255, 255)
     Button.Font = Enum.Font.GothamBold
     Button.TextSize = 9
@@ -483,10 +484,6 @@ local function createActionButton(labelText, buttonText, parentTab, callback)
     local Corner = Instance.new("UICorner")
     Corner.CornerRadius = UDim.new(0, 3)
     Corner.Parent = Button
-
-    if callback then
-        Button.MouseButton1Click:Connect(callback)
-    end
 
     return Button
 end
@@ -638,79 +635,120 @@ end
 
 -- หมวดหมู่: ฟังก์ชั่นหลัก
 createHeader(">> คอมมิวนิตี้ <<", MainFuncTab)
-createActionButton("Discord Community", "คัดลอกลิงก์", MainFuncTab, function()
+local DiscordFrame = Instance.new("Frame")
+DiscordFrame.Size = UDim2.new(0.92, 0, 0, 36)
+DiscordFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+DiscordFrame.BorderSizePixel = 0
+DiscordFrame.Parent = MainFuncTab
+local DiscordCorner = Instance.new("UICorner"); DiscordCorner.CornerRadius = UDim.new(0, 4); DiscordCorner.Parent = DiscordFrame
+
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Size = UDim2.new(1, -12, 0, 26)
+DiscordBtn.Position = UDim2.new(0, 6, 0.5, -13)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+DiscordBtn.Text = "คัดลอกลิงก์ Discord"
+DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.TextSize = 10
+DiscordBtn.Parent = DiscordFrame
+local DiscordBtnCorner = Instance.new("UICorner"); DiscordBtnCorner.CornerRadius = UDim.new(0, 3); DiscordBtnCorner.Parent = DiscordBtn
+
+DiscordBtn.MouseButton1Click:Connect(function()
     copyToClipboard(DiscordLink)
-    showNotification("คัดลอกลิงก์ Discord สำเร็จ!")
+    showNotification("คัดลอกลิงก์ Discord สำเร็จ!", true)
 end)
 
 createHeader(">> ฟังก์ชั่นพิเศษ <<", AimbotTab)
-local FullLockBtn = createActionButton("ล็อกหัว 100% (ทุกมุมมอง)", "กดทำงาน", AimbotTab)
-local FullLockTorsoBtn = createActionButton("ล็อกตัว 100% (ทุกมุมมอง)", "กดทำงาน", AimbotTab)
-local FullLockTorsoWallCheckBtn = createActionButton("ไม่ล็อกตัวหลังกำแพง", "กดทำงาน", AimbotTab)
+local FullLockToggle = createToggle("FullLock", "ล็อกหัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
+local FullLockTorsoToggle = createToggle("FullLockTorso", "ล็อกตัว 100% (ทุกมุมมอง/หลัง)", AimbotTab)
+local FullLockTorsoWallCheckToggle = createToggle("FullLockTorsoWallCheck", "ไม่ล็อกตัวหลังกำแพง", AimbotTab)
 
 createHeader(">> ล็อกคน <<", AimbotTab)
-local PlayerHeadBtn = createActionButton("ระบบล็อกหัวคน", "กดทำงาน", AimbotTab)
-local PlayerTorsoBtn = createActionButton("ระบบล็อกตัวคน", "กดทำงาน", AimbotTab)
+local PlayerHeadToggle = createToggle("PlayerHead", "เปิดใช้งานระบบล็อกหัวคน", AimbotTab)
+local PlayerTorsoToggle = createToggle("PlayerTorso", "เปิดใช้งานระบบล็อกตัวคน", AimbotTab)
 
 createHeader(">> ล็อก NPC <<", AimbotTab)
-local NPCHeadBtn = createActionButton("ระบบล็อกหัว NPC", "กดทำงาน", AimbotTab)
-local NPCTorsoBtn = createActionButton("ระบบล็อกตัว NPC", "กดทำงาน", AimbotTab)
+local NPCHeadToggle = createToggle("NPCHead", "เปิดใช้งานระบบล็อกหัว NPC", AimbotTab)
+local NPCTorsoToggle = createToggle("NPCTorso", "เปิดใช้งานระบบล็อกตัว NPC", AimbotTab)
 
 createHeader(">> ตั้งค่าระบบล็อก <<", AimbotTab)
-local WallCheckBtn = createActionButton("ไม่ล็อกตัวหลังกำแพง", "กดทำงาน", AimbotTab)
+local WallCheckButton = createToggle("WallCheck", "ไม่ล็อกตัวหลังกำแพง", AimbotTab)
 local SliderBack, SliderBtn, SliderLabel = createSlider("FOV: 100", AimbotTab)
 local SpeedBack, SpeedBtn, SpeedLabel = createSlider("ความเร็วดูด: 50", AimbotTab)
 
 createHeader(">> ระบบมองทะลุสีทึบ (Chams) <<", EspTab)
-local PlayerEspChamsBtn = createActionButton("มองทะลุกำแพง (คน)", "กดทำงาน", EspTab)
-local NpcEspChamsBtn = createActionButton("มองทะลุกำแพง (NPC)", "กดทำงาน", EspTab)
+local PlayerEspChamsToggle = createToggle("PlayerEspChams", "เปิดใช้งานมองทะลุกำแพง (คน)", EspTab)
+local NpcEspChamsToggle = createToggle("NpcEspChams", "เปิดใช้งานมองทะลุกำแพง (NPC)", EspTab)
 
 createHeader(">> ตั้งค่า ESP <<", EspTab)
-local MasterEsp2DBtn = createActionButton("ESP กรอบสี่เหลี่ยม", "กดทำงาน", EspTab)
-local PlayerEsp2DBtn = createActionButton("2D ESP + เส้น (คน)", "กดทำงาน", EspTab)
-local NpcEsp2DBtn = createActionButton("2D ESP + เส้น (NPC)", "กดทำงาน", EspTab)
+local MasterEsp2DToggle = createToggle("MasterEsp2D", "เปิดใช้งาน ESP กรอบสี่เหลี่ยม", EspTab)
+local PlayerEsp2DToggle = createToggle("PlayerEsp2D", "เปิดใช้งาน 2D ESP + เส้น (คน)", EspTab)
+local NpcEsp2DToggle = createToggle("NpcEsp2D", "เปิดใช้งาน 2D ESP + เส้น (NPC)", EspTab)
 
 createHeader(">> ความเร็วผู้เล่น <<", CharacterTab)
-local EnableSpeedBtn = createActionButton("เปิดใช้งานวิ่งเร็ว", "กดทำงาน", CharacterTab)
+local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", CharacterTab)
 local CurrentWalkSpeed = 16
 local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput, SetWalkSpeedFunc = createSliderWithInputAndSync("ความเร็ว (16 - 800):", 16, 800, 16, CharacterTab, function(val)
     CurrentWalkSpeed = val
 end)
 
 createHeader(">> กระโดดสูงผู้เล่น <<", CharacterTab)
-local EnableJumpBtn = createActionButton("เปิดใช้งานกระโดดสูง", "กดทำงาน", CharacterTab)
+local EnableJumpToggle = createToggle("EnableJump", "เปิดใช้งานกระโดดสูง", CharacterTab)
 local CurrentJumpPower = 50
 local JumpPowerBack, JumpPowerBtn, JumpPowerInput, SetJumpPowerFunc = createSliderWithInputAndSync("กระโดดสูง (50 - 500):", 50, 500, 50, CharacterTab, function(val)
     CurrentJumpPower = val
 end)
 
 createHeader(">> ระบบทะลุกำแพง (Noclip) <<", CharacterTab)
-local NoclipBtn = createActionButton("ทะลุกำแพง", "กดทำงาน", CharacterTab)
+local NoclipToggle = createToggle("Noclip", "เปิดใช้งานทะลุกำแพง", CharacterTab)
 
 createHeader(">> กระโดดไม่จำกัด <<", CharacterTab)
-local InfJumpBtn = createActionButton("กระโดดไม่จำกัด", "กดทำงาน", CharacterTab)
+local InfJumpToggle = createToggle("InfJump", "กระโดดไม่จำกัด", CharacterTab)
 
-createActionButton("รีเซ็ตค่าผู้เล่น", "รีเซ็ต", CharacterTab, function()
-    CurrentWalkSpeed = 16
-    CurrentJumpPower = 50
-    WalkSpeedInput.Text = "16"
-    JumpPowerInput.Text = "50"
-    WalkSpeedBtn.Position = UDim2.new(0, 0, 0, -4)
-    JumpPowerBtn.Position = UDim2.new(0, 0, 0, -4)
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        local humanoid = LocalPlayer.Character.Humanoid
-        humanoid.WalkSpeed = 16
-        humanoid.UseJumpPower = true
-        humanoid.JumpPower = 50
-    end
-    showNotification("รีเซ็ตค่าความเร็ว/กระโดดสำเร็จ")
-end)
+local ResetFrame = Instance.new("Frame")
+ResetFrame.Size = UDim2.new(0.92, 0, 0, 32)
+ResetFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ResetFrame.BorderSizePixel = 0
+ResetFrame.Parent = CharacterTab
+local ResetFrameCorner = Instance.new("UICorner"); ResetFrameCorner.CornerRadius = UDim.new(0, 4); ResetFrameCorner.Parent = ResetFrame
+
+local ResetBtn = Instance.new("TextButton")
+ResetBtn.Size = UDim2.new(1, -12, 0, 22)
+ResetBtn.Position = UDim2.new(0, 6, 0.5, -11)
+ResetBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+ResetBtn.Text = "รีเซ็ตค่าปกติ"
+ResetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ResetBtn.Font = Enum.Font.GothamBold
+ResetBtn.TextSize = 10
+ResetBtn.Parent = ResetFrame
+table.insert(allButtons, ResetBtn)
+local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
 
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
-local AutoTpBackBtn = createActionButton("วาร์ปติดด้านหลังผู้เล่นใกล้สุด", "กดทำงาน", TeleportTab)
+local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", TeleportTab)
 
+-- ฟังก์ชันใหม่: วาร์ปหาผู้เล่นใกล้สุดแบบกดครั้งเดียว (ปรับหน้าตาเป็นปุ่มกดปกติ)
 createHeader(">> วาร์ปด่วนครั้งเดียว <<", TeleportTab)
-createActionButton("วาร์ปไปหาผู้เล่นใกล้ที่สุด", "วาร์ปทันที", TeleportTab, function()
+local TpOnceFrame = Instance.new("Frame")
+TpOnceFrame.Size = UDim2.new(0.92, 0, 0, 34)
+TpOnceFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TpOnceFrame.BorderSizePixel = 0
+TpOnceFrame.Parent = TeleportTab
+local TpOnceCorner = Instance.new("UICorner"); TpOnceCorner.CornerRadius = UDim.new(0, 4); TpOnceCorner.Parent = TpOnceFrame
+
+local TpOnceBtn = Instance.new("TextButton")
+TpOnceBtn.Size = UDim2.new(1, -12, 0, 24)
+TpOnceBtn.Position = UDim2.new(0, 6, 0.5, -12)
+TpOnceBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+TpOnceBtn.Text = "วาร์ปไปหาผู้เล่นที่ใกล้ที่สุด"
+TpOnceBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TpOnceBtn.Font = Enum.Font.GothamBold
+TpOnceBtn.TextSize = 10
+TpOnceBtn.Parent = TpOnceFrame
+table.insert(allButtons, TpOnceBtn)
+local TpOnceBtnCorner = Instance.new("UICorner"); TpOnceBtnCorner.CornerRadius = UDim.new(0, 3); TpOnceBtnCorner.Parent = TpOnceBtn
+
+TpOnceBtn.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         local myRoot = char.HumanoidRootPart
@@ -731,21 +769,41 @@ createActionButton("วาร์ปไปหาผู้เล่นใกล้
         if closestTarget and closestTarget:FindFirstChild("HumanoidRootPart") then
             local targetRoot = closestTarget.HumanoidRootPart
             myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 3.5)
-            showNotification("วาร์ปหาผู้เล่นใกล้ที่สุดสำเร็จ!")
+            showNotification("วาร์ปหาผู้เล่นใกล้ที่สุดสำเร็จ!", true)
         else
-            showNotification("ไม่พบผู้เล่นใกล้เคียงในระยะ!")
+            showNotification("ไม่พบผู้เล่นใกล้เคียงในระยะ!", false)
         end
     end
 end)
 
+-- เครื่องมือคลิกวาร์ป (ปรับหน้าตาเป็นปุ่มกดปกติ)
 createHeader(">> เครื่องมือคลิกวาร์ป <<", TeleportTab)
-createActionButton("รับไอเท็มคลิกวาร์ป", "รับไอเท็ม", TeleportTab, function()
+local GiveToolFrame = Instance.new("Frame")
+GiveToolFrame.Size = UDim2.new(0.92, 0, 0, 34)
+GiveToolFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+GiveToolFrame.BorderSizePixel = 0
+GiveToolFrame.Parent = TeleportTab
+local GiveToolCorner = Instance.new("UICorner"); GiveToolCorner.CornerRadius = UDim.new(0, 4); GiveToolCorner.Parent = GiveToolFrame
+
+local GiveToolBtn = Instance.new("TextButton")
+GiveToolBtn.Size = UDim2.new(1, -12, 0, 24)
+GiveToolBtn.Position = UDim2.new(0, 6, 0.5, -12)
+GiveToolBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+GiveToolBtn.Text = "รับไอเท็มคลิกวาร์ป"
+GiveToolBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+GiveToolBtn.Font = Enum.Font.GothamBold
+GiveToolBtn.TextSize = 10
+GiveToolBtn.Parent = GiveToolFrame
+table.insert(allButtons, GiveToolBtn)
+local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
+
+GiveToolBtn.MouseButton1Click:Connect(function()
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
     local character = LocalPlayer.Character
     if not backpack or not character then return end
 
     if backpack:FindFirstChild("ClickTeleportTool") or (character and character:FindFirstChild("ClickTeleportTool")) then
-        showNotification("คุณมีไอเท็มนี้อยู่ในกระเป๋าแล้ว!")
+        showNotification("คุณมีไอเท็มนี้อยู่ในกระเป๋าแล้ว!", false)
         return
     end
 
@@ -771,42 +829,42 @@ createActionButton("รับไอเท็มคลิกวาร์ป", "�
             local hrp = char.HumanoidRootPart
             local targetPos = mouse.Hit.Position
             hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
-            showNotification("วาร์ปไปยังตำแหน่งที่คลิกสำเร็จ!")
+            showNotification("วาร์ปไปยังตำแหน่งที่คลิกสำเร็จ!", true)
         end
     end)
 
     tool.Parent = backpack
-    showNotification("รับไอเท็ม 'อุปกรณ์คลิกวาร์ป' สำเร็จ!")
+    showNotification("รับไอเท็ม 'อุปกรณ์คลิกวาร์ป' สำเร็จ!", true)
 end)
 
 createHeader(">> กดใช้งานทันที (0 วิ) <<", ToolTab)
-local InstantActionBtn = createActionButton("กดค้างทันที (0 วิ)", "กดทำงาน", ToolTab)
+local InstantActionToggle = createToggle("InstantAction", "เปิดใช้งานกดค้างทันที (0 วิ)", ToolTab)
 
 createHeader(">> ลบคูลดาวน์อุปกรณ์ <<", ToolTab)
-local CooldownBtnTrigger = createActionButton("ปรับคูลดาวน์", "กดทำงาน", ToolTab)
+local CooldownToggle = createToggle("CooldownToggle", "เปิดใช้งานลบ/ปรับคูลดาวน์", ToolTab)
 local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาคูลดาวน์: 0 วิ (ไม่มีดีเลย์)", ToolTab)
 
 createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", ToolTab)
-local HitboxBtnTrigger = createActionButton("ขยายฮิดบล็อก", "กดทำงาน", ToolTab)
+local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
 local HitboxConfig = { Enabled = false, Size = 1 }
 local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInputAndSync("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
     HitboxConfig.Size = val
 end)
 
 createHeader(">> ระบบภาพดินน้ำมัน (Plastic) <<", FpsTab)
-local ClayGraphicsBtn = createActionButton("ภาพดินน้ำมัน", "กดทำงาน", FpsTab)
+local ClayGraphicsToggle = createToggle("ClayGraphics", "เปิดใช้งานภาพดินน้ำมัน", FpsTab)
 
 createHeader(">> แสงสว่างแผนที่ (Fullbright) <<", FpsTab)
-local FullbrightBtn = createActionButton("แมพสว่างสุดๆ", "กดทำงาน", FpsTab)
+local FullbrightToggle = createToggle("Fullbright", "เปิดใช้งานแมพสว่างสุดๆ", FpsTab)
 
 createHeader(">> เพิ่ม FPS (ลบเอฟเฟค & ควัน) <<", FpsTab)
-local FpsBoostBtn = createActionButton("ลบเอฟเฟคทั้งหมด", "กดทำงาน", FpsTab)
+local FpsBoostToggle = createToggle("FpsBoost", "ลบเอฟเฟคทั้งหมด/ควัน/ละออง", FpsTab)
 
 createHeader(">> เพิ่ม FPS แบบเจาะลึก <<", FpsTab)
-local SelectiveFpsBtn = createActionButton("แก้แลคเฉพาะจุด", "กดทำงาน", FpsTab)
+local SelectiveFpsToggle = createToggle("SelectiveFps", "เปิดใช้งานแก้แลคเฉพาะจุด", FpsTab)
 
 createHeader(">> ลบสิ่งที่ไม่จำเป็น (หิน/เศษเอฟเฟค) <<", FpsTab)
-local RemoveJunkBtn = createActionButton("ลบหิน/เศษเอฟเฟค", "กดทำงาน", FpsTab)
+local RemoveJunkToggle = createToggle("RemoveJunk", "ลบหิน/เศษเอฟเฟคการโจมตี", FpsTab)
 
 createHeader(">> ใส่โค้ดที่ต้องการรัน <<", AutoExecTab)
 local CodeBoxFrame = Instance.new("Frame")
@@ -851,14 +909,14 @@ local ExecBtnFrameCorner = Instance.new("UICorner"); ExecBtnFrameCorner.CornerRa
 
 local function executeCodeString(codeStr, times)
     if not codeStr or codeStr == "" then
-        showNotification("ไม่มีโค้ดให้รัน!")
+        showNotification("ไม่มีโค้ดให้รัน!", false)
         return
     end
     local successLoad, func = pcall(function()
         return loadstring(codeStr)
     end)
     if not successLoad or not func then
-        showNotification("โค้ดมีข้อผิดพลาดทางไวยากรณ์!")
+        showNotification("โค้ดมีข้อผิดพลาดทางไวยากรณ์!", false)
         return
     end
     local successCount = 0
@@ -866,7 +924,7 @@ local function executeCodeString(codeStr, times)
         local success = pcall(func)
         if success then successCount = successCount + 1 end
     end
-    showNotification("รันโค้ดสำเร็จ " .. successCount .. " / " .. times .. " ครั้ง!")
+    showNotification("รันโค้ดสำเร็จ " .. successCount .. " / " .. times .. " ครั้ง!", true)
 end
 
 local btnW = 110
@@ -888,18 +946,18 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn1000.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
 createHeader(">> ระบบรันโค้ดอัตโนมัติ (0.01s) <<", AutoExecTab)
-local AutoLoopBtn = createActionButton("ออโต้รันโค้ด", "กดทำงาน", AutoExecTab)
+local AutoLoopToggle = createToggle("AutoLoop", "รันโค้ดอัตโนมัติ (ความเร็ว 0.01)", AutoExecTab)
 local isLoopingCode = false
-AutoLoopBtn.MouseButton1Click:Connect(function()
+AutoLoopToggle.MouseButton1Click:Connect(function()
     isLoopingCode = not isLoopingCode
-    AutoLoopBtn.BackgroundColor3 = isLoopingCode and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    AutoLoopBtn.Text = isLoopingCode and "หยุดทำงาน" or "กดทำงาน"
-    showNotification(isLoopingCode and "เริ่มรันโค้ดอัตโนมัติแล้ว" or "หยุดรันโค้ดอัตโนมัติแล้ว")
+    AutoLoopToggle.BackgroundColor3 = isLoopingCode and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    AutoLoopToggle.Text = isLoopingCode and "เปิด" or "ปิด"
+    showNotification(isLoopingCode and "เริ่มรันโค้ดอัตโนมัติแล้ว" or "หยุดรันโค้ดอัตโนมัติแล้ว", isLoopingCode)
 end)
 
 task.spawn(function()
@@ -1005,8 +1063,8 @@ for i = 1, 5 do
     local sBtnW = 52
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
-    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1017,10 +1075,10 @@ for i = 1, 5 do
     Instance.new("UICorner", subAutoRow).CornerRadius = UDim.new(0, 3)
 
     local autoLbl = Instance.new("TextLabel")
-    autoLbl.Size = UDim2.new(0.55, 0, 1, 0); autoLbl.Position = UDim2.new(0, 6, 0, 0); autoLbl.BackgroundTransparency = 1; autoLbl.Text = "ออโต้รัน (0.01s)"; autoLbl.TextColor3 = Color3.fromRGB(240,240,240); autoLbl.Font = Enum.Font.Gotham; autoLbl.TextSize = 9; autoLbl.TextXAlignment = Enum.TextXAlignment.Left; autoLbl.Parent = subAutoRow
+    autoLbl.Size = UDim2.new(0.65, 0, 1, 0); autoLbl.Position = UDim2.new(0, 6, 0, 0); autoLbl.BackgroundTransparency = 1; autoLbl.Text = "ออโต้รัน (0.01s)"; autoLbl.TextColor3 = Color3.fromRGB(240,240,240); autoLbl.Font = Enum.Font.Gotham; autoLbl.TextSize = 9; autoLbl.TextXAlignment = Enum.TextXAlignment.Left; autoLbl.Parent = subAutoRow
 
     local autoBtn = Instance.new("TextButton")
-    autoBtn.Size = UDim2.new(0, 65, 0, 16); autoBtn.Position = UDim2.new(1, -68, 0.5, -8); autoBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255); autoBtn.Text = "กดทำงาน"; autoBtn.TextColor3 = Color3.fromRGB(255,255,255); autoBtn.Font = Enum.Font.GothamBold; autoBtn.TextSize = 8; autoBtn.Parent = subAutoRow
+    autoBtn.Size = UDim2.new(0, 45, 0, 16); autoBtn.Position = UDim2.new(1, -48, 0.5, -8); autoBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60); autoBtn.Text = "ปิด"; autoBtn.TextColor3 = Color3.fromRGB(255,255,255); autoBtn.Font = Enum.Font.GothamBold; autoBtn.TextSize = 8; autoBtn.Parent = subAutoRow
     Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 3)
 
     saveBtn.MouseButton1Click:Connect(function()
@@ -1029,7 +1087,7 @@ for i = 1, 5 do
             Code = subBox.Text
         }
         saveSavedData(savedDatabase)
-        showNotification("เซฟโค้ดและชื่อห้องช่อง " .. i .. " สำเร็จ!")
+        showNotification("เซฟโค้ดและชื่อห้องช่อง " .. i .. " สำเร็จ!", true)
     end)
 
     clearBtn.MouseButton1Click:Connect(function()
@@ -1039,12 +1097,12 @@ for i = 1, 5 do
             Code = ""
         }
         saveSavedData(savedDatabase)
-        showNotification("ล้างโค้ดช่อง " .. i .. " แล้ว")
+        showNotification("ล้างโค้ดช่อง " .. i .. " แล้ว", true)
     end)
 
     copyBtn.MouseButton1Click:Connect(function()
         copyToClipboard(subBox.Text)
-        showNotification("คัดลอกโค้ดช่อง " .. i .. " แล้ว!")
+        showNotification("คัดลอกโค้ดช่อง " .. i .. " แล้ว!", true)
     end)
 
     nameBox.FocusLost:Connect(function()
@@ -1059,9 +1117,9 @@ for i = 1, 5 do
 
     autoBtn.MouseButton1Click:Connect(function()
         subLoopStates[i] = not subLoopStates[i]
-        autoBtn.BackgroundColor3 = subLoopStates[i] and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-        autoBtn.Text = subLoopStates[i] and "หยุดทำงาน" or "กดทำงาน"
-        showNotification(subLoopStates[i] and "เริ่มออโต้รันช่อง " .. i or "หยุดออโต้รันช่อง " .. i)
+        autoBtn.BackgroundColor3 = subLoopStates[i] and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+        autoBtn.Text = subLoopStates[i] and "เปิด" or "ปิด"
+        showNotification(subLoopStates[i] and "เริ่มออโต้รันช่อง " .. i or "หยุดออโต้รันช่อง " .. i, subLoopStates[i])
     end)
 
     task.spawn(function()
@@ -1087,11 +1145,11 @@ end
 
 -- ระบบกระโดดไม่จำกัด (Inf Jump)
 local InfJumpConfig = { Enabled = false }
-InfJumpBtn.MouseButton1Click:Connect(function()
+InfJumpToggle.MouseButton1Click:Connect(function()
     InfJumpConfig.Enabled = not InfJumpConfig.Enabled
-    InfJumpBtn.BackgroundColor3 = InfJumpConfig.Enabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    InfJumpBtn.Text = InfJumpConfig.Enabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((InfJumpConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'กระโดดไม่จำกัด')
+    InfJumpToggle.BackgroundColor3 = InfJumpConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    InfJumpToggle.Text = InfJumpConfig.Enabled and "เปิด" or "ปิด"
+    showNotification((InfJumpConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'กระโดดไม่จำกัด', InfJumpConfig.Enabled)
 end)
 
 UserInputService.JumpRequest:Connect(function()
@@ -1105,11 +1163,11 @@ end)
 
 -- ระบบทะลุกำแพง (Noclip)
 local NoclipConfig = { Enabled = false }
-NoclipBtn.MouseButton1Click:Connect(function()
+NoclipToggle.MouseButton1Click:Connect(function()
     NoclipConfig.Enabled = not NoclipConfig.Enabled
-    NoclipBtn.BackgroundColor3 = NoclipConfig.Enabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    NoclipBtn.Text = NoclipConfig.Enabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((NoclipConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ทะลุกำแพง')
+    NoclipToggle.BackgroundColor3 = NoclipConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    NoclipToggle.Text = NoclipConfig.Enabled and "เปิด" or "ปิด"
+    showNotification((NoclipConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ทะลุกำแพง', NoclipConfig.Enabled)
     
     if not NoclipConfig.Enabled then
         local char = LocalPlayer.Character
@@ -1138,11 +1196,11 @@ end)
 
 -- ระบบ Instant Action
 local InstantActionConfig = { Enabled = false }
-InstantActionBtn.MouseButton1Click:Connect(function()
+InstantActionToggle.MouseButton1Click:Connect(function()
     InstantActionConfig.Enabled = not InstantActionConfig.Enabled
-    InstantActionBtn.BackgroundColor3 = InstantActionConfig.Enabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    InstantActionBtn.Text = InstantActionConfig.Enabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((InstantActionConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'กดใช้งานทันที (0 วิ)')
+    InstantActionToggle.BackgroundColor3 = InstantActionConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    InstantActionToggle.Text = InstantActionConfig.Enabled and "เปิด" or "ปิด"
+    showNotification((InstantActionConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'กดใช้งานทันที (0 วิ)', InstantActionConfig.Enabled)
 end)
 
 task.spawn(function()
@@ -1161,11 +1219,11 @@ task.spawn(function()
 end)
 
 local AutoTpBackConfig = { Enabled = false }
-AutoTpBackBtn.MouseButton1Click:Connect(function()
+AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
-    AutoTpBackBtn.BackgroundColor3 = AutoTpBackConfig.Enabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    AutoTpBackBtn.Text = AutoTpBackConfig.Enabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((AutoTpBackConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ออโต้เทเลพอร์ตด้านหลัง')
+    AutoTpBackToggle.BackgroundColor3 = AutoTpBackConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    AutoTpBackToggle.Text = AutoTpBackConfig.Enabled and "เปิด" or "ปิด"
+    showNotification((AutoTpBackConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ออโต้เทเลพอร์ตด้านหลัง', AutoTpBackConfig.Enabled)
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -1196,11 +1254,11 @@ RunService.RenderStepped:Connect(function()
 end)
 
 local CooldownConfig = { Enabled = false, Time = 0 }
-CooldownBtnTrigger.MouseButton1Click:Connect(function()
+CooldownToggle.MouseButton1Click:Connect(function()
     CooldownConfig.Enabled = not CooldownConfig.Enabled
-    CooldownBtnTrigger.BackgroundColor3 = CooldownConfig.Enabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    CooldownBtnTrigger.Text = CooldownConfig.Enabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((CooldownConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ลบ/ปรับคูลดาวน์')
+    CooldownToggle.BackgroundColor3 = CooldownConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    CooldownToggle.Text = CooldownConfig.Enabled and "เปิด" or "ปิด"
+    showNotification((CooldownConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ลบ/ปรับคูลดาวน์', CooldownConfig.Enabled)
 end)
 
 task.spawn(function()
@@ -1234,11 +1292,11 @@ task.spawn(function()
 end)
 
 local OriginalSizes = {}
-HitboxBtnTrigger.MouseButton1Click:Connect(function()
+HitboxToggle.MouseButton1Click:Connect(function()
     HitboxConfig.Enabled = not HitboxConfig.Enabled
-    HitboxBtnTrigger.BackgroundColor3 = HitboxConfig.Enabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    HitboxBtnTrigger.Text = HitboxConfig.Enabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((HitboxConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ขยายฮิดบล็อก')
+    HitboxToggle.BackgroundColor3 = HitboxConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    HitboxToggle.Text = HitboxConfig.Enabled and "เปิด" or "ปิด"
+    showNotification((HitboxConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ขยายฮิดบล็อก', HitboxConfig.Enabled)
 
     if not HitboxConfig.Enabled then
         for char, origSize in pairs(OriginalSizes) do
@@ -1312,11 +1370,11 @@ local function restoreMaterials()
     originalMaterials = {}
 end
 
-ClayGraphicsBtn.MouseButton1Click:Connect(function()
+ClayGraphicsToggle.MouseButton1Click:Connect(function()
     ClayGraphicsEnabled = not ClayGraphicsEnabled
-    ClayGraphicsBtn.BackgroundColor3 = ClayGraphicsEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    ClayGraphicsBtn.Text = ClayGraphicsEnabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((ClayGraphicsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ภาพดินน้ำมัน')
+    ClayGraphicsToggle.BackgroundColor3 = ClayGraphicsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    ClayGraphicsToggle.Text = ClayGraphicsEnabled and "เปิด" or "ปิด"
+    showNotification((ClayGraphicsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ภาพดินน้ำมัน', ClayGraphicsEnabled)
 
     if ClayGraphicsEnabled then
         applyClayMaterial()
@@ -1370,11 +1428,11 @@ local function restoreLaggyObjects()
     optimizedParts = {}
 end
 
-SelectiveFpsBtn.MouseButton1Click:Connect(function()
+SelectiveFpsToggle.MouseButton1Click:Connect(function()
     SelectiveFpsEnabled = not SelectiveFpsEnabled
-    SelectiveFpsBtn.BackgroundColor3 = SelectiveFpsEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    SelectiveFpsBtn.Text = SelectiveFpsEnabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((SelectiveFpsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'แก้แลคเฉพาะจุด (FPS Boost)')
+    SelectiveFpsToggle.BackgroundColor3 = SelectiveFpsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    SelectiveFpsToggle.Text = SelectiveFpsEnabled and "เปิด" or "ปิด"
+    showNotification((SelectiveFpsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'แก้แลคเฉพาะจุด (FPS Boost)', SelectiveFpsEnabled)
 
     if SelectiveFpsEnabled then
         optimizeLaggyObjects()
@@ -1391,11 +1449,11 @@ local oldGlobalShadows = Lighting.GlobalShadows
 local oldAmbient = Lighting.Ambient
 local oldOutdoorAmbient = Lighting.OutdoorAmbient
 
-FullbrightBtn.MouseButton1Click:Connect(function()
+FullbrightToggle.MouseButton1Click:Connect(function()
     FullbrightEnabled = not FullbrightEnabled
-    FullbrightBtn.BackgroundColor3 = FullbrightEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    FullbrightBtn.Text = FullbrightEnabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((FullbrightEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'แมพสว่าง')
+    FullbrightToggle.BackgroundColor3 = FullbrightEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    FullbrightToggle.Text = FullbrightEnabled and "เปิด" or "ปิด"
+    showNotification((FullbrightEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'แมพสว่าง', FullbrightEnabled)
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -1427,11 +1485,11 @@ local function clearEffectsInObject(parentObj)
     end
 end
 
-FpsBoostBtn.MouseButton1Click:Connect(function()
+FpsBoostToggle.MouseButton1Click:Connect(function()
     FpsBoostEnabled = not FpsBoostEnabled
-    FpsBoostBtn.BackgroundColor3 = FpsBoostEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    FpsBoostBtn.Text = FpsBoostEnabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((FpsBoostEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'เพิ่ม FPS (ลบเอฟเฟค)')
+    FpsBoostToggle.BackgroundColor3 = FpsBoostEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    FpsBoostToggle.Text = FpsBoostEnabled and "เปิด" or "ปิด"
+    showNotification((FpsBoostEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'เพิ่ม FPS (ลบเอฟเฟค)', FpsBoostEnabled)
 
     if FpsBoostEnabled then
         clearEffectsInObject(Workspace)
@@ -1475,11 +1533,11 @@ local function clearExistingJunk()
     end
 end
 
-RemoveJunkBtn.MouseButton1Click:Connect(function()
+RemoveJunkToggle.MouseButton1Click:Connect(function()
     RemoveJunkEnabled = not RemoveJunkEnabled
-    RemoveJunkBtn.BackgroundColor3 = RemoveJunkEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    RemoveJunkBtn.Text = RemoveJunkEnabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((RemoveJunkEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ลบสิ่งที่ไม่จำเป็น (หิน/เอฟเฟค)')
+    RemoveJunkToggle.BackgroundColor3 = RemoveJunkEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    RemoveJunkToggle.Text = RemoveJunkEnabled and "เปิด" or "ปิด"
+    showNotification((RemoveJunkEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ลบสิ่งที่ไม่จำเป็น (หิน/เอฟเฟค)', RemoveJunkEnabled)
 
     if RemoveJunkEnabled then
         clearExistingJunk()
@@ -1584,88 +1642,104 @@ end
 updateFOV(FOV_Radius)
 
 local function updateVisuals(btn, state, funcName)
-    btn.BackgroundColor3 = state and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    btn.Text = state and "หยุดทำงาน" or "กดทำงาน"
+    btn.BackgroundColor3 = state and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    btn.Text = state and "เปิด" or "ปิด"
     local anyEnabled = LockConfig.PlayerHead or LockConfig.PlayerTorso or LockConfig.NPCHead or LockConfig.NPCTorso or LockConfig.FullLock or LockConfig.FullLockTorso
     FOV_Circle.Visible = anyEnabled and not LockConfig.FullLock and not LockConfig.FullLockTorso
-    showNotification((state and 'เปิดใช้งาน "' or 'ปิดใช้งาน "') .. funcName .. '"')
+    showNotification((state and 'เปิดใช้งาน "' or 'ปิดใช้งาน "') .. funcName .. '"', state)
 end
 
-FullLockBtn.MouseButton1Click:Connect(function()
+FullLockToggle.MouseButton1Click:Connect(function()
     LockConfig.FullLock = not LockConfig.FullLock
     if LockConfig.FullLock then
         LockConfig.FullLockTorso = false
-        FullLockTorsoBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-        FullLockTorsoBtn.Text = "กดทำงาน"
+        FullLockTorsoToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+        FullLockTorsoToggle.Text = "ปิด"
     end
-    updateVisuals(FullLockBtn, LockConfig.FullLock, "ล็อกหัว 100%")
+    updateVisuals(FullLockToggle, LockConfig.FullLock, "ล็อกหัว 100%")
 end)
 
-FullLockTorsoBtn.MouseButton1Click:Connect(function()
+FullLockTorsoToggle.MouseButton1Click:Connect(function()
     LockConfig.FullLockTorso = not LockConfig.FullLockTorso
     if LockConfig.FullLockTorso then
         LockConfig.FullLock = false
-        FullLockBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-        FullLockBtn.Text = "กดทำงาน"
+        FullLockToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+        FullLockToggle.Text = "ปิด"
     end
-    updateVisuals(FullLockTorsoBtn, LockConfig.FullLockTorso, "ล็อกตัว 100%")
+    updateVisuals(FullLockTorsoToggle, LockConfig.FullLockTorso, "ล็อกตัว 100%")
 end)
 
-FullLockTorsoWallCheckBtn.MouseButton1Click:Connect(function()
+FullLockTorsoWallCheckToggle.MouseButton1Click:Connect(function()
     LockConfig.FullLockTorsoWallCheck = not LockConfig.FullLockTorsoWallCheck
-    updateVisuals(FullLockTorsoWallCheckBtn, LockConfig.FullLockTorsoWallCheck, "ไม่ล็อกตัวหลังกำแพง")
+    updateVisuals(FullLockTorsoWallCheckToggle, LockConfig.FullLockTorsoWallCheck, "ไม่ล็อกตัวหลังกำแพง")
 end)
 
-PlayerHeadBtn.MouseButton1Click:Connect(function()
+PlayerHeadToggle.MouseButton1Click:Connect(function()
     LockConfig.PlayerHead = not LockConfig.PlayerHead
-    if LockConfig.PlayerHead then LockConfig.PlayerTorso = false; PlayerTorsoBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255); PlayerTorsoBtn.Text = "กดทำงาน" end
-    updateVisuals(PlayerHeadBtn, LockConfig.PlayerHead, "ล็อกหัวคน")
+    if LockConfig.PlayerHead then LockConfig.PlayerTorso = false; PlayerTorsoToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); PlayerTorsoToggle.Text = "ปิด" end
+    updateVisuals(PlayerHeadToggle, LockConfig.PlayerHead, "ล็อกหัวคน")
 end)
-PlayerTorsoBtn.MouseButton1Click:Connect(function()
+PlayerTorsoToggle.MouseButton1Click:Connect(function()
     LockConfig.PlayerTorso = not LockConfig.PlayerTorso
-    if LockConfig.PlayerTorso then LockConfig.PlayerHead = false; PlayerHeadBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255); PlayerHeadBtn.Text = "กดทำงาน" end
-    updateVisuals(PlayerTorsoBtn, LockConfig.PlayerTorso, "ล็อกตัวคน")
+    if LockConfig.PlayerTorso then LockConfig.PlayerHead = false; PlayerHeadToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); PlayerHeadToggle.Text = "ปิด" end
+    updateVisuals(PlayerTorsoToggle, LockConfig.PlayerTorso, "ล็อกตัวคน")
 end)
-NPCHeadBtn.MouseButton1Click:Connect(function()
+NPCHeadToggle.MouseButton1Click:Connect(function()
     LockConfig.NPCHead = not LockConfig.NPCHead
-    if LockConfig.NPCHead then LockConfig.NPCTorso = false; NPCTorsoBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255); NPCTorsoBtn.Text = "กดทำงาน" end
-    updateVisuals(NPCHeadBtn, LockConfig.NPCHead, "ล็อกหัว NPC")
+    if LockConfig.NPCHead then LockConfig.NPCTorso = false; NPCTorsoToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); NPCTorsoToggle.Text = "ปิด" end
+    updateVisuals(NPCHeadToggle, LockConfig.NPCHead, "ล็อกหัว NPC")
 end)
-NPCTorsoBtn.MouseButton1Click:Connect(function()
+NPCTorsoToggle.MouseButton1Click:Connect(function()
     LockConfig.NPCTorso = not LockConfig.NPCTorso
-    if LockConfig.NPCTorso then LockConfig.NPCHead = false; NPCHeadBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255); NPCHeadBtn.Text = "กดทำงาน" end
-    updateVisuals(NPCTorsoBtn, LockConfig.NPCTorso, "ล็อกตัว NPC")
+    if LockConfig.NPCTorso then LockConfig.NPCHead = false; NPCHeadToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); NPCHeadToggle.Text = "ปิด" end
+    updateVisuals(NPCTorsoToggle, LockConfig.NPCTorso, "ล็อกตัว NPC")
 end)
 
-PlayerEspChamsBtn.MouseButton1Click:Connect(function() LockConfig.PlayerEspChams = not LockConfig.PlayerEspChams; updateVisuals(PlayerEspChamsBtn, LockConfig.PlayerEspChams, "ทะลุกำแพง (คน)") end)
-NpcEspChamsBtn.MouseButton1Click:Connect(function() LockConfig.NpcEspChams = not LockConfig.NpcEspChams; updateVisuals(NpcEspChamsBtn, LockConfig.NpcEspChams, "ทะลุกำแพง (NPC)") end)
-MasterEsp2DBtn.MouseButton1Click:Connect(function() LockConfig.MasterEsp2D = not LockConfig.MasterEsp2D; updateVisuals(MasterEsp2DBtn, LockConfig.MasterEsp2D, "ESP กล่อง") end)
-PlayerEsp2DBtn.MouseButton1Click:Connect(function() LockConfig.PlayerEsp2D = not LockConfig.PlayerEsp2D; updateVisuals(PlayerEsp2DBtn, LockConfig.PlayerEsp2D, "2D ESP (คน)") end)
-NpcEsp2DBtn.MouseButton1Click:Connect(function() LockConfig.NpcEsp2D = not LockConfig.NpcEsp2D; updateVisuals(NpcEsp2DBtn, LockConfig.NpcEsp2D, "2D ESP (NPC)") end)
+PlayerEspChamsToggle.MouseButton1Click:Connect(function() LockConfig.PlayerEspChams = not LockConfig.PlayerEspChams; updateVisuals(PlayerEspChamsToggle, LockConfig.PlayerEspChams, "ทะลุกำแพง (คน)") end)
+NpcEspChamsToggle.MouseButton1Click:Connect(function() LockConfig.NpcEspChams = not LockConfig.NpcEspChams; updateVisuals(NpcEspChamsToggle, LockConfig.NpcEspChams, "ทะลุกำแพง (NPC)") end)
+MasterEsp2DToggle.MouseButton1Click:Connect(function() LockConfig.MasterEsp2D = not LockConfig.MasterEsp2D; updateVisuals(MasterEsp2DToggle, LockConfig.MasterEsp2D, "ESP กล่อง") end)
+PlayerEsp2DToggle.MouseButton1Click:Connect(function() LockConfig.PlayerEsp2D = not LockConfig.PlayerEsp2D; updateVisuals(PlayerEsp2DToggle, LockConfig.PlayerEsp2D, "2D ESP (คน)") end)
+NpcEsp2DToggle.MouseButton1Click:Connect(function() LockConfig.NpcEsp2D = not LockConfig.NpcEsp2D; updateVisuals(NpcEsp2DToggle, LockConfig.NpcEsp2D, "2D ESP (NPC)") end)
 
-WallCheckBtn.MouseButton1Click:Connect(function()
+WallCheckButton.MouseButton1Click:Connect(function()
     WallCheckEnabled = not WallCheckEnabled
-    WallCheckBtn.BackgroundColor3 = WallCheckEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(0, 162, 255)
-    WallCheckBtn.Text = WallCheckEnabled and "หยุดทำงาน" or "กดทำงาน"
-    showNotification((WallCheckEnabled and 'เปิดใช้งาน "' or 'ปิดใช้งาน "') .. 'ไม่ล็อกหลังกำแพง"')
+    WallCheckButton.BackgroundColor3 = WallCheckEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    WallCheckButton.Text = WallCheckEnabled and "เปิด" or "ปิด"
+    showNotification((WallCheckEnabled and 'เปิดใช้งาน "' or 'ปิดใช้งาน "') .. 'ไม่ล็อกหลังกำแพง"', WallCheckEnabled)
 end)
 
-EnableSpeedBtn.MouseButton1Click:Connect(function()
+EnableSpeedToggle.MouseButton1Click:Connect(function()
     LockConfig.EnableSpeed = not LockConfig.EnableSpeed
-    updateVisuals(EnableSpeedBtn, LockConfig.EnableSpeed, "วิ่งเร็ว")
+    updateVisuals(EnableSpeedToggle, LockConfig.EnableSpeed, "วิ่งเร็ว")
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = LockConfig.EnableSpeed and CurrentWalkSpeed or 16
     end
 end)
 
-EnableJumpBtn.MouseButton1Click:Connect(function()
+EnableJumpToggle.MouseButton1Click:Connect(function()
     LockConfig.EnableJump = not LockConfig.EnableJump
-    updateVisuals(EnableJumpBtn, LockConfig.EnableJump, "กระโดดสูง")
+    updateVisuals(EnableJumpToggle, LockConfig.EnableJump, "กระโดดสูง")
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         local humanoid = LocalPlayer.Character.Humanoid
         humanoid.UseJumpPower = true
         humanoid.JumpPower = LockConfig.EnableJump and CurrentJumpPower or 50
     end
+end)
+
+ResetBtn.MouseButton1Click:Connect(function()
+    CurrentWalkSpeed = 16
+    CurrentJumpPower = 50
+    WalkSpeedInput.Text = "16"
+    JumpPowerInput.Text = "50"
+    WalkSpeedBtn.Position = UDim2.new(0, 0, 0, -4)
+    JumpPowerBtn.Position = UDim2.new(0, 0, 0, -4)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = LocalPlayer.Character.Humanoid
+        humanoid.WalkSpeed = 16
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = 50
+    end
+    showNotification("รีเซ็ตค่าความเร็ว/กระโดดสำเร็จ", true)
 end)
 
 local fovDragging, speedDragging, walkSpeedDragging, jumpPowerDragging, hitboxDragging, cooldownDragging = false, false, false, false, false, false
