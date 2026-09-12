@@ -59,6 +59,19 @@ ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+-- สร้างวงกลม FOV ไว้ล่วงหน้าเพื่อป้องกัน Error การอ้างถึง
+local FOV_Circle = Instance.new("Frame")
+FOV_Circle.Name = "FOV_Circle"
+FOV_Circle.AnchorPoint = Vector2.new(0.5, 0.5)
+FOV_Circle.Position = UDim2.new(0.5, 0, 0.5, 0)
+FOV_Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+FOV_Circle.BackgroundTransparency = 0.96
+FOV_Circle.Visible = false
+FOV_Circle.Parent = ScreenGui
+local FOV_Corner, FOV_Stroke = Instance.new("UICorner"), Instance.new("UIStroke")
+FOV_Corner.CornerRadius = UDim.new(1, 0); FOV_Corner.Parent = FOV_Circle
+FOV_Stroke.Color = Color3.fromRGB(0, 162, 255); FOV_Stroke.Thickness = 1; FOV_Stroke.Parent = FOV_Circle
+
 local NotifContainer = Instance.new("Frame")
 NotifContainer.Name = "NotifContainer"
 NotifContainer.Size = UDim2.new(0, 240, 1, 0)
@@ -1103,7 +1116,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1687,19 +1700,6 @@ GiveToolBtn.MouseButton1Click:Connect(function()
     showNotification("รับไอเท็ม 'อุปกรณ์คลิกวาร์ป' สำเร็จ!", true)
 end)
 
--- วงกลม FOV
-local FOV_Circle = Instance.new("Frame")
-FOV_Circle.Name = "FOV_Circle"
-FOV_Circle.AnchorPoint = Vector2.new(0.5, 0.5)
-FOV_Circle.Position = UDim2.new(0.5, 0, 0.5, 0)
-FOV_Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-FOV_Circle.BackgroundTransparency = 0.96
-FOV_Circle.Visible = false
-FOV_Circle.Parent = ScreenGui
-local FOV_Corner, FOV_Stroke = Instance.new("UICorner"), Instance.new("UIStroke")
-FOV_Corner.CornerRadius = UDim.new(1, 0); FOV_Corner.Parent = FOV_Circle
-FOV_Stroke.Color = Color3.fromRGB(0, 162, 255); FOV_Stroke.Thickness = 1; FOV_Stroke.Parent = FOV_Circle
-
 -- โหลดหน้าต่าง GUI
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
@@ -1835,7 +1835,7 @@ end)
 
 -- ระบบล็อกเป้าและควบคุมตัวละคร (Main Render Loop)
 local function isVisible(targetPart)
-    if not WallCheckEnabled then return true end
+    if not WallCheckEnabled and not LockConfig.FullLockTorsoWallCheck then return true end
     local origin = Camera.CFrame.Position
     local ray = Ray.new(origin, (targetPart.Position - origin).Unit * 500)
     local hit = Workspace:FindPartOnWithIgnoreList(ray, {LocalPlayer.Character, targetPart.Parent})
