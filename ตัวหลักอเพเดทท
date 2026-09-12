@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: UPDATED TELEPORT BUTTONS ]] --
+-- [[ GKHub v1.4.24: UPDATED WITH ONE-CLICK CLOSEST PLAYER TELEPORT ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -727,7 +727,7 @@ local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.ne
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", TeleportTab)
 
--- ฟังก์ชันใหม่: วาร์ปหาผู้เล่นใกล้สุดแบบกดครั้งเดียว (ปรับหน้าตาเป็นปุ่มกดปกติ)
+-- ฟังก์ชันใหม่: วาร์ปหาผู้เล่นใกล้สุดแบบกดครั้งเดียว
 createHeader(">> วาร์ปด่วนครั้งเดียว <<", TeleportTab)
 local TpOnceFrame = Instance.new("Frame")
 TpOnceFrame.Size = UDim2.new(0.92, 0, 0, 34)
@@ -740,7 +740,7 @@ local TpOnceBtn = Instance.new("TextButton")
 TpOnceBtn.Size = UDim2.new(1, -12, 0, 24)
 TpOnceBtn.Position = UDim2.new(0, 6, 0.5, -12)
 TpOnceBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-TpOnceBtn.Text = "วาร์ปไปหาผู้เล่นที่ใกล้ที่สุด"
+TpOnceBtn.Text = "วาร์ปไปหาผู้เล่นใกล้ที่สุด (กดครั้งเดียว)"
 TpOnceBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 TpOnceBtn.Font = Enum.Font.GothamBold
 TpOnceBtn.TextSize = 10
@@ -776,7 +776,6 @@ TpOnceBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- เครื่องมือคลิกวาร์ป (ปรับหน้าตาเป็นปุ่มกดปกติ)
 createHeader(">> เครื่องมือคลิกวาร์ป <<", TeleportTab)
 local GiveToolFrame = Instance.new("Frame")
 GiveToolFrame.Size = UDim2.new(0.92, 0, 0, 34)
@@ -789,53 +788,13 @@ local GiveToolBtn = Instance.new("TextButton")
 GiveToolBtn.Size = UDim2.new(1, -12, 0, 24)
 GiveToolBtn.Position = UDim2.new(0, 6, 0.5, -12)
 GiveToolBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-GiveToolBtn.Text = "รับไอเท็มคลิกวาร์ป"
+GiveToolBtn.Text = "รับไอเท็ม: อุปกรณ์คลิกวาร์ป"
 GiveToolBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 GiveToolBtn.Font = Enum.Font.GothamBold
 GiveToolBtn.TextSize = 10
 GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
-
-GiveToolBtn.MouseButton1Click:Connect(function()
-    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-    local character = LocalPlayer.Character
-    if not backpack or not character then return end
-
-    if backpack:FindFirstChild("ClickTeleportTool") or (character and character:FindFirstChild("ClickTeleportTool")) then
-        showNotification("คุณมีไอเท็มนี้อยู่ในกระเป๋าแล้ว!", false)
-        return
-    end
-
-    local tool = Instance.new("Tool")
-    tool.Name = "ClickTeleportTool"
-    tool.RequiresHandle = true
-
-    local handle = Instance.new("Part")
-    handle.Name = "Handle"
-    handle.Size = Vector3.new(1, 1, 3)
-    handle.BrickColor = BrickColor.new("Bright blue")
-    handle.Parent = tool
-
-    local mesh = Instance.new("SpecialMesh")
-    mesh.MeshType = Enum.MeshType.Wedge
-    mesh.Scale = Vector3.new(1, 1, 1)
-    mesh.Parent = handle
-
-    tool.Activated:Connect(function()
-        local mouse = LocalPlayer:GetMouse()
-        local char = LocalPlayer.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            local hrp = char.HumanoidRootPart
-            local targetPos = mouse.Hit.Position
-            hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
-            showNotification("วาร์ปไปยังตำแหน่งที่คลิกสำเร็จ!", true)
-        end
-    end)
-
-    tool.Parent = backpack
-    showNotification("รับไอเท็ม 'อุปกรณ์คลิกวาร์ป' สำเร็จ!", true)
-end)
 
 createHeader(">> กดใช้งานทันที (0 วิ) <<", ToolTab)
 local InstantActionToggle = createToggle("InstantAction", "เปิดใช้งานกดค้างทันที (0 วิ)", ToolTab)
@@ -946,7 +905,7 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn1000.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
@@ -1063,8 +1022,8 @@ for i = 1, 5 do
     local sBtnW = 52
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
-    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1556,6 +1515,46 @@ RemoveJunkToggle.MouseButton1Click:Connect(function()
             junkConnection = nil
         end
     end
+end)
+
+GiveToolBtn.MouseButton1Click:Connect(function()
+    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+    local character = LocalPlayer.Character
+    if not backpack or not character then return end
+
+    if backpack:FindFirstChild("ClickTeleportTool") or (character and character:FindFirstChild("ClickTeleportTool")) then
+        showNotification("คุณมีไอเท็มนี้อยู่ในกระเป๋าแล้ว!", false)
+        return
+    end
+
+    local tool = Instance.new("Tool")
+    tool.Name = "ClickTeleportTool"
+    tool.RequiresHandle = true
+
+    local handle = Instance.new("Part")
+    handle.Name = "Handle"
+    handle.Size = Vector3.new(1, 1, 3)
+    handle.BrickColor = BrickColor.new("Bright blue")
+    handle.Parent = tool
+
+    local mesh = Instance.new("SpecialMesh")
+    mesh.MeshType = Enum.MeshType.Wedge
+    mesh.Scale = Vector3.new(1, 1, 1)
+    mesh.Parent = handle
+
+    tool.Activated:Connect(function()
+        local mouse = LocalPlayer:GetMouse()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local hrp = char.HumanoidRootPart
+            local targetPos = mouse.Hit.Position
+            hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
+            showNotification("วาร์ปไปยังตำแหน่งที่คลิกสำเร็จ!", true)
+        end
+    end)
+
+    tool.Parent = backpack
+    showNotification("รับไอเท็ม 'อุปกรณ์คลิกวาร์ป' สำเร็จ!", true)
 end)
 
 local FOV_Circle = Instance.new("Frame")
