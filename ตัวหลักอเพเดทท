@@ -905,7 +905,7 @@ Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn1000.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
@@ -1023,7 +1023,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -2110,64 +2110,4 @@ YesButton.MouseButton1Click:Connect(function()
         ScreenGui:Destroy()
         if FOV_Circle then FOV_Circle:Destroy() end
     end)
-end)
--- สร้างหมวดหมู่ "พลังวิเศษ" เพิ่มต่อจากเมนูเดิม
-local PowerTab = createContainer("พลังวิเศษ")
-createCategoryButton("พลังวิเศษ", PowerTab)
-
-createHeader(">> พลังวิเศษพิเศษ <<", PowerTab)
-
--- สร้างปุ่มเปิด/ปิด หยุดเวลา
-local TimeStopToggle = createToggle("TimeStop", "เปิดใช้งานหยุดเวลา (ไม่หลุดจากเกม)", PowerTab)
-
-local isTimeStopped = false
-local replicatedStorage = game:GetService("ReplicatedStorage")
-
--- ฟังก์ชันสำหรับหยุดเวลาโดยไม่ให้ตัวละครเด้งออก (NetworkOwnership & Simulation)
-TimeStopToggle.MouseButton1Click:Connect(function()
-    isTimeStopped = not isTimeStopped
-    TimeStopToggle.BackgroundColor3 = isTimeStopped and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
-    TimeStopToggle.Text = isTimeStopped and "เปิด" or "ปิด"
-    
-    showNotification((isTimeStopped and "หยุดเวลาสำเร็จ! (คุณสามารถเดินและหยิบของได้)" or "คืนค่าเวลาปกติแล้ว!"), isTimeStopped)
-    
-    pcall(function()
-        if isTimeStopped then
-            -- ปิดการส่งแพ็คเกจจำลองสถานะชั่วคราวเพื่อให้คนอื่นเห็นว่าเราค้าง แต่เรายังคุมตัวละครได้
-            settings():GetService("NetworkSettings").IncomingReplicationLag = 999999
-            
-            -- ตั้งค่าให้ตัวละครไม่ส่งการเคลื่อนไหวออกไปข้างนอก (จำลองการหยุดเวลาเฉพาะตัวเรากับเซิร์ฟเวอร์)
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                LocalPlayer.Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-            end
-        else
-            -- คืนค่าเน็ตเวิร์กกลับสู่ปกติและซิงค์ข้อมูลของที่เราหยิบเข้ามาในตัว
-            settings():GetService("NetworkSettings").IncomingReplicationLag = 0
-            
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local hrp = char.HumanoidRootPart
-                -- รีเฟรชตำแหน่งเล็กน้อยเพื่อให้เซิร์ฟเวอร์อัปเดตไอเท็มที่เราหยิบมาขณะหยุดเวลา
-                hrp.CFrame = hrp.CFrame + Vector3.new(0, 0.1, 0)
-            end
-        end
-    end)
-end)
-
--- ลูปคอยบล็อกสถานะการเคลื่อนไหวของร่างกายขณะหยุดเวลา เพื่อให้เราเดินทะลุกรอบเวลาที่ค้างได้
-RunService.Stepped:Connect(function()
-    if isTimeStopped then
-        pcall(function()
-            local char = LocalPlayer.Character
-            if char then
-                for _, part in ipairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        -- ป้องกันแรงกระแทกจากภายนอกขณะหยุดเวลา
-                        part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                    end
-                end
-            end
-        end)
-    end
 end)
