@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.22: FIXED & OPTIMIZED UPDATE ]] --
+-- [[ GKHub v1.4.22: FIXED & OPTIMIZED UPDATE (ADDED TELEPORT TAB) ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -349,6 +349,7 @@ local MainFuncTab = createContainer("ฟังก์ชั่นหลัก")
 local AimbotTab = createContainer("ระบบล็อกเป้า")
 local EspTab = createContainer("ระบบ ESP & Chams")
 local CharacterTab = createContainer("ตัวละคร")
+local TeleportTab = createContainer("วาป") -- หมวดหมู่ใหม่: วาป
 local ToolTab = createContainer("เครื่องมือ")
 local FpsTab = createContainer("ระบบ FPS")
 local AutoExecTab = createContainer("รันโค้ดอัตโนมัติ")
@@ -388,6 +389,7 @@ btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
 createCategoryButton("ระบบล็อกเป้า", AimbotTab)
 createCategoryButton("ระบบ ESP & Chams", EspTab)
 createCategoryButton("ตัวละคร", CharacterTab)
+createCategoryButton("วาป", TeleportTab) -- เพิ่มปุ่มเมนูหมวดหมู่ วาป
 createCategoryButton("เครื่องมือ", ToolTab)
 createCategoryButton("ระบบ FPS", FpsTab)
 createCategoryButton("รันโค้ดอัตโนมัติ", AutoExecTab)
@@ -698,29 +700,16 @@ ResetBtn.Parent = ResetFrame
 table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
 
-createHeader(">> กดใช้งานทันที (0 วิ) <<", ToolTab)
-local InstantActionToggle = createToggle("InstantAction", "เปิดใช้งานกดค้างทันที (0 วิ)", ToolTab)
+-- หมวดหมู่: วาป (ย้ายฟังก์ชันมาไว้ที่นี่)
+createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
+local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด", TeleportTab)
 
-createHeader(">> ออโต้เทเลพอร์ต <<", ToolTab)
-local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด", ToolTab)
-
-createHeader(">> ลบคูลดาวน์อุปกรณ์ <<", ToolTab)
-local CooldownToggle = createToggle("CooldownToggle", "เปิดใช้งานลบ/ปรับคูลดาวน์", ToolTab)
-local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาคูลดาวน์: 0 วิ (ไม่มีดีเลย์)", ToolTab)
-
-createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", ToolTab)
-local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
-local HitboxConfig = { Enabled = false, Size = 1 }
-local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInputAndSync("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
-    HitboxConfig.Size = val
-end)
-
-createHeader(">> เครื่องมือคลิกวาร์ป <<", ToolTab)
+createHeader(">> เครื่องมือคลิกวาร์ป <<", TeleportTab)
 local GiveToolFrame = Instance.new("Frame")
 GiveToolFrame.Size = UDim2.new(0.92, 0, 0, 34)
 GiveToolFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 GiveToolFrame.BorderSizePixel = 0
-GiveToolFrame.Parent = ToolTab
+GiveToolFrame.Parent = TeleportTab
 local GiveToolCorner = Instance.new("UICorner"); GiveToolCorner.CornerRadius = UDim.new(0, 4); GiveToolCorner.Parent = GiveToolFrame
 
 local GiveToolBtn = Instance.new("TextButton")
@@ -734,6 +723,21 @@ GiveToolBtn.TextSize = 10
 GiveToolBtn.Parent = GiveToolFrame
 table.insert(allButtons, GiveToolBtn)
 local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
+
+-- หมวดหมู่: เครื่องมือ
+createHeader(">> กดใช้งานทันที (0 วิ) <<", ToolTab)
+local InstantActionToggle = createToggle("InstantAction", "เปิดใช้งานกดค้างทันที (0 วิ)", ToolTab)
+
+createHeader(">> ลบคูลดาวน์อุปกรณ์ <<", ToolTab)
+local CooldownToggle = createToggle("CooldownToggle", "เปิดใช้งานลบ/ปรับคูลดาวน์", ToolTab)
+local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาคูลดาวน์: 0 วิ (ไม่มีดีเลย์)", ToolTab)
+
+createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", ToolTab)
+local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
+local HitboxConfig = { Enabled = false, Size = 1 }
+local HitboxBack, HitboxBtn, HitboxInput, SetHitboxFunc = createSliderWithInputAndSync("ขนาดฮิดบล็อก (1 - 1000):", 1, 1000, 1, ToolTab, function(val)
+    HitboxConfig.Size = val
+end)
 
 -- หมวดหมู่: ระบบ FPS
 createHeader(">> ระบบภาพดินน้ำมัน (Plastic) <<", FpsTab)
@@ -944,7 +948,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1030,7 +1034,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ระบบทะลุกำแพง (Noclip) [แก้ไขให้คืนค่า CanCollide เมื่อปิด]
+-- ระบบทะลุกำแพง (Noclip)
 local NoclipConfig = { Enabled = false }
 NoclipToggle.MouseButton1Click:Connect(function()
     NoclipConfig.Enabled = not NoclipConfig.Enabled
@@ -1038,7 +1042,6 @@ NoclipToggle.MouseButton1Click:Connect(function()
     NoclipToggle.Text = NoclipConfig.Enabled and "เปิด" or "ปิด"
     showNotification((NoclipConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ทะลุกำแพง', NoclipConfig.Enabled)
     
-    -- หากปิด Noclip ให้คืนค่าการชน (CanCollide) กลับเป็นปกติทันที
     if not NoclipConfig.Enabled then
         local char = LocalPlayer.Character
         if char then
@@ -1064,7 +1067,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- ระบบ Instant Action (กดค้าง/ทำอะไรทีละนานๆ ให้เสร็จทันที 0 วิ)
+-- ระบบ Instant Action
 local InstantActionConfig = { Enabled = false }
 InstantActionToggle.MouseButton1Click:Connect(function()
     InstantActionConfig.Enabled = not InstantActionConfig.Enabled
