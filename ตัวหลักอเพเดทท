@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.24: UPDATED WITH ONE-CLICK CLOSEST PLAYER TELEPORT ]] --
+-- [[ GKHub v1.4.25: UPDATED WITH TIME STOP & POWER TAB ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -9,6 +9,7 @@ local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
@@ -377,6 +378,7 @@ local TeleportTab = createContainer("วาป")
 local ToolTab = createContainer("เครื่องมือ")
 local FpsTab = createContainer("ระบบ FPS")
 local AutoExecTab = createContainer("รันโค้ดอัตโนมัติ")
+local PowerTab = createContainer("พลังวิเศษ")
 
 local categoryButtons = {}
 local function createCategoryButton(name, targetTab)
@@ -417,6 +419,7 @@ createCategoryButton("วาป", TeleportTab)
 createCategoryButton("เครื่องมือ", ToolTab)
 createCategoryButton("ระบบ FPS", FpsTab)
 createCategoryButton("รันโค้ดอัตโนมัติ", AutoExecTab)
+createCategoryButton("พลังวิเศษ", PowerTab)
 
 MainFuncTab.Visible = true
 
@@ -727,7 +730,6 @@ local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.ne
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", TeleportTab)
 
--- ฟังก์ชันใหม่: วาร์ปหาผู้เล่นใกล้สุดแบบกดครั้งเดียว
 createHeader(">> วาร์ปด่วนครั้งเดียว <<", TeleportTab)
 local TpOnceFrame = Instance.new("Frame")
 TpOnceFrame.Size = UDim2.new(0.92, 0, 0, 34)
@@ -889,25 +891,25 @@ end
 local btnW = 110
 local btnH = 22
 
-local btn1 = Instance.new("TextButton")
-btn1.Size = UDim2.new(0, btnW, 0, btnH); btn1.Position = UDim2.new(0, 6, 0, 6); btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1.Text = "รัน ×1"; btn1.TextColor3 = Color3.fromRGB(255,255,255); btn1.Font = Enum.Font.GothamBold; btn1.TextSize = 9; btn1.Parent = ExecBtnFrame
-Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 3)
-btn1.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1) end)
+local btn1Exec = Instance.new("TextButton")
+btn1Exec.Size = UDim2.new(0, btnW, 0, btnH); btn1Exec.Position = UDim2.new(0, 6, 0, 6); btn1Exec.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1Exec.Text = "รัน ×1"; btn1Exec.TextColor3 = Color3.fromRGB(255,255,255); btn1Exec.Font = Enum.Font.GothamBold; btn1Exec.TextSize = 9; btn1Exec.Parent = ExecBtnFrame
+Instance.new("UICorner", btn1Exec).CornerRadius = UDim.new(0, 3)
+btn1Exec.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1) end)
 
-local btn10 = Instance.new("TextButton")
-btn10.Size = UDim2.new(0, btnW, 0, btnH); btn10.Position = UDim2.new(1, -116, 0, 6); btn10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn10.Text = "รัน ×10"; btn10.TextColor3 = Color3.fromRGB(255,255,255); btn10.Font = Enum.Font.GothamBold; btn10.TextSize = 9; btn10.Parent = ExecBtnFrame
-Instance.new("UICorner", btn10).CornerRadius = UDim.new(0, 3)
-btn10.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 10) end)
+local btn10Exec = Instance.new("TextButton")
+btn10Exec.Size = UDim2.new(0, btnW, 0, btnH); btn10Exec.Position = UDim2.new(1, -116, 0, 6); btn10Exec.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn10Exec.Text = "รัน ×10"; btn10Exec.TextColor3 = Color3.fromRGB(255,255,255); btn10Exec.Font = Enum.Font.GothamBold; btn10Exec.TextSize = 9; btn10Exec.Parent = ExecBtnFrame
+Instance.new("UICorner", btn10Exec).CornerRadius = UDim.new(0, 3)
+btn10Exec.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 10) end)
 
-local btn100 = Instance.new("TextButton")
-btn100.Size = UDim2.new(0, btnW, 0, btnH); btn100.Position = UDim2.new(0, 6, 0, 32); btn100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100.Text = "รัน ×100"; btn100.TextColor3 = Color3.fromRGB(255,255,255); btn100.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
-Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
-btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
+local btn100Exec = Instance.new("TextButton")
+btn100Exec.Size = UDim2.new(0, btnW, 0, btnH); btn100Exec.Position = UDim2.new(0, 6, 0, 32); btn100Exec.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100Exec.Text = "รัน ×100"; btn100Exec.TextColor3 = Color3.fromRGB(255,255,255); btn100Exec.Font = Enum.Font.GothamBold; btn100Exec.TextSize = 9; btn100Exec.Parent = ExecBtnFrame
+Instance.new("UICorner", btn100Exec).CornerRadius = UDim.new(0, 3)
+btn100Exec.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
-local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
-Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
-btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
+local btn1000Exec = Instance.new("TextButton")
+btn1000Exec.Size = UDim2.new(0, btnW, 0, btnH); btn1000Exec.Position = UDim2.new(1, -116, 0, 32); btn1000Exec.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000Exec.Text = "รัน ×1000"; btn1000Exec.TextColor3 = Color3.fromRGB(255,255,255); btn1000Exec.Font = Enum.Font.GothamBold; btn1000Exec.TextSize = 9; btn1000Exec.Parent = ExecBtnFrame
+Instance.new("UICorner", btn1000Exec).CornerRadius = UDim.new(0, 3)
+btn1000Exec.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
 createHeader(">> ระบบรันโค้ดอัตโนมัติ (0.01s) <<", AutoExecTab)
 local AutoLoopToggle = createToggle("AutoLoop", "รันโค้ดอัตโนมัติ (ความเร็ว 0.01)", AutoExecTab)
@@ -1022,8 +1024,8 @@ for i = 1, 5 do
     local sBtnW = 52
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
-    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s10.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1101,6 +1103,55 @@ for i = 1, 5 do
         foldBtn.Text = isFolded and "v" or "^"
     end)
 end
+
+-- หมวดหมู่: พลังวิเศษ (Time Stop)
+createHeader(">> พลังวิเศษพิเศษ <<", PowerTab)
+
+local TimeStopToggle = createToggle("TimeStop", "เปิดใช้งานหยุดเวลา (ไม่หลุดจากเกม)", PowerTab)
+
+local isTimeStopped = false
+
+TimeStopToggle.MouseButton1Click:Connect(function()
+    isTimeStopped = not isTimeStopped
+    TimeStopToggle.BackgroundColor3 = isTimeStopped and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    TimeStopToggle.Text = isTimeStopped and "เปิด" or "ปิด"
+    
+    showNotification((isTimeStopped and "หยุดเวลาสำเร็จ! (คุณสามารถเดินและหยิบของได้)" or "คืนค่าเวลาปกติแล้ว!"), isTimeStopped)
+    
+    pcall(function()
+        if isTimeStopped then
+            settings():GetService("NetworkSettings").IncomingReplicationLag = 999999
+            
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                LocalPlayer.Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            end
+        else
+            settings():GetService("NetworkSettings").IncomingReplicationLag = 0
+            
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local hrp = char.HumanoidRootPart
+                hrp.CFrame = hrp.CFrame + Vector3.new(0, 0.1, 0)
+            end
+        end
+    end)
+end)
+
+RunService.Stepped:Connect(function()
+    if isTimeStopped then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end
+        end)
+    end
+end)
 
 -- ระบบกระโดดไม่จำกัด (Inf Jump)
 local InfJumpConfig = { Enabled = false }
@@ -1602,7 +1653,6 @@ end)
 local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
-    local TweenService = game:GetService("TweenService")
     if isMinimized then
         MinimizeButton.Text = "+"
         TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 440, 0, 28)}):Play()
@@ -2070,6 +2120,14 @@ YesButton.MouseButton1Click:Connect(function()
     InstantActionConfig.Enabled = false
     InfJumpConfig.Enabled = false
     NoclipConfig.Enabled = false
+    
+    if isTimeStopped then
+        isTimeStopped = false
+        pcall(function()
+            settings():GetService("NetworkSettings").IncomingReplicationLag = 0
+        end)
+    end
+    
     restoreMaterials()
     restoreLaggyObjects()
     
