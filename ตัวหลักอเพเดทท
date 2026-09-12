@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.21: FIXED & OPTIMIZED UPDATE ]] --
+-- [[ GKHub v1.4.22: FIXED & OPTIMIZED UPDATE ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -348,7 +348,7 @@ end
 local MainFuncTab = createContainer("ฟังก์ชั่นหลัก")
 local AimbotTab = createContainer("ระบบล็อกเป้า")
 local EspTab = createContainer("ระบบ ESP & Chams")
-local SpeedTab = createContainer("ความเร็ว & กระโดด")
+local CharacterTab = createContainer("ตัวละคร")
 local ToolTab = createContainer("เครื่องมือ")
 local FpsTab = createContainer("ระบบ FPS")
 local AutoExecTab = createContainer("รันโค้ดอัตโนมัติ")
@@ -387,7 +387,7 @@ btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
 
 createCategoryButton("ระบบล็อกเป้า", AimbotTab)
 createCategoryButton("ระบบ ESP & Chams", EspTab)
-createCategoryButton("ความเร็ว & กระโดด", SpeedTab)
+createCategoryButton("ตัวละคร", CharacterTab)
 createCategoryButton("เครื่องมือ", ToolTab)
 createCategoryButton("ระบบ FPS", FpsTab)
 createCategoryButton("รันโค้ดอัตโนมัติ", AutoExecTab)
@@ -659,28 +659,31 @@ local MasterEsp2DToggle = createToggle("MasterEsp2D", "เปิดใช้ง�
 local PlayerEsp2DToggle = createToggle("PlayerEsp2D", "เปิดใช้งาน 2D ESP + เส้น (คน)", EspTab)
 local NpcEsp2DToggle = createToggle("NpcEsp2D", "เปิดใช้งาน 2D ESP + เส้น (NPC)", EspTab)
 
-createHeader(">> ความเร็วผู้เล่น <<", SpeedTab)
-local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", SpeedTab)
+createHeader(">> ความเร็วผู้เล่น <<", CharacterTab)
+local EnableSpeedToggle = createToggle("EnableSpeed", "เปิดใช้งานวิ่งเร็ว", CharacterTab)
 local CurrentWalkSpeed = 16
-local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput, SetWalkSpeedFunc = createSliderWithInputAndSync("ความเร็ว (16 - 800):", 16, 800, 16, SpeedTab, function(val)
+local WalkSpeedBack, WalkSpeedBtn, WalkSpeedInput, SetWalkSpeedFunc = createSliderWithInputAndSync("ความเร็ว (16 - 800):", 16, 800, 16, CharacterTab, function(val)
     CurrentWalkSpeed = val
 end)
 
-createHeader(">> กระโดดสูงผู้เล่น <<", SpeedTab)
-local EnableJumpToggle = createToggle("EnableJump", "เปิดใช้งานกระโดดสูง", SpeedTab)
+createHeader(">> กระโดดสูงผู้เล่น <<", CharacterTab)
+local EnableJumpToggle = createToggle("EnableJump", "เปิดใช้งานกระโดดสูง", CharacterTab)
 local CurrentJumpPower = 50
-local JumpPowerBack, JumpPowerBtn, JumpPowerInput, SetJumpPowerFunc = createSliderWithInputAndSync("กระโดดสูง (50 - 500):", 50, 500, 50, SpeedTab, function(val)
+local JumpPowerBack, JumpPowerBtn, JumpPowerInput, SetJumpPowerFunc = createSliderWithInputAndSync("กระโดดสูง (50 - 500):", 50, 500, 50, CharacterTab, function(val)
     CurrentJumpPower = val
 end)
 
-createHeader(">> กระโดดไม่จำกัด <<", SpeedTab)
-local InfJumpToggle = createToggle("InfJump", "กระโดดไม่จำกัด", SpeedTab)
+createHeader(">> ระบบทะลุกำแพง (Noclip) <<", CharacterTab)
+local NoclipToggle = createToggle("Noclip", "เปิดใช้งานทะลุกำแพง", CharacterTab)
+
+createHeader(">> กระโดดไม่จำกัด <<", CharacterTab)
+local InfJumpToggle = createToggle("InfJump", "กระโดดไม่จำกัด", CharacterTab)
 
 local ResetFrame = Instance.new("Frame")
 ResetFrame.Size = UDim2.new(0.92, 0, 0, 32)
 ResetFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 ResetFrame.BorderSizePixel = 0
-ResetFrame.Parent = SpeedTab
+ResetFrame.Parent = CharacterTab
 local ResetFrameCorner = Instance.new("UICorner"); ResetFrameCorner.CornerRadius = UDim.new(0, 4); ResetFrameCorner.Parent = ResetFrame
 
 local ResetBtn = Instance.new("TextButton")
@@ -1023,6 +1026,28 @@ UserInputService.JumpRequest:Connect(function()
         local char = LocalPlayer.Character
         if char and char:FindFirstChildOfClass("Humanoid") then
             char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- ระบบทะลุกำแพง (Noclip)
+local NoclipConfig = { Enabled = false }
+NoclipToggle.MouseButton1Click:Connect(function()
+    NoclipConfig.Enabled = not NoclipConfig.Enabled
+    NoclipToggle.BackgroundColor3 = NoclipConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    NoclipToggle.Text = NoclipConfig.Enabled and "เปิด" or "ปิด"
+    showNotification((NoclipConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ทะลุกำแพง', NoclipConfig.Enabled)
+end)
+
+RunService.Stepped:Connect(function()
+    if NoclipConfig.Enabled then
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
         end
     end
 end)
@@ -1943,6 +1968,7 @@ YesButton.MouseButton1Click:Connect(function()
     ClayGraphicsEnabled = false
     InstantActionConfig.Enabled = false
     InfJumpConfig.Enabled = false
+    NoclipConfig.Enabled = false
     restoreMaterials()
     restoreLaggyObjects()
     
