@@ -244,6 +244,10 @@ NoButton.ZIndex = 12
 NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
+YesButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
@@ -558,6 +562,7 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     BtnCorner.CornerRadius = UDim.new(1, 0)
     BtnCorner.Parent = Btn
 
+    local dragging = false
     local function applyValue(val, updateInput)
         val = math.clamp(val, minVal, maxVal)
         if updateInput then
@@ -567,6 +572,20 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
         Btn.Position = UDim2.new(percentage, -6, 0, -4)
         if callback then callback(val) end
     end
+
+    Btn.MouseButton1Down:Connect(function() dragging = true end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local relX = math.clamp(input.Position.X - Back.AbsolutePosition.X, 0, Back.AbsoluteSize.X)
+            local val = math.floor(minVal + (relX / Back.AbsoluteSize.X) * (maxVal - minVal))
+            applyValue(val, true)
+        end
+    end)
 
     InputBox.FocusLost:Connect(function()
         local num = tonumber(InputBox.Text)
@@ -580,7 +599,11 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     return Back, Btn, InputBox, applyValue
 end
 
-local function createSlider(labelText, parentTab)
+local function createSlider(labelText, parentTab, minVal, maxVal, defaultVal, callback)
+    minVal = minVal or 10
+    maxVal = maxVal or 500
+    defaultVal = defaultVal or 100
+
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0.92, 0, 0, 42)
     Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -632,6 +655,27 @@ local function createSlider(labelText, parentTab)
     BtnCorner.CornerRadius = UDim.new(1, 0)
     BtnCorner.Parent = Btn
 
+    local dragging = false
+    local function updateValue(inputPos)
+        local relX = math.clamp(inputPos - Back.AbsolutePosition.X, 0, Back.AbsoluteSize.X)
+        local pct = relX / Back.AbsoluteSize.X
+        local val = math.floor(minVal + pct * (maxVal - minVal))
+        Btn.Position = UDim2.new(pct, -6, 0, -4)
+        if callback then callback(val) end
+    end
+
+    Btn.MouseButton1Down:Connect(function() dragging = true end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateValue(input.Position.X)
+        end
+    end)
+
     return Back, Btn, Label
 end
 
@@ -676,8 +720,23 @@ local NPCTorsoToggle = createToggle("NPCTorso", "เปิดใช้งาน�
 
 createHeader(">> ตั้งค่าระบบล็อก <<", AimbotTab)
 local WallCheckButton = createToggle("WallCheck", "ไม่ล็อกตัวหลังกำแพง", AimbotTab)
-local SliderBack, SliderBtn, SliderLabel = createSlider("FOV: 100", AimbotTab)
-local SpeedBack, SpeedBtn, SpeedLabel = createSlider("ความเร็วดูด: 50", AimbotTab)
+
+local FOV_Radius = 100
+local LockSpeed = 50 
+local WallCheckEnabled = false
+
+local SliderBack, SliderBtn, SliderLabel = createSlider("FOV: 100", AimbotTab, 10, 500, 100, function(val)
+    FOV_Radius = val
+    SliderLabel.Text = "FOV: " .. math.floor(val)
+    if FOV_Circle then
+        FOV_Circle.Size = UDim2.new(0, val * 2, 0, val * 2)
+    end
+end)
+
+local SpeedBack, SpeedBtn, SpeedLabel = createSlider("ความเร็วดูด: 50", AimbotTab, 1, 100, 50, function(val)
+    LockSpeed = val
+    SpeedLabel.Text = "ความเร็วดูด: " .. math.floor(val)
+end)
 
 -- หมวดหมู่: ESP
 createHeader(">> ระบบมองทะลุสีทึบ (Chams) <<", EspTab)
@@ -728,6 +787,19 @@ ResetBtn.TextSize = 10
 ResetBtn.Parent = ResetFrame
 table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
+
+ResetBtn.MouseButton1Click:Connect(function()
+    CurrentWalkSpeed = 16
+    CurrentJumpPower = 50
+    SetWalkSpeedFunc(16, true)
+    SetJumpPowerFunc(50, true)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChildOfClass("Humanoid") then
+        char.Humanoid.WalkSpeed = 16
+        char.Humanoid.JumpPower = 50
+    end
+    showNotification("รีเซ็ตค่าผู้เล่นเป็นปกติแล้ว!", true)
+end)
 
 -- หมวดหมู่: วาร์ป
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
@@ -807,7 +879,7 @@ local InstantActionToggle = createToggle("InstantAction", "เปิดใช้
 
 createHeader(">> ลบคูลดาวน์อุปกรณ์ <<", ToolTab)
 local CooldownToggle = createToggle("CooldownToggle", "เปิดใช้งานลบ/ปรับคูลดาวน์", ToolTab)
-local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาคูลดาวน์: 0 วิ (ไม่มีดีเลย์)", ToolTab)
+local CooldownBack, CooldownBtn, CooldownLabel = createSlider("เวลาคูลดาวน์: 0 วิ (ไม่มีดีเลย์)", ToolTab, 0, 10, 0)
 
 createHeader(">> ขยายฮิดบล็อก (Hitbox Expander) <<", ToolTab)
 local HitboxToggle = createToggle("HitboxToggle", "เปิดใช้งานขยายฮิดบล็อก", ToolTab)
@@ -1681,27 +1753,12 @@ CloseButton.MouseButton1Click:Connect(function()
 end)
 NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
 
-YesButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
 local LockConfig = {
     FullLock = false, FullLockTorso = false, FullLockTorsoWallCheck = false, PlayerHead = false, PlayerTorso = false, NPCHead = false, NPCTorso = false,
     PlayerEspChams = false, NpcEspChams = false,
     MasterEsp2D = false, PlayerEsp2D = false, NpcEsp2D = false,
     EnableSpeed = false, EnableJump = false
 }
-
-local WallCheckEnabled = false
-local FOV_Radius = 100
-local LockSpeed = 50 
-
-local function updateFOV(radius)
-    FOV_Radius = radius
-    FOV_Circle.Size = UDim2.new(0, radius * 2, 0, radius * 2)
-    SliderLabel.Text = "FOV: " .. math.floor(radius)
-end
-updateFOV(FOV_Radius)
 
 local function updateVisuals(btn, state, funcName)
     btn.BackgroundColor3 = state and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
@@ -1766,6 +1823,9 @@ MasterEsp2DToggle.MouseButton1Click:Connect(function() LockConfig.MasterEsp2D = 
 PlayerEsp2DToggle.MouseButton1Click:Connect(function() LockConfig.PlayerEsp2D = not LockConfig.PlayerEsp2D; updateVisuals(PlayerEsp2DToggle, LockConfig.PlayerEsp2D, "2D ESP (คน)") end)
 NpcEsp2DToggle.MouseButton1Click:Connect(function() LockConfig.NpcEsp2D = not LockConfig.NpcEsp2D; updateVisuals(NpcEsp2DToggle, LockConfig.NpcEsp2D, "2D ESP (NPC)") end)
 
+EnableSpeedToggle.MouseButton1Click:Connect(function() LockConfig.EnableSpeed = not LockConfig.EnableSpeed; updateVisuals(EnableSpeedToggle, LockConfig.EnableSpeed, "วิ่งเร็ว") end)
+EnableJumpToggle.MouseButton1Click:Connect(function() LockConfig.EnableJump = not LockConfig.EnableJump; updateVisuals(EnableJumpToggle, LockConfig.EnableJump, "กระโดดสูง") end)
+
 WallCheckButton.MouseButton1Click:Connect(function()
     WallCheckEnabled = not WallCheckEnabled
     WallCheckButton.BackgroundColor3 = WallCheckEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
@@ -1773,200 +1833,128 @@ WallCheckButton.MouseButton1Click:Connect(function()
     showNotification((WallCheckEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ไม่ล็อกตัวหลังกำแพง', WallCheckEnabled)
 end)
 
-EnableSpeedToggle.MouseButton1Click:Connect(function()
-    LockConfig.EnableSpeed = not LockConfig.EnableSpeed
-    EnableSpeedToggle.BackgroundColor3 = LockConfig.EnableSpeed and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
-    EnableSpeedToggle.Text = LockConfig.EnableSpeed and "เปิด" or "ปิด"
-    showNotification((LockConfig.EnableSpeed and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'วิ่งเร็ว', LockConfig.EnableSpeed)
-end)
-
-EnableJumpToggle.MouseButton1Click:Connect(function()
-    LockConfig.EnableJump = not LockConfig.EnableJump
-    EnableJumpToggle.BackgroundColor3 = LockConfig.EnableJump and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
-    EnableJumpToggle.Text = LockConfig.EnableJump and "เปิด" or "ปิด"
-    showNotification((LockConfig.EnableJump and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'กระโดดสูง', LockConfig.EnableJump)
-end)
-
-ResetBtn.MouseButton1Click:Connect(function()
-    CurrentWalkSpeed = 16
-    CurrentJumpPower = 50
-    SetWalkSpeedFunc(16, true)
-    SetJumpPowerFunc(50, true)
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChildOfClass("Humanoid") then
-        char.Humanoid.WalkSpeed = 16
-        char.Humanoid.JumpPower = 50
-    end
-    showNotification("รีเซ็ตความเร็วและการกระโดดเรียบร้อย!", true)
-end)
-
--- Slider Interactivity
-local function setupSliderLogic(sliderBtn, sliderBack, minV, maxV, onUpdate)
-    local dragging = false
-    sliderBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local posX = input.Position.X - sliderBack.AbsolutePosition.X
-            local perc = math.clamp(posX / sliderBack.AbsoluteSize.X, 0, 1)
-            sliderBtn.Position = UDim2.new(perc, -6, 0, -4)
-            local val = minV + (maxV - minV) * perc
-            onUpdate(val)
-        end
-    end)
-end
-
-setupSliderLogic(SliderBtn, SliderBack, 20, 800, function(v)
-    updateFOV(v)
-end)
-
-setupSliderLogic(SpeedBtn, SpeedBack, 1, 100, function(v)
-    LockSpeed = v
-    SpeedLabel.Text = "ความเร็วดูด: " .. math.floor(v)
-end)
-
-setupSliderLogic(CooldownBtn, CooldownBack, 0, 10, function(v)
-    CooldownConfig.Time = math.floor(v * 10) / 10
-    CooldownLabel.Text = "เวลาคูลดาวน์: " .. CooldownConfig.Time .. " วิ"
-end)
-
--- Aimbot Core Loop
-local function isPartVisible(part)
-    local char = LocalPlayer.Character
-    if not char then return false end
-    local ignoreList = {char, Camera}
-    local rays = Camera:GetPartsObscuredPassingThroughFirstWithIgnoreList(
-        {Camera.CFrame.Position, part.Position},
-        ignoreList
-    )
-    return #rays == 0
+-- ระบบล็อกเป้าและควบคุมตัวละคร (Main Render Loop)
+local function isVisible(targetPart)
+    if not WallCheckEnabled then return true end
+    local origin = Camera.CFrame.Position
+    local ray = Ray.new(origin, (targetPart.Position - origin).Unit * 500)
+    local hit = Workspace:FindPartOnWithIgnoreList(ray, {LocalPlayer.Character, targetPart.Parent})
+    return hit == nil or hit:IsDescendantOf(targetPart.Parent)
 end
 
 RunService.RenderStepped:Connect(function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChildOfClass("Humanoid") then
         local hum = char:FindFirstChildOfClass("Humanoid")
-        if LockConfig.EnableSpeed then hum.WalkSpeed = CurrentWalkSpeed end
-        if LockConfig.EnableJump then hum.JumpPower = CurrentJumpPower end
-    end
-
-    local bestTarget = nil
-    local shortestDistance = math.huge
-    local mousePos = UserInputService:GetMouseLocation()
-
-    local targets = {}
-    if LockConfig.PlayerHead or LockConfig.PlayerTorso or LockConfig.FullLock or LockConfig.FullLockTorso then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character then
-                table.insert(targets, {Char = p.Character, IsNPC = false})
-            end
+        if LockConfig.EnableSpeed then
+            hum.WalkSpeed = CurrentWalkSpeed
+        end
+        if LockConfig.EnableJump then
+            hum.JumpPower = CurrentJumpPower
         end
     end
 
-    if LockConfig.NPCHead or LockConfig.NPCTorso then
-        for _, obj in ipairs(Workspace:GetChildren()) do
-            if obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid") and not Players:GetPlayerFromCharacter(obj) then
-                table.insert(targets, {Char = obj, IsNPC = true})
-            end
+    -- ตรรกะ Aimbot
+    local closestTargetPart = nil
+    local shortestDistance = FOV_Radius
+    local centerScreen = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+    local function checkCharacter(model, isNPC)
+        if not model or model == LocalPlayer.Character then return end
+        local hum = model:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then return end
+
+        local head = model:FindFirstChild("Head")
+        local torso = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
+
+        local targetPart = nil
+        if isNPC then
+            if LockConfig.NPCHead then targetPart = head
+            elseif LockConfig.NPCTorso then targetPart = torso end
+        else
+            if LockConfig.FullLock or LockConfig.PlayerHead then targetPart = head
+            elseif LockConfig.FullLockTorso or LockConfig.PlayerTorso then targetPart = torso end
         end
-    end
 
-    for _, target in ipairs(targets) do
-        local tChar = target.Char
-        local hum = tChar:FindFirstChildOfClass("Humanoid")
-        if hum and hum.Health > 0 then
-            local partName = "Head"
-            if LockConfig.FullLockTorso or (target.IsNPC and LockConfig.NPCTorso) or (not target.IsNPC and LockConfig.PlayerTorso) then
-                partName = "HumanoidRootPart"
-            end
-
-            local part = tChar:FindFirstChild(partName) or tChar:FindFirstChild("Torso")
-            if part then
-                local isWallCheck = WallCheckEnabled or (LockConfig.FullLockTorso and LockConfig.FullLockTorsoWallCheck)
-                if not isWallCheck or isPartVisible(part) then
-                    local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
-                    if onScreen or LockConfig.FullLock or LockConfig.FullLockTorso then
-                        local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-                        if LockConfig.FullLock or LockConfig.FullLockTorso or dist <= FOV_Radius then
-                            if dist < shortestDistance then
-                                shortestDistance = dist
-                                bestTarget = part
-                            end
-                        end
+        if targetPart and isVisible(targetPart) then
+            if LockConfig.FullLock or LockConfig.FullLockTorso then
+                closestTargetPart = targetPart
+            else
+                local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                if onScreen then
+                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - centerScreen).Magnitude
+                    if dist < shortestDistance then
+                        shortestDistance = dist
+                        closestTargetPart = targetPart
                     end
                 end
             end
         end
     end
 
-    if bestTarget then
-        local targetCF = CFrame.new(Camera.CFrame.Position, bestTarget.Position)
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character then checkCharacter(p.Character, false) end
+    end
+
+    for _, obj in ipairs(Workspace:GetChildren()) do
+        if obj:IsA("Model") and not Players:GetPlayerFromCharacter(obj) then
+            checkCharacter(obj, true)
+        end
+    end
+
+    if closestTargetPart then
+        local targetCFrame = CFrame.new(Camera.CFrame.Position, closestTargetPart.Position)
         if LockConfig.FullLock or LockConfig.FullLockTorso then
-            Camera.CFrame = targetCF
+            Camera.CFrame = targetCFrame
         else
-            Camera.CFrame = Camera.CFrame:Lerp(targetCF, (LockSpeed / 100))
+            Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, LockSpeed / 100)
         end
     end
 end)
 
--- ESP 2D & Chams System
-local espObjects = {}
-
-local function createChams(model, color)
-    for _, part in ipairs(model:GetDescendants()) do
-        if part:IsA("BasePart") and not part:FindFirstChild("GKAura") then
-            local box = Instance.new("BoxHandleAdornment")
-            box.Name = "GKAura"
-            box.Size = part.Size
-            box.Color3 = color
-            box.AlwaysOnTop = true
-            box.ZIndex = 5
-            box.Adornee = part
-            box.Transparency = 0.5
-            box.Parent = part
-        end
+-- ระบบ ESP Highlights (Chams)
+local function applyChams(model, color)
+    local hl = model:FindFirstChild("GK_Highlight")
+    if not hl then
+        hl = Instance.new("Highlight")
+        hl.Name = "GK_Highlight"
+        hl.FillColor = color
+        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+        hl.FillTransparency = 0.5
+        hl.OutlineTransparency = 0
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.Parent = model
     end
 end
 
 local function removeChams(model)
-    for _, part in ipairs(model:GetDescendants()) do
-        if part:IsA("BasePart") then
-            local aura = part:FindFirstChild("GKAura")
-            if aura then aura:Destroy() end
-        end
-    end
+    local hl = model:FindFirstChild("GK_Highlight")
+    if hl then hl:Destroy() end
 end
 
-RunService.RenderStepped:Connect(function()
-    -- ESP & Chams Update Loop
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            if LockConfig.PlayerEspChams then
-                createChams(player.Character, Color3.fromRGB(0, 162, 255))
-            else
-                removeChams(player.Character)
-            end
-        end
-    end
+task.spawn(function()
+    while task.wait(0.5) do
+        if not ScreenGui.Parent then break end
 
-    if LockConfig.NpcEspChams then
-        for _, obj in ipairs(Workspace:GetChildren()) do
-            if obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid") and not Players:GetPlayerFromCharacter(obj) then
-                createChams(obj, Color3.fromRGB(255, 165, 0))
+        -- Chams สำหรับคน
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                if LockConfig.PlayerEspChams then
+                    applyChams(p.Character, Color3.fromRGB(0, 162, 255))
+                else
+                    removeChams(p.Character)
+                end
             end
         end
-    else
+
+        -- Chams สำหรับ NPC
         for _, obj in ipairs(Workspace:GetChildren()) do
-            if obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid") and not Players:GetPlayerFromCharacter(obj) then
-                removeChams(obj)
+            if obj:IsA("Model") and not Players:GetPlayerFromCharacter(obj) and obj:FindFirstChildOfClass("Humanoid") then
+                if LockConfig.NpcEspChams then
+                    applyChams(obj, Color3.fromRGB(255, 162, 0))
+                else
+                    removeChams(obj)
+                end
             end
         end
     end
