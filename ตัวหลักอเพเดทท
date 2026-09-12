@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.23: FIXED & OPTIMIZED UPDATE (ADDED PERMANENT CODE STORAGE) ]] --
+-- [[ GKHub v1.4.24: UPDATED WITH ONE-CLICK CLOSEST PLAYER TELEPORT ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -725,7 +725,56 @@ table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
 
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
-local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด", TeleportTab)
+local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", TeleportTab)
+
+-- ฟังก์ชันใหม่: วาร์ปหาผู้เล่นใกล้สุดแบบกดครั้งเดียว
+createHeader(">> วาร์ปด่วนครั้งเดียว <<", TeleportTab)
+local TpOnceFrame = Instance.new("Frame")
+TpOnceFrame.Size = UDim2.new(0.92, 0, 0, 34)
+TpOnceFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TpOnceFrame.BorderSizePixel = 0
+TpOnceFrame.Parent = TeleportTab
+local TpOnceCorner = Instance.new("UICorner"); TpOnceCorner.CornerRadius = UDim.new(0, 4); TpOnceCorner.Parent = TpOnceFrame
+
+local TpOnceBtn = Instance.new("TextButton")
+TpOnceBtn.Size = UDim2.new(1, -12, 0, 24)
+TpOnceBtn.Position = UDim2.new(0, 6, 0.5, -12)
+TpOnceBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+TpOnceBtn.Text = "วาร์ปไปหาผู้เล่นใกล้ที่สุด (กดครั้งเดียว)"
+TpOnceBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TpOnceBtn.Font = Enum.Font.GothamBold
+TpOnceBtn.TextSize = 10
+TpOnceBtn.Parent = TpOnceFrame
+table.insert(allButtons, TpOnceBtn)
+local TpOnceBtnCorner = Instance.new("UICorner"); TpOnceBtnCorner.CornerRadius = UDim.new(0, 3); TpOnceBtnCorner.Parent = TpOnceBtn
+
+TpOnceBtn.MouseButton1Click:Connect(function()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local myRoot = char.HumanoidRootPart
+        local closestTarget = nil
+        local shortestDist = math.huge
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+                local targetRoot = player.Character.HumanoidRootPart
+                local dist = (targetRoot.Position - myRoot.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closestTarget = player.Character
+                end
+            end
+        end
+
+        if closestTarget and closestTarget:FindFirstChild("HumanoidRootPart") then
+            local targetRoot = closestTarget.HumanoidRootPart
+            myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 3.5)
+            showNotification("วาร์ปหาผู้เล่นใกล้ที่สุดสำเร็จ!", true)
+        else
+            showNotification("ไม่พบผู้เล่นใกล้เคียงในระยะ!", false)
+        end
+    end
+end)
 
 createHeader(">> เครื่องมือคลิกวาร์ป <<", TeleportTab)
 local GiveToolFrame = Instance.new("Frame")
