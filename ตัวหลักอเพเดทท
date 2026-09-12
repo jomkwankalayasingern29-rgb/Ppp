@@ -724,10 +724,7 @@ ResetBtn.Parent = ResetFrame
 table.insert(allButtons, ResetBtn)
 local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
 
-createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
-local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", TeleportTab)
-
--- ฟังก์ชันใหม่: วาร์ปหาผู้เล่นใกล้สุดแบบกดครั้งเดียว (ปรับหน้าตาเป็นปุ่มกดปกติ)
+-- วาร์ปด่วนครั้งเดียว (เปลี่ยนเป็นสไตล์ปุ่มกดใช้งานทันทีแนวตั้ง)
 createHeader(">> วาร์ปด่วนครั้งเดียว <<", TeleportTab)
 local TpOnceFrame = Instance.new("Frame")
 TpOnceFrame.Size = UDim2.new(0.92, 0, 0, 34)
@@ -776,7 +773,7 @@ TpOnceBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- เครื่องมือคลิกวาร์ป (ปรับหน้าตาเป็นปุ่มกดปกติ)
+-- เครื่องมือคลิกวาร์ป (เปลี่ยนเป็นสไตล์ปุ่มกดใช้งานทันทีแนวตั้ง)
 createHeader(">> เครื่องมือคลิกวาร์ป <<", TeleportTab)
 local GiveToolFrame = Instance.new("Frame")
 GiveToolFrame.Size = UDim2.new(0.92, 0, 0, 34)
@@ -1064,7 +1061,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1213,41 +1210,6 @@ task.spawn(function()
                         obj.HoldDuration = 0
                     end
                 end
-            end
-        end
-    end
-end)
-
-local AutoTpBackConfig = { Enabled = false }
-AutoTpBackToggle.MouseButton1Click:Connect(function()
-    AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
-    AutoTpBackToggle.BackgroundColor3 = AutoTpBackConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
-    AutoTpBackToggle.Text = AutoTpBackConfig.Enabled and "เปิด" or "ปิด"
-    showNotification((AutoTpBackConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ออโต้เทเลพอร์ตด้านหลัง', AutoTpBackConfig.Enabled)
-end)
-
-RunService.RenderStepped:Connect(function()
-    if AutoTpBackConfig.Enabled then
-        local char = LocalPlayer.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            local myRoot = char.HumanoidRootPart
-            local closestTarget = nil
-            local shortestDist = math.huge
-
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-                    local targetRoot = player.Character.HumanoidRootPart
-                    local dist = (targetRoot.Position - myRoot.Position).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closestTarget = player.Character
-                    end
-                end
-            end
-
-            if closestTarget and closestTarget:FindFirstChild("HumanoidRootPart") then
-                local targetRoot = closestTarget.HumanoidRootPart
-                myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 3.5)
             end
         end
     end
@@ -2066,7 +2028,6 @@ YesButton.MouseButton1Click:Connect(function()
     RemoveJunkEnabled = false
     HitboxConfig.Enabled = false
     CooldownConfig.Enabled = false
-    AutoTpBackConfig.Enabled = false
     ClayGraphicsEnabled = false
     InstantActionConfig.Enabled = false
     InfJumpConfig.Enabled = false
