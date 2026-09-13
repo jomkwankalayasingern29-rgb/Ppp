@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.26: UPDATED TELEPORT BUTTONS & UI LAYOUT ]] --
+-- [[ GKHub v1.4.25: UPDATED TELEPORT BUTTONS + CUSTOM NOTIF IMAGE & ANIMATION ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -61,8 +61,8 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local NotifContainer = Instance.new("Frame")
 NotifContainer.Name = "NotifContainer"
-NotifContainer.Size = UDim2.new(0, 240, 1, 0)
-NotifContainer.Position = UDim2.new(1, -250, 0, 0)
+NotifContainer.Size = UDim2.new(0, 250, 1, 0)
+NotifContainer.Position = UDim2.new(1, -260, 0, 0)
 NotifContainer.BackgroundTransparency = 1
 NotifContainer.Parent = ScreenGui
 
@@ -76,12 +76,16 @@ local NotifPadding = Instance.new("UIPadding")
 NotifPadding.PaddingBottom = UDim.new(0, 15)
 NotifPadding.Parent = NotifContainer
 
+-- ฟังก์ชันแจ้งเตือนพร้อมรูปภาพและอนิเมชันเด้งขึ้นแบบนุ่มนวล
 local function showNotification(text, isEnabled)
     if not ScreenGui.Parent then return end
+    
     local card = Instance.new("Frame")
     card.Size = UDim2.new(1, 0, 0, 50)
-    card.Position = UDim2.new(1, 40, 0, 0)
+    -- เริ่มต้นให้อยู่ด้านขวาและต่ำกว่าเล็กน้อย เพื่อเตรียมทำอนิเมชันเลื่อนขึ้นและเด้ง
+    card.Position = UDim2.new(1, 60, 0, 20)
     card.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    card.BackgroundTransparency = 0.1
     card.BorderSizePixel = 0
     card.Parent = NotifContainer
 
@@ -94,20 +98,29 @@ local function showNotification(text, isEnabled)
     stroke.Thickness = 1.2
     stroke.Parent = card
 
+    -- เพิ่มรูปภาพแจ้งเตือนตาม UID ที่ขอ (117391496934016)
+    local icon = Instance.new("ImageLabel")
+    icon.Size = UDim2.new(0, 32, 0, 32)
+    icon.Position = UDim2.new(0, 8, 0.5, -16)
+    icon.BackgroundTransparency = 1
+    icon.Image = "rbxassetid://117391496934016"
+    icon.Parent = card
+
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -16, 0, 30)
-    lbl.Position = UDim2.new(0, 8, 0, 4)
+    lbl.Size = UDim2.new(1, -52, 0, 30)
+    lbl.Position = UDim2.new(0, 46, 0, 4)
     lbl.BackgroundTransparency = 1
     lbl.Text = text
     lbl.TextColor3 = Color3.fromRGB(240, 240, 240)
     lbl.TextSize = 11
     lbl.Font = Enum.Font.GothamBold
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.TextWrapped = true
     lbl.Parent = card
 
     local barBack = Instance.new("Frame")
-    barBack.Size = UDim2.new(1, -16, 0, 3)
-    barBack.Position = UDim2.new(0, 8, 1, -8)
+    barBack.Size = UDim2.new(1, -52, 0, 3)
+    barBack.Position = UDim2.new(0, 46, 1, -8)
     barBack.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     barBack.BorderSizePixel = 0
     barBack.Parent = card
@@ -127,13 +140,25 @@ local function showNotification(text, isEnabled)
     barFillCorner.Parent = barFill
 
     task.spawn(function()
-        local tweenIn = TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)})
+        -- อニメชันเด้งขึ้นมานุ่มนวล (EasingStyle.Back)
+        local tweenIn = TweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        })
         tweenIn:Play()
         tweenIn.Completed:Wait()
-        local tweenBar = TweenService:Create(barFill, TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2.new(0, 0, 1, 0)})
+
+        -- หลอดเวลาวิ่งลดลง
+        local tweenBar = TweenService:Create(barFill, TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 0, 1, 0)
+        })
         tweenBar:Play()
         tweenBar.Completed:Wait()
-        local tweenOut = TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 40, 0, 0)})
+
+        -- อนิเมชันหดและเลื่อนหายไปทางขวาตอนปิด
+        local tweenOut = TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Position = UDim2.new(1, 60, 0, 0),
+            BackgroundTransparency = 1
+        })
         tweenOut:Play()
         tweenOut.Completed:Wait()
         card:Destroy()
@@ -648,7 +673,6 @@ local function createSlider(labelText, parentTab)
     return Back, Btn, Label
 end
 
--- หมวดหมู่: ฟังก์ชั่นหลัก
 createHeader(">> คอมมิวนิตี้ <<", MainFuncTab)
 local DiscordFrame = Instance.new("Frame")
 DiscordFrame.Size = UDim2.new(0.92, 0, 0, 36)
@@ -1001,25 +1025,12 @@ for i = 1, 5 do
         savedDatabase[tostring(i)] = {Title = "รันสคริปต์อัตโนมัติ-" .. i, Code = ""}
     end
 
-    -- ปรับปรุงระบบพับให้คลุมทั้ง Header และ Content พร้อมขยับขนาดอัตโนมัติ
-    local slotContainer = Instance.new("Frame")
-    slotContainer.Name = "SlotContainer_" .. i
-    slotContainer.Size = UDim2.new(0.92, 0, 0, 28)
-    slotContainer.BackgroundTransparency = 1
-    slotContainer.BorderSizePixel = 0
-    slotContainer.Parent = AutoExecTab
-
-    local slotLayout = Instance.new("UIListLayout")
-    slotLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    slotLayout.Padding = UDim.new(0, 4)
-    slotLayout.Parent = slotContainer
-
     local dropHeader = Instance.new("Frame")
-    dropHeader.Size = UDim2.new(1, 0, 0, 28)
+    dropHeader.Size = UDim2.new(0.92, 0, 0, 28)
     dropHeader.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     dropHeader.BackgroundTransparency = 0.4
     dropHeader.BorderSizePixel = 0
-    dropHeader.Parent = slotContainer
+    dropHeader.Parent = AutoExecTab
     Instance.new("UICorner", dropHeader).CornerRadius = UDim.new(0, 4)
 
     local nameBox = Instance.new("TextBox")
@@ -1045,16 +1056,16 @@ for i = 1, 5 do
     foldBtn.Parent = dropHeader
 
     local dropContent = Instance.new("Frame")
-    dropContent.Size = UDim2.new(1, 0, 0, 148)
+    dropContent.Size = UDim2.new(0.92, 0, 0, 175)
     dropContent.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     dropContent.BackgroundTransparency = 0.4
     dropContent.BorderSizePixel = 0
     dropContent.Visible = false
-    dropContent.Parent = slotContainer
+    dropContent.Parent = AutoExecTab
     Instance.new("UICorner", dropContent).CornerRadius = UDim.new(0, 4)
 
     local subBox = Instance.new("TextBox")
-    subBox.Size = UDim2.new(1, -10, 0, 45)
+    subBox.Size = UDim2.new(1, -10, 0, 50)
     subBox.Position = UDim2.new(0, 5, 0, 5)
     subBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
     subBox.BackgroundTransparency = 0.4
@@ -1073,7 +1084,7 @@ for i = 1, 5 do
 
     local actionRow = Instance.new("Frame")
     actionRow.Size = UDim2.new(1, -10, 0, 20)
-    actionRow.Position = UDim2.new(0, 5, 0, 54)
+    actionRow.Position = UDim2.new(0, 5, 0, 60)
     actionRow.BackgroundTransparency = 1
     actionRow.Parent = dropContent
 
@@ -1091,7 +1102,7 @@ for i = 1, 5 do
 
     local subExecRow = Instance.new("Frame")
     subExecRow.Size = UDim2.new(1, -10, 0, 20)
-    subExecRow.Position = UDim2.new(0, 5, 0, 78)
+    subExecRow.Position = UDim2.new(0, 5, 0, 85)
     subExecRow.BackgroundTransparency = 1
     subExecRow.Parent = dropContent
 
@@ -1099,11 +1110,11 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
-    subAutoRow.Size = UDim2.new(1, -10, 0, 22)
-    subAutoRow.Position = UDim2.new(0, 5, 0, 102)
+    subAutoRow.Size = UDim2.new(1, -10, 0, 24)
+    subAutoRow.Position = UDim2.new(0, 5, 0, 112)
     subAutoRow.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     subAutoRow.BackgroundTransparency = 0.4
     subAutoRow.BorderSizePixel = 0
@@ -1176,11 +1187,9 @@ for i = 1, 5 do
         isFolded = not isFolded
         dropContent.Visible = not isFolded
         foldBtn.Text = isFolded and "v" or "^"
-        slotContainer.Size = isFolded and UDim2.new(0.92, 0, 0, 28) or UDim2.new(0.92, 0, 0, 180)
     end)
 end
 
--- ระบบกระโดดไม่จำกัด (Inf Jump)
 local InfJumpConfig = { Enabled = false }
 InfJumpToggle.MouseButton1Click:Connect(function()
     InfJumpConfig.Enabled = not InfJumpConfig.Enabled
@@ -1198,7 +1207,6 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ระบบทะลุกำแพง (Noclip)
 local NoclipConfig = { Enabled = false }
 NoclipToggle.MouseButton1Click:Connect(function()
     NoclipConfig.Enabled = not NoclipConfig.Enabled
@@ -2109,5 +2117,36 @@ YesButton.MouseButton1Click:Connect(function()
     NoclipConfig.Enabled = false
     restoreMaterials()
     restoreLaggyObjects()
+    
+    for char, origSize in pairs(OriginalSizes) do
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.Size = origSize
+            char.HumanoidRootPart.Transparency = 1
+            char.HumanoidRootPart.Material = Enum.Material.Plastic
+            char.CanCollide = true
+        end
+    end
+    OriginalSizes = {}
+
+    if effectConnection then effectConnection:Disconnect() end
+    if junkConnection then junkConnection:Disconnect() end
+    clearAllDrawings()
+
+    Lighting.Brightness = oldBrightness
+    Lighting.ClockTime = oldClockTime
+    Lighting.FogEnd = oldFogEnd
+    Lighting.GlobalShadows = oldGlobalShadows
+    Lighting.Ambient = oldAmbient
+    Lighting.OutdoorAmbient = oldOutdoorAmbient
+
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = LocalPlayer.Character.Humanoid
+        humanoid.WalkSpeed = 16
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = 50
+    end
+
+    for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end end
+    for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("GKHub_NpcCham") then desc.GKHub_NpcCham:Destroy() end end
     ScreenGui:Destroy()
 end)
