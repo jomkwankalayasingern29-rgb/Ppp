@@ -111,32 +111,45 @@ local function GetNearestRootPart()
     return nearestPart
 end
 
--- 1. ระบบ Silent Aim / กระสุนเลี้ยวเข้าเป้าหมายในวง FOV
+-- 1. แก้ไขระบบ Silent Aim ให้ดักจับทิศทางการยิง / CFrame / Vector3 และ Raycast ได้แม่นยำขึ้น
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
     local method = getnamecallmethod()
     
     if getgenv().SilentAimEnabled and (method == "FireServer" or method == "InvokeServer") then
-        if not tostring(self):lower():find("teleport") and not tostring(self):lower():find("character") then
-            local target = GetTargetPart(getgenv().SilentAimTarget)
-            if target then
-                for i, v in ipairs(args) do
-                    if typeof(v) == "Vector3" then
-                        args[i] = target.Position
-                    elseif typeof(v) == "CFrame" then
-                        args[i] = CFrame.new(v.Position, target.Position)
-                    elseif typeof(v) == "Instance" and v:IsA("BasePart") then
-                        if v.Name == "HumanoidRootPart" or v.Name == "Torso" or v.Name:lower():find("part") then
-                            args[i] = target
-                        end
-                    end
+        local target = GetTargetPart(getgenv().SilentAimTarget)
+        if target then
+            for i, v in ipairs(args) do
+                local vType = typeof(v)
+                if vType == "Vector3" then
+                    -- ถ้าส่งพิกัดทิศทางหรือตำแหน่งกระสุน ให้เปลี่ยนไปหาเป้าหมาย
+                    args[i] = target.Position
+                elseif vType == "CFrame" then
+                    args[i] = CFrame.new(v.Position, target.Position)
+                elseif vType == "Ray" then
+                    local origin = v.Origin
+                    local direction = (target.Position - origin).Unit * (v.Direction.Magnitude)
+                    args[i] = Ray.new(origin, direction)
                 end
             end
         end
     end
     
     return oldNamecall(self, unpack(args))
+end)
+
+-- เพิ่ม Hook สำหรับฟังก์ชัน Raycast เพื่อบังคับทิศทางกระสุนให้เลี้ยวเข้าเป้าหมายในระยะ FOV
+local oldRaycast
+oldRaycast = hookfunction(workspace.Raycast, function(ws, origin, direction, params)
+    if getgenv().SilentAimEnabled then
+        local target = GetTargetPart(getgenv().SilentAimTarget)
+        if target then
+            local dist = direction.Magnitude
+            direction = (target.Position - origin).Unit * dist
+        end
+    end
+    return oldRaycast(ws, origin, direction, params)
 end)
 
 -- 2. ระบบ Cam Lock & LookAt
@@ -350,7 +363,7 @@ NoticeTitle.Size = UDim2.new(1, -20, 1, 0)
 NoticeTitle.Position = UDim2.new(0, 10, 0, 0)
 NoticeTitle.BackgroundTransparency = 1
 NoticeTitle.Font = Enum.Font.GothamBold
-NoticeTitle.Text = "รายละเอียดสคริปต์ (เพิ่มฟังก์ชันกระสุนเลี้ยว/ล็อคเป้า FOV)"
+NoticeTitle.Text = "รายละเอียดสคริปต์ (แก้ไขบั๊กกระสุนเลี้ยวสมบูรณ์)"
 NoticeTitle.TextColor3 = Color3.fromRGB(230, 230, 230)
 NoticeTitle.TextSize = 10
 NoticeTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -361,7 +374,7 @@ NoticeContent.Size = UDim2.new(1, -24, 0, 130)
 NoticeContent.Position = UDim2.new(0, 12, 0, 38)
 NoticeContent.BackgroundTransparency = 1
 NoticeContent.Font = Enum.Font.Gotham
-NoticeContent.Text = "• เพิ่มระบบกระสุนเลี้ยว (Silent Aim) ทำงานร่วมกับวงกลม FOV\n• เมื่อเปิดใช้งานและอยู่ในวง FOV เวลากดยิงกระสุนจะพุ่งตรงไปหาเป้าหมายทันที\n• แก้ไขบั๊กเกิดใหม่และเพิ่มระบบตั้งค่า FOV สูงสุด 1000"
+NoticeContent.Text = "• เพิ่มระบบดักจับ Raycast (`workspace.Raycast`) ทำให้กระสุนเลี้ยวเข้าเป้าหมายได้จริง\n• รองรับการยิงทะลุและเปลี่ยนทิศทางกระสุนตามวงกลม FOV\n• ปรับแต่งความเสถียรของระบบ Silent Aim ให้เข้ากับเกมประเภท BlockSpin"
 NoticeContent.TextColor3 = Color3.fromRGB(200, 200, 200)
 NoticeContent.TextSize = 10
 NoticeContent.TextXAlignment = Enum.TextXAlignment.Left
@@ -438,7 +451,7 @@ TitleLabel.Size = UDim2.new(1, -80, 1, 0)
 TitleLabel.Position = UDim2.new(0, 30, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "GKHub | BlockSpin Edition"
+TitleLabel.Text = "GKHub | BlockSpin Edition (Fixed)"
 TitleLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
