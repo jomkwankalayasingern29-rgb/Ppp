@@ -111,14 +111,13 @@ local function GetNearestRootPart()
     return nearestPart
 end
 
--- 1. ระบบ Silent Aim Hook (แก้ไขไม่ให้ไปบล็อกปุ่มรีเซ็ตหรือระบบรีสปอนของเกม)
+-- 1. ระบบ Silent Aim / กระสุนเลี้ยวเข้าเป้าหมายในวง FOV
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
     local method = getnamecallmethod()
     
     if getgenv().SilentAimEnabled and (method == "FireServer" or method == "InvokeServer") then
-        -- ตรวจสอบเพื่อไม่ให้ยุ่งกับเมนูระบบรีเซ็ตของ Roblox
         if not tostring(self):lower():find("teleport") and not tostring(self):lower():find("character") then
             local target = GetTargetPart(getgenv().SilentAimTarget)
             if target then
@@ -308,7 +307,7 @@ ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.IgnoreGuiInset = true
-ScreenGui.DisplayOrder = 999 -- ป้องกันไม่ให้ UI ไปทับปุ่มเมนูหลักหรือปุ่มรีเซ็ตของเกม
+ScreenGui.DisplayOrder = 999
 
 local NoticeFrame = Instance.new("Frame")
 NoticeFrame.Name = "NoticeFrame"
@@ -351,9 +350,9 @@ NoticeTitle.Size = UDim2.new(1, -20, 1, 0)
 NoticeTitle.Position = UDim2.new(0, 10, 0, 0)
 NoticeTitle.BackgroundTransparency = 1
 NoticeTitle.Font = Enum.Font.GothamBold
-NoticeTitle.Text = "รายละเอียดสคริปต์ (อัปเดตแก้บั๊กเกิดใหม่ + FOV 1000)"
+NoticeTitle.Text = "รายละเอียดสคริปต์ (เพิ่มฟังก์ชันกระสุนเลี้ยว/ล็อคเป้า FOV)"
 NoticeTitle.TextColor3 = Color3.fromRGB(230, 230, 230)
-NoticeTitle.TextSize = 11
+NoticeTitle.TextSize = 10
 NoticeTitle.TextXAlignment = Enum.TextXAlignment.Left
 NoticeTitle.Parent = NoticeTopBar
 
@@ -362,7 +361,7 @@ NoticeContent.Size = UDim2.new(1, -24, 0, 130)
 NoticeContent.Position = UDim2.new(0, 12, 0, 38)
 NoticeContent.BackgroundTransparency = 1
 NoticeContent.Font = Enum.Font.Gotham
-NoticeContent.Text = "• แก้ไขปัญหาบั๊กกดเกิดใหม่ไม่ได้เรียบร้อยแล้ว\n• เพิ่มหมวดหมู่ตั้งค่า FOV (ปรับขนาดวงกลม/มุมมองได้สูงสุด 1000)\n• ระบบ Silent Aim, Cam Lock และ ESP ทำงานสมบูรณ์"
+NoticeContent.Text = "• เพิ่มระบบกระสุนเลี้ยว (Silent Aim) ทำงานร่วมกับวงกลม FOV\n• เมื่อเปิดใช้งานและอยู่ในวง FOV เวลากดยิงกระสุนจะพุ่งตรงไปหาเป้าหมายทันที\n• แก้ไขบั๊กเกิดใหม่และเพิ่มระบบตั้งค่า FOV สูงสุด 1000"
 NoticeContent.TextColor3 = Color3.fromRGB(200, 200, 200)
 NoticeContent.TextSize = 10
 NoticeContent.TextXAlignment = Enum.TextXAlignment.Left
@@ -616,14 +615,14 @@ local function createSectionTitle(parent, text, textColor)
     return title
 end
 
-createSectionTitle(LockContainer, ">> ฟังก์ชันพิเศษ <<", Color3.fromRGB(0, 150, 255))
-createStyleRow(LockContainer, "เปิดใช้งาน Silent Aim", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
+createSectionTitle(LockContainer, ">> ฟังก์ชันกระสุนเลี้ยว <<", Color3.fromRGB(0, 150, 255))
+createStyleRow(LockContainer, "เปิดใช้งานกระสุนเลี้ยว", "ปิด", Color3.fromRGB(200, 50, 50), function(btn)
     getgenv().SilentAimEnabled = not getgenv().SilentAimEnabled
     btn.Text = getgenv().SilentAimEnabled and "เปิด" or "ปิด"
     btn.BackgroundColor3 = getgenv().SilentAimEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
-createStyleRow(LockContainer, "เป้าหมาย (หัว / ตัว)", "หัว", Color3.fromRGB(40, 110, 190), function(btn)
+createStyleRow(LockContainer, "เป้าหมายกระสุน (หัว / ตัว)", "หัว", Color3.fromRGB(40, 110, 190), function(btn)
     getgenv().SilentAimTarget = getgenv().SilentAimTarget == "Head" and "Body" or "Head"
     btn.Text = getgenv().SilentAimTarget == "Head" and "หัว" or "ตัว"
 end)
@@ -662,7 +661,7 @@ createStyleRow(ESPContainer, "เปิดใช้งาน ESP 2D", "ปิด
     btn.BackgroundColor3 = getgenv().ESP2DEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
--- ตั้งค่า FOV (เพิ่มใหม่ รองรับสูงสุด 1000)
+-- ตั้งค่า FOV
 local FOVContainer = createContainer("ตั้งค่า FOV")
 createSectionTitle(FOVContainer, ">> ปรับขนาดวงกลม/FOV <<", Color3.fromRGB(255, 200, 0))
 
