@@ -56,6 +56,7 @@ FOVCircle.Transparency = 0.8
 RunService.RenderStepped:Connect(function()
     local screenSize = Camera.ViewportSize
     FOVCircle.Position = Vector2.new(screenSize.X / 2, screenSize.Y / 2)
+    FOVCircle.Radius = getgenv().CircleRadius
     FOVCircle.Visible = getgenv().SilentAimEnabled or getgenv().CamLockEnabled
 end)
 
@@ -69,7 +70,6 @@ local function GetTargetPart(targetType)
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
             local character = player.Character
             
-            -- ปรับปรุงการหาพาร์ทให้รองรับโมเดลในแมพ BlockSpin และป้องกันการล็อกมั่ว
             local part = character:FindFirstChild(targetType == "Head" and "Head" or "HumanoidRootPart")
             if not part then
                 part = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
@@ -111,23 +111,26 @@ local function GetNearestRootPart()
     return nearestPart
 end
 
--- 1. ระบบ Silent Aim Hook
+-- 1. ระบบ Silent Aim Hook (แก้ไขไม่ให้ไปบล็อกปุ่มรีเซ็ตหรือระบบรีสปอนของเกม)
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
     local method = getnamecallmethod()
     
     if getgenv().SilentAimEnabled and (method == "FireServer" or method == "InvokeServer") then
-        local target = GetTargetPart(getgenv().SilentAimTarget)
-        if target then
-            for i, v in ipairs(args) do
-                if typeof(v) == "Vector3" then
-                    args[i] = target.Position
-                elseif typeof(v) == "CFrame" then
-                    args[i] = CFrame.new(v.Position, target.Position)
-                elseif typeof(v) == "Instance" and v:IsA("BasePart") then
-                    if v.Name == "HumanoidRootPart" or v.Name == "Torso" or v.Name:lower():find("part") then
-                        args[i] = target
+        -- ตรวจสอบเพื่อไม่ให้ยุ่งกับเมนูระบบรีเซ็ตของ Roblox
+        if not tostring(self):lower():find("teleport") and not tostring(self):lower():find("character") then
+            local target = GetTargetPart(getgenv().SilentAimTarget)
+            if target then
+                for i, v in ipairs(args) do
+                    if typeof(v) == "Vector3" then
+                        args[i] = target.Position
+                    elseif typeof(v) == "CFrame" then
+                        args[i] = CFrame.new(v.Position, target.Position)
+                    elseif typeof(v) == "Instance" and v:IsA("BasePart") then
+                        if v.Name == "HumanoidRootPart" or v.Name == "Torso" or v.Name:lower():find("part") then
+                            args[i] = target
+                        end
                     end
                 end
             end
@@ -304,6 +307,8 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.DisplayOrder = 999 -- ป้องกันไม่ให้ UI ไปทับปุ่มเมนูหลักหรือปุ่มรีเซ็ตของเกม
 
 local NoticeFrame = Instance.new("Frame")
 NoticeFrame.Name = "NoticeFrame"
@@ -346,7 +351,7 @@ NoticeTitle.Size = UDim2.new(1, -20, 1, 0)
 NoticeTitle.Position = UDim2.new(0, 10, 0, 0)
 NoticeTitle.BackgroundTransparency = 1
 NoticeTitle.Font = Enum.Font.GothamBold
-NoticeTitle.Text = "รายละเอียดสคริปต์ (เวอร์ชันอัปเดตสำหรับ BlockSpin)"
+NoticeTitle.Text = "รายละเอียดสคริปต์ (อัปเดตแก้บั๊กเกิดใหม่ + FOV 1000)"
 NoticeTitle.TextColor3 = Color3.fromRGB(230, 230, 230)
 NoticeTitle.TextSize = 11
 NoticeTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -357,7 +362,7 @@ NoticeContent.Size = UDim2.new(1, -24, 0, 130)
 NoticeContent.Position = UDim2.new(0, 12, 0, 38)
 NoticeContent.BackgroundTransparency = 1
 NoticeContent.Font = Enum.Font.Gotham
-NoticeContent.Text = "• ปรับปรุงระบบล็อกเป้าหมายให้แม่นยำขึ้นสำหรับแมพ BlockSpin\n• แก้ไขปัญหาอาการล็อกมั่วและรองรับโมเดลตัวละครในแมพ\n• คงระบบ Silent Aim, Cam Lock และ ESP ไว้ครบถ้วน"
+NoticeContent.Text = "• แก้ไขปัญหาบั๊กกดเกิดใหม่ไม่ได้เรียบร้อยแล้ว\n• เพิ่มหมวดหมู่ตั้งค่า FOV (ปรับขนาดวงกลม/มุมมองได้สูงสุด 1000)\n• ระบบ Silent Aim, Cam Lock และ ESP ทำงานสมบูรณ์"
 NoticeContent.TextColor3 = Color3.fromRGB(200, 200, 200)
 NoticeContent.TextSize = 10
 NoticeContent.TextXAlignment = Enum.TextXAlignment.Left
@@ -491,7 +496,7 @@ LeftSide.Size = UDim2.new(0.32, 0, 1, -38)
 LeftSide.Position = UDim2.new(0, 6, 0, 34)
 LeftSide.BackgroundTransparency = 1
 LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 110)
+LeftSide.CanvasSize = UDim2.new(0, 0, 0, 140)
 LeftSide.ScrollBarThickness = 1
 LeftSide.Parent = MainFrame
 
@@ -657,6 +662,83 @@ createStyleRow(ESPContainer, "เปิดใช้งาน ESP 2D", "ปิด
     btn.BackgroundColor3 = getgenv().ESP2DEnabled and Color3.fromRGB(45, 180, 80) or Color3.fromRGB(200, 50, 50)
 end)
 
+-- ตั้งค่า FOV (เพิ่มใหม่ รองรับสูงสุด 1000)
+local FOVContainer = createContainer("ตั้งค่า FOV")
+createSectionTitle(FOVContainer, ">> ปรับขนาดวงกลม/FOV <<", Color3.fromRGB(255, 200, 0))
+
+local function createFOVControlRow(parent, titleText, initialVal, minVal, maxVal, callback)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(0.96, 0, 0, 50)
+    row.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+    row.BorderSizePixel = 0
+    row.Parent = parent
+
+    local rCorner = Instance.new("UICorner")
+    rCorner.CornerRadius = UDim.new(0, 5)
+    rCorner.Parent = row
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -20, 0, 20)
+    label.Position = UDim2.new(0, 10, 0, 4)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamBold
+    label.Text = titleText .. ": " .. initialVal
+    label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    label.TextSize = 10
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = row
+
+    local btnPlus = Instance.new("TextButton")
+    btnPlus.Size = UDim2.new(0, 40, 0, 20)
+    btnPlus.Position = UDim2.new(1, -50, 0, 25)
+    btnPlus.BackgroundColor3 = Color3.fromRGB(40, 110, 190)
+    btnPlus.BorderSizePixel = 0
+    btnPlus.Font = Enum.Font.GothamBold
+    btnPlus.Text = "+"
+    btnPlus.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btnPlus.TextSize = 11
+    btnPlus.Parent = row
+    
+    local cPlus = Instance.new("UICorner")
+    cPlus.CornerRadius = UDim.new(0, 4)
+    cPlus.Parent = btnPlus
+
+    local btnMinus = Instance.new("TextButton")
+    btnMinus.Size = UDim2.new(0, 40, 0, 20)
+    btnMinus.Position = UDim2.new(1, -95, 0, 25)
+    btnMinus.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    btnMinus.BorderSizePixel = 0
+    btnMinus.Font = Enum.Font.GothamBold
+    btnMinus.Text = "-"
+    btnMinus.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btnMinus.TextSize = 11
+    btnMinus.Parent = row
+    
+    local cMinus = Instance.new("UICorner")
+    cMinus.CornerRadius = UDim.new(0, 4)
+    cMinus.Parent = btnMinus
+
+    local currentVal = initialVal
+    btnPlus.MouseButton1Click:Connect(function()
+        currentVal = math.clamp(currentVal + 20, minVal, maxVal)
+        label.Text = titleText .. ": " .. currentVal
+        callback(currentVal)
+    end)
+
+    btnMinus.MouseButton1Click:Connect(function()
+        currentVal = math.clamp(currentVal - 20, minVal, maxVal)
+        label.Text = titleText .. ": " .. currentVal
+        callback(currentVal)
+    end)
+
+    return row
+end
+
+createFOVControlRow(FOVContainer, "ขนาดวงกลม (Circle Radius)", getgenv().CircleRadius, 10, 1000, function(val)
+    getgenv().CircleRadius = val
+    FOVCircle.Radius = val
+end)
+
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
         container.Visible = (name == tabName)
@@ -684,6 +766,7 @@ end
 createCategoryButton("เมนูหลัก")
 createCategoryButton("ล็อกหัว-ตัว")
 createCategoryButton("ESP")
+createCategoryButton("ตั้งค่า FOV")
 
 switchTab("เมนูหลัก")
 
