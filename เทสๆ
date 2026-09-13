@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: UPDATED TELEPORT BUTTONS ]] --
+-- [[ GKHub v1.4.26: UPDATED TELEPORT BUTTONS & UI LAYOUT ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -179,7 +179,6 @@ MainFrame.Visible = false
 MainFrame.BackgroundTransparency = 1
 MainFrame.Parent = ScreenGui
 
--- เปลี่ยนพื้นหลัง UI เป็นรูปภาพ (ImageLabel) ตามที่ขอ
 local BgImage = Instance.new("ImageLabel")
 BgImage.Name = "BgImage"
 BgImage.Size = UDim2.new(1, 0, 1, 0)
@@ -745,7 +744,6 @@ local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.ne
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", TeleportTab)
 
--- ฟังก์ชันใหม่: วาร์ปหาผู้เล่นใกล้สุดแบบกดครั้งเดียว (ปรับหน้าตาเป็นปุ่มกดปกติ)
 createHeader(">> วาร์ปด่วนครั้งเดียว <<", TeleportTab)
 local TpOnceFrame = Instance.new("Frame")
 TpOnceFrame.Size = UDim2.new(0.92, 0, 0, 34)
@@ -795,7 +793,6 @@ TpOnceBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- เครื่องมือคลิกวาร์ป (ปรับหน้าตาเป็นปุ่มกดปกติ)
 createHeader(">> เครื่องมือคลิกวาร์ป <<", TeleportTab)
 local GiveToolFrame = Instance.new("Frame")
 GiveToolFrame.Size = UDim2.new(0.92, 0, 0, 34)
@@ -1004,12 +1001,25 @@ for i = 1, 5 do
         savedDatabase[tostring(i)] = {Title = "รันสคริปต์อัตโนมัติ-" .. i, Code = ""}
     end
 
+    -- ปรับปรุงระบบพับให้คลุมทั้ง Header และ Content พร้อมขยับขนาดอัตโนมัติ
+    local slotContainer = Instance.new("Frame")
+    slotContainer.Name = "SlotContainer_" .. i
+    slotContainer.Size = UDim2.new(0.92, 0, 0, 28)
+    slotContainer.BackgroundTransparency = 1
+    slotContainer.BorderSizePixel = 0
+    slotContainer.Parent = AutoExecTab
+
+    local slotLayout = Instance.new("UIListLayout")
+    slotLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    slotLayout.Padding = UDim.new(0, 4)
+    slotLayout.Parent = slotContainer
+
     local dropHeader = Instance.new("Frame")
-    dropHeader.Size = UDim2.new(0.92, 0, 0, 28)
+    dropHeader.Size = UDim2.new(1, 0, 0, 28)
     dropHeader.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     dropHeader.BackgroundTransparency = 0.4
     dropHeader.BorderSizePixel = 0
-    dropHeader.Parent = AutoExecTab
+    dropHeader.Parent = slotContainer
     Instance.new("UICorner", dropHeader).CornerRadius = UDim.new(0, 4)
 
     local nameBox = Instance.new("TextBox")
@@ -1035,16 +1045,16 @@ for i = 1, 5 do
     foldBtn.Parent = dropHeader
 
     local dropContent = Instance.new("Frame")
-    dropContent.Size = UDim2.new(0.92, 0, 0, 175)
+    dropContent.Size = UDim2.new(1, 0, 0, 148)
     dropContent.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     dropContent.BackgroundTransparency = 0.4
     dropContent.BorderSizePixel = 0
     dropContent.Visible = false
-    dropContent.Parent = AutoExecTab
+    dropContent.Parent = slotContainer
     Instance.new("UICorner", dropContent).CornerRadius = UDim.new(0, 4)
 
     local subBox = Instance.new("TextBox")
-    subBox.Size = UDim2.new(1, -10, 0, 50)
+    subBox.Size = UDim2.new(1, -10, 0, 45)
     subBox.Position = UDim2.new(0, 5, 0, 5)
     subBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
     subBox.BackgroundTransparency = 0.4
@@ -1063,7 +1073,7 @@ for i = 1, 5 do
 
     local actionRow = Instance.new("Frame")
     actionRow.Size = UDim2.new(1, -10, 0, 20)
-    actionRow.Position = UDim2.new(0, 5, 0, 60)
+    actionRow.Position = UDim2.new(0, 5, 0, 54)
     actionRow.BackgroundTransparency = 1
     actionRow.Parent = dropContent
 
@@ -1081,7 +1091,7 @@ for i = 1, 5 do
 
     local subExecRow = Instance.new("Frame")
     subExecRow.Size = UDim2.new(1, -10, 0, 20)
-    subExecRow.Position = UDim2.new(0, 5, 0, 85)
+    subExecRow.Position = UDim2.new(0, 5, 0, 78)
     subExecRow.BackgroundTransparency = 1
     subExecRow.Parent = dropContent
 
@@ -1089,11 +1099,11 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
-    subAutoRow.Size = UDim2.new(1, -10, 0, 24)
-    subAutoRow.Position = UDim2.new(0, 5, 0, 112)
+    subAutoRow.Size = UDim2.new(1, -10, 0, 22)
+    subAutoRow.Position = UDim2.new(0, 5, 0, 102)
     subAutoRow.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     subAutoRow.BackgroundTransparency = 0.4
     subAutoRow.BorderSizePixel = 0
@@ -1166,6 +1176,7 @@ for i = 1, 5 do
         isFolded = not isFolded
         dropContent.Visible = not isFolded
         foldBtn.Text = isFolded and "v" or "^"
+        slotContainer.Size = isFolded and UDim2.new(0.92, 0, 0, 28) or UDim2.new(0.92, 0, 0, 180)
     end)
 end
 
@@ -1220,7 +1231,6 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- ระบบ Instant Action
 local InstantActionConfig = { Enabled = false }
 InstantActionToggle.MouseButton1Click:Connect(function()
     InstantActionConfig.Enabled = not InstantActionConfig.Enabled
@@ -2099,36 +2109,5 @@ YesButton.MouseButton1Click:Connect(function()
     NoclipConfig.Enabled = false
     restoreMaterials()
     restoreLaggyObjects()
-    
-    for char, origSize in pairs(OriginalSizes) do
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.Size = origSize
-            char.HumanoidRootPart.Transparency = 1
-            char.HumanoidRootPart.Material = Enum.Material.Plastic
-            char.CanCollide = true
-        end
-    end
-    OriginalSizes = {}
-
-    if effectConnection then effectConnection:Disconnect() end
-    if junkConnection then junkConnection:Disconnect() end
-    clearAllDrawings()
-
-    Lighting.Brightness = oldBrightness
-    Lighting.ClockTime = oldClockTime
-    Lighting.FogEnd = oldFogEnd
-    Lighting.GlobalShadows = oldGlobalShadows
-    Lighting.Ambient = oldAmbient
-    Lighting.OutdoorAmbient = oldOutdoorAmbient
-
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        local humanoid = LocalPlayer.Character.Humanoid
-        humanoid.WalkSpeed = 16
-        humanoid.UseJumpPower = true
-        humanoid.JumpPower = 50
-    end
-
-    for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end end
-    for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then if desc:FindFirstChild("GKHub_NpcCham") then desc.GKHub_NpcCham:Destroy() end end end
     ScreenGui:Destroy()
 end)
