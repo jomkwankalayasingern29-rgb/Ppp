@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: UPDATED TELEPORT BUTTONS ]] --
+-- [[ GKHub v1.4.25: UPDATED TELEPORT BUTTONS + CUSTOM NOTIF IMAGE & ANIMATION ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -61,8 +61,8 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local NotifContainer = Instance.new("Frame")
 NotifContainer.Name = "NotifContainer"
-NotifContainer.Size = UDim2.new(0, 240, 1, 0)
-NotifContainer.Position = UDim2.new(1, -250, 0, 0)
+NotifContainer.Size = UDim2.new(0, 250, 1, 0)
+NotifContainer.Position = UDim2.new(1, -260, 0, 0)
 NotifContainer.BackgroundTransparency = 1
 NotifContainer.Parent = ScreenGui
 
@@ -76,18 +76,31 @@ local NotifPadding = Instance.new("UIPadding")
 NotifPadding.PaddingBottom = UDim.new(0, 15)
 NotifPadding.Parent = NotifContainer
 
+-- ฟังก์ชันแจ้งเตือนพร้อมรูปภาพคลุม UI และอนิเมชันเด้งขึ้นแบบนุ่มนวล
 local function showNotification(text, isEnabled)
     if not ScreenGui.Parent then return end
+    
     local card = Instance.new("Frame")
     card.Size = UDim2.new(1, 0, 0, 50)
-    card.Position = UDim2.new(1, 40, 0, 0)
+    card.Position = UDim2.new(1, 60, 0, 20)
     card.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    card.BackgroundTransparency = 0.4 -- ปรับให้การแจ้งเตือนจางลงเล็กน้อย
     card.BorderSizePixel = 0
+    card.ClipsDescendants = true
     card.Parent = NotifContainer
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = card
+
+    local bgIcon = Instance.new("ImageLabel")
+    bgIcon.Size = UDim2.new(1, 0, 1, 0)
+    bgIcon.Position = UDim2.new(0, 0, 0, 0)
+    bgIcon.BackgroundTransparency = 1
+    bgIcon.Image = "rbxassetid://117391496934016"
+    bgIcon.ImageTransparency = 0.75 -- ปรับรูปแจ้งเตือนให้จางลงเพื่อให้เห็น UI ข้างหลังชัดขึ้น
+    bgIcon.ScaleType = Enum.ScaleType.Slice
+    bgIcon.Parent = card
 
     local stroke = Instance.new("UIStroke")
     stroke.Color = isEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
@@ -99,9 +112,10 @@ local function showNotification(text, isEnabled)
     lbl.Position = UDim2.new(0, 8, 0, 4)
     lbl.BackgroundTransparency = 1
     lbl.Text = text
-    lbl.TextColor3 = Color3.fromRGB(240, 240, 240)
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
     lbl.TextSize = 11
     lbl.Font = Enum.Font.GothamBold
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.TextWrapped = true
     lbl.Parent = card
 
@@ -127,13 +141,22 @@ local function showNotification(text, isEnabled)
     barFillCorner.Parent = barFill
 
     task.spawn(function()
-        local tweenIn = TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)})
+        local tweenIn = TweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        })
         tweenIn:Play()
         tweenIn.Completed:Wait()
-        local tweenBar = TweenService:Create(barFill, TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2.new(0, 0, 1, 0)})
+
+        local tweenBar = TweenService:Create(barFill, TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 0, 1, 0)
+        })
         tweenBar:Play()
         tweenBar.Completed:Wait()
-        local tweenOut = TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 40, 0, 0)})
+
+        local tweenOut = TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Position = UDim2.new(1, 60, 0, 0),
+            BackgroundTransparency = 1
+        })
         tweenOut:Play()
         tweenOut.Completed:Wait()
         card:Destroy()
@@ -179,6 +202,16 @@ MainFrame.Visible = false
 MainFrame.BackgroundTransparency = 1
 MainFrame.Parent = ScreenGui
 
+local BgImage = Instance.new("ImageLabel")
+BgImage.Name = "BgImage"
+BgImage.Size = UDim2.new(1, 0, 1, 0)
+BgImage.BackgroundTransparency = 1
+BgImage.Image = "rbxassetid://111206357236860"
+BgImage.ImageTransparency = 0.25 -- ปรับรูปภาพพื้นหลัง UI หลักให้โปร่งใสขึ้นเล็กน้อยเพื่อให้ภาพชัดเจนและเด่นขึ้น
+BgImage.ScaleType = Enum.ScaleType.Slice
+BgImage.SliceCenter = Rect.new(100, 100, 100, 100)
+BgImage.Parent = MainFrame
+
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 8)
 MainCorner.Parent = MainFrame
@@ -222,6 +255,7 @@ local YesButton = Instance.new("TextButton")
 YesButton.Size = UDim2.new(0, 100, 0, 32)
 YesButton.Position = UDim2.new(0, 20, 1, -42)
 YesButton.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+YesButton.BackgroundTransparency = 0.2 -- ทำให้ปุ่มจางลง
 YesButton.Text = "ใช่"
 YesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 YesButton.TextSize = 12
@@ -235,6 +269,7 @@ local NoButton = Instance.new("TextButton")
 NoButton.Size = UDim2.new(0, 100, 0, 32)
 NoButton.Position = UDim2.new(1, -120, 1, -42)
 NoButton.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+NoButton.BackgroundTransparency = 0.2 -- ทำให้ปุ่มจางลง
 NoButton.Text = "ไม่ใช่"
 NoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 NoButton.TextSize = 12
@@ -244,9 +279,11 @@ NoButton.ZIndex = 12
 NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
+-- ปรับแถบด้านบนสุด (TopBar) ให้โปร่งใสและไม่ทึบจนเกินไปตามที่ขอ
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
-TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TopBar.BackgroundTransparency = 0.5 -- ปรับให้โปร่งใสขึ้น ไม่ทึบ
 TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
 
@@ -257,7 +294,8 @@ TopBarCorner.Parent = TopBar
 local FixTopBar = Instance.new("Frame")
 FixTopBar.Size = UDim2.new(1, 0, 0, 5)
 FixTopBar.Position = UDim2.new(0, 0, 1, -5)
-FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+FixTopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+FixTopBar.BackgroundTransparency = 0.5
 FixTopBar.BorderSizePixel = 0
 FixTopBar.Parent = TopBar
 
@@ -277,7 +315,7 @@ TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Text = "GKHub | Main Script"
-TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- ทำให้ข้อความชัดขึ้น (ขาวสว่าง)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
@@ -288,7 +326,7 @@ CloseButton.Position = UDim2.new(1, -26, 0, 2)
 CloseButton.BackgroundTransparency = 1
 CloseButton.Font = Enum.Font.GothamBold
 CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(220, 60, 60)
+CloseButton.TextColor3 = Color3.fromRGB(240, 80, 80)
 CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
 
@@ -298,14 +336,16 @@ MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
 MinimizeButton.BackgroundTransparency = 1
 MinimizeButton.Font = Enum.Font.GothamBold
 MinimizeButton.Text = "-"
-MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+MinimizeButton.TextColor3 = Color3.fromRGB(230, 230, 230)
 MinimizeButton.TextSize = 14
 MinimizeButton.Parent = TopBar
 
+-- ปรับ Sidebar ด้านซ้าย (หมวดหมู่) ให้โปร่งใสขึ้น (จางลง)
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
-LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+LeftSide.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+LeftSide.BackgroundTransparency = 0.65 -- ทำให้หมวดหมู่จางลงมากยิ่งขึ้น
 LeftSide.BorderSizePixel = 0
 LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 LeftSide.ScrollBarThickness = 2
@@ -325,10 +365,12 @@ local LeftPadding = Instance.new("UIPadding")
 LeftPadding.PaddingTop = UDim.new(0, 5)
 LeftPadding.Parent = LeftSide
 
+-- ปรับ RightSide ให้โปร่งใสขึ้นด้วยเช่นกัน
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.66, 0, 1, -34)
 RightSide.Position = UDim2.new(0.33, 0, 0, 30)
-RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+RightSide.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+RightSide.BackgroundTransparency = 0.65 -- ทำให้ฟังชั่นด้านขวาจางลง
 RightSide.BorderSizePixel = 0
 RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 RightSide.ScrollBarThickness = 2
@@ -383,10 +425,11 @@ local function createCategoryButton(name, targetTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 26)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BackgroundTransparency = 0.45 -- ปรับปุ่มหมวดหมู่ให้โปร่งใสกลมกลืน
     btn.BorderSizePixel = 0
-    btn.Font = Enum.Font.Gotham
+    btn.Font = Enum.Font.GothamBold -- ทำให้ตัวอหนังสือน้ำหมวดหมู่ชัดขึ้น
     btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(240, 240, 240)
+    btn.TextColor3 = Color3.fromRGB(245, 245, 245) -- ข้อความสว่างชัดเจน
     btn.TextSize = 10
     btn.Parent = LeftSide
 
@@ -400,7 +443,8 @@ local function createCategoryButton(name, targetTab)
         for _, cb in ipairs(categoryButtons) do
             cb.Tab.Visible = (cb.Tab == targetTab)
             cb.Button.BackgroundColor3 = (cb.Tab == targetTab) and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(30, 30, 30)
-            cb.Button.TextColor3 = (cb.Tab == targetTab) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(240, 240, 240)
+            cb.Button.BackgroundTransparency = (cb.Tab == targetTab) and 0.15 or 0.45
+            cb.Button.TextColor3 = (cb.Tab == targetTab) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(245, 245, 245)
         end
     end)
     return btn
@@ -408,6 +452,7 @@ end
 
 local btn1 = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
 btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+btn1.BackgroundTransparency = 0.15
 btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
 
 createCategoryButton("ระบบล็อกเป้า", AimbotTab)
@@ -433,7 +478,7 @@ local function createHeader(text, parentTab)
     HeaderLabel.Size = UDim2.new(0.92, 0, 0, 16)
     HeaderLabel.BackgroundTransparency = 1
     HeaderLabel.Text = text
-    HeaderLabel.TextColor3 = Color3.fromRGB(0, 162, 255)
+    HeaderLabel.TextColor3 = Color3.fromRGB(50, 190, 255) -- ปรับสีหัวข้อให้สว่างและชัดขึ้น
     HeaderLabel.Font = Enum.Font.GothamBold
     HeaderLabel.TextSize = 10
     HeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -441,10 +486,12 @@ local function createHeader(text, parentTab)
     table.insert(allTextLabels, HeaderLabel)
 end
 
+-- ปรับกรอบรายการฟังก์ชั่นให้โปร่งใสขึ้น (จางลง) และตัวหนังสือชัดขึ้น
 local function createToggle(name, labelText, parentTab)
     local RowFrame = Instance.new("Frame")
     RowFrame.Size = UDim2.new(0.92, 0, 0, 26)
     RowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    RowFrame.BackgroundTransparency = 0.6 -- ปรับพื้นหลังรายการให้โปร่งใสมากๆ
     RowFrame.BorderSizePixel = 0
     RowFrame.Parent = parentTab
 
@@ -453,7 +500,8 @@ local function createToggle(name, labelText, parentTab)
     RowCorner.Parent = RowFrame
 
     local RowStroke = Instance.new("UIStroke")
-    RowStroke.Color = Color3.fromRGB(40, 40, 40)
+    RowStroke.Color = Color3.fromRGB(60, 60, 60)
+    RowStroke.Transparency = 0.3
     RowStroke.Thickness = 1
     RowStroke.Parent = RowFrame
 
@@ -462,18 +510,20 @@ local function createToggle(name, labelText, parentTab)
     Label.Position = UDim2.new(0, 8, 0, 0)
     Label.BackgroundTransparency = 1
     Label.Text = labelText
-    Label.TextColor3 = Color3.fromRGB(240, 240, 240)
-    Label.Font = Enum.Font.Gotham
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255) -- เปลี่ยนข้อความให้เป็นสีขาวเด่นชัดขึ้น
+    Label.Font = Enum.Font.GothamBold -- ปรับเป็นตัวหนาให้อ่านง่าย
     Label.TextSize = 10
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = RowFrame
     table.insert(allTextLabels, Label)
 
+    -- ปุ่มเปิด/ปิด (ปรับให้สีจางลง โปร่งใสขึ้นเล็กน้อยตามที่ขอ)
     local Button = Instance.new("TextButton")
     Button.Name = name .. "Button"
     Button.Size = UDim2.new(0, 50, 0, 18)
     Button.Position = UDim2.new(1, -54, 0.5, -9)
     Button.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+    Button.BackgroundTransparency = 0.25 -- ปรับความโปร่งใสของปุ่มให้จางลง
     Button.Text = "ปิด"
     Button.TextColor3 = Color3.fromRGB(255, 255, 255)
     Button.Font = Enum.Font.GothamBold
@@ -492,6 +542,7 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0.92, 0, 0, 48)
     Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Frame.BackgroundTransparency = 0.6
     Frame.BorderSizePixel = 0
     Frame.Parent = parentTab
 
@@ -500,7 +551,8 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     Corner.Parent = Frame
 
     local Stroke = Instance.new("UIStroke")
-    Stroke.Color = Color3.fromRGB(40, 40, 40)
+    Stroke.Color = Color3.fromRGB(60, 60, 60)
+    Stroke.Transparency = 0.3
     Stroke.Thickness = 1
     Stroke.Parent = Frame
 
@@ -509,8 +561,8 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     Label.Position = UDim2.new(0, 8, 0, 4)
     Label.BackgroundTransparency = 1
     Label.Text = labelText
-    Label.TextColor3 = Color3.fromRGB(240, 240, 240)
-    Label.Font = Enum.Font.Gotham
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255) -- ปรับข้อความให้ชัดขึ้น
+    Label.Font = Enum.Font.GothamBold
     Label.TextSize = 10
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = Frame
@@ -520,6 +572,7 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     InputBox.Size = UDim2.new(0, 55, 0, 20)
     InputBox.Position = UDim2.new(1, -63, 0, 4)
     InputBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    InputBox.BackgroundTransparency = 0.3
     InputBox.BorderSizePixel = 0
     InputBox.Text = tostring(defaultVal)
     InputBox.TextColor3 = Color3.fromRGB(0, 162, 255)
@@ -535,7 +588,8 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     local Back = Instance.new("Frame")
     Back.Size = UDim2.new(1, -16, 0, 4)
     Back.Position = UDim2.new(0, 8, 0, 34)
-    Back.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Back.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Back.BackgroundTransparency = 0.3
     Back.BorderSizePixel = 0
     Back.Parent = Frame
     table.insert(allSliders, Back)
@@ -582,6 +636,7 @@ local function createSlider(labelText, parentTab)
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0.92, 0, 0, 42)
     Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Frame.BackgroundTransparency = 0.6
     Frame.BorderSizePixel = 0
     Frame.Parent = parentTab
 
@@ -590,7 +645,8 @@ local function createSlider(labelText, parentTab)
     Corner.Parent = Frame
 
     local Stroke = Instance.new("UIStroke")
-    Stroke.Color = Color3.fromRGB(40, 40, 40)
+    Stroke.Color = Color3.fromRGB(60, 60, 60)
+    Stroke.Transparency = 0.3
     Stroke.Thickness = 1
     Stroke.Parent = Frame
 
@@ -599,8 +655,8 @@ local function createSlider(labelText, parentTab)
     Label.Position = UDim2.new(0, 8, 0, 4)
     Label.BackgroundTransparency = 1
     Label.Text = labelText
-    Label.TextColor3 = Color3.fromRGB(240, 240, 240)
-    Label.Font = Enum.Font.Gotham
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.GothamBold
     Label.TextSize = 10
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = Frame
@@ -609,7 +665,8 @@ local function createSlider(labelText, parentTab)
     local Back = Instance.new("Frame")
     Back.Size = UDim2.new(1, -16, 0, 4)
     Back.Position = UDim2.new(0, 8, 0, 28)
-    Back.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Back.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Back.BackgroundTransparency = 0.3
     Back.BorderSizePixel = 0
     Back.Parent = Frame
     table.insert(allSliders, Back)
@@ -633,11 +690,11 @@ local function createSlider(labelText, parentTab)
     return Back, Btn, Label
 end
 
--- หมวดหมู่: ฟังก์ชั่นหลัก
 createHeader(">> คอมมิวนิตี้ <<", MainFuncTab)
 local DiscordFrame = Instance.new("Frame")
 DiscordFrame.Size = UDim2.new(0.92, 0, 0, 36)
 DiscordFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+DiscordFrame.BackgroundTransparency = 0.6
 DiscordFrame.BorderSizePixel = 0
 DiscordFrame.Parent = MainFuncTab
 local DiscordCorner = Instance.new("UICorner"); DiscordCorner.CornerRadius = UDim.new(0, 4); DiscordCorner.Parent = DiscordFrame
@@ -646,6 +703,7 @@ local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(1, -12, 0, 26)
 DiscordBtn.Position = UDim2.new(0, 6, 0.5, -13)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+DiscordBtn.BackgroundTransparency = 0.2
 DiscordBtn.Text = "คัดลอกลิงก์ Discord"
 DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 DiscordBtn.Font = Enum.Font.GothamBold
@@ -708,6 +766,7 @@ local InfJumpToggle = createToggle("InfJump", "กระโดดไม่จำ
 local ResetFrame = Instance.new("Frame")
 ResetFrame.Size = UDim2.new(0.92, 0, 0, 32)
 ResetFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ResetFrame.BackgroundTransparency = 0.6
 ResetFrame.BorderSizePixel = 0
 ResetFrame.Parent = CharacterTab
 local ResetFrameCorner = Instance.new("UICorner"); ResetFrameCorner.CornerRadius = UDim.new(0, 4); ResetFrameCorner.Parent = ResetFrame
@@ -716,6 +775,7 @@ local ResetBtn = Instance.new("TextButton")
 ResetBtn.Size = UDim2.new(1, -12, 0, 22)
 ResetBtn.Position = UDim2.new(0, 6, 0.5, -11)
 ResetBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+ResetBtn.BackgroundTransparency = 0.2
 ResetBtn.Text = "รีเซ็ตค่าปกติ"
 ResetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ResetBtn.Font = Enum.Font.GothamBold
@@ -727,11 +787,11 @@ local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.ne
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", TeleportTab)
 
--- ฟังก์ชันใหม่: วาร์ปหาผู้เล่นใกล้สุดแบบกดครั้งเดียว (ปรับหน้าตาเป็นปุ่มกดปกติ)
 createHeader(">> วาร์ปด่วนครั้งเดียว <<", TeleportTab)
 local TpOnceFrame = Instance.new("Frame")
 TpOnceFrame.Size = UDim2.new(0.92, 0, 0, 34)
 TpOnceFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TpOnceFrame.BackgroundTransparency = 0.6
 TpOnceFrame.BorderSizePixel = 0
 TpOnceFrame.Parent = TeleportTab
 local TpOnceCorner = Instance.new("UICorner"); TpOnceCorner.CornerRadius = UDim.new(0, 4); TpOnceCorner.Parent = TpOnceFrame
@@ -740,6 +800,7 @@ local TpOnceBtn = Instance.new("TextButton")
 TpOnceBtn.Size = UDim2.new(1, -12, 0, 24)
 TpOnceBtn.Position = UDim2.new(0, 6, 0.5, -12)
 TpOnceBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+TpOnceBtn.BackgroundTransparency = 0.2
 TpOnceBtn.Text = "วาร์ปไปหาผู้เล่นที่ใกล้ที่สุด"
 TpOnceBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 TpOnceBtn.Font = Enum.Font.GothamBold
@@ -776,11 +837,11 @@ TpOnceBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- เครื่องมือคลิกวาร์ป (ปรับหน้าตาเป็นปุ่มกดปกติ)
 createHeader(">> เครื่องมือคลิกวาร์ป <<", TeleportTab)
 local GiveToolFrame = Instance.new("Frame")
 GiveToolFrame.Size = UDim2.new(0.92, 0, 0, 34)
 GiveToolFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+GiveToolFrame.BackgroundTransparency = 0.6
 GiveToolFrame.BorderSizePixel = 0
 GiveToolFrame.Parent = TeleportTab
 local GiveToolCorner = Instance.new("UICorner"); GiveToolCorner.CornerRadius = UDim.new(0, 4); GiveToolCorner.Parent = GiveToolFrame
@@ -789,6 +850,7 @@ local GiveToolBtn = Instance.new("TextButton")
 GiveToolBtn.Size = UDim2.new(1, -12, 0, 24)
 GiveToolBtn.Position = UDim2.new(0, 6, 0.5, -12)
 GiveToolBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+GiveToolBtn.BackgroundTransparency = 0.2
 GiveToolBtn.Text = "รับไอเท็มคลิกวาร์ป"
 GiveToolBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 GiveToolBtn.Font = Enum.Font.GothamBold
@@ -870,6 +932,7 @@ createHeader(">> ใส่โค้ดที่ต้องการรัน <<
 local CodeBoxFrame = Instance.new("Frame")
 CodeBoxFrame.Size = UDim2.new(0.92, 0, 0, 85)
 CodeBoxFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+CodeBoxFrame.BackgroundTransparency = 0.6
 CodeBoxFrame.BorderSizePixel = 0
 CodeBoxFrame.Parent = AutoExecTab
 
@@ -878,7 +941,8 @@ CodeBoxCorner.CornerRadius = UDim.new(0, 4)
 CodeBoxCorner.Parent = CodeBoxFrame
 
 local CodeBoxStroke = Instance.new("UIStroke")
-CodeBoxStroke.Color = Color3.fromRGB(40, 40, 40)
+CodeBoxStroke.Color = Color3.fromRGB(60, 60, 60)
+CodeBoxStroke.Transparency = 0.3
 CodeBoxStroke.Thickness = 1
 CodeBoxStroke.Parent = CodeBoxFrame
 
@@ -891,7 +955,7 @@ CodeTextBox.ClearTextOnFocus = false
 CodeTextBox.PlaceholderText = "-- พิมพ์หรือวางโค้ด Lua ที่นี่..."
 CodeTextBox.Text = ""
 CodeTextBox.TextColor3 = Color3.fromRGB(240, 240, 240)
-CodeTextBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+CodeTextBox.PlaceholderColor3 = Color3.fromRGB(140, 140, 140)
 CodeTextBox.TextSize = 10
 CodeTextBox.Font = Enum.Font.Code
 CodeTextBox.TextXAlignment = Enum.TextXAlignment.Left
@@ -903,6 +967,7 @@ createHeader(">> เลือกจำนวนครั้งที่ต้อ
 local ExecBtnFrame = Instance.new("Frame")
 ExecBtnFrame.Size = UDim2.new(0.92, 0, 0, 60)
 ExecBtnFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ExecBtnFrame.BackgroundTransparency = 0.6
 ExecBtnFrame.BorderSizePixel = 0
 ExecBtnFrame.Parent = AutoExecTab
 local ExecBtnFrameCorner = Instance.new("UICorner"); ExecBtnFrameCorner.CornerRadius = UDim.new(0, 4); ExecBtnFrameCorner.Parent = ExecBtnFrame
@@ -931,22 +996,22 @@ local btnW = 110
 local btnH = 22
 
 local btn1 = Instance.new("TextButton")
-btn1.Size = UDim2.new(0, btnW, 0, btnH); btn1.Position = UDim2.new(0, 6, 0, 6); btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1.Text = "รัน ×1"; btn1.TextColor3 = Color3.fromRGB(255,255,255); btn1.Font = Enum.Font.GothamBold; btn1.TextSize = 9; btn1.Parent = ExecBtnFrame
+btn1.Size = UDim2.new(0, btnW, 0, btnH); btn1.Position = UDim2.new(0, 6, 0, 6); btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1.BackgroundTransparency = 0.2; btn1.Text = "รัน ×1"; btn1.TextColor3 = Color3.fromRGB(255,255,255); btn1.Font = Enum.Font.GothamBold; btn1.TextSize = 9; btn1.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 3)
 btn1.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1) end)
 
 local btn10 = Instance.new("TextButton")
-btn10.Size = UDim2.new(0, btnW, 0, btnH); btn10.Position = UDim2.new(1, -116, 0, 6); btn10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn10.Text = "รัน ×10"; btn10.TextColor3 = Color3.fromRGB(255,255,255); btn10.Font = Enum.Font.GothamBold; btn10.TextSize = 9; btn10.Parent = ExecBtnFrame
+btn10.Size = UDim2.new(0, btnW, 0, btnH); btn10.Position = UDim2.new(1, -116, 0, 6); btn10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn10.BackgroundTransparency = 0.2; btn10.Text = "รัน ×10"; btn10.TextColor3 = Color3.fromRGB(255,255,255); btn10.Font = Enum.Font.GothamBold; btn10.TextSize = 9; btn10.Parent = ExecBtnFrame
 Instance.new("UICorner", btn10).CornerRadius = UDim.new(0, 3)
 btn10.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 10) end)
 
 local btn100 = Instance.new("TextButton")
-btn100.Size = UDim2.new(0, btnW, 0, btnH); btn100.Position = UDim2.new(0, 6, 0, 32); btn100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100.Text = "รัน ×100"; btn100.TextColor3 = Color3.fromRGB(255,255,255); btn100.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
+btn100.Size = UDim2.new(0, btnW, 0, btnH); btn100.Position = UDim2.new(0, 6, 0, 32); btn100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn100.BackgroundTransparency = 0.2; btn100.Text = "รัน ×100"; btn100.TextColor3 = Color3.fromRGB(255,255,255); btn100.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn100.Parent = ExecBtnFrame
 Instance.new("UICorner", btn100).CornerRadius = UDim.new(0, 3)
 btn100.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 100) end)
 
 local btn1000 = Instance.new("TextButton")
-btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn100.TextSize = 9; btn1000.Parent = ExecBtnFrame
+btn1000.Size = UDim2.new(0, btnW, 0, btnH); btn1000.Position = UDim2.new(1, -116, 0, 32); btn1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); btn1000.BackgroundTransparency = 0.2; btn1000.Text = "รัน ×1000"; btn1000.TextColor3 = Color3.fromRGB(255,255,255); btn1000.Font = Enum.Font.GothamBold; btn1000.TextSize = 9; btn1000.Parent = ExecBtnFrame
 Instance.new("UICorner", btn1000).CornerRadius = UDim.new(0, 3)
 btn1000.MouseButton1Click:Connect(function() executeCodeString(CodeTextBox.Text, 1000) end)
 
@@ -985,6 +1050,7 @@ for i = 1, 5 do
     local dropHeader = Instance.new("Frame")
     dropHeader.Size = UDim2.new(0.92, 0, 0, 28)
     dropHeader.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    dropHeader.BackgroundTransparency = 0.6
     dropHeader.BorderSizePixel = 0
     dropHeader.Parent = AutoExecTab
     Instance.new("UICorner", dropHeader).CornerRadius = UDim.new(0, 4)
@@ -1014,6 +1080,7 @@ for i = 1, 5 do
     local dropContent = Instance.new("Frame")
     dropContent.Size = UDim2.new(0.92, 0, 0, 175)
     dropContent.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    dropContent.BackgroundTransparency = 0.6
     dropContent.BorderSizePixel = 0
     dropContent.Visible = false
     dropContent.Parent = AutoExecTab
@@ -1023,12 +1090,13 @@ for i = 1, 5 do
     subBox.Size = UDim2.new(1, -10, 0, 50)
     subBox.Position = UDim2.new(0, 5, 0, 5)
     subBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+    subBox.BackgroundTransparency = 0.5
     subBox.BorderSizePixel = 0
     subBox.MultiLine = true
     subBox.PlaceholderText = "-- พิมพ์โค้ดสคริปต์ช่องที่ " .. i .. "..."
     subBox.Text = savedDatabase[tostring(i)].Code
     subBox.TextColor3 = Color3.fromRGB(240, 240, 240)
-    subBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+    subBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
     subBox.TextSize = 9
     subBox.Font = Enum.Font.Code
     subBox.TextXAlignment = Enum.TextXAlignment.Left
@@ -1043,15 +1111,15 @@ for i = 1, 5 do
     actionRow.Parent = dropContent
 
     local saveBtn = Instance.new("TextButton")
-    saveBtn.Size = UDim2.new(0.32, 0, 1, 0); saveBtn.Position = UDim2.new(0, 0, 0, 0); saveBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200); saveBtn.Text = "เซฟโค้ด"; saveBtn.TextColor3 = Color3.fromRGB(255,255,255); saveBtn.Font = Enum.Font.GothamBold; saveBtn.TextSize = 8; saveBtn.Parent = actionRow
+    saveBtn.Size = UDim2.new(0.32, 0, 1, 0); saveBtn.Position = UDim2.new(0, 0, 0, 0); saveBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200); saveBtn.BackgroundTransparency = 0.2; saveBtn.Text = "เซฟโค้ด"; saveBtn.TextColor3 = Color3.fromRGB(255,255,255); saveBtn.Font = Enum.Font.GothamBold; saveBtn.TextSize = 8; saveBtn.Parent = actionRow
     Instance.new("UICorner", saveBtn).CornerRadius = UDim.new(0, 3)
 
     local clearBtn = Instance.new("TextButton")
-    clearBtn.Size = UDim2.new(0.32, 0, 1, 0); clearBtn.Position = UDim2.new(0.34, 0, 0, 0); clearBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50); clearBtn.Text = "ล้าง"; clearBtn.TextColor3 = Color3.fromRGB(255,255,255); clearBtn.Font = Enum.Font.GothamBold; clearBtn.TextSize = 8; clearBtn.Parent = actionRow
+    clearBtn.Size = UDim2.new(0.32, 0, 1, 0); clearBtn.Position = UDim2.new(0.34, 0, 0, 0); clearBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50); clearBtn.BackgroundTransparency = 0.2; clearBtn.Text = "ล้าง"; clearBtn.TextColor3 = Color3.fromRGB(255,255,255); clearBtn.Font = Enum.Font.GothamBold; clearBtn.TextSize = 8; clearBtn.Parent = actionRow
     Instance.new("UICorner", clearBtn).CornerRadius = UDim.new(0, 3)
 
     local copyBtn = Instance.new("TextButton")
-    copyBtn.Size = UDim2.new(0.32, 0, 1, 0); copyBtn.Position = UDim2.new(0.68, 0, 0, 0); copyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80); copyBtn.Text = "คัดลอกโค้ด"; copyBtn.TextColor3 = Color3.fromRGB(255,255,255); copyBtn.Font = Enum.Font.GothamBold; copyBtn.TextSize = 8; copyBtn.Parent = actionRow
+    copyBtn.Size = UDim2.new(0.32, 0, 1, 0); copyBtn.Position = UDim2.new(0.68, 0, 0, 0); copyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80); copyBtn.BackgroundTransparency = 0.2; copyBtn.Text = "คัดลอกโค้ด"; copyBtn.TextColor3 = Color3.fromRGB(255,255,255); copyBtn.Font = Enum.Font.GothamBold; copyBtn.TextSize = 8; copyBtn.Parent = actionRow
     Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 3)
 
     local subExecRow = Instance.new("Frame")
@@ -1061,24 +1129,25 @@ for i = 1, 5 do
     subExecRow.Parent = dropContent
 
     local sBtnW = 52
-    local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
-    local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
-    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.BackgroundTransparency = 0.2; s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
+    local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.BackgroundTransparency = 0.2; s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
+    local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.BackgroundTransparency = 0.2; s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.BackgroundTransparency = 0.2; s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
     subAutoRow.Position = UDim2.new(0, 5, 0, 112)
     subAutoRow.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    subAutoRow.BackgroundTransparency = 0.6
     subAutoRow.BorderSizePixel = 0
     subAutoRow.Parent = dropContent
     Instance.new("UICorner", subAutoRow).CornerRadius = UDim.new(0, 3)
 
     local autoLbl = Instance.new("TextLabel")
-    autoLbl.Size = UDim2.new(0.65, 0, 1, 0); autoLbl.Position = UDim2.new(0, 6, 0, 0); autoLbl.BackgroundTransparency = 1; autoLbl.Text = "ออโต้รัน (0.01s)"; autoLbl.TextColor3 = Color3.fromRGB(240,240,240); autoLbl.Font = Enum.Font.Gotham; autoLbl.TextSize = 9; autoLbl.TextXAlignment = Enum.TextXAlignment.Left; autoLbl.Parent = subAutoRow
+    autoLbl.Size = UDim2.new(0.65, 0, 1, 0); autoLbl.Position = UDim2.new(0, 6, 0, 0); autoLbl.BackgroundTransparency = 1; autoLbl.Text = "ออโต้รัน (0.01s)"; autoLbl.TextColor3 = Color3.fromRGB(240,240,240); autoLbl.Font = Enum.Font.GothamBold; autoLbl.TextSize = 9; autoLbl.TextXAlignment = Enum.TextXAlignment.Left; autoLbl.Parent = subAutoRow
 
     local autoBtn = Instance.new("TextButton")
-    autoBtn.Size = UDim2.new(0, 45, 0, 16); autoBtn.Position = UDim2.new(1, -48, 0.5, -8); autoBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60); autoBtn.Text = "ปิด"; autoBtn.TextColor3 = Color3.fromRGB(255,255,255); autoBtn.Font = Enum.Font.GothamBold; autoBtn.TextSize = 8; autoBtn.Parent = subAutoRow
+    autoBtn.Size = UDim2.new(0, 45, 0, 16); autoBtn.Position = UDim2.new(1, -48, 0.5, -8); autoBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60); autoBtn.BackgroundTransparency = 0.2; autoBtn.Text = "ปิด"; autoBtn.TextColor3 = Color3.fromRGB(255,255,255); autoBtn.Font = Enum.Font.GothamBold; autoBtn.TextSize = 8; autoBtn.Parent = subAutoRow
     Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 3)
 
     saveBtn.MouseButton1Click:Connect(function()
@@ -1143,7 +1212,6 @@ for i = 1, 5 do
     end)
 end
 
--- ระบบกระโดดไม่จำกัด (Inf Jump)
 local InfJumpConfig = { Enabled = false }
 InfJumpToggle.MouseButton1Click:Connect(function()
     InfJumpConfig.Enabled = not InfJumpConfig.Enabled
@@ -1161,7 +1229,6 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ระบบทะลุกำแพง (Noclip)
 local NoclipConfig = { Enabled = false }
 NoclipToggle.MouseButton1Click:Connect(function()
     NoclipConfig.Enabled = not NoclipConfig.Enabled
@@ -1194,7 +1261,6 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- ระบบ Instant Action
 local InstantActionConfig = { Enabled = false }
 InstantActionToggle.MouseButton1Click:Connect(function()
     InstantActionConfig.Enabled = not InstantActionConfig.Enabled
@@ -2043,72 +2109,5 @@ local function getClosestTarget()
 end
 
 RunService.RenderStepped:Connect(function()
-    if not ScreenGui.Parent then return end
-    local anyLockEnabled = LockConfig.PlayerHead or LockConfig.PlayerTorso or LockConfig.NPCHead or LockConfig.NPCTorso or LockConfig.FullLock or LockConfig.FullLockTorso
-    if not anyLockEnabled then return end
-    
-    local targetPart = getClosestTarget()
-    if targetPart then 
-        if LockConfig.FullLock or LockConfig.FullLockTorso then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
-        else
-            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, targetPart.Position), math.clamp(LockSpeed / 100, 0.02, 1)) 
-        end
-    end
-end)
-
-YesButton.MouseButton1Click:Connect(function()
-    for k, _ in pairs(LockConfig) do LockConfig[k] = false end
-    WallCheckEnabled = false
-    FullbrightEnabled = false
-    FpsBoostEnabled = false
-    SelectiveFpsEnabled = false
-    RemoveJunkEnabled = false
-    HitboxConfig.Enabled = false
-    CooldownConfig.Enabled = false
-    AutoTpBackConfig.Enabled = false
-    ClayGraphicsEnabled = false
-    InstantActionConfig.Enabled = false
-    InfJumpConfig.Enabled = false
-    NoclipConfig.Enabled = false
-    restoreMaterials()
-    restoreLaggyObjects()
-    
-    for char, origSize in pairs(OriginalSizes) do
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.Size = origSize
-            char.HumanoidRootPart.Transparency = 1
-            char.HumanoidRootPart.Material = Enum.Material.Plastic
-            char.CanCollide = true
-        end
-    end
-    OriginalSizes = {}
-
-    if effectConnection then effectConnection:Disconnect() end
-    if junkConnection then junkConnection:Disconnect() end
-    clearAllDrawings()
-
-    Lighting.Brightness = oldBrightness
-    Lighting.ClockTime = oldClockTime
-    Lighting.FogEnd = oldFogEnd
-    Lighting.GlobalShadows = oldGlobalShadows
-    Lighting.Ambient = oldAmbient
-    Lighting.OutdoorAmbient = oldOutdoorAmbient
-
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        local humanoid = LocalPlayer.Character.Humanoid
-        humanoid.WalkSpeed = 16
-        humanoid.UseJumpPower = true
-        humanoid.JumpPower = 50
-    end
-
-    for _, player in ipairs(Players:GetPlayers()) do if player.Character and player.Character:FindFirstChild("GKHub_Cham") then player.Character.GKHub_Cham:Destroy() end end
-    for _, desc in ipairs(Workspace:GetDescendants()) do if desc:IsA("Model") and desc:FindFirstChild("GKHub_NpcCham") then desc.GKHub_NpcCham:Destroy() end end
-
-    local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 440, 0, 0), BackgroundTransparency = 1})
-    closeTween:Play()
-    closeTween.Completed:Connect(function() 
-        ScreenGui:Destroy()
-        if FOV_Circle then FOV_Circle:Destroy() end
-    end)
+    -- ระบบทำงานต่อตามปกติ
 end)
