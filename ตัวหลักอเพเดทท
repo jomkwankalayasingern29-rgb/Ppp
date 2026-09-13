@@ -84,21 +84,22 @@ local function showNotification(text, isEnabled)
     card.Size = UDim2.new(1, 0, 0, 50)
     card.Position = UDim2.new(1, 60, 0, 20)
     card.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    card.BackgroundTransparency = 0.4 -- ปรับให้การแจ้งเตือนจางลงเล็กน้อย
+    card.BackgroundTransparency = 0.2
     card.BorderSizePixel = 0
-    card.ClipsDescendants = true
+    card.ClipsDescendants = true -- ตัดส่วนเกินไม่ให้ล้นกรอบ
     card.Parent = NotifContainer
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = card
 
+    -- ทำให้รูปภาพคลุมพื้นที่การแจ้งเตือน (Background Image คลุมไปเลย)
     local bgIcon = Instance.new("ImageLabel")
     bgIcon.Size = UDim2.new(1, 0, 1, 0)
     bgIcon.Position = UDim2.new(0, 0, 0, 0)
     bgIcon.BackgroundTransparency = 1
     bgIcon.Image = "rbxassetid://117391496934016"
-    bgIcon.ImageTransparency = 0.75 -- ปรับรูปแจ้งเตือนให้จางลงเพื่อให้เห็น UI ข้างหลังชัดขึ้น
+    bgIcon.ImageTransparency = 0.6 -- ปรับความโปร่งใสของรูปพื้นหลังไม่ให้บังตัวหนังสือ (0.5 - 0.8 กำลังสวย)
     bgIcon.ScaleType = Enum.ScaleType.Slice
     bgIcon.Parent = card
 
@@ -163,6 +164,7 @@ local function showNotification(text, isEnabled)
     end)
 end
 
+-- (ส่วนโค้ดที่เหลือต่อจากนี้เหมือนเดิมทั้งหมดตามสคริปต์ของคุณ)
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
 LoadFrame.Size = UDim2.new(0, 300, 0, 65)
@@ -207,7 +209,6 @@ BgImage.Name = "BgImage"
 BgImage.Size = UDim2.new(1, 0, 1, 0)
 BgImage.BackgroundTransparency = 1
 BgImage.Image = "rbxassetid://111206357236860"
-BgImage.ImageTransparency = 0.25 -- ปรับรูปภาพพื้นหลัง UI หลักให้โปร่งใสขึ้นเล็กน้อยเพื่อให้ภาพชัดเจนและเด่นขึ้น
 BgImage.ScaleType = Enum.ScaleType.Slice
 BgImage.SliceCenter = Rect.new(100, 100, 100, 100)
 BgImage.Parent = MainFrame
@@ -255,7 +256,6 @@ local YesButton = Instance.new("TextButton")
 YesButton.Size = UDim2.new(0, 100, 0, 32)
 YesButton.Position = UDim2.new(0, 20, 1, -42)
 YesButton.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-YesButton.BackgroundTransparency = 0.2 -- ทำให้ปุ่มจางลง
 YesButton.Text = "ใช่"
 YesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 YesButton.TextSize = 12
@@ -269,7 +269,6 @@ local NoButton = Instance.new("TextButton")
 NoButton.Size = UDim2.new(0, 100, 0, 32)
 NoButton.Position = UDim2.new(1, -120, 1, -42)
 NoButton.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-NoButton.BackgroundTransparency = 0.2 -- ทำให้ปุ่มจางลง
 NoButton.Text = "ไม่ใช่"
 NoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 NoButton.TextSize = 12
@@ -279,11 +278,10 @@ NoButton.ZIndex = 12
 NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
--- ปรับแถบด้านบนสุด (TopBar) ให้โปร่งใสและไม่ทึบจนเกินไปตามที่ขอ
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
-TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-TopBar.BackgroundTransparency = 0.5 -- ปรับให้โปร่งใสขึ้น ไม่ทึบ
+TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+TopBar.BackgroundTransparency = 0.5 -- ปรับแถบด้านบนให้จางลง (จากเดิมทึบ)
 TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
 
@@ -294,8 +292,8 @@ TopBarCorner.Parent = TopBar
 local FixTopBar = Instance.new("Frame")
 FixTopBar.Size = UDim2.new(1, 0, 0, 5)
 FixTopBar.Position = UDim2.new(0, 0, 1, -5)
-FixTopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-FixTopBar.BackgroundTransparency = 0.5
+FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+FixTopBar.BackgroundTransparency = 0.5 -- ให้สอดคล้องกับ TopBar
 FixTopBar.BorderSizePixel = 0
 FixTopBar.Parent = TopBar
 
@@ -305,7 +303,7 @@ LogoG.Position = UDim2.new(0, 8, 0, 4)
 LogoG.BackgroundTransparency = 1
 LogoG.Font = Enum.Font.GothamBold
 LogoG.Text = "G"
-LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
+LogoG.TextColor3 = Color3.fromRGB(0, 180, 255) -- ปรับสีให้สว่างชัดเจนขึ้น
 LogoG.TextSize = 14
 LogoG.Parent = TopBar
 
@@ -315,7 +313,7 @@ TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Text = "GKHub | Main Script"
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- ทำให้ข้อความชัดขึ้น (ขาวสว่าง)
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- ข้อความชัดเจนขึ้น (ขาวสว่าง)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
@@ -326,7 +324,7 @@ CloseButton.Position = UDim2.new(1, -26, 0, 2)
 CloseButton.BackgroundTransparency = 1
 CloseButton.Font = Enum.Font.GothamBold
 CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(240, 80, 80)
+CloseButton.TextColor3 = Color3.fromRGB(255, 90, 90) -- ทำให้ปุ่มชัดขึ้น
 CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
 
@@ -340,12 +338,11 @@ MinimizeButton.TextColor3 = Color3.fromRGB(230, 230, 230)
 MinimizeButton.TextSize = 14
 MinimizeButton.Parent = TopBar
 
--- ปรับ Sidebar ด้านซ้าย (หมวดหมู่) ให้โปร่งใสขึ้น (จางลง)
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
-LeftSide.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-LeftSide.BackgroundTransparency = 0.65 -- ทำให้หมวดหมู่จางลงมากยิ่งขึ้น
+LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+LeftSide.BackgroundTransparency = 0.65 -- ปรับหมวดหมู่ด้านซ้ายให้จางลง (โปร่งแสงมากขึ้น)
 LeftSide.BorderSizePixel = 0
 LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 LeftSide.ScrollBarThickness = 2
@@ -365,12 +362,11 @@ local LeftPadding = Instance.new("UIPadding")
 LeftPadding.PaddingTop = UDim.new(0, 5)
 LeftPadding.Parent = LeftSide
 
--- ปรับ RightSide ให้โปร่งใสขึ้นด้วยเช่นกัน
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.66, 0, 1, -34)
 RightSide.Position = UDim2.new(0.33, 0, 0, 30)
-RightSide.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-RightSide.BackgroundTransparency = 0.65 -- ทำให้ฟังชั่นด้านขวาจางลง
+RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+RightSide.BackgroundTransparency = 0.65 -- ปรับส่วนแสดงฟังชั่นด้านขวาให้จางลง
 RightSide.BorderSizePixel = 0
 RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 RightSide.ScrollBarThickness = 2
@@ -425,11 +421,11 @@ local function createCategoryButton(name, targetTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 26)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    btn.BackgroundTransparency = 0.45 -- ปรับปุ่มหมวดหมู่ให้โปร่งใสกลมกลืน
+    btn.BackgroundTransparency = 0.5 -- ทำให้ปุ่มหมวดหมู่จางลง
     btn.BorderSizePixel = 0
-    btn.Font = Enum.Font.GothamBold -- ทำให้ตัวอหนังสือน้ำหมวดหมู่ชัดขึ้น
+    btn.Font = Enum.Font.GothamBold
     btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(245, 245, 245) -- ข้อความสว่างชัดเจน
+    btn.TextColor3 = Color3.fromRGB(245, 245, 245) -- ตัวหนังสือชัดขึ้น
     btn.TextSize = 10
     btn.Parent = LeftSide
 
@@ -443,7 +439,7 @@ local function createCategoryButton(name, targetTab)
         for _, cb in ipairs(categoryButtons) do
             cb.Tab.Visible = (cb.Tab == targetTab)
             cb.Button.BackgroundColor3 = (cb.Tab == targetTab) and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(30, 30, 30)
-            cb.Button.BackgroundTransparency = (cb.Tab == targetTab) and 0.15 or 0.45
+            cb.Button.BackgroundTransparency = (cb.Tab == targetTab) and 0.1 or 0.5
             cb.Button.TextColor3 = (cb.Tab == targetTab) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(245, 245, 245)
         end
     end)
@@ -452,7 +448,7 @@ end
 
 local btn1 = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
 btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-btn1.BackgroundTransparency = 0.15
+btn1.BackgroundTransparency = 0.1
 btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
 
 createCategoryButton("ระบบล็อกเป้า", AimbotTab)
@@ -478,7 +474,7 @@ local function createHeader(text, parentTab)
     HeaderLabel.Size = UDim2.new(0.92, 0, 0, 16)
     HeaderLabel.BackgroundTransparency = 1
     HeaderLabel.Text = text
-    HeaderLabel.TextColor3 = Color3.fromRGB(50, 190, 255) -- ปรับสีหัวข้อให้สว่างและชัดขึ้น
+    HeaderLabel.TextColor3 = Color3.fromRGB(50, 190, 255) -- หัวข้อชัดขึ้น สว่างขึ้น
     HeaderLabel.Font = Enum.Font.GothamBold
     HeaderLabel.TextSize = 10
     HeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -486,12 +482,11 @@ local function createHeader(text, parentTab)
     table.insert(allTextLabels, HeaderLabel)
 end
 
--- ปรับกรอบรายการฟังก์ชั่นให้โปร่งใสขึ้น (จางลง) และตัวหนังสือชัดขึ้น
 local function createToggle(name, labelText, parentTab)
     local RowFrame = Instance.new("Frame")
     RowFrame.Size = UDim2.new(0.92, 0, 0, 26)
     RowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    RowFrame.BackgroundTransparency = 0.6 -- ปรับพื้นหลังรายการให้โปร่งใสมากๆ
+    RowFrame.BackgroundTransparency = 0.6 -- ปรับพื้นหลังแถวให้จางลงเพื่อให้รูปภาพ UI ชัดขึ้น
     RowFrame.BorderSizePixel = 0
     RowFrame.Parent = parentTab
 
@@ -501,7 +496,6 @@ local function createToggle(name, labelText, parentTab)
 
     local RowStroke = Instance.new("UIStroke")
     RowStroke.Color = Color3.fromRGB(60, 60, 60)
-    RowStroke.Transparency = 0.3
     RowStroke.Thickness = 1
     RowStroke.Parent = RowFrame
 
@@ -510,20 +504,19 @@ local function createToggle(name, labelText, parentTab)
     Label.Position = UDim2.new(0, 8, 0, 0)
     Label.BackgroundTransparency = 1
     Label.Text = labelText
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255) -- เปลี่ยนข้อความให้เป็นสีขาวเด่นชัดขึ้น
-    Label.Font = Enum.Font.GothamBold -- ปรับเป็นตัวหนาให้อ่านง่าย
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255) -- ข้อความชื่อฟังก์ชั่นปรับให้เป็นสีขาวชัดเจน
+    Label.Font = Enum.Font.GothamBold -- ทำให้ตัวหนาขึ้นเพื่อความคมชัด
     Label.TextSize = 10
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = RowFrame
     table.insert(allTextLabels, Label)
 
-    -- ปุ่มเปิด/ปิด (ปรับให้สีจางลง โปร่งใสขึ้นเล็กน้อยตามที่ขอ)
     local Button = Instance.new("TextButton")
     Button.Name = name .. "Button"
     Button.Size = UDim2.new(0, 50, 0, 18)
     Button.Position = UDim2.new(1, -54, 0.5, -9)
     Button.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-    Button.BackgroundTransparency = 0.25 -- ปรับความโปร่งใสของปุ่มให้จางลง
+    Button.BackgroundTransparency = 0.25 -- ปรับปุ่มเปิด/ปิดให้จางลงเล็กน้อย
     Button.Text = "ปิด"
     Button.TextColor3 = Color3.fromRGB(255, 255, 255)
     Button.Font = Enum.Font.GothamBold
@@ -552,7 +545,6 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
 
     local Stroke = Instance.new("UIStroke")
     Stroke.Color = Color3.fromRGB(60, 60, 60)
-    Stroke.Transparency = 0.3
     Stroke.Thickness = 1
     Stroke.Parent = Frame
 
@@ -561,7 +553,7 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     Label.Position = UDim2.new(0, 8, 0, 4)
     Label.BackgroundTransparency = 1
     Label.Text = labelText
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255) -- ปรับข้อความให้ชัดขึ้น
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
     Label.Font = Enum.Font.GothamBold
     Label.TextSize = 10
     Label.TextXAlignment = Enum.TextXAlignment.Left
@@ -572,10 +564,10 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     InputBox.Size = UDim2.new(0, 55, 0, 20)
     InputBox.Position = UDim2.new(1, -63, 0, 4)
     InputBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    InputBox.BackgroundTransparency = 0.3
+    InputBox.BackgroundTransparency = 0.4
     InputBox.BorderSizePixel = 0
     InputBox.Text = tostring(defaultVal)
-    InputBox.TextColor3 = Color3.fromRGB(0, 162, 255)
+    InputBox.TextColor3 = Color3.fromRGB(0, 180, 255)
     InputBox.Font = Enum.Font.GothamBold
     InputBox.TextSize = 10
     InputBox.Parent = Frame
@@ -646,7 +638,6 @@ local function createSlider(labelText, parentTab)
 
     local Stroke = Instance.new("UIStroke")
     Stroke.Color = Color3.fromRGB(60, 60, 60)
-    Stroke.Transparency = 0.3
     Stroke.Thickness = 1
     Stroke.Parent = Frame
 
@@ -942,7 +933,6 @@ CodeBoxCorner.Parent = CodeBoxFrame
 
 local CodeBoxStroke = Instance.new("UIStroke")
 CodeBoxStroke.Color = Color3.fromRGB(60, 60, 60)
-CodeBoxStroke.Transparency = 0.3
 CodeBoxStroke.Thickness = 1
 CodeBoxStroke.Parent = CodeBoxFrame
 
@@ -954,8 +944,8 @@ CodeTextBox.MultiLine = true
 CodeTextBox.ClearTextOnFocus = false
 CodeTextBox.PlaceholderText = "-- พิมพ์หรือวางโค้ด Lua ที่นี่..."
 CodeTextBox.Text = ""
-CodeTextBox.TextColor3 = Color3.fromRGB(240, 240, 240)
-CodeTextBox.PlaceholderColor3 = Color3.fromRGB(140, 140, 140)
+CodeTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+CodeTextBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
 CodeTextBox.TextSize = 10
 CodeTextBox.Font = Enum.Font.Code
 CodeTextBox.TextXAlignment = Enum.TextXAlignment.Left
@@ -1021,6 +1011,7 @@ local isLoopingCode = false
 AutoLoopToggle.MouseButton1Click:Connect(function()
     isLoopingCode = not isLoopingCode
     AutoLoopToggle.BackgroundColor3 = isLoopingCode and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    AutoLoopToggle.BackgroundTransparency = 0.25
     AutoLoopToggle.Text = isLoopingCode and "เปิด" or "ปิด"
     showNotification(isLoopingCode and "เริ่มรันโค้ดอัตโนมัติแล้ว" or "หยุดรันโค้ดอัตโนมัติแล้ว", isLoopingCode)
 end)
@@ -1060,7 +1051,7 @@ for i = 1, 5 do
     nameBox.Position = UDim2.new(0, 8, 0, 0)
     nameBox.BackgroundTransparency = 1
     nameBox.Text = savedDatabase[tostring(i)].Title
-    nameBox.TextColor3 = Color3.fromRGB(0, 162, 255)
+    nameBox.TextColor3 = Color3.fromRGB(0, 180, 255)
     nameBox.Font = Enum.Font.GothamBold
     nameBox.TextSize = 10
     nameBox.TextXAlignment = Enum.TextXAlignment.Left
@@ -1072,7 +1063,7 @@ for i = 1, 5 do
     foldBtn.Position = UDim2.new(1, -26, 0.5, -12)
     foldBtn.BackgroundTransparency = 1
     foldBtn.Text = "v"
-    foldBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
+    foldBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     foldBtn.Font = Enum.Font.GothamBold
     foldBtn.TextSize = 12
     foldBtn.Parent = dropHeader
@@ -1095,8 +1086,8 @@ for i = 1, 5 do
     subBox.MultiLine = true
     subBox.PlaceholderText = "-- พิมพ์โค้ดสคริปต์ช่องที่ " .. i .. "..."
     subBox.Text = savedDatabase[tostring(i)].Code
-    subBox.TextColor3 = Color3.fromRGB(240, 240, 240)
-    subBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+    subBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    subBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
     subBox.TextSize = 9
     subBox.Font = Enum.Font.Code
     subBox.TextXAlignment = Enum.TextXAlignment.Left
@@ -1144,10 +1135,10 @@ for i = 1, 5 do
     Instance.new("UICorner", subAutoRow).CornerRadius = UDim.new(0, 3)
 
     local autoLbl = Instance.new("TextLabel")
-    autoLbl.Size = UDim2.new(0.65, 0, 1, 0); autoLbl.Position = UDim2.new(0, 6, 0, 0); autoLbl.BackgroundTransparency = 1; autoLbl.Text = "ออโต้รัน (0.01s)"; autoLbl.TextColor3 = Color3.fromRGB(240,240,240); autoLbl.Font = Enum.Font.GothamBold; autoLbl.TextSize = 9; autoLbl.TextXAlignment = Enum.TextXAlignment.Left; autoLbl.Parent = subAutoRow
+    autoLbl.Size = UDim2.new(0.65, 0, 1, 0); autoLbl.Position = UDim2.new(0, 6, 0, 0); autoLbl.BackgroundTransparency = 1; autoLbl.Text = "ออโต้รัน (0.01s)"; autoLbl.TextColor3 = Color3.fromRGB(255,255,255); autoLbl.Font = Enum.Font.GothamBold; autoLbl.TextSize = 9; autoLbl.TextXAlignment = Enum.TextXAlignment.Left; autoLbl.Parent = subAutoRow
 
     local autoBtn = Instance.new("TextButton")
-    autoBtn.Size = UDim2.new(0, 45, 0, 16); autoBtn.Position = UDim2.new(1, -48, 0.5, -8); autoBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60); autoBtn.BackgroundTransparency = 0.2; autoBtn.Text = "ปิด"; autoBtn.TextColor3 = Color3.fromRGB(255,255,255); autoBtn.Font = Enum.Font.GothamBold; autoBtn.TextSize = 8; autoBtn.Parent = subAutoRow
+    autoBtn.Size = UDim2.new(0, 45, 0, 16); autoBtn.Position = UDim2.new(1, -48, 0.5, -8); autoBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60); autoBtn.BackgroundTransparency = 0.25; autoBtn.Text = "ปิด"; autoBtn.TextColor3 = Color3.fromRGB(255,255,255); autoBtn.Font = Enum.Font.GothamBold; autoBtn.TextSize = 8; autoBtn.Parent = subAutoRow
     Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 3)
 
     saveBtn.MouseButton1Click:Connect(function()
@@ -1187,6 +1178,7 @@ for i = 1, 5 do
     autoBtn.MouseButton1Click:Connect(function()
         subLoopStates[i] = not subLoopStates[i]
         autoBtn.BackgroundColor3 = subLoopStates[i] and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+        autoBtn.BackgroundTransparency = 0.25
         autoBtn.Text = subLoopStates[i] and "เปิด" or "ปิด"
         showNotification(subLoopStates[i] and "เริ่มออโต้รันช่อง " .. i or "หยุดออโต้รันช่อง " .. i, subLoopStates[i])
     end)
@@ -1216,6 +1208,7 @@ local InfJumpConfig = { Enabled = false }
 InfJumpToggle.MouseButton1Click:Connect(function()
     InfJumpConfig.Enabled = not InfJumpConfig.Enabled
     InfJumpToggle.BackgroundColor3 = InfJumpConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    InfJumpToggle.BackgroundTransparency = 0.25
     InfJumpToggle.Text = InfJumpConfig.Enabled and "เปิด" or "ปิด"
     showNotification((InfJumpConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'กระโดดไม่จำกัด', InfJumpConfig.Enabled)
 end)
@@ -1233,6 +1226,7 @@ local NoclipConfig = { Enabled = false }
 NoclipToggle.MouseButton1Click:Connect(function()
     NoclipConfig.Enabled = not NoclipConfig.Enabled
     NoclipToggle.BackgroundColor3 = NoclipConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    NoclipToggle.BackgroundTransparency = 0.25
     NoclipToggle.Text = NoclipConfig.Enabled and "เปิด" or "ปิด"
     showNotification((NoclipConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ทะลุกำแพง', NoclipConfig.Enabled)
     
@@ -1265,6 +1259,7 @@ local InstantActionConfig = { Enabled = false }
 InstantActionToggle.MouseButton1Click:Connect(function()
     InstantActionConfig.Enabled = not InstantActionConfig.Enabled
     InstantActionToggle.BackgroundColor3 = InstantActionConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    InstantActionToggle.BackgroundTransparency = 0.25
     InstantActionToggle.Text = InstantActionConfig.Enabled and "เปิด" or "ปิด"
     showNotification((InstantActionConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'กดใช้งานทันที (0 วิ)', InstantActionConfig.Enabled)
 end)
@@ -1288,6 +1283,7 @@ local AutoTpBackConfig = { Enabled = false }
 AutoTpBackToggle.MouseButton1Click:Connect(function()
     AutoTpBackConfig.Enabled = not AutoTpBackConfig.Enabled
     AutoTpBackToggle.BackgroundColor3 = AutoTpBackConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    AutoTpBackToggle.BackgroundTransparency = 0.25
     AutoTpBackToggle.Text = AutoTpBackConfig.Enabled and "เปิด" or "ปิด"
     showNotification((AutoTpBackConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ออโต้เทเลพอร์ตด้านหลัง', AutoTpBackConfig.Enabled)
 end)
@@ -1323,6 +1319,7 @@ local CooldownConfig = { Enabled = false, Time = 0 }
 CooldownToggle.MouseButton1Click:Connect(function()
     CooldownConfig.Enabled = not CooldownConfig.Enabled
     CooldownToggle.BackgroundColor3 = CooldownConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    CooldownToggle.BackgroundTransparency = 0.25
     CooldownToggle.Text = CooldownConfig.Enabled and "เปิด" or "ปิด"
     showNotification((CooldownConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ลบ/ปรับคูลดาวน์', CooldownConfig.Enabled)
 end)
@@ -1361,6 +1358,7 @@ local OriginalSizes = {}
 HitboxToggle.MouseButton1Click:Connect(function()
     HitboxConfig.Enabled = not HitboxConfig.Enabled
     HitboxToggle.BackgroundColor3 = HitboxConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    HitboxToggle.BackgroundTransparency = 0.25
     HitboxToggle.Text = HitboxConfig.Enabled and "เปิด" or "ปิด"
     showNotification((HitboxConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ขยายฮิดบล็อก', HitboxConfig.Enabled)
 
@@ -1439,6 +1437,7 @@ end
 ClayGraphicsToggle.MouseButton1Click:Connect(function()
     ClayGraphicsEnabled = not ClayGraphicsEnabled
     ClayGraphicsToggle.BackgroundColor3 = ClayGraphicsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    ClayGraphicsToggle.BackgroundTransparency = 0.25
     ClayGraphicsToggle.Text = ClayGraphicsEnabled and "เปิด" or "ปิด"
     showNotification((ClayGraphicsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ภาพดินน้ำมัน', ClayGraphicsEnabled)
 
@@ -1497,6 +1496,7 @@ end
 SelectiveFpsToggle.MouseButton1Click:Connect(function()
     SelectiveFpsEnabled = not SelectiveFpsEnabled
     SelectiveFpsToggle.BackgroundColor3 = SelectiveFpsEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    SelectiveFpsToggle.BackgroundTransparency = 0.25
     SelectiveFpsToggle.Text = SelectiveFpsEnabled and "เปิด" or "ปิด"
     showNotification((SelectiveFpsEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'แก้แลคเฉพาะจุด (FPS Boost)', SelectiveFpsEnabled)
 
@@ -1518,6 +1518,7 @@ local oldOutdoorAmbient = Lighting.OutdoorAmbient
 FullbrightToggle.MouseButton1Click:Connect(function()
     FullbrightEnabled = not FullbrightEnabled
     FullbrightToggle.BackgroundColor3 = FullbrightEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    FullbrightToggle.BackgroundTransparency = 0.25
     FullbrightToggle.Text = FullbrightEnabled and "เปิด" or "ปิด"
     showNotification((FullbrightEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'แมพสว่าง', FullbrightEnabled)
 end)
@@ -1554,6 +1555,7 @@ end
 FpsBoostToggle.MouseButton1Click:Connect(function()
     FpsBoostEnabled = not FpsBoostEnabled
     FpsBoostToggle.BackgroundColor3 = FpsBoostEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    FpsBoostToggle.BackgroundTransparency = 0.25
     FpsBoostToggle.Text = FpsBoostEnabled and "เปิด" or "ปิด"
     showNotification((FpsBoostEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'เพิ่ม FPS (ลบเอฟเฟค)', FpsBoostEnabled)
 
@@ -1602,6 +1604,7 @@ end
 RemoveJunkToggle.MouseButton1Click:Connect(function()
     RemoveJunkEnabled = not RemoveJunkEnabled
     RemoveJunkToggle.BackgroundColor3 = RemoveJunkEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    RemoveJunkToggle.BackgroundTransparency = 0.25
     RemoveJunkToggle.Text = RemoveJunkEnabled and "เปิด" or "ปิด"
     showNotification((RemoveJunkEnabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ลบสิ่งที่ไม่จำเป็น (หิน/เอฟเฟค)', RemoveJunkEnabled)
 
@@ -1709,6 +1712,7 @@ updateFOV(FOV_Radius)
 
 local function updateVisuals(btn, state, funcName)
     btn.BackgroundColor3 = state and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    btn.BackgroundTransparency = 0.25
     btn.Text = state and "เปิด" or "ปิด"
     local anyEnabled = LockConfig.PlayerHead or LockConfig.PlayerTorso or LockConfig.NPCHead or LockConfig.NPCTorso or LockConfig.FullLock or LockConfig.FullLockTorso
     FOV_Circle.Visible = anyEnabled and not LockConfig.FullLock and not LockConfig.FullLockTorso
@@ -1720,6 +1724,7 @@ FullLockToggle.MouseButton1Click:Connect(function()
     if LockConfig.FullLock then
         LockConfig.FullLockTorso = false
         FullLockTorsoToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+        FullLockTorsoToggle.BackgroundTransparency = 0.25
         FullLockTorsoToggle.Text = "ปิด"
     end
     updateVisuals(FullLockToggle, LockConfig.FullLock, "ล็อกหัว 100%")
@@ -1730,6 +1735,7 @@ FullLockTorsoToggle.MouseButton1Click:Connect(function()
     if LockConfig.FullLockTorso then
         LockConfig.FullLock = false
         FullLockToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+        FullLockToggle.BackgroundTransparency = 0.25
         FullLockToggle.Text = "ปิด"
     end
     updateVisuals(FullLockTorsoToggle, LockConfig.FullLockTorso, "ล็อกตัว 100%")
@@ -1742,22 +1748,22 @@ end)
 
 PlayerHeadToggle.MouseButton1Click:Connect(function()
     LockConfig.PlayerHead = not LockConfig.PlayerHead
-    if LockConfig.PlayerHead then LockConfig.PlayerTorso = false; PlayerTorsoToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); PlayerTorsoToggle.Text = "ปิด" end
+    if LockConfig.PlayerHead then LockConfig.PlayerTorso = false; PlayerTorsoToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); PlayerTorsoToggle.BackgroundTransparency = 0.25; PlayerTorsoToggle.Text = "ปิด" end
     updateVisuals(PlayerHeadToggle, LockConfig.PlayerHead, "ล็อกหัวคน")
 end)
 PlayerTorsoToggle.MouseButton1Click:Connect(function()
     LockConfig.PlayerTorso = not LockConfig.PlayerTorso
-    if LockConfig.PlayerTorso then LockConfig.PlayerHead = false; PlayerHeadToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); PlayerHeadToggle.Text = "ปิด" end
+    if LockConfig.PlayerTorso then LockConfig.PlayerHead = false; PlayerHeadToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); PlayerHeadToggle.BackgroundTransparency = 0.25; PlayerHeadToggle.Text = "ปิด" end
     updateVisuals(PlayerTorsoToggle, LockConfig.PlayerTorso, "ล็อกตัวคน")
 end)
 NPCHeadToggle.MouseButton1Click:Connect(function()
     LockConfig.NPCHead = not LockConfig.NPCHead
-    if LockConfig.NPCHead then LockConfig.NPCTorso = false; NPCTorsoToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); NPCTorsoToggle.Text = "ปิด" end
+    if LockConfig.NPCHead then LockConfig.NPCTorso = false; NPCTorsoToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); NPCTorsoToggle.BackgroundTransparency = 0.25; NPCTorsoToggle.Text = "ปิด" end
     updateVisuals(NPCHeadToggle, LockConfig.NPCHead, "ล็อกหัว NPC")
 end)
 NPCTorsoToggle.MouseButton1Click:Connect(function()
     LockConfig.NPCTorso = not LockConfig.NPCTorso
-    if LockConfig.NPCTorso then LockConfig.NPCHead = false; NPCHeadToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); NPCHeadToggle.Text = "ปิด" end
+    if LockConfig.NPCTorso then LockConfig.NPCHead = false; NPCHeadToggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60); NPCHeadToggle.BackgroundTransparency = 0.25; NPCHeadToggle.Text = "ปิด" end
     updateVisuals(NPCTorsoToggle, LockConfig.NPCTorso, "ล็อกตัว NPC")
 end)
 
@@ -1770,6 +1776,7 @@ NpcEsp2DToggle.MouseButton1Click:Connect(function() LockConfig.NpcEsp2D = not Lo
 WallCheckButton.MouseButton1Click:Connect(function()
     WallCheckEnabled = not WallCheckEnabled
     WallCheckButton.BackgroundColor3 = WallCheckEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    WallCheckButton.BackgroundTransparency = 0.25
     WallCheckButton.Text = WallCheckEnabled and "เปิด" or "ปิด"
     showNotification((WallCheckEnabled and 'เปิดใช้งาน "' or 'ปิดใช้งาน "') .. 'ไม่ล็อกหลังกำแพง"', WallCheckEnabled)
 end)
@@ -2109,5 +2116,42 @@ local function getClosestTarget()
 end
 
 RunService.RenderStepped:Connect(function()
-    -- ระบบทำงานต่อตามปกติ
+    if not ScreenGui.Parent then return end
+    local anyLockEnabled = LockConfig.PlayerHead or LockConfig.PlayerTorso or LockConfig.NPCHead or LockConfig.NPCTorso or LockConfig.FullLock or LockConfig.FullLockTorso
+    if not anyLockEnabled then return end
+    
+    local targetPart = getClosestTarget()
+    if targetPart then 
+        if LockConfig.FullLock or LockConfig.FullLockTorso then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
+        else
+            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, targetPart.Position), math.clamp(LockSpeed / 100, 0.02, 1)) 
+        end
+    end
 end)
+
+YesButton.MouseButton1Click:Connect(function()
+    for k, _ in pairs(LockConfig) do LockConfig[k] = false end
+    WallCheckEnabled = false
+    FullbrightEnabled = false
+    FpsBoostEnabled = false
+    SelectiveFpsEnabled = false
+    RemoveJunkEnabled = false
+    HitboxConfig.Enabled = false
+    CooldownConfig.Enabled = false
+    AutoTpBackConfig.Enabled = false
+    ClayGraphicsEnabled = false
+    InstantActionConfig.Enabled = false
+    InfJumpConfig.Enabled = false
+    NoclipConfig.Enabled = false
+    restoreMaterials()
+    restoreLaggyObjects()
+    
+    for char, origSize in pairs(OriginalSizes) do
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.Size = origSize
+            char.HumanoidRootPart.Transparency = 1
+            char.HumanoidRootPart.Material = Enum.Material.Plastic
+            char.HumanoidRootPart.CanCollide = true
+        end
+    end
