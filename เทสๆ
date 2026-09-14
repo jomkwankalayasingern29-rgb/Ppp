@@ -276,7 +276,7 @@ NoButton.ZIndex = 12
 NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
--- ปรับ TopBar ด้านบนสุดให้จางลง (BackgroundTransparency = 0.6)
+-- ปรับ TopBar ด้านบนสุดให้จางลง
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
@@ -337,7 +337,7 @@ MinimizeButton.TextColor3 = Color3.fromRGB(240, 240, 240)
 MinimizeButton.TextSize = 14
 MinimizeButton.Parent = TopBar
 
--- ปรับหมวดหมู่ซ้ายให้จางลง (BackgroundTransparency = 0.6)
+-- ปรับหมวดหมู่ซ้ายให้จางลง
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
@@ -362,7 +362,7 @@ local LeftPadding = Instance.new("UIPadding")
 LeftPadding.PaddingTop = UDim.new(0, 5)
 LeftPadding.Parent = LeftSide
 
--- ปรับฟังก์ชั่นขวาให้จางลง (BackgroundTransparency = 0.6)
+-- ปรับฟังก์ชันขวาให้จางลง
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.66, 0, 1, -34)
 RightSide.Position = UDim2.new(0.33, 0, 0, 30)
@@ -421,8 +421,8 @@ local categoryButtons = {}
 local function createCategoryButton(name, targetTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 26)
-    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundTransparency = 0.85 -- ปรับสีขาวจางๆ กลมกลืน
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BackgroundTransparency = 0.5
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
     btn.Text = name
@@ -439,8 +439,8 @@ local function createCategoryButton(name, targetTab)
     btn.MouseButton1Click:Connect(function()
         for _, cb in ipairs(categoryButtons) do
             cb.Tab.Visible = (cb.Tab == targetTab)
-            cb.Button.BackgroundColor3 = (cb.Tab == targetTab) and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(255, 255, 255)
-            cb.Button.BackgroundTransparency = (cb.Tab == targetTab) and 0 or 0.85
+            cb.Button.BackgroundColor3 = (cb.Tab == targetTab) and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(30, 30, 30)
+            cb.Button.BackgroundTransparency = (cb.Tab == targetTab) and 0 or 0.5
             cb.Button.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
     end)
@@ -475,7 +475,7 @@ local function createHeader(text, parentTab)
     HeaderLabel.Size = UDim2.new(0.92, 0, 0, 16)
     HeaderLabel.BackgroundTransparency = 1
     HeaderLabel.Text = text
-    HeaderLabel.TextColor3 = Color3.fromRGB(200, 220, 255)
+    HeaderLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
     HeaderLabel.Font = Enum.Font.GothamBold
     HeaderLabel.TextSize = 10
     HeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -483,11 +483,12 @@ local function createHeader(text, parentTab)
     table.insert(allTextLabels, HeaderLabel)
 end
 
+-- ปรับกล่องฟังก์ชันแถวต่างๆ ให้โปร่งใสขึ้น (BackgroundTransparency = 0.5 ให้ดูจางๆ สไตล์โมเดิร์น)
 local function createToggle(name, labelText, parentTab)
     local RowFrame = Instance.new("Frame")
     RowFrame.Size = UDim2.new(0.92, 0, 0, 26)
-    RowFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    RowFrame.BackgroundTransparency = 0.9 -- ทำให้กล่องฟังก์ชันเป็นสีขาวจางๆ
+    RowFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    RowFrame.BackgroundTransparency = 0.5
     RowFrame.BorderSizePixel = 0
     RowFrame.Parent = parentTab
 
@@ -496,8 +497,7 @@ local function createToggle(name, labelText, parentTab)
     RowCorner.Parent = RowFrame
 
     local RowStroke = Instance.new("UIStroke")
-    RowStroke.Color = Color3.fromRGB(255, 255, 255)
-    RowStroke.Transparency = 0.8
+    RowStroke.Color = Color3.fromRGB(70, 70, 70)
     RowStroke.Thickness = 1
     RowStroke.Parent = RowFrame
 
@@ -536,8 +536,8 @@ end
 local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVal, parentTab, callback)
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0.92, 0, 0, 48)
-    Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Frame.BackgroundTransparency = 0.9
+    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Frame.BackgroundTransparency = 0.5
     Frame.BorderSizePixel = 0
     Frame.Parent = parentTab
 
@@ -546,8 +546,7 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     Corner.Parent = Frame
 
     local Stroke = Instance.new("UIStroke")
-    Stroke.Color = Color3.fromRGB(255, 255, 255)
-    Stroke.Transparency = 0.8
+    Stroke.Color = Color3.fromRGB(70, 70, 70)
     Stroke.Thickness = 1
     Stroke.Parent = Frame
 
@@ -566,8 +565,8 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     local InputBox = Instance.new("TextBox")
     InputBox.Size = UDim2.new(0, 55, 0, 20)
     InputBox.Position = UDim2.new(1, -63, 0, 4)
-    InputBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    InputBox.BackgroundTransparency = 0.8
+    InputBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    InputBox.BackgroundTransparency = 0.3
     InputBox.BorderSizePixel = 0
     InputBox.Text = tostring(defaultVal)
     InputBox.TextColor3 = Color3.fromRGB(0, 162, 255)
@@ -583,8 +582,8 @@ local function createSliderWithInputAndSync(labelText, minVal, maxVal, defaultVa
     local Back = Instance.new("Frame")
     Back.Size = UDim2.new(1, -16, 0, 4)
     Back.Position = UDim2.new(0, 8, 0, 34)
-    Back.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Back.BackgroundTransparency = 0.7
+    Back.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    Back.BackgroundTransparency = 0.5
     Back.BorderSizePixel = 0
     Back.Parent = Frame
     table.insert(allSliders, Back)
@@ -630,8 +629,8 @@ end
 local function createSlider(labelText, parentTab)
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0.92, 0, 0, 42)
-    Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Frame.BackgroundTransparency = 0.9
+    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Frame.BackgroundTransparency = 0.5
     Frame.BorderSizePixel = 0
     Frame.Parent = parentTab
 
@@ -640,8 +639,7 @@ local function createSlider(labelText, parentTab)
     Corner.Parent = Frame
 
     local Stroke = Instance.new("UIStroke")
-    Stroke.Color = Color3.fromRGB(255, 255, 255)
-    Stroke.Transparency = 0.8
+    Stroke.Color = Color3.fromRGB(70, 70, 70)
     Stroke.Thickness = 1
     Stroke.Parent = Frame
 
@@ -660,8 +658,8 @@ local function createSlider(labelText, parentTab)
     local Back = Instance.new("Frame")
     Back.Size = UDim2.new(1, -16, 0, 4)
     Back.Position = UDim2.new(0, 8, 0, 28)
-    Back.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Back.BackgroundTransparency = 0.7
+    Back.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    Back.BackgroundTransparency = 0.5
     Back.BorderSizePixel = 0
     Back.Parent = Frame
     table.insert(allSliders, Back)
@@ -688,8 +686,8 @@ end
 createHeader(">> คอมมิวนิตี้ <<", MainFuncTab)
 local DiscordFrame = Instance.new("Frame")
 DiscordFrame.Size = UDim2.new(0.92, 0, 0, 36)
-DiscordFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-DiscordFrame.BackgroundTransparency = 0.9
+DiscordFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+DiscordFrame.BackgroundTransparency = 0.5
 DiscordFrame.BorderSizePixel = 0
 DiscordFrame.Parent = MainFuncTab
 local DiscordCorner = Instance.new("UICorner"); DiscordCorner.CornerRadius = UDim.new(0, 4); DiscordCorner.Parent = DiscordFrame
@@ -760,8 +758,8 @@ local InfJumpToggle = createToggle("InfJump", "กระโดดไม่จำ
 
 local ResetFrame = Instance.new("Frame")
 ResetFrame.Size = UDim2.new(0.92, 0, 0, 32)
-ResetFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ResetFrame.BackgroundTransparency = 0.9
+ResetFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+ResetFrame.BackgroundTransparency = 0.5
 ResetFrame.BorderSizePixel = 0
 ResetFrame.Parent = CharacterTab
 local ResetFrameCorner = Instance.new("UICorner"); ResetFrameCorner.CornerRadius = UDim.new(0, 4); ResetFrameCorner.Parent = ResetFrame
@@ -785,8 +783,8 @@ local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด
 createHeader(">> วาร์ปด่วนครั้งเดียว <<", TeleportTab)
 local TpOnceFrame = Instance.new("Frame")
 TpOnceFrame.Size = UDim2.new(0.92, 0, 0, 34)
-TpOnceFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TpOnceFrame.BackgroundTransparency = 0.9
+TpOnceFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+TpOnceFrame.BackgroundTransparency = 0.5
 TpOnceFrame.BorderSizePixel = 0
 TpOnceFrame.Parent = TeleportTab
 local TpOnceCorner = Instance.new("UICorner"); TpOnceCorner.CornerRadius = UDim.new(0, 4); TpOnceCorner.Parent = TpOnceFrame
@@ -835,8 +833,8 @@ end)
 createHeader(">> เครื่องมือคลิกวาร์ป <<", TeleportTab)
 local GiveToolFrame = Instance.new("Frame")
 GiveToolFrame.Size = UDim2.new(0.92, 0, 0, 34)
-GiveToolFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-GiveToolFrame.BackgroundTransparency = 0.9
+GiveToolFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+GiveToolFrame.BackgroundTransparency = 0.5
 GiveToolFrame.BorderSizePixel = 0
 GiveToolFrame.Parent = TeleportTab
 local GiveToolCorner = Instance.new("UICorner"); GiveToolCorner.CornerRadius = UDim.new(0, 4); GiveToolCorner.Parent = GiveToolFrame
@@ -926,8 +924,8 @@ local RemoveJunkToggle = createToggle("RemoveJunk", "ลบหิน/เศษ�
 createHeader(">> ใส่โค้ดที่ต้องการรัน <<", AutoExecTab)
 local CodeBoxFrame = Instance.new("Frame")
 CodeBoxFrame.Size = UDim2.new(0.92, 0, 0, 85)
-CodeBoxFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-CodeBoxFrame.BackgroundTransparency = 0.9
+CodeBoxFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+CodeBoxFrame.BackgroundTransparency = 0.5
 CodeBoxFrame.BorderSizePixel = 0
 CodeBoxFrame.Parent = AutoExecTab
 
@@ -936,8 +934,7 @@ CodeBoxCorner.CornerRadius = UDim.new(0, 4)
 CodeBoxCorner.Parent = CodeBoxFrame
 
 local CodeBoxStroke = Instance.new("UIStroke")
-CodeBoxStroke.Color = Color3.fromRGB(255, 255, 255)
-CodeBoxStroke.Transparency = 0.8
+CodeBoxStroke.Color = Color3.fromRGB(70, 70, 70)
 CodeBoxStroke.Thickness = 1
 CodeBoxStroke.Parent = CodeBoxFrame
 
@@ -950,7 +947,7 @@ CodeTextBox.ClearTextOnFocus = false
 CodeTextBox.PlaceholderText = "-- พิมพ์หรือวางโค้ด Lua ที่นี่..."
 CodeTextBox.Text = ""
 CodeTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-CodeTextBox.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
+CodeTextBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
 CodeTextBox.TextSize = 10
 CodeTextBox.Font = Enum.Font.Code
 CodeTextBox.TextXAlignment = Enum.TextXAlignment.Left
@@ -961,8 +958,8 @@ table.insert(allTextLabels, CodeTextBox)
 createHeader(">> เลือกจำนวนครั้งที่ต้องการรัน <<", AutoExecTab)
 local ExecBtnFrame = Instance.new("Frame")
 ExecBtnFrame.Size = UDim2.new(0.92, 0, 0, 60)
-ExecBtnFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ExecBtnFrame.BackgroundTransparency = 0.9
+ExecBtnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+ExecBtnFrame.BackgroundTransparency = 0.5
 ExecBtnFrame.BorderSizePixel = 0
 ExecBtnFrame.Parent = AutoExecTab
 local ExecBtnFrameCorner = Instance.new("UICorner"); ExecBtnFrameCorner.CornerRadius = UDim.new(0, 4); ExecBtnFrameCorner.Parent = ExecBtnFrame
@@ -1045,8 +1042,8 @@ for i = 1, 5 do
 
     local dropHeader = Instance.new("Frame")
     dropHeader.Size = UDim2.new(0.92, 0, 0, 28)
-    dropHeader.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    dropHeader.BackgroundTransparency = 0.9
+    dropHeader.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    dropHeader.BackgroundTransparency = 0.5
     dropHeader.BorderSizePixel = 0
     dropHeader.Parent = AutoExecTab
     Instance.new("UICorner", dropHeader).CornerRadius = UDim.new(0, 4)
@@ -1075,8 +1072,8 @@ for i = 1, 5 do
 
     local dropContent = Instance.new("Frame")
     dropContent.Size = UDim2.new(0.92, 0, 0, 175)
-    dropContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    dropContent.BackgroundTransparency = 0.9
+    dropContent.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    dropContent.BackgroundTransparency = 0.5
     dropContent.BorderSizePixel = 0
     dropContent.Visible = false
     dropContent.Parent = AutoExecTab
@@ -1085,14 +1082,14 @@ for i = 1, 5 do
     local subBox = Instance.new("TextBox")
     subBox.Size = UDim2.new(1, -10, 0, 50)
     subBox.Position = UDim2.new(0, 5, 0, 5)
-    subBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    subBox.BackgroundTransparency = 0.8
+    subBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    subBox.BackgroundTransparency = 0.5
     subBox.BorderSizePixel = 0
     subBox.MultiLine = true
     subBox.PlaceholderText = "-- พิมพ์โค้ดสคริปต์ช่องที่ " .. i .. "..."
     subBox.Text = savedDatabase[tostring(i)].Code
     subBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    subBox.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
+    subBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
     subBox.TextSize = 9
     subBox.Font = Enum.Font.Code
     subBox.TextXAlignment = Enum.TextXAlignment.Left
@@ -1133,8 +1130,8 @@ for i = 1, 5 do
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
     subAutoRow.Position = UDim2.new(0, 5, 0, 112)
-    subAutoRow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    subAutoRow.BackgroundTransparency = 0.9
+    subAutoRow.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    subAutoRow.BackgroundTransparency = 0.5
     subAutoRow.BorderSizePixel = 0
     subAutoRow.Parent = dropContent
     Instance.new("UICorner", subAutoRow).CornerRadius = UDim.new(0, 3)
@@ -2118,9 +2115,11 @@ local function getClosestTarget()
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= LocalPlayer and p.Character then processModel(p.Character, false) end
     end
-    for _, desc in ipairs(Workspace:GetDescendants()) do
-        if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then
-            processModel(desc, true)
+    if LockConfig.NPCHead or LockConfig.NPCTorso then
+        for _, desc in ipairs(Workspace:GetDescendants()) do
+            if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then
+                processModel(desc, true)
+            end
         end
     end
     return closestPart
@@ -2129,8 +2128,7 @@ end
 RunService.RenderStepped:Connect(function()
     local target = getClosestTarget()
     if target then
-        local camCFrame = Camera.CFrame
-        local targetCFrame = CFrame.new(camCFrame.Position, target.Position)
-        Camera.CFrame = camCFrame:Lerp(targetCFrame, LockSpeed / 100)
+        local targetCF = CFrame.new(Camera.CFrame.Position, target.Position)
+        Camera.CFrame = Camera.CFrame:Lerp(targetCF, LockSpeed / 100)
     end
 end)
