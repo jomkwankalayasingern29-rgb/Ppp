@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: OPTIMIZED 2D ESP & TARGET LOCK ]] --
+-- [[ GKHub v1.4.25: OPTIMIZED 2D ESP & TARGET LOCK (Fixed) ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -91,15 +91,6 @@ local function showNotification(text, isEnabled)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = card
-
-    local bgIcon = Instance.new("ImageLabel")
-    bgIcon.Size = UDim2.new(1, 0, 1, 0)
-    bgIcon.Position = UDim2.new(0, 0, 0, 0)
-    bgIcon.BackgroundTransparency = 1
-    bgIcon.Image = "rbxassetid://117391496934016"
-    bgIcon.ImageTransparency = 0.6
-    bgIcon.ScaleType = Enum.ScaleType.Slice
-    bgIcon.Parent = card
 
     local stroke = Instance.new("UIStroke")
     stroke.Color = isEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
@@ -201,15 +192,6 @@ MainFrame.Visible = false
 MainFrame.BackgroundTransparency = 1
 MainFrame.Parent = ScreenGui
 
-local BgImage = Instance.new("ImageLabel")
-BgImage.Name = "BgImage"
-BgImage.Size = UDim2.new(1, 0, 1, 0)
-BgImage.BackgroundTransparency = 1
-BgImage.Image = "rbxassetid://111206357236860"
-BgImage.ScaleType = Enum.ScaleType.Slice
-BgImage.SliceCenter = Rect.new(100, 100, 100, 100)
-BgImage.Parent = MainFrame
-
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 8)
 MainCorner.Parent = MainFrame
@@ -286,14 +268,6 @@ local TopBarCorner = Instance.new("UICorner")
 TopBarCorner.CornerRadius = UDim.new(0, 8)
 TopBarCorner.Parent = TopBar
 
-local FixTopBar = Instance.new("Frame")
-FixTopBar.Size = UDim2.new(1, 0, 0, 5)
-FixTopBar.Position = UDim2.new(0, 0, 1, -5)
-FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-FixTopBar.BackgroundTransparency = 0.6
-FixTopBar.BorderSizePixel = 0
-FixTopBar.Parent = TopBar
-
 local LogoG = Instance.new("TextLabel")
 LogoG.Size = UDim2.new(0, 20, 0, 20)
 LogoG.Position = UDim2.new(0, 8, 0, 4)
@@ -354,10 +328,6 @@ LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 5)
 LeftLayout.Parent = LeftSide
-
-local LeftPadding = Instance.new("UIPadding")
-LeftPadding.PaddingTop = UDim.new(0, 5)
-LeftPadding.Parent = LeftSide
 
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.66, 0, 1, -34)
@@ -446,7 +416,6 @@ end
 local btn1 = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
 btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
 btn1.BackgroundTransparency = 0
-btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
 
 createCategoryButton("ระบบล็อกเป้า", AimbotTab)
 createCategoryButton("ระบบ ESP & Chams", EspTab)
@@ -755,7 +724,7 @@ ResetFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 ResetFrame.BackgroundTransparency = 0.5
 ResetFrame.BorderSizePixel = 0
 ResetFrame.Parent = CharacterTab
-local ResetFrameCorner = Instance.new("UICorner"); ResetFrameCorner.CornerRadius = UDim.new(0, 4); ResetFrameCorner.Parent = ResetFrame
+Instance.new("UICorner", ResetFrame).CornerRadius = UDim.new(0, 4)
 
 local ResetBtn = Instance.new("TextButton")
 ResetBtn.Size = UDim2.new(1, -12, 0, 22)
@@ -767,8 +736,7 @@ ResetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ResetBtn.Font = Enum.Font.GothamBold
 ResetBtn.TextSize = 10
 ResetBtn.Parent = ResetFrame
-table.insert(allButtons, ResetBtn)
-local ResetCorner = Instance.new("UICorner"); ResetCorner.CornerRadius = UDim.new(0, 3); ResetCorner.Parent = ResetBtn
+Instance.new("UICorner", ResetBtn).CornerRadius = UDim.new(0, 3)
 
 createHeader(">> ออโต้เทเลพอร์ต <<", TeleportTab)
 local AutoTpBackToggle = createToggle("AutoTpBack", "วาร์ปติดด้านหลังผู้เล่นใกล้สุด (ออโต้)", TeleportTab)
@@ -780,7 +748,7 @@ TpOnceFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 TpOnceFrame.BackgroundTransparency = 0.5
 TpOnceFrame.BorderSizePixel = 0
 TpOnceFrame.Parent = TeleportTab
-local TpOnceCorner = Instance.new("UICorner"); TpOnceCorner.CornerRadius = UDim.new(0, 4); TpOnceCorner.Parent = TpOnceFrame
+Instance.new("UICorner", TpOnceFrame).CornerRadius = UDim.new(0, 4)
 
 local TpOnceBtn = Instance.new("TextButton")
 TpOnceBtn.Size = UDim2.new(1, -12, 0, 24)
@@ -792,8 +760,7 @@ TpOnceBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 TpOnceBtn.Font = Enum.Font.GothamBold
 TpOnceBtn.TextSize = 10
 TpOnceBtn.Parent = TpOnceFrame
-table.insert(allButtons, TpOnceBtn)
-local TpOnceBtnCorner = Instance.new("UICorner"); TpOnceBtnCorner.CornerRadius = UDim.new(0, 3); TpOnceBtnCorner.Parent = TpOnceBtn
+Instance.new("UICorner", TpOnceBtn).CornerRadius = UDim.new(0, 3)
 
 TpOnceBtn.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
@@ -830,7 +797,7 @@ GiveToolFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 GiveToolFrame.BackgroundTransparency = 0.5
 GiveToolFrame.BorderSizePixel = 0
 GiveToolFrame.Parent = TeleportTab
-local GiveToolCorner = Instance.new("UICorner"); GiveToolCorner.CornerRadius = UDim.new(0, 4); GiveToolCorner.Parent = GiveToolFrame
+Instance.new("UICorner", GiveToolFrame).CornerRadius = UDim.new(0, 4)
 
 local GiveToolBtn = Instance.new("TextButton")
 GiveToolBtn.Size = UDim2.new(1, -12, 0, 24)
@@ -842,8 +809,7 @@ GiveToolBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 GiveToolBtn.Font = Enum.Font.GothamBold
 GiveToolBtn.TextSize = 10
 GiveToolBtn.Parent = GiveToolFrame
-table.insert(allButtons, GiveToolBtn)
-local GiveToolBtnCorner = Instance.new("UICorner"); GiveToolBtnCorner.CornerRadius = UDim.new(0, 3); GiveToolBtnCorner.Parent = GiveToolBtn
+Instance.new("UICorner", GiveToolBtn).CornerRadius = UDim.new(0, 3)
 
 GiveToolBtn.MouseButton1Click:Connect(function()
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
@@ -921,11 +887,7 @@ CodeBoxFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 CodeBoxFrame.BackgroundTransparency = 0.5
 CodeBoxFrame.BorderSizePixel = 0
 CodeBoxFrame.Parent = AutoExecTab
-
-local CodeBoxCorner = Instance.new("UICorner")
-CodeBoxCorner.CornerRadius = UDim.new(0, 4)
-CodeBoxCorner.Parent = CodeBoxFrame
-
+Instance.new("UICorner", CodeBoxFrame).CornerRadius = UDim.new(0, 4)
 local CodeBoxStroke = Instance.new("UIStroke")
 CodeBoxStroke.Color = Color3.fromRGB(60, 60, 60)
 CodeBoxStroke.Thickness = 1
@@ -946,7 +908,6 @@ CodeTextBox.Font = Enum.Font.Code
 CodeTextBox.TextXAlignment = Enum.TextXAlignment.Left
 CodeTextBox.TextYAlignment = Enum.TextYAlignment.Top
 CodeTextBox.Parent = CodeBoxFrame
-table.insert(allTextLabels, CodeTextBox)
 
 createHeader(">> เลือกจำนวนครั้งที่ต้องการรัน <<", AutoExecTab)
 local ExecBtnFrame = Instance.new("Frame")
@@ -955,7 +916,7 @@ ExecBtnFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 ExecBtnFrame.BackgroundTransparency = 0.5
 ExecBtnFrame.BorderSizePixel = 0
 ExecBtnFrame.Parent = AutoExecTab
-local ExecBtnFrameCorner = Instance.new("UICorner"); ExecBtnFrameCorner.CornerRadius = UDim.new(0, 4); ExecBtnFrameCorner.Parent = ExecBtnFrame
+Instance.new("UICorner", ExecBtnFrame).CornerRadius = UDim.new(0, 4)
 
 local function executeCodeString(codeStr, times)
     if not codeStr or codeStr == "" then
@@ -1118,7 +1079,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.BackgroundTransparency = 0.2; s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.BackgroundTransparency = 0.2; s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.BackgroundTransparency = 0.2; s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.BackgroundTransparency = 0.2; s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.BackgroundTransparency = 0.2; s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1677,6 +1638,7 @@ CloseButton.MouseButton1Click:Connect(function()
     if not isMinimized then ConfirmOverlay.Visible = true end
 end)
 NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
+YesButton.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
 local LockConfig = {
     FullLock = false, FullLockTorso = false, FullLockTorsoWallCheck = false, PlayerHead = false, PlayerTorso = false, NPCHead = false, NPCTorso = false,
@@ -2090,7 +2052,8 @@ local function getClosestTarget()
             if onScreen then
                 local dist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
                 if dist <= FOV_Radius then
-                    if not WallCheckButton or not WallCheckButton.BackgroundColor3 then -- ถ้าผ่านเงื่อนไข WallCheck
+                    -- แก้ไขการเช็ค WallCheck ให้ถูกต้อง
+                    if not WallCheckEnabled or isVisible(part, model) then
                         if dist < shortestDist then
                             shortestDist = dist
                             closestPart = part
