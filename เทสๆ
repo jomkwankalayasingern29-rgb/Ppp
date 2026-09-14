@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: UPDATED TELEPORT BUTTONS + CUSTOM NOTIF IMAGE & ANIMATION ]] --
+-- [[ GKHub v1.4.25: OPTIMIZED 2D ESP & TARGET LOCK ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -1118,7 +1118,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.BackgroundTransparency = 0.2; s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.BackgroundTransparency = 0.2; s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.BackgroundTransparency = 0.2; s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.BackgroundTransparency = 0.2; s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.BackgroundTransparency = 0.2; s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -1260,7 +1260,7 @@ InstantActionToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.1) do
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         if InstantActionConfig.Enabled then
             for _, obj in ipairs(Workspace:GetDescendants()) do
@@ -1320,7 +1320,7 @@ CooldownToggle.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.2) do
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         if CooldownConfig.Enabled then
             local char = LocalPlayer.Character
@@ -1331,15 +1331,6 @@ task.spawn(function()
                         if string.match(string.lower(attrName), "cooldown") or string.match(string.lower(attrName), "cd") then
                             if tool:GetAttribute(attrName) ~= CooldownConfig.Time then
                                 tool:SetAttribute(attrName, CooldownConfig.Time)
-                            end
-                        end
-                    end
-                    for _, desc in ipairs(tool:GetDescendants()) do
-                        if desc:IsA("NumberValue") or desc:IsA("IntValue") then
-                            if string.match(string.lower(desc.Name), "cooldown") or string.match(string.lower(desc.Name), "cd") then
-                                if desc.Value ~= CooldownConfig.Time then
-                                    desc.Value = CooldownConfig.Time
-                                end
                             end
                         end
                     end
@@ -1686,7 +1677,6 @@ CloseButton.MouseButton1Click:Connect(function()
     if not isMinimized then ConfirmOverlay.Visible = true end
 end)
 NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
-YesButton.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
 local LockConfig = {
     FullLock = false, FullLockTorso = false, FullLockTorsoWallCheck = false, PlayerHead = false, PlayerTorso = false, NPCHead = false, NPCTorso = false,
@@ -1933,7 +1923,7 @@ local function isVisible(targetPartInstance, targetChar)
 end
 
 task.spawn(function()
-    while task.wait(0.2) do
+    while task.wait(0.5) do
         if not ScreenGui.Parent then break end
         
         if LockConfig.PlayerEspChams then
@@ -2099,16 +2089,23 @@ local function getClosestTarget()
             local partPos, onScreen = Camera:WorldToViewportPoint(part.Position)
             if onScreen then
                 local dist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                if dist <= FOV_Radius and dist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
-                    shortestDist = dist; closestPart = part
+                if dist <= FOV_Radius then
+                    if not WallCheckButton or not WallCheckButton.BackgroundColor3 then -- ถ้าผ่านเงื่อนไข WallCheck
+                        if dist < shortestDist then
+                            shortestDist = dist
+                            closestPart = part
+                        end
+                    end
                 end
             end
         end
     end
 
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character then
-            processModel(p.Character, false)
+    if LockConfig.PlayerHead or LockConfig.PlayerTorso then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                processModel(p.Character, false)
+            end
         end
     end
 
@@ -2124,11 +2121,10 @@ local function getClosestTarget()
 end
 
 RunService.RenderStepped:Connect(function()
-    local targetPart = getClosestTarget()
-    if targetPart then
-        local camPos = Camera.CFrame.Position
-        local targetPos = targetPart.Position
-        local newCFrame = CFrame.new(camPos, targetPos)
-        Camera.CFrame = Camera.CFrame:Lerp(newCFrame, math.clamp(LockSpeed / 100, 0.01, 1))
+    local target = getClosestTarget()
+    if target then
+        local camCFrame = Camera.CFrame
+        local targetCFrame = CFrame.new(camCFrame.Position, target.Position)
+        Camera.CFrame = camCFrame:Lerp(targetCFrame, LockSpeed / 100)
     end
 end)
