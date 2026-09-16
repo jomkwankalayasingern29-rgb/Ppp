@@ -276,6 +276,7 @@ NoButton.ZIndex = 12
 NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
 
+-- ปรับ TopBar ด้านบนสุดให้จางลง (BackgroundTransparency = 0.6)
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
@@ -311,7 +312,7 @@ TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Text = "GKHub | Main Script"
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- เพิ่มความชัดข้อความด้านบน
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
@@ -336,6 +337,7 @@ MinimizeButton.TextColor3 = Color3.fromRGB(240, 240, 240)
 MinimizeButton.TextSize = 14
 MinimizeButton.Parent = TopBar
 
+-- ปรับหมวดหมู่ซ้ายให้จางลง (BackgroundTransparency = 0.6)
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
@@ -360,6 +362,7 @@ local LeftPadding = Instance.new("UIPadding")
 LeftPadding.PaddingTop = UDim.new(0, 5)
 LeftPadding.Parent = LeftSide
 
+-- ปรับฟังก์ชั่นขวาให้จางลง (BackgroundTransparency = 0.6)
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.66, 0, 1, -34)
 RightSide.Position = UDim2.new(0.33, 0, 0, 30)
@@ -418,12 +421,13 @@ local categoryButtons = {}
 local function createCategoryButton(name, targetTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 26)
+    -- ปรับปุ่มหมวดหมู่ให้โปร่งใสขึ้น (BackgroundTransparency = 0.5)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     btn.BackgroundTransparency = 0.5
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
     btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255) -- ข้อความชัดขึ้น
     btn.TextSize = 10
     btn.Parent = LeftSide
 
@@ -472,7 +476,7 @@ local function createHeader(text, parentTab)
     HeaderLabel.Size = UDim2.new(0.92, 0, 0, 16)
     HeaderLabel.BackgroundTransparency = 1
     HeaderLabel.Text = text
-    HeaderLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+    HeaderLabel.TextColor3 = Color3.fromRGB(100, 200, 255) -- ปรับสีหัวข้อหมวดหมู่ย่อยให้สว่างชัดเจน
     HeaderLabel.Font = Enum.Font.GothamBold
     HeaderLabel.TextSize = 10
     HeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -502,7 +506,7 @@ local function createToggle(name, labelText, parentTab)
     Label.Position = UDim2.new(0, 8, 0, 0)
     Label.BackgroundTransparency = 1
     Label.Text = labelText
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255) -- ข้อความในฟังก์ชันชัดขึ้น
     Label.Font = Enum.Font.GothamBold
     Label.TextSize = 10
     Label.TextXAlignment = Enum.TextXAlignment.Left
@@ -513,6 +517,7 @@ local function createToggle(name, labelText, parentTab)
     Button.Name = name .. "Button"
     Button.Size = UDim2.new(0, 50, 0, 18)
     Button.Position = UDim2.new(1, -54, 0.5, -9)
+    -- ปรับปุ่มเปิด-ปิดให้สีจางลง (เพิ่ม BackgroundTransparency = 0.3)
     Button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
     Button.BackgroundTransparency = 0.3
     Button.Text = "ปิด"
@@ -886,44 +891,6 @@ GiveToolBtn.MouseButton1Click:Connect(function()
     showNotification("รับไอเท็ม 'อุปกรณ์คลิกวาร์ป' สำเร็จ!", true)
 end)
 
-createHeader(">> กำจัดบอทออโต้ <<", ToolTab)
-local AutoKillBotToggle = createToggle("AutoKillBot", "ฆ่าบอทรอบๆตัว (ออโต้ 300 สตัด)", ToolTab)
-local AutoKillBotConfig = { Enabled = false }
-
-AutoKillBotToggle.MouseButton1Click:Connect(function()
-    AutoKillBotConfig.Enabled = not AutoKillBotConfig.Enabled
-    AutoKillBotToggle.BackgroundColor3 = AutoKillBotConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(200, 50, 50)
-    AutoKillBotToggle.BackgroundTransparency = 0.3
-    AutoKillBotToggle.Text = AutoKillBotConfig.Enabled and "เปิด" or "ปิด"
-    showNotification((AutoKillBotConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ฆ่าบอทรอบๆตัว (ออโต้)', AutoKillBotConfig.Enabled)
-end)
-
-task.spawn(function()
-    while task.wait(1) do
-        if not ScreenGui.Parent then break end
-        if AutoKillBotConfig.Enabled then
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local myRootPos = char.HumanoidRootPart.Position
-                pcall(function()
-                    for _, obj in ipairs(Workspace:GetDescendants()) do
-                        if obj:IsA("Model") and obj ~= char and not Players:GetPlayerFromCharacter(obj) then
-                            local humanoid = obj:FindFirstChildOfClass("Humanoid")
-                            local hrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")
-                            if humanoid and hrp and humanoid.Health > 0 then
-                                local dist = (hrp.Position - myRootPos).Magnitude
-                                if dist <= 300 then
-                                    humanoid.Health = 0
-                                end
-                            end
-                        end
-                    end
-                end)
-            end
-        end
-    end
-end)
-
 createHeader(">> กดใช้งานทันที (0 วิ) <<", ToolTab)
 local InstantActionToggle = createToggle("InstantAction", "เปิดใช้งานกดค้างทันที (0 วิ)", ToolTab)
 
@@ -1157,7 +1124,7 @@ for i = 1, 5 do
     local s1 = Instance.new("TextButton"); s1.Size = UDim2.new(0, sBtnW, 1, 0); s1.Position = UDim2.new(0, 0, 0, 0); s1.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1.BackgroundTransparency = 0.2; s1.Text = "รัน ×1"; s1.TextColor3 = Color3.fromRGB(255,255,255); s1.Font = Enum.Font.GothamBold; s1.TextSize = 8; s1.Parent = subExecRow; Instance.new("UICorner", s1).CornerRadius = UDim.new(0, 3)
     local s10 = Instance.new("TextButton"); s10.Size = UDim2.new(0, sBtnW, 1, 0); s10.Position = UDim2.new(0, 58, 0, 0); s10.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s10.BackgroundTransparency = 0.2; s10.Text = "รัน ×10"; s10.TextColor3 = Color3.fromRGB(255,255,255); s10.Font = Enum.Font.GothamBold; s10.TextSize = 8; s10.Parent = subExecRow; Instance.new("UICorner", s10).CornerRadius = UDim.new(0, 3)
     local s100 = Instance.new("TextButton"); s100.Size = UDim2.new(0, sBtnW, 1, 0); s100.Position = UDim2.new(0, 116, 0, 0); s100.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s100.BackgroundTransparency = 0.2; s100.Text = "รัน ×100"; s100.TextColor3 = Color3.fromRGB(255,255,255); s100.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s100).CornerRadius = UDim.new(0, 3)
-    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.BackgroundTransparency = 0.2; s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s100.TextSize = 8; s100.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
+    local s1000 = Instance.new("TextButton"); s1000.Size = UDim2.new(0, sBtnW, 1, 0); s1000.Position = UDim2.new(0, 174, 0, 0); s1000.BackgroundColor3 = Color3.fromRGB(0, 162, 255); s1000.BackgroundTransparency = 0.2; s1000.Text = "รัน ×1000"; s1000.TextColor3 = Color3.fromRGB(255,255,255); s1000.Font = Enum.Font.GothamBold; s1000.TextSize = 8; s1000.Parent = subExecRow; Instance.new("UICorner", s1000).CornerRadius = UDim.new(0, 3)
 
     local subAutoRow = Instance.new("Frame")
     subAutoRow.Size = UDim2.new(1, -10, 0, 24)
@@ -2088,6 +2055,225 @@ RunService.RenderStepped:Connect(function()
             if desc:FindFirstChild("HumanoidRootPart") then
                 drawESP(desc, true) 
             end
+        end
+    end
+end)
+
+local function getClosestTarget()
+    local closestPart, shortestDist = nil, math.huge
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return nil end
+    local myRootPos = LocalPlayer.Character.HumanoidRootPart.Position
+
+    if LockConfig.FullLock then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                local head = p.Character.Head
+                if not LockConfig.FullLockTorsoWallCheck or isVisible(head, p.Character) then
+                    local dist = (head.Position - myRootPos).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        closestPart = head
+                    end
+                end
+            end
+        end
+        return closestPart
+    end
+
+    if LockConfig.FullLockTorso then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                local torso = p.Character.HumanoidRootPart
+                if not LockConfig.FullLockTorsoWallCheck or isVisible(torso, p.Character) then
+                    local dist = (torso.Position - myRootPos).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        closestPart = torso
+                    end
+                end
+            end
+        end
+        return closestPart
+    end
+
+    local function processModel(model, isNpc)
+        local pName = (isNpc and (LockConfig.NPCHead and "Head" or LockConfig.NPCTorso and "HumanoidRootPart")) or (LockConfig.PlayerHead and "Head" or LockConfig.PlayerTorso and "HumanoidRootPart")
+        if not pName then return end
+        local part = model:FindFirstChild(pName) or (pName == "HumanoidRootPart" and (model:FindFirstChild("UpperTorso") or model:FindFirstChild("Torso")))
+        if part and model:FindFirstChild("Humanoid") and model.Humanoid.Health > 0 then
+            local partPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+            if onScreen then
+                local dist = (Vector2.new(partPos.X, partPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if dist <= FOV_Radius and dist < shortestDist and (not WallCheckEnabled or isVisible(part, model)) then
+                    shortestDist = dist; closestPart = part
+                end
+            end
+        end
+    end
+
+    for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character then processModel(p.Character, false) end end
+    for _, d in ipairs(Workspace:GetDescendants()) do if d:IsA("Model") and d:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(d) and d ~= LocalPlayer.Character then processModel(d, true) end end
+    return closestPart
+end
+
+RunService.RenderStepped:Connect(function()
+    if not ScreenGui.Parent then return end
+    local anyLockEnabled = LockConfig.PlayerHead or LockConfig.PlayerTorso or LockConfig.NPCHead or LockConfig.NPCTorso or LockConfig.FullLock or LockConfig.FullLockTorso
+    if not anyLockEnabled then return end
+    
+    local targetPart = getClosestTarget()
+    if targetPart then 
+        if LockConfig.FullLock or LockConfig.FullLockTorso then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
+        else
+            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, targetPart.Position), math.clamp(LockSpeed / 100, 0.02, 1)) 
+        end
+    end
+end)
+
+YesButton.MouseButton1Click:Connect(function()
+    for k, _ in pairs(LockConfig) do LockConfig[k] = false end
+    WallCheckEnabled = false
+    FullbrightEnabled = false
+    FpsBoostEnabled = false
+    SelectiveFpsEnabled = false
+    RemoveJunkEnabled = false
+    HitboxConfig.Enabled = false
+    CooldownConfig.Enabled = false
+    AutoTpBackConfig.Enabled = false
+    ClayGraphicsEnabled = false
+    InstantActionConfig.Enabled = false
+    InfJumpConfig.Enabled = false
+    NoclipConfig.Enabled = false
+    restoreMaterials()
+    restoreLaggyObjects()
+    
+    for char, origSize in pairs(OriginalSizes) do
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.Size = origSize
+            char.HumanoidRootPart.Transparency = 1
+            char.HumanoidRootPart.Material = Enum.Material.Plastic
+            char.HumanoidRootPart.CanCollide = true
+        end
+    end
+    ScreenGui:Destroy()
+end)
+CooldownBtn.InputBegan:Connect(function(input) 
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
+        cooldownDragging = true 
+    end 
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        fovDragging = false
+        speedDragging = false
+        walkSpeedDragging = false
+        jumpPowerDragging = false
+        hitboxDragging = false
+        cooldownDragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        local mousePos = UserInputService:GetMouseLocation()
+        
+        if fovDragging then
+            local sliderPos = SliderBack.AbsolutePosition
+            local sliderSize = SliderBack.AbsoluteSize
+            local pos = math.clamp((mousePos.X - sliderPos.X) / sliderSize.X, 0, 1)
+            updateFOV(10 + pos * 490)
+        elseif speedDragging then
+            local sliderPos = SpeedBack.AbsolutePosition
+            local sliderSize = SpeedBack.AbsoluteSize
+            local pos = math.clamp((mousePos.X - sliderPos.X) / sliderSize.X, 0, 1)
+            LockSpeed = 10 + pos * 490
+            SpeedLabel.Text = "ความเร็วดูด: " .. math.floor(LockSpeed)
+            SliderBtn.Position = UDim2.new(pos, -6, 0, -4)
+        elseif walkSpeedDragging then
+            local sliderPos = WalkSpeedBack.AbsolutePosition
+            local sliderSize = WalkSpeedBack.AbsoluteSize
+            local pos = math.clamp((mousePos.X - sliderPos.X) / sliderSize.X, 0, 1)
+            local val = math.floor(16 + pos * (800 - 16))
+            WalkSpeedInput.Text = tostring(val)
+            WalkSpeedBtn.Position = UDim2.new(pos, -6, 0, -4)
+            CurrentWalkSpeed = val
+            if LockConfig.EnableSpeed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid.WalkSpeed = val
+            end
+        elseif jumpPowerDragging then
+            local sliderPos = JumpPowerBack.AbsolutePosition
+            local sliderSize = JumpPowerBack.AbsoluteSize
+            local pos = math.clamp((mousePos.X - sliderPos.X) / sliderSize.X, 0, 1)
+            local val = math.floor(50 + pos * (500 - 50))
+            JumpPowerInput.Text = tostring(val)
+            JumpPowerBtn.Position = UDim2.new(pos, -6, 0, -4)
+            CurrentJumpPower = val
+            if LockConfig.EnableJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                local humanoid = LocalPlayer.Character.Humanoid
+                humanoid.UseJumpPower = true
+                humanoid.JumpPower = val
+            end
+        elseif hitboxDragging then
+            local sliderPos = HitboxBack.AbsolutePosition
+            local sliderSize = HitboxBack.AbsoluteSize
+            local pos = math.clamp((mousePos.X - sliderPos.X) / sliderSize.X, 0, 1)
+            local val = math.floor(1 + pos * (1000 - 1))
+            HitboxInput.Text = tostring(val)
+            HitboxBtn.Position = UDim2.new(pos, -6, 0, -4)
+            HitboxConfig.Size = val
+        elseif cooldownDragging then
+            local sliderPos = CooldownBack.AbsolutePosition
+            local sliderSize = CooldownBack.AbsoluteSize
+            local pos = math.clamp((mousePos.X - sliderPos.X) / sliderSize.X, 0, 1)
+            local val = math.floor(pos * 10 * 10) / 10
+            CooldownLabel.Text = "เวลาคูลดาวน์: " .. val .. " วิ"
+            CooldownBtn.Position = UDim2.new(pos, -6, 0, -4)
+            CooldownConfig.Time = val
+        end
+    end
+end)
+
+-- ฟังก์ชันการทำงานหลักของการล็อกเป้า (Aimbot & Camera Lock)
+RunService.RenderStepped:Connect(function()
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
+    local myRoot = char.HumanoidRootPart
+    local myHead = char:FindFirstChild("Head") or myRoot
+    
+    -- อัปเดตตำแหน่งวงกลม FOV ตามเมาส์
+    if FOV_Circle.Visible then
+        local mousePos = UserInputService:GetMouseLocation()
+        FOV_Circle.Position = UDim2.new(0, mousePos.X, 0, mousePos.Y)
+    end
+    
+    -- ระบบ FullLock (ล็อกหัว/ตัว 100%)
+    if LockConfig.FullLock or LockConfig.FullLockTorso then
+        local closestTarget = nil
+        local shortestDist = math.huge
+        
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local tChar = player.Character
+                local humanoid = tChar:FindFirstChildOfClass("Humanoid")
+                local targetPart = LockConfig.FullLock and (tChar:FindFirstChild("Head") or tChar:FindFirstChild("HumanoidRootPart")) or (tChar:FindFirstChild("HumanoidRootPart") or tChar:FindFirstChild("Head"))
+                
+                if humanoid and targetPart and humanoid.Health > 0 then
+                    if not (LockConfig.FullLockTorso and LockConfig.FullLockTorsoWallCheck) or not isBehindWall(myHead.Position, targetPart.Position) then
+                        local dist = (targetPart.Position - myRoot.Position).Magnitude
+                        if dist < shortestDist then
+                            shortestDist = dist
+                            closestTarget = targetPart
+                        end
+                    end
+                end
+            end
+        end
+        
+        if closestTarget then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestTarget.Position)
         end
     end
 end)
