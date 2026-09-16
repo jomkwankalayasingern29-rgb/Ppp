@@ -76,6 +76,7 @@ local NotifPadding = Instance.new("UIPadding")
 NotifPadding.PaddingBottom = UDim.new(0, 15)
 NotifPadding.Parent = NotifContainer
 
+-- ฟังก์ชันแจ้งเตือนพร้อมรูปภาพคลุม UI และอนิเมชันเด้งขึ้นแบบนุ่มนวล
 local function showNotification(text, isEnabled)
     if not ScreenGui.Parent then return end
     
@@ -274,10 +275,6 @@ NoButton.BorderSizePixel = 0
 NoButton.ZIndex = 12
 NoButton.Parent = ConfirmBox
 local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
-
-YesButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
 
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
@@ -887,6 +884,44 @@ GiveToolBtn.MouseButton1Click:Connect(function()
 
     tool.Parent = backpack
     showNotification("รับไอเท็ม 'อุปกรณ์คลิกวาร์ป' สำเร็จ!", true)
+end)
+
+createHeader(">> กำจัดบอทออโต้ <<", ToolTab)
+local AutoKillBotToggle = createToggle("AutoKillBot", "ฆ่าบอทรอบๆตัว (ออโต้ 300 สตัด)", ToolTab)
+local AutoKillBotConfig = { Enabled = false }
+
+AutoKillBotToggle.MouseButton1Click:Connect(function()
+    AutoKillBotConfig.Enabled = not AutoKillBotConfig.Enabled
+    AutoKillBotToggle.BackgroundColor3 = AutoKillBotConfig.Enabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(200, 50, 50)
+    AutoKillBotToggle.BackgroundTransparency = 0.3
+    AutoKillBotToggle.Text = AutoKillBotConfig.Enabled and "เปิด" or "ปิด"
+    showNotification((AutoKillBotConfig.Enabled and 'เปิดใช้งาน ' or 'ปิดใช้งาน ') .. 'ฆ่าบอทรอบๆตัว (ออโต้)', AutoKillBotConfig.Enabled)
+end)
+
+task.spawn(function()
+    while task.wait(1) do
+        if not ScreenGui.Parent then break end
+        if AutoKillBotConfig.Enabled then
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local myRootPos = char.HumanoidRootPart.Position
+                pcall(function()
+                    for _, obj in ipairs(Workspace:GetDescendants()) do
+                        if obj:IsA("Model") and obj ~= char and not Players:GetPlayerFromCharacter(obj) then
+                            local humanoid = obj:FindFirstChildOfClass("Humanoid")
+                            local hrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")
+                            if humanoid and hrp and humanoid.Health > 0 then
+                                local dist = (hrp.Position - myRootPos).Magnitude
+                                if dist <= 300 then
+                                    humanoid.Health = 0
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end
 end)
 
 createHeader(">> กดใช้งานทันที (0 วิ) <<", ToolTab)
@@ -2054,12 +2089,5 @@ RunService.RenderStepped:Connect(function()
                 drawESP(desc, true) 
             end
         end
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    local targetPart = nil
-    if LockConfig.FullLock or LockConfig.FullLockTorso or LockConfig.PlayerHead or LockConfig.PlayerTorso or LockConfig.NPCHead or LockConfig.NPCTorso then
-        -- ลูปการทำงานล็อกเป้าทำงานต่อเนื่องที่นี่
     end
 end)
