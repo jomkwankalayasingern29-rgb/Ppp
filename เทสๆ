@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: Multi-UI Support ]] --
+-- [[ GKHub v1.4.25: Multi-UI & Discord Copy Support ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -45,7 +45,6 @@ end
 local savedDatabase = loadSavedData()
 
 local ScreenGui = Instance.new("ScreenGui")
--- ใช้ HttpService:GenerateGUID() เพื่อสร้างชื่อที่ไม่ซ้ำกัน ทำให้รันหลาย UI พร้อมกันได้
 ScreenGui.Name = "CustomScriptUI_" .. HttpService:GenerateGUID(false):sub(1, 8)
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -397,6 +396,37 @@ end
 
 local MainFuncTab = createContainer("หน้าแรก")
 
+-- ฟังก์ชันสร้างปุ่มกดคัดลอกลิงก์ดิสคอดในหน้าแรก
+local function createDiscordButton(parentTab)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.92, 0, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BackgroundTransparency = 0.4
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = "คัดลอกลิงก์ดิสคอด"
+    btn.TextColor3 = Color3.fromRGB(0, 162, 255)
+    btn.TextSize = 11
+    btn.Parent = parentTab
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(0, 162, 255)
+    stroke.Thickness = 1
+    stroke.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        copyToClipboard(DiscordLink)
+        showNotification("คัดลอกลิงก์ดิสคอดสำเร็จแล้ว!", true)
+    end)
+end
+
+-- เรียกใช้งานฟังก์ชันสร้างปุ่มดิสคอดในหมวดหมู่หน้าแรก
+createDiscordButton(MainFuncTab)
+
 local categoryButtons = {}
 local function createCategoryButton(name, targetTab)
     local btn = Instance.new("TextButton")
@@ -449,10 +479,10 @@ task.spawn(function()
         end
     end
     
-    LoadText.Text = "ดาวโหลดเสร็จเเล้ว"
+    LoadText.Text = "ดาวน์โหลดเสร็จแล้ว"
     task.wait(0.6)
     
-    LoadText.Text = "คัดลอกลิ้งดิสเสร็จเเล้ว"
+    LoadText.Text = "คัดลอกลิงก์ดิสคอดเสร็จแล้ว"
     copyToClipboard(DiscordLink)
     task.wait(0.6)
     
