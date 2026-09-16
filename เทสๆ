@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: UI System Only ]] --
+-- [[ GKHub v1.4.25: Multi-UI Support ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -12,16 +12,6 @@ local HttpService = game:GetService("HttpService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
-
-local oldUIs = {"CustomScriptUI", "GKHub_Gui", "HJ1JK_Gui", "HJ1JK_LoadingUI", "HJ1JK_NotifGui", "D_Icon", "FOV_Circle"}
-for _, uiName in ipairs(oldUIs) do
-    if CoreGui:FindFirstChild(uiName) then
-        pcall(function() CoreGui[uiName]:Destroy() end)
-    end
-    if LocalPlayer:FindFirstChild("PlayerGui") and LocalPlayer.PlayerGui:FindFirstChild(uiName) then
-        pcall(function() LocalPlayer.PlayerGui[uiName]:Destroy() end)
-    end
-end
 
 local DiscordLink = "https://discord.gg/Ugssja4wqQ"
 local SaveFileName = "GKHub_SavedCodes.json"
@@ -55,7 +45,8 @@ end
 local savedDatabase = loadSavedData()
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CustomScriptUI"
+-- ใช้ HttpService:GenerateGUID() เพื่อสร้างชื่อที่ไม่ซ้ำกัน ทำให้รันหลาย UI พร้อมกันได้
+ScreenGui.Name = "CustomScriptUI_" .. HttpService:GenerateGUID(false):sub(1, 8)
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -76,7 +67,6 @@ local NotifPadding = Instance.new("UIPadding")
 NotifPadding.PaddingBottom = UDim.new(0, 15)
 NotifPadding.Parent = NotifContainer
 
--- ฟังก์ชันแจ้งเตือนพร้อมรูปภาพคลุม UI และอนิเมชันเด้งขึ้นแบบนุ่มนวล
 local function showNotification(text, isEnabled)
     if not ScreenGui.Parent then return end
     
@@ -481,7 +471,6 @@ end)
 local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
-    local TweenService = game:GetService("TweenService")
     if isMinimized then
         MinimizeButton.Text = "+"
         TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 440, 0, 28)}):Play()
