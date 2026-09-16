@@ -1,4 +1,4 @@
--- [[ GKHub v1.5.1: Mobile Friendly & Loading UI ]] --
+-- [[ GKHub v1.5.2: Smooth Loading & Fade-in UI ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -120,7 +120,7 @@ local function showNotification(text, isEnabled)
     end)
 end
 
--- [ หน้าจอโหลด (Loading Screen) สำหรับมือถือ ] --
+-- [ หน้าจอโหลด (Loading Screen) พร้อมอนิเมชันจุดวิ่ง ] --
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
 LoadFrame.Size = UDim2.new(0, 240, 0, 55)
@@ -143,13 +143,12 @@ LoadText.Name = "LoadText"
 LoadText.Size = UDim2.new(1, 0, 1, 0)
 LoadText.BackgroundTransparency = 1
 LoadText.Font = Enum.Font.GothamBold
-LoadText.Text = "กำลังโหลดระบบ..."
+LoadText.Text = "กำลังโหลด..."
 LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 12
 LoadText.Parent = LoadFrame
 
-
--- [ UI หลัก (ขนาดกะทัดรัดสำหรับมือถือ: 380x240) ] --
+-- [ UI หลัก (ขนาดกะทัดรัดสำหรับมือถือ) ] --
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 380, 0, 240)
@@ -159,7 +158,7 @@ MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Visible = false
-MainFrame.BackgroundTransparency = 1
+MainFrame.BackgroundTransparency = 1 -- ตั้งค่าเริ่มต้นให้จางสนิท (สำหรับทำ Fade-in)
 MainFrame.Parent = ScreenGui
 
 local BgImage = Instance.new("ImageLabel")
@@ -514,26 +513,36 @@ LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     LeftSide.CanvasSize = UDim2.new(0, 0, 0, LeftLayout.AbsoluteContentSize.Y + 15)
 end)
 
--- [ แสดงอนิเมชันตอนเริ่มรัน (โหลดเสร็จค่อยเปิดหน้าต่างหลัก) ] --
+-- [ ควบคุมลำดับขั้นตอนการโหลดและอนิเมชันเปิด UI แบบ Fade-in ] --
 task.spawn(function()
+    -- 1. กำลังโหลด... (มีอนิเมชันจุดวิ่ง 2 วินาที)
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
-    
-    while tick() - startTime < 1.2 do
+    while tick() - startTime < 2 do
         for _, d in ipairs(dots) do
-            LoadText.Text = "กำลังโหลดระบบ" .. d
-            task.wait(0.2)
+            if not LoadText.Parent then return end
+            LoadText.Text = "กำลังโหลด" .. d
+            task.wait(0.3)
         end
     end
     
-    LoadText.Text = "พร้อมใช้งาน!"
-    task.wait(0.4)
+    -- 2. โหลดเสร็จแล้ว (1 วินาที)
+    LoadText.Text = "โหลดเสร็จแล้ว"
+    task.wait(1)
+    
+    -- 3. คัดลอกลิงก์ดิสคอดเสร็จแล้ว
+    LoadText.Text = "คัดลอกลิงก์ดิสเสร็จแล้ว"
+    copyToClipboard(DiscordLink)
+    task.wait(0.8)
+    
+    -- ลบหน้าจอโหลดทิ้ง
     LoadFrame:Destroy()
     
+    -- 4. เด้ง UI หลักขึ้นมาแบบจางๆ ค่อยๆ โผล่มา (Fade-in & Scale)
     MainFrame.Visible = true
-    MainFrame.Size = UDim2.new(0, 260, 0, 160)
+    MainFrame.Size = UDim2.new(0, 280, 0, 180)
     
-    TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 380, 0, 240),
         BackgroundTransparency = 0
     }):Play()
