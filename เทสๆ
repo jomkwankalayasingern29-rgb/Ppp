@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.26: Attack Category & Glassmorphism Theme ]] --
+-- [[ GKHub v1.4.27: Target Lock Feature ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -397,7 +397,7 @@ end
 local MainFuncTab = createContainer("หน้าแรก")
 local AttackFuncTab = createContainer("โจมตี")
 
--- ปุ่มคัดลอกลิงก์ดิสคอดในหน้าแรก: ความโปร่งใส 0.6, ตัวอักษรสีขาว, ไม่มีขอบ
+-- ปุ่มคัดลอกลิงก์ดิสคอดในหน้าแรก
 local function createDiscordButton(parentTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 32)
@@ -422,13 +422,107 @@ end
 
 createDiscordButton(MainFuncTab)
 
+-- ระบบล็อกเป้า (Aimbot / Lock Target)
+local AimbotEnabled = false
+local FOVRadius = 120 -- ขนาดรัศมีวงกลมตรงกลางจอ
+
+-- สร้างวงกลม FOV แสดงตรงกลางจอ
+local FOVgui = Instance.new("ScreenGui")
+FOVgui.Name = "GKHub_FOV"
+FOVgui.Parent = CoreGui
+FOVgui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local FOVFrame = Instance.new("Frame")
+FOVFrame.Size = UDim2.new(0, FOVRadius * 2, 0, FOVRadius * 2)
+FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+FOVFrame.BackgroundTransparency = 1
+FOVFrame.Visible = false
+FOVFrame.Parent = FOVgui
+
+local FOVStroke = Instance.new("UIStroke")
+FOVStroke.Color = Color3.fromRGB(0, 162, 255)
+FOVStroke.Thickness = 1.5
+FOVStroke.Parent = FOVFrame
+
+local FOVCircleCorner = Instance.new("UICorner")
+FOVCircleCorner.CornerRadius = UDim.new(1, 0)
+FOVCircleCorner.Parent = FOVFrame
+
+-- ฟังก์ชันคำนวณหาเป้าหมายที่อยู่ใกล้จุดกึ่งกลางจอที่สุดในวงกลม
+local function getClosestPlayerInFOV()
+    local closestTarget = nil
+    local shortestDist = FOVRadius
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            local hrp = player.Character.HumanoidRootPart
+            local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+            
+            if onScreen then
+                local screenVector = Vector2.new(screenPos.X, screenPos.Y)
+                local dist = (screenVector - screenCenter).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closestTarget = hrp
+                end
+            end
+        end
+    end
+    return closestTarget
+end
+
+-- ลูปการทำงานล็อกเป้าแบบไม่แล็ค (ไม่สแกนทั้งแมพ เช็คเฉพาะคนในระยะจอ)
+RunService.RenderStepped:Connect(function()
+    if AimbotEnabled then
+        FOVFrame.Visible = true
+        local target = getClosestPlayerInFOV()
+        if target then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+        end
+    else
+        FOVFrame.Visible = false
+    end
+end)
+
+-- สร้างปุ่มเปิด/ปิด ล็อกเป้าในหมวด "โจมตี"
+local function createAimbotButton(parentTab)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.92, 0, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundTransparency = 0.6
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = "ล็อกเป้า: ปิด"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 11
+    btn.Parent = parentTab
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        AimbotEnabled = not AimbotEnabled
+        if AimbotEnabled then
+            btn.Text = "ล็อกเป้า: เปิด"
+            showNotification("เปิดใช้งานระบบล็อกเป้าแล้ว", true)
+        else
+            btn.Text = "ล็อกเป้า: ปิด"
+            showNotification("ปิดใช้งานระบบล็อกเป้าแล้ว", false)
+        end
+    end)
+end
+
+createAimbotButton(AttackFuncTab)
+
 local categoryButtons = {}
 local function createCategoryButton(name, targetTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 26)
-    -- ปรับสีหมวดหมู่ให้เป็นสีขาวจางๆ 0.9 (สไตล์กระจก)
     btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundTransparency = 0.9
+    btn.BackgroundTransparency = 0.9 -- สไตล์กระจก 0.9
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
     btn.Text = name
@@ -446,11 +540,9 @@ local function createCategoryButton(name, targetTab)
         for _, cb in ipairs(categoryButtons) do
             cb.Tab.Visible = (cb.Tab == targetTab)
             if cb.Tab == targetTab then
-                -- ปุ่มที่เลือก: เน้นชัดขึ้น (เช่น สีฟ้า หรือความโปร่งใสลดลง)
                 cb.Button.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
                 cb.Button.BackgroundTransparency = 0
             else
-                -- ปุ่มปกติ: สีขาวจาง 0.9 เหมือนกระจก
                 cb.Button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 cb.Button.BackgroundTransparency = 0.9
             end
@@ -461,7 +553,6 @@ local function createCategoryButton(name, targetTab)
 end
 
 local btn1 = createCategoryButton("หน้าแรก", MainFuncTab)
--- ตั้งค่าเริ่มต้นให้ปุ่ม "หน้าแรก" ถูกเลือกอยู่
 btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
 btn1.BackgroundTransparency = 0
 
@@ -526,4 +617,5 @@ end)
 NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
 YesButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
+    FOVgui:Destroy()
 end)
