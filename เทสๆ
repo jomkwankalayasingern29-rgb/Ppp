@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: Button Theme Update ]] --
+-- [[ GKHub v1.4.25: Final Polish ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -299,7 +299,7 @@ TitleLabel.Size = UDim2.new(1, -80, 1, 0)
 TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "GKHub | คอมมูนิตี้"
+TitleLabel.Text = "GKHub >> คอมมูนิวตี้"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -396,27 +396,22 @@ end
 
 local MainFuncTab = createContainer("หน้าแรก")
 
--- ปรับปุ่มคัดลอกลิงก์ดิสคอด: ความโปร่งใส 0.6, ขอบสีขาว, ตัวอักษรสีขาว
+-- ปุ่มคัดลอกลิงก์ดิสคอด: โปร่งใส 0.6, ตัวอักษรสีขาว, ไม่มีขอบ
 local function createDiscordButton(parentTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 32)
     btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundTransparency = 0.6 -- จาง 0.6 ตามต้องการ
+    btn.BackgroundTransparency = 0.6
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
     btn.Text = "คัดลอกลิงก์ดิสคอด"
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255) -- ตัวอักษรสีขาว
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextSize = 11
     btn.Parent = parentTab
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(255, 255, 255) -- ขอบสีขาว
-    stroke.Thickness = 1
-    stroke.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
         copyToClipboard(DiscordLink)
