@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: Community & UI Theme Update ]] --
+-- [[ GKHub v1.4.25: Button Theme Update ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -294,7 +294,6 @@ LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
 LogoG.TextSize = 14
 LogoG.Parent = TopBar
 
--- เพิ่มคำว่า "คอมมูนิตี้" ไว้ที่ด้านบนสุด พร้อมเปลี่ยนเป็นสีขาว
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -80, 1, 0)
 TitleLabel.Position = UDim2.new(0, 32, 0, 0)
@@ -397,22 +396,27 @@ end
 
 local MainFuncTab = createContainer("หน้าแรก")
 
--- ฟังก์ชันสร้างปุ่มกดคัดลอกลิงก์ดิสคอด (เปลี่ยนพื้นหลังเป็นสีขาว และตัวอักษรสีเข้มเพื่อให้อ่านง่าย)
+-- ปรับปุ่มคัดลอกลิงก์ดิสคอด: ความโปร่งใส 0.6, ขอบสีขาว, ตัวอักษรสีขาว
 local function createDiscordButton(parentTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(240, 240, 240) -- เปลี่ยนจากสีดำ/เทาเข้ม เป็นสีขาว
-    btn.BackgroundTransparency = 0
+    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundTransparency = 0.6 -- จาง 0.6 ตามต้องการ
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
     btn.Text = "คัดลอกลิงก์ดิสคอด"
-    btn.TextColor3 = Color3.fromRGB(20, 20, 20) -- ตัวอักษรสีเข้มตัดกับปุ่มสีขาว
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255) -- ตัวอักษรสีขาว
     btn.TextSize = 11
     btn.Parent = parentTab
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(255, 255, 255) -- ขอบสีขาว
+    stroke.Thickness = 1
+    stroke.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
         copyToClipboard(DiscordLink)
