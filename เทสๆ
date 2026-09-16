@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.28: Target Lock Smooth Toggle Animation ]] --
+-- [[ GKHub v1.5.0: UI Redesign & Toggle Aimbot ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -22,33 +22,12 @@ local function copyToClipboard(text)
     end)
 end
 
-local function loadSavedData()
-    local success, result = pcall(function()
-        if readfile and isfile and isfile(SaveFileName) then
-            return HttpService:JSONDecode(readfile(SaveFileName))
-        end
-    end)
-    if success and type(result) == "table" then
-        return result
-    end
-    return {}
-end
-
-local function saveSavedData(data)
-    pcall(function()
-        if writefile then
-            writefile(SaveFileName, HttpService:JSONEncode(data))
-        end
-    end)
-end
-
-local savedDatabase = loadSavedData()
-
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI_" .. HttpService:GenerateGUID(false):sub(1, 8)
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+-- [ ระบบแจ้งเตือน Notification ] --
 local NotifContainer = Instance.new("Frame")
 NotifContainer.Name = "NotifContainer"
 NotifContainer.Size = UDim2.new(0, 250, 1, 0)
@@ -81,15 +60,6 @@ local function showNotification(text, isEnabled)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = card
-
-    local bgIcon = Instance.new("ImageLabel")
-    bgIcon.Size = UDim2.new(1, 0, 1, 0)
-    bgIcon.Position = UDim2.new(0, 0, 0, 0)
-    bgIcon.BackgroundTransparency = 1
-    bgIcon.Image = "rbxassetid://117391496934016"
-    bgIcon.ImageTransparency = 0.6
-    bgIcon.ScaleType = Enum.ScaleType.Slice
-    bgIcon.Parent = card
 
     local stroke = Instance.new("UIStroke")
     stroke.Color = isEnabled and Color3.fromRGB(40, 200, 100) or Color3.fromRGB(220, 60, 60)
@@ -152,50 +122,22 @@ local function showNotification(text, isEnabled)
     end)
 end
 
-local LoadFrame = Instance.new("Frame")
-LoadFrame.Name = "LoadFrame"
-LoadFrame.Size = UDim2.new(0, 300, 0, 65)
-LoadFrame.Position = UDim2.new(0.5, -150, 0.5, -32)
-LoadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-LoadFrame.BorderSizePixel = 0
-LoadFrame.Parent = ScreenGui
-
-local LoadCorner = Instance.new("UICorner")
-LoadCorner.CornerRadius = UDim.new(0, 8)
-LoadCorner.Parent = LoadFrame
-
-local LoadStroke = Instance.new("UIStroke")
-LoadStroke.Color = Color3.fromRGB(0, 162, 255)
-LoadStroke.Thickness = 1.5
-LoadStroke.Parent = LoadFrame
-
-local LoadText = Instance.new("TextLabel")
-LoadText.Name = "LoadText"
-LoadText.Size = UDim2.new(1, 0, 1, 0)
-LoadText.BackgroundTransparency = 1
-LoadText.Font = Enum.Font.GothamBold
-LoadText.Text = "กำลังโหลด..."
-LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
-LoadText.TextSize = 14
-LoadText.Parent = LoadFrame
-
+-- [ สร้าง UI หลัก ] --
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 440, 0, 310)
-MainFrame.Position = UDim2.new(0.5, -220, 0.5, -155)
+MainFrame.Size = UDim2.new(0, 500, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Visible = false
-MainFrame.BackgroundTransparency = 1
 MainFrame.Parent = ScreenGui
 
 local BgImage = Instance.new("ImageLabel")
 BgImage.Name = "BgImage"
 BgImage.Size = UDim2.new(1, 0, 1, 0)
 BgImage.BackgroundTransparency = 1
-BgImage.Image = "rbxassetid://111206357236860"
+BgImage.Image = "rbxassetid://111206357236860" -- ภาพพื้นหลัง (สามารถเปลี่ยน ID ได้)
 BgImage.ScaleType = Enum.ScaleType.Slice
 BgImage.SliceCenter = Rect.new(100, 100, 100, 100)
 BgImage.Parent = MainFrame
@@ -209,66 +151,11 @@ MainStroke.Color = Color3.fromRGB(0, 162, 255)
 MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
-local ConfirmOverlay = Instance.new("Frame")
-ConfirmOverlay.Name = "ConfirmOverlay"
-ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
-ConfirmOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-ConfirmOverlay.BackgroundTransparency = 0.5
-ConfirmOverlay.Visible = false
-ConfirmOverlay.ZIndex = 10
-ConfirmOverlay.Parent = MainFrame
-
-local ConfirmBox = Instance.new("Frame")
-ConfirmBox.Size = UDim2.new(0, 260, 0, 120)
-ConfirmBox.Position = UDim2.new(0.5, -130, 0.5, -60)
-ConfirmBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-ConfirmBox.BorderSizePixel = 0
-ConfirmBox.ZIndex = 11
-ConfirmBox.Parent = ConfirmOverlay
-local ConfirmCorner = Instance.new("UICorner"); ConfirmCorner.CornerRadius = UDim.new(0, 6); ConfirmCorner.Parent = ConfirmBox
-local ConfirmStroke = Instance.new("UIStroke"); ConfirmStroke.Color = Color3.fromRGB(0, 162, 255); ConfirmStroke.Thickness = 1.2; ConfirmStroke.Parent = ConfirmBox
-
-local ConfirmTitle = Instance.new("TextLabel")
-ConfirmTitle.Size = UDim2.new(1, 0, 0, 40)
-ConfirmTitle.Position = UDim2.new(0, 0, 0, 10)
-ConfirmTitle.BackgroundTransparency = 1
-ConfirmTitle.Text = "คุณต้องการปิด/ลบ UI นี้หรือไม่?"
-ConfirmTitle.TextColor3 = Color3.fromRGB(240, 240, 240)
-ConfirmTitle.TextSize = 13
-ConfirmTitle.Font = Enum.Font.GothamBold
-ConfirmTitle.ZIndex = 12
-ConfirmTitle.Parent = ConfirmBox
-
-local YesButton = Instance.new("TextButton")
-YesButton.Size = UDim2.new(0, 100, 0, 32)
-YesButton.Position = UDim2.new(0, 20, 1, -42)
-YesButton.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-YesButton.Text = "ใช่"
-YesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-YesButton.TextSize = 12
-YesButton.Font = Enum.Font.GothamBold
-YesButton.BorderSizePixel = 0
-YesButton.ZIndex = 12
-YesButton.Parent = ConfirmBox
-local YesCorner = Instance.new("UICorner"); YesCorner.CornerRadius = UDim.new(0, 4); YesCorner.Parent = YesButton
-
-local NoButton = Instance.new("TextButton")
-NoButton.Size = UDim2.new(0, 100, 0, 32)
-NoButton.Position = UDim2.new(1, -120, 1, -42)
-NoButton.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-NoButton.Text = "ไม่ใช่"
-NoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-NoButton.TextSize = 12
-NoButton.Font = Enum.Font.GothamBold
-NoButton.BorderSizePixel = 0
-NoButton.ZIndex = 12
-NoButton.Parent = ConfirmBox
-local NoCorner = Instance.new("UICorner"); NoCorner.CornerRadius = UDim.new(0, 4); NoCorner.Parent = NoButton
-
+-- [ แถบบนสุด (TopBar) ] --
 local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 28)
-TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-TopBar.BackgroundTransparency = 0.6
+TopBar.Size = UDim2.new(1, 0, 0, 30)
+TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TopBar.BackgroundTransparency = 0.5
 TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
 
@@ -276,95 +163,76 @@ local TopBarCorner = Instance.new("UICorner")
 TopBarCorner.CornerRadius = UDim.new(0, 8)
 TopBarCorner.Parent = TopBar
 
-local FixTopBar = Instance.new("Frame")
-FixTopBar.Size = UDim2.new(1, 0, 0, 5)
-FixTopBar.Position = UDim2.new(0, 0, 1, -5)
-FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-FixTopBar.BackgroundTransparency = 0.6
-FixTopBar.BorderSizePixel = 0
-FixTopBar.Parent = TopBar
-
 local LogoG = Instance.new("TextLabel")
 LogoG.Size = UDim2.new(0, 20, 0, 20)
-LogoG.Position = UDim2.new(0, 8, 0, 4)
+LogoG.Position = UDim2.new(0, 10, 0, 5)
 LogoG.BackgroundTransparency = 1
 LogoG.Font = Enum.Font.GothamBold
 LogoG.Text = "G"
 LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
-LogoG.TextSize = 14
+LogoG.TextSize = 16
 LogoG.Parent = TopBar
 
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -80, 1, 0)
-TitleLabel.Position = UDim2.new(0, 32, 0, 0)
+TitleLabel.Position = UDim2.new(0, 36, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "GKHub >> คอมมูนิวตี้"
+TitleLabel.Text = "GKHub | Main Script"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 12
+TitleLabel.TextSize = 13
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
-CloseButton.Position = UDim2.new(1, -26, 0, 2)
+CloseButton.Position = UDim2.new(1, -28, 0, 3)
 CloseButton.BackgroundTransparency = 1
 CloseButton.Font = Enum.Font.GothamBold
 CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.fromRGB(255, 80, 80)
-CloseButton.TextSize = 13
+CloseButton.TextSize = 14
 CloseButton.Parent = TopBar
 
 local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
-MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
+MinimizeButton.Position = UDim2.new(1, -54, 0, 3)
 MinimizeButton.BackgroundTransparency = 1
 MinimizeButton.Font = Enum.Font.GothamBold
 MinimizeButton.Text = "-"
 MinimizeButton.TextColor3 = Color3.fromRGB(240, 240, 240)
-MinimizeButton.TextSize = 14
+MinimizeButton.TextSize = 16
 MinimizeButton.Parent = TopBar
 
+-- [ พื้นที่จัดวางซ้าย-ขวา ] --
 local LeftSide = Instance.new("ScrollingFrame")
-LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
-LeftSide.Position = UDim2.new(0, 5, 0, 30)
-LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-LeftSide.BackgroundTransparency = 0.6
+LeftSide.Size = UDim2.new(0.3, 0, 1, -40)
+LeftSide.Position = UDim2.new(0, 10, 0, 35)
+LeftSide.BackgroundTransparency = 1
 LeftSide.BorderSizePixel = 0
 LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-LeftSide.ScrollBarThickness = 2
+LeftSide.ScrollBarThickness = 0
 LeftSide.Parent = MainFrame
-
-local LeftCorner = Instance.new("UICorner")
-LeftCorner.CornerRadius = UDim.new(0, 5)
-LeftCorner.Parent = LeftSide
 
 local LeftLayout = Instance.new("UIListLayout")
 LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-LeftLayout.Padding = UDim.new(0, 5)
+LeftLayout.Padding = UDim.new(0, 6)
 LeftLayout.Parent = LeftSide
 
-local LeftPadding = Instance.new("UIPadding")
-LeftPadding.PaddingTop = UDim.new(0, 5)
-LeftPadding.Parent = LeftSide
-
-local RightSide = Instance.new("ScrollingFrame")
-RightSide.Size = UDim2.new(0.66, 0, 1, -34)
-RightSide.Position = UDim2.new(0.33, 0, 0, 30)
-RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+local RightSide = Instance.new("Frame")
+RightSide.Size = UDim2.new(0.65, 0, 1, -40)
+RightSide.Position = UDim2.new(0.32, 0, 0, 35)
+RightSide.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 RightSide.BackgroundTransparency = 0.6
 RightSide.BorderSizePixel = 0
-RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-RightSide.ScrollBarThickness = 2
 RightSide.Parent = MainFrame
 
 local RightCorner = Instance.new("UICorner")
-RightCorner.CornerRadius = UDim.new(0, 5)
+RightCorner.CornerRadius = UDim.new(0, 6)
 RightCorner.Parent = RightSide
 
-local FunctionContainers = {}
-
+-- [ ฟังก์ชันสร้างส่วนประกอบ UI ] --
 local function createContainer(name)
     local container = Instance.new("ScrollingFrame")
     container.Name = name
@@ -379,52 +247,140 @@ local function createContainer(name)
     local layout = Instance.new("UIListLayout")
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 5)
+    layout.Padding = UDim.new(0, 6)
     layout.Parent = container
 
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 6)
+    padding.PaddingTop = UDim.new(0, 10)
+    padding.PaddingBottom = UDim.new(0, 10)
     padding.Parent = container
 
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         container.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
     end)
 
-    FunctionContainers[name] = container
     return container
 end
 
-local MainFuncTab = createContainer("หน้าแรก")
-local AttackFuncTab = createContainer("โจมตี")
+-- สร้าง Header สีฟ้าใสๆ แบบในรูป (เช่น >> ระบบล็อกเป้า <<)
+local function createSectionHeader(title, parentTab)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0.92, 0, 0, 20)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = ">> " .. title .. " <<"
+    lbl.TextColor3 = Color3.fromRGB(100, 180, 255)
+    lbl.TextSize = 12
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = parentTab
+    return lbl
+end
 
-local function createDiscordButton(parentTab)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.92, 0, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundTransparency = 0.6
-    btn.BorderSizePixel = 0
-    btn.Font = Enum.Font.GothamBold
-    btn.Text = "คัดลอกลิงก์ดิสคอด"
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 11
-    btn.Parent = parentTab
-
+-- สร้างปุ่มกดธรรมดา (เช่น คัดลอกดิสคอด)
+local function createSimpleButton(title, parentTab, callback)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0.92, 0, 0, 36)
+    container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    container.BackgroundTransparency = 0.5
+    container.BorderSizePixel = 0
+    container.Parent = parentTab
+    
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+    corner.Parent = container
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundTransparency = 1
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = title
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 12
+    btn.Parent = container
 
     btn.MouseButton1Click:Connect(function()
-        copyToClipboard(DiscordLink)
-        showNotification("คัดลอกลิงก์ดิสคอดสำเร็จแล้ว!", true)
+        if callback then callback() end
     end)
 end
 
-createDiscordButton(MainFuncTab)
+-- สร้าง Toggle Row (แบบในรูป มีสวิตช์ปิดเปิดอยู่ขวา)
+local function createToggle(title, parentTab, defaultState, callback)
+    local state = defaultState or false
 
--- ระบบล็อกเป้า (Aimbot)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(0.92, 0, 0, 38)
+    row.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    row.BackgroundTransparency = 0.5
+    row.BorderSizePixel = 0
+    row.Parent = parentTab
+    
+    local rowCorner = Instance.new("UICorner")
+    rowCorner.CornerRadius = UDim.new(0, 6)
+    rowCorner.Parent = row
+
+    local titleLbl = Instance.new("TextLabel")
+    titleLbl.Size = UDim2.new(0.7, 0, 1, 0)
+    titleLbl.Position = UDim2.new(0, 12, 0, 0)
+    titleLbl.BackgroundTransparency = 1
+    titleLbl.Text = title
+    titleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLbl.TextSize = 12
+    titleLbl.Font = Enum.Font.GothamBold
+    titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+    titleLbl.Parent = row
+
+    local toggleBtn = Instance.new("TextButton")
+    toggleBtn.Size = UDim2.new(0, 50, 0, 24)
+    toggleBtn.Position = UDim2.new(1, -60, 0.5, -12)
+    toggleBtn.BackgroundColor3 = state and Color3.fromRGB(40, 200, 100) or Color3.fromRGB(200, 50, 50)
+    toggleBtn.BackgroundTransparency = 0.3
+    toggleBtn.BorderSizePixel = 0
+    toggleBtn.Text = state and "เปิด" or "ปิด"
+    toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleBtn.TextSize = 11
+    toggleBtn.Font = Enum.Font.GothamBold
+    toggleBtn.Parent = row
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 4)
+    btnCorner.Parent = toggleBtn
+
+    toggleBtn.MouseButton1Click:Connect(function()
+        state = not state
+        if state then
+            toggleBtn.Text = "เปิด"
+            TweenService:Create(toggleBtn, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Color3.fromRGB(40, 200, 100)
+            }):Play()
+        else
+            toggleBtn.Text = "ปิด"
+            TweenService:Create(toggleBtn, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+            }):Play()
+        end
+        if callback then callback(state) end
+    end)
+end
+
+
+-- [ สร้าง Tabs ] --
+local MainFuncTab = createContainer("หน้าแรก")
+local AttackFuncTab = createContainer("ระบบล็อกเป้า")
+
+-- เนื้อหาหน้าแรก
+createSectionHeader("คอมมูนิตี้ (Community)", MainFuncTab)
+createSimpleButton("คัดลอกลิงก์ Discord", MainFuncTab, function()
+    copyToClipboard(DiscordLink)
+    showNotification("คัดลอกลิงก์ Discord สำเร็จแล้ว!", true)
+end)
+
+-- เนื้อหาหน้าระบบล็อกเป้า
+createSectionHeader("ระบบล็อกเป้าคน (Aimbot)", AttackFuncTab)
+
 local AimbotEnabled = false
 local FOVRadius = 120
 
+-- วงกลม FOV
 local FOVgui = Instance.new("ScreenGui")
 FOVgui.Name = "GKHub_FOV"
 FOVgui.Parent = CoreGui
@@ -442,7 +398,6 @@ local FOVStroke = Instance.new("UIStroke")
 FOVStroke.Color = Color3.fromRGB(0, 162, 255)
 FOVStroke.Thickness = 1.5
 FOVStroke.Parent = FOVFrame
-
 local FOVCircleCorner = Instance.new("UICorner")
 FOVCircleCorner.CornerRadius = UDim.new(1, 0)
 FOVCircleCorner.Parent = FOVFrame
@@ -482,64 +437,33 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- สร้างปุ่มล็อกเป้าคน [ปิด/เปิด] พร้อมอนิเมชันเปลี่ยนสีช้าๆ (สีแดง <-> สีเขียวจางๆ)
-local function createAimbotButton(parentTab)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.92, 0, 0, 32)
-    -- ค่าเริ่มต้นสถานะปิด: เป็นสีแดงจางๆ (BackgroundTransparency 0.6)
-    btn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-    btn.BackgroundTransparency = 0.6
-    btn.BorderSizePixel = 0
-    btn.Font = Enum.Font.GothamBold
-    btn.Text = "ล็อกเป้าคน [ปิด]"
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 11
-    btn.Parent = parentTab
+-- สร้างปุ่มเปิดปิด (Toggle) สำหรับล็อกเป้า
+createToggle("เปิดใช้งานล็อกเป้าคน", AttackFuncTab, false, function(state)
+    AimbotEnabled = state
+    if state then
+        showNotification("เปิดใช้งานระบบล็อกเป้าแล้ว", true)
+    else
+        showNotification("ปิดใช้งานระบบล็อกเป้าแล้ว", false)
+    end
+end)
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-
-    btn.MouseButton1Click:Connect(function()
-        AimbotEnabled = not AimbotEnabled
-        
-        if AimbotEnabled then
-            btn.Text = "ล็อกเป้าคน [เปิด]"
-            showNotification("เปิดใช้งานระบบล็อกเป้าแล้ว", true)
-            -- อนิเมชันค่อยๆ เปลี่ยนจากสีแดงเป็นสีเขียวจางๆ (ใช้เวลา 0.4 วินาที)
-            TweenService:Create(btn, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                BackgroundColor3 = Color3.fromRGB(40, 200, 100),
-                BackgroundTransparency = 0.6
-            }):Play()
-        else
-            btn.Text = "ล็อกเป้าคน [ปิด]"
-            showNotification("ปิดใช้งานระบบล็อกเป้าแล้ว", false)
-            -- อนิเมชันค่อยๆ เปลี่ยนกลับเป็นสีแดงจางๆ
-            TweenService:Create(btn, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                BackgroundColor3 = Color3.fromRGB(220, 60, 60),
-                BackgroundTransparency = 0.6
-            }):Play()
-        end
-    end)
-end
-
-createAimbotButton(AttackFuncTab)
-
+-- [ ระบบหมวดหมู่ด้านซ้าย (Category Buttons) ] --
 local categoryButtons = {}
 local function createCategoryButton(name, targetTab)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.92, 0, 0, 26)
-    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundTransparency = 0.9
+    btn.Size = UDim2.new(0.95, 0, 0, 32)
+    -- สีตอนยังไม่ถูกเลือก (สีเทาเข้มโปร่งใส คล้ายๆ ในภาพ)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.BackgroundTransparency = 0.3
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 10
+    btn.TextSize = 11
     btn.Parent = LeftSide
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
+    corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
 
     table.insert(categoryButtons, {Button = btn, Tab = targetTab})
@@ -548,71 +472,43 @@ local function createCategoryButton(name, targetTab)
         for _, cb in ipairs(categoryButtons) do
             cb.Tab.Visible = (cb.Tab == targetTab)
             if cb.Tab == targetTab then
+                -- ปุ่มที่เลือก เป็นสีฟ้าสว่าง
                 cb.Button.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
                 cb.Button.BackgroundTransparency = 0
             else
-                cb.Button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                cb.Button.BackgroundTransparency = 0.9
+                -- ปุ่มปกติ
+                cb.Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                cb.Button.BackgroundTransparency = 0.3
             end
-            cb.Button.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
     end)
     return btn
 end
 
-local btn1 = createCategoryButton("หน้าแรก", MainFuncTab)
-btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-btn1.BackgroundTransparency = 0
+local btnHome = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
+local btnAttack = createCategoryButton("ระบบล็อกเป้า", AttackFuncTab)
 
-createCategoryButton("โจมตี", AttackFuncTab)
-
+-- ตั้งค่าหน้าแรกเป็นค่าเริ่มต้น
+btnHome.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+btnHome.BackgroundTransparency = 0
 MainFuncTab.Visible = true
 
 LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     LeftSide.CanvasSize = UDim2.new(0, 0, 0, LeftLayout.AbsoluteContentSize.Y + 20)
 end)
 
-task.spawn(function()
-    local dots = {"", ".", "..", "..."}
-    local startTime = tick()
-    
-    while tick() - startTime < 1.5 do
-        for _, d in ipairs(dots) do
-            LoadText.Text = "กำลังโหลด" .. d
-            task.wait(0.25)
-        end
-    end
-    
-    LoadText.Text = "ดาวน์โหลดเสร็จแล้ว"
-    task.wait(0.6)
-    
-    LoadText.Text = "คัดลอกลิงก์ดิสคอดเสร็จแล้ว"
-    copyToClipboard(DiscordLink)
-    task.wait(0.6)
-    
-    LoadFrame:Destroy()
-    
-    MainFrame.Visible = true
-    MainFrame.Size = UDim2.new(0, 320, 0, 200)
-    
-    local expandTween = TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 440, 0, 310),
-        BackgroundTransparency = 0
-    })
-    expandTween:Play()
-end)
-
+-- [ ระบบ ปิด/ย่อ UI ] --
 local isMinimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
         MinimizeButton.Text = "+"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 440, 0, 28)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 500, 0, 30)}):Play()
         LeftSide.Visible = false
         RightSide.Visible = false
     else
         MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 440, 0, 310)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 500, 0, 350)}):Play()
         task.wait(0.1)
         LeftSide.Visible = true
         RightSide.Visible = true
@@ -620,10 +516,6 @@ MinimizeButton.MouseButton1Click:Connect(function()
 end)
 
 CloseButton.MouseButton1Click:Connect(function()
-    if not isMinimized then ConfirmOverlay.Visible = true end
-end)
-NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
-YesButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
     FOVgui:Destroy()
 end)
