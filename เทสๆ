@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.27: Target Lock Feature ]] --
+-- [[ GKHub v1.4.28: Target Lock Smooth Toggle Animation ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -92,7 +92,7 @@ local function showNotification(text, isEnabled)
     bgIcon.Parent = card
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = isEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    stroke.Color = isEnabled and Color3.fromRGB(40, 200, 100) or Color3.fromRGB(220, 60, 60)
     stroke.Thickness = 1.2
     stroke.Parent = card
 
@@ -121,7 +121,7 @@ local function showNotification(text, isEnabled)
 
     local barFill = Instance.new("Frame")
     barFill.Size = UDim2.new(1, 0, 1, 0)
-    barFill.BackgroundColor3 = isEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(220, 60, 60)
+    barFill.BackgroundColor3 = isEnabled and Color3.fromRGB(40, 200, 100) or Color3.fromRGB(220, 60, 60)
     barFill.BorderSizePixel = 0
     barFill.Parent = barBack
 
@@ -397,7 +397,6 @@ end
 local MainFuncTab = createContainer("หน้าแรก")
 local AttackFuncTab = createContainer("โจมตี")
 
--- ปุ่มคัดลอกลิงก์ดิสคอดในหน้าแรก
 local function createDiscordButton(parentTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 32)
@@ -422,11 +421,10 @@ end
 
 createDiscordButton(MainFuncTab)
 
--- ระบบล็อกเป้า (Aimbot / Lock Target)
+-- ระบบล็อกเป้า (Aimbot)
 local AimbotEnabled = false
-local FOVRadius = 120 -- ขนาดรัศมีวงกลมตรงกลางจอ
+local FOVRadius = 120
 
--- สร้างวงกลม FOV แสดงตรงกลางจอ
 local FOVgui = Instance.new("ScreenGui")
 FOVgui.Name = "GKHub_FOV"
 FOVgui.Parent = CoreGui
@@ -449,7 +447,6 @@ local FOVCircleCorner = Instance.new("UICorner")
 FOVCircleCorner.CornerRadius = UDim.new(1, 0)
 FOVCircleCorner.Parent = FOVFrame
 
--- ฟังก์ชันคำนวณหาเป้าหมายที่อยู่ใกล้จุดกึ่งกลางจอที่สุดในวงกลม
 local function getClosestPlayerInFOV()
     local closestTarget = nil
     local shortestDist = FOVRadius
@@ -473,7 +470,6 @@ local function getClosestPlayerInFOV()
     return closestTarget
 end
 
--- ลูปการทำงานล็อกเป้าแบบไม่แล็ค (ไม่สแกนทั้งแมพ เช็คเฉพาะคนในระยะจอ)
 RunService.RenderStepped:Connect(function()
     if AimbotEnabled then
         FOVFrame.Visible = true
@@ -486,15 +482,16 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- สร้างปุ่มเปิด/ปิด ล็อกเป้าในหมวด "โจมตี"
+-- สร้างปุ่มล็อกเป้าคน [ปิด/เปิด] พร้อมอนิเมชันเปลี่ยนสีช้าๆ (สีแดง <-> สีเขียวจางๆ)
 local function createAimbotButton(parentTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    -- ค่าเริ่มต้นสถานะปิด: เป็นสีแดงจางๆ (BackgroundTransparency 0.6)
+    btn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
     btn.BackgroundTransparency = 0.6
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
-    btn.Text = "ล็อกเป้า: ปิด"
+    btn.Text = "ล็อกเป้าคน [ปิด]"
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextSize = 11
     btn.Parent = parentTab
@@ -505,12 +502,23 @@ local function createAimbotButton(parentTab)
 
     btn.MouseButton1Click:Connect(function()
         AimbotEnabled = not AimbotEnabled
+        
         if AimbotEnabled then
-            btn.Text = "ล็อกเป้า: เปิด"
+            btn.Text = "ล็อกเป้าคน [เปิด]"
             showNotification("เปิดใช้งานระบบล็อกเป้าแล้ว", true)
+            -- อนิเมชันค่อยๆ เปลี่ยนจากสีแดงเป็นสีเขียวจางๆ (ใช้เวลา 0.4 วินาที)
+            TweenService:Create(btn, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Color3.fromRGB(40, 200, 100),
+                BackgroundTransparency = 0.6
+            }):Play()
         else
-            btn.Text = "ล็อกเป้า: ปิด"
+            btn.Text = "ล็อกเป้าคน [ปิด]"
             showNotification("ปิดใช้งานระบบล็อกเป้าแล้ว", false)
+            -- อนิเมชันค่อยๆ เปลี่ยนกลับเป็นสีแดงจางๆ
+            TweenService:Create(btn, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Color3.fromRGB(220, 60, 60),
+                BackgroundTransparency = 0.6
+            }):Play()
         end
     end)
 end
@@ -522,7 +530,7 @@ local function createCategoryButton(name, targetTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 26)
     btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundTransparency = 0.9 -- สไตล์กระจก 0.9
+    btn.BackgroundTransparency = 0.9
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
     btn.Text = name
