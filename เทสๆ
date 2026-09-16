@@ -1,4 +1,4 @@
--- [[ GKHub v1.4.25: Final Polish ]] --
+-- [[ GKHub v1.4.26: Attack Category & Glassmorphism Theme ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -395,8 +395,9 @@ local function createContainer(name)
 end
 
 local MainFuncTab = createContainer("หน้าแรก")
+local AttackFuncTab = createContainer("โจมตี")
 
--- ปุ่มคัดลอกลิงก์ดิสคอด: โปร่งใส 0.6, ตัวอักษรสีขาว, ไม่มีขอบ
+-- ปุ่มคัดลอกลิงก์ดิสคอดในหน้าแรก: ความโปร่งใส 0.6, ตัวอักษรสีขาว, ไม่มีขอบ
 local function createDiscordButton(parentTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 32)
@@ -425,8 +426,9 @@ local categoryButtons = {}
 local function createCategoryButton(name, targetTab)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 26)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    btn.BackgroundTransparency = 0.5
+    -- ปรับสีหมวดหมู่ให้เป็นสีขาวจางๆ 0.9 (สไตล์กระจก)
+    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundTransparency = 0.9
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
     btn.Text = name
@@ -443,8 +445,15 @@ local function createCategoryButton(name, targetTab)
     btn.MouseButton1Click:Connect(function()
         for _, cb in ipairs(categoryButtons) do
             cb.Tab.Visible = (cb.Tab == targetTab)
-            cb.Button.BackgroundColor3 = (cb.Tab == targetTab) and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(30, 30, 30)
-            cb.Button.BackgroundTransparency = (cb.Tab == targetTab) and 0 or 0.5
+            if cb.Tab == targetTab then
+                -- ปุ่มที่เลือก: เน้นชัดขึ้น (เช่น สีฟ้า หรือความโปร่งใสลดลง)
+                cb.Button.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+                cb.Button.BackgroundTransparency = 0
+            else
+                -- ปุ่มปกติ: สีขาวจาง 0.9 เหมือนกระจก
+                cb.Button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                cb.Button.BackgroundTransparency = 0.9
+            end
             cb.Button.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
     end)
@@ -452,9 +461,11 @@ local function createCategoryButton(name, targetTab)
 end
 
 local btn1 = createCategoryButton("หน้าแรก", MainFuncTab)
+-- ตั้งค่าเริ่มต้นให้ปุ่ม "หน้าแรก" ถูกเลือกอยู่
 btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
 btn1.BackgroundTransparency = 0
-btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+createCategoryButton("โจมตี", AttackFuncTab)
 
 MainFuncTab.Visible = true
 
