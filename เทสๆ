@@ -197,7 +197,6 @@ end
 -- 1. หมวด "เมนูหลัก"
 local MainMenuContainer = createContainer("เมนูหลัก")
 
--- ปุ่ม Discord
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.92, 0, 0, 26)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -218,16 +217,18 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ปุ่มหาเซิร์ฟคนน้อย (Server Hop)
+-- 2. หมวดใหม่ "หาเซิร์ฟคนน้อย"
+local HopServerContainer = createContainer("หาเซิร์ฟคนน้อย")
+
 local HopBtn = Instance.new("TextButton")
 HopBtn.Size = UDim2.new(0.92, 0, 0, 26)
 HopBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 HopBtn.BorderSizePixel = 0
 HopBtn.Font = Enum.Font.Gotham
-HopBtn.Text = "หาเซิร์ฟคนน้อย"
+HopBtn.Text = "กดเพื่อหาเซิร์ฟคนน้อย"
 HopBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
 HopBtn.TextSize = 10
-HopBtn.Parent = MainMenuContainer
+HopBtn.Parent = HopServerContainer
 
 local HopBtnCorner = Instance.new("UICorner")
 HopBtnCorner.CornerRadius = UDim.new(0, 4)
@@ -318,7 +319,7 @@ HopBtn.MouseButton1Click:Connect(function()
                 if result.nextPageCursor then
                     cursor = result.nextPageCursor
                 else
-                    cursor = "" -- วนกลับไปหาใหม่ถ้าหมดหน้า
+                    cursor = ""
                 end
             end
             task.wait(0.5)
@@ -355,13 +356,13 @@ local function createCategoryButton(name)
 end
 
 createCategoryButton("เมนูหลัก")
+createCategoryButton("หาเซิร์ฟคนน้อย")
 
 -- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก"
 switchTab("เมนูหลัก")
 
 -- ==================== ลำดับการทำงาน (Loading & Animation) ====================
 task.spawn(function()
-    -- 1. กำลังโหลด... 2 วินาที
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
     
@@ -372,21 +373,17 @@ task.spawn(function()
         end
     end
     
-    -- 2. ดาวโหลดเสร็จเเล้ว 1 วินาที
     LoadText.Text = "ดาวโหลดเสร็จเเล้ว"
     task.wait(1)
     
-    -- 3. คัดลอกลิ้งดิสเสร็จเเล้ว + คัดลอกอัตโนมัติ
     LoadText.Text = "คัดลอกลิ้งดิสเสร็จเเล้ว"
     if setclipboard then
         setclipboard("https://discord.gg/Ugssja4wqQ")
     end
     task.wait(1)
     
-    -- 4. ลบหน้าจอโหลดทิ้ง
     LoadFrame:Destroy()
     
-    -- 5. ค่อยๆ ขยายหน้าต่าง UI หลักขึ้นมาแบบช้าๆ
     MainFrame.Visible = true
     MainFrame.Size = UDim2.new(0, 320, 0, 180)
     
