@@ -265,7 +265,7 @@ local function createNotificationUI()
     return textLabel, NotifFrame
 end
 
--- ระบบสลับเซิร์ฟคนน้อยเวอร์ชันใหม่ (ปลอดภัยและแม่นยำขึ้น)
+-- ระบบหาเซิร์ฟเวอร์แบบกรองข้อมูลที่เสถียรและไม่ติดเซิร์ฟเต็ม
 HopBtn.MouseButton1Click:Connect(function()
     local textLabel, notifFrame = createNotificationUI()
     local HttpService = game:GetService("HttpService")
@@ -289,49 +289,72 @@ HopBtn.MouseButton1Click:Connect(function()
             end
         end)
         
-        -- ใช้ pcall ครอบการดึง API ป้องกันรันแล้วเออเร่อ
-        local success, result = pcall(function()
-            local url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100", tostring(game.PlaceId))
-            return HttpService:JSONDecode(game:HttpGet(url))
-        end)
+        local targetServerId = nil
+        local cursor = ""
         
-        if success and result and result.data then
-            local targetServerId = nil
+        -- วนลูปค้นหาเซิร์ฟเวอร์ที่ว่างจริง ๆ (กรองไม่ให้เอาเซิร์ฟที่คนเต็มหรือใกล้เต็ม)
+        for i = 1, 5 do -- ลองค้นหาดึงหน้าเว็บสูงสุด 5 หน้าเพื่อความเร็ว
+            local success, result = pcall(function()
+                local url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100", tostring(game.PlaceId))
+                if cursor ~= "" then
+                    url = url .. "&cursor=" .. cursor
+                end
+                return HttpService:JSONDecode(game:HttpGet(url))
+            end)
             
-            -- วนลูปหาเซิร์ฟเวอร์ที่มีคนเล่นน้อยที่สุด (0 หรือ 1 คน)
-            for _, server in ipairs(result.data) do
-                if server.id ~= game.JobId and type(server.playing) == "number" and server.playing <= 1 then
-                    targetServerId = server.id
-                    break
+            if success and result and result.data then
+                for _, server in ipairs(result.data) do
+                    -- เช็คเงื่อนไข: ต้องไม่ใช่เซิร์ฟเดิม, มีคนเล่นน้อยกว่า maxPlayers และคนเล่นน้อย (เช่น ไม่เกิน 2-3 คน หรือว่าง)
+                    if server.id ~= game.JobId and type(server.playing) == "number" and type(server.maxPlayers) == "number" then
+                        if server.playing < server.maxPlayers - 1 and server.playing <= 2 then
+                            targetServerId = server.id
+                            break
+                        end
+                    end
                 end
             end
             
-            -- ถ้าหาเซิร์ฟ 0-1 คนไม่ได้ ให้ยอมรับเซิร์ฟที่คนน้อยที่สุดที่มีอยู่ในรายการแทน
-            if not targetServerId and #result.data > 0 then
+            if targetServerId then break end
+            
+            if result and result.nextPageCursor then
+                cursor = result.nextPageCursor
+            else
+                break
+            end
+            task.wait(0.2)
+        end
+        
+        -- ถ้ายังหาแบบคนน้อยสุดๆ ไม่เจอ ให้เลือกเซิร์ฟไหนก็ได้ที่ไม่เต็มและไม่ใช่เซิร์ฟปัจจุบัน
+        if not targetServerId then
+            local success, result = pcall(function()
+                local url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=10", tostring(game.PlaceId))
+                return HttpService:JSONDecode(game:HttpGet(url))
+            end)
+            if success and result and result.data then
                 for _, server in ipairs(result.data) do
-                    if server.id ~= game.JobId then
+                    if server.id ~= game.JobId and server.playing < server.maxPlayers then
                         targetServerId = server.id
                         break
                     end
                 end
             end
-            
-            if targetServerId then
-                searching = false
-                textLabel.Text = "เจอเซิร์ฟแล้วกำลังวาป"
-                task.wait(0.5)
-                notifFrame:Destroy()
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, targetServerId, Players.LocalPlayer)
-                return
-            end
         end
         
-        -- เผื่อกรณีดึง API ไม่สำเร็จ ให้ใช้ระบบ Teleport สำรองของ Roblox ทันที
-        searching = false
-        textLabel.Text = "กำลังสุ่มเปลี่ยนเซิร์ฟ..."
-        task.wait(0.5)
-        notifFrame:Destroy()
-        TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
+        if targetServerId then
+            searching = false
+            textLabel.Text = "เจอเซิร์ฟแล้วกำลังวาป"
+            task.wait(0.5)
+            notifFrame:Destroy()
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, targetServerId, Players.LocalPlayer)
+            return
+        else
+            -- ถ้าไม่เจอจริงๆ ให้ใช้ระบบสุ่มวาปสำรองของ Roblox ทันที
+            searching = false
+            textLabel.Text = "กำลังสุ่มเข้าเซิร์ฟอื่น..."
+            task.wait(0.5)
+            notifFrame:Destroy()
+            TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
+        end
     end)
 end)
 
