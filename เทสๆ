@@ -217,7 +217,7 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 2. หมวดใหม่ "หาเซิร์ฟคนน้อย"
+-- 2. หมวด "หาเซิร์ฟคนน้อย"
 local HopServerContainer = createContainer("หาเซิร์ฟคนน้อย")
 
 local HopBtn = Instance.new("TextButton")
@@ -265,7 +265,7 @@ local function createNotificationUI()
     return textLabel, NotifFrame
 end
 
--- ระบบสลับเซิร์ฟคนน้อย
+-- ระบบสลับเซิร์ฟคนน้อยเวอร์ชันใหม่ (ปลอดภัยและแม่นยำขึ้น)
 HopBtn.MouseButton1Click:Connect(function()
     local textLabel, notifFrame = createNotificationUI()
     local HttpService = game:GetService("HttpService")
@@ -278,7 +278,7 @@ HopBtn.MouseButton1Click:Connect(function()
         local seconds = 1
         local searching = true
         
-        -- Task นับเวลาโชว์ UI
+        -- ตัวนับเวลาแสดงผลบน UI
         task.spawn(function()
             while searching do
                 task.wait(1)
@@ -289,41 +289,49 @@ HopBtn.MouseButton1Click:Connect(function()
             end
         end)
         
-        -- ค้นหาเซิร์ฟเวอร์
-        local cursor = ""
-        local foundServer = false
+        -- ใช้ pcall ครอบการดึง API ป้องกันรันแล้วเออเร่อ
+        local success, result = pcall(function()
+            local url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100", tostring(game.PlaceId))
+            return HttpService:JSONDecode(game:HttpGet(url))
+        end)
         
-        while not foundServer do
-            local success, result = pcall(function()
-                local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-                if cursor ~= "" then
-                    url = url .. "&cursor=" .. cursor
-                end
-                return HttpService:JSONDecode(game:HttpGet(url))
-            end)
+        if success and result and result.data then
+            local targetServerId = nil
             
-            if success and result and result.data then
-                for _, server in ipairs(result.data) do
-                    -- เช็คว่าเป็นเซิร์ฟอื่น และมีผู้เล่น 0 หรือ 1 คน
-                    if server.id ~= game.JobId and server.playing and server.playing <= 1 then
-                        searching = false
-                        foundServer = true
-                        textLabel.Text = "เจอเซิร์ฟแล้วกำลังวาป"
-                        task.wait(0.8)
-                        notifFrame:Destroy()
-                        TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, Players.LocalPlayer)
-                        return
-                    end
-                end
-                
-                if result.nextPageCursor then
-                    cursor = result.nextPageCursor
-                else
-                    cursor = ""
+            -- วนลูปหาเซิร์ฟเวอร์ที่มีคนเล่นน้อยที่สุด (0 หรือ 1 คน)
+            for _, server in ipairs(result.data) do
+                if server.id ~= game.JobId and type(server.playing) == "number" and server.playing <= 1 then
+                    targetServerId = server.id
+                    break
                 end
             end
-            task.wait(0.5)
+            
+            -- ถ้าหาเซิร์ฟ 0-1 คนไม่ได้ ให้ยอมรับเซิร์ฟที่คนน้อยที่สุดที่มีอยู่ในรายการแทน
+            if not targetServerId and #result.data > 0 then
+                for _, server in ipairs(result.data) do
+                    if server.id ~= game.JobId then
+                        targetServerId = server.id
+                        break
+                    end
+                end
+            end
+            
+            if targetServerId then
+                searching = false
+                textLabel.Text = "เจอเซิร์ฟแล้วกำลังวาป"
+                task.wait(0.5)
+                notifFrame:Destroy()
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, targetServerId, Players.LocalPlayer)
+                return
+            end
         end
+        
+        -- เผื่อกรณีดึง API ไม่สำเร็จ ให้ใช้ระบบ Teleport สำรองของ Roblox ทันที
+        searching = false
+        textLabel.Text = "กำลังสุ่มเปลี่ยนเซิร์ฟ..."
+        task.wait(0.5)
+        notifFrame:Destroy()
+        TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
     end)
 end)
 
