@@ -391,6 +391,7 @@ end
 -- [ สร้าง Tabs ] --
 local MainFuncTab = createContainer("หน้าแรก")
 local AutoFarmTab = createContainer("ฟามออโต้")
+local CharacterTab = createContainer("ตัวละคร")
 
 createSectionHeader("คอมมูนิตี้ (Community)", MainFuncTab)
 createSimpleButton("คัดลอกลิงก์ Discord", MainFuncTab, function()
@@ -425,6 +426,110 @@ createToggle("เปิดใช้งานออโต้ฟาม", AutoFarmT
         showNotification("เปิดใช้งานระบบฟามออโต้แล้ว", true)
     else
         showNotification("ปิดใช้งานระบบฟามออโต้แล้ว", false)
+    end
+end)
+
+-- [ ระบบตัวละคร (Character Cheats) ] --
+createSectionHeader("ตั้งค่าตัวละคร (Character)", CharacterTab)
+
+-- 1. วิ่งเร็ว (WalkSpeed)
+local WalkSpeedEnabled = false
+createToggle("วิ่งเร็ว (Speed)", CharacterTab, false, function(state)
+    WalkSpeedEnabled = state
+    if state then
+        showNotification("เปิดใช้งานวิ่งเร็วแล้ว", true)
+    else
+        showNotification("ปิดใช้งานวิ่งเร็วแล้ว", false)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if WalkSpeedEnabled then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 50
+        end
+    end
+end)
+
+-- 2. กระโดดสูง (JumpPower)
+local JumpPowerEnabled = false
+createToggle("กระโดดสูง (Jump)", CharacterTab, false, function(state)
+    JumpPowerEnabled = state
+    if state then
+        showNotification("เปิดใช้งานกระโดดสูงแล้ว", true)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.UseJumpPower = true
+            LocalPlayer.Character.Humanoid.JumpPower = 100
+        end
+    else
+        showNotification("ปิดใช้งานกระโดดสูงแล้ว", false)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.UseJumpPower = true
+            LocalPlayer.Character.Humanoid.JumpPower = 50
+        end
+    end
+end)
+
+-- 3. ทะลุกำแพง (Noclip)
+local NoclipEnabled = false
+createToggle("ทะลุกำแพง (Noclip)", CharacterTab, false, function(state)
+    NoclipEnabled = state
+    if state then
+        showNotification("เปิดใช้งานทะลุกำแพงแล้ว", true)
+    else
+        showNotification("ปิดใช้งานทะลุกำแพงแล้ว", false)
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if NoclipEnabled then
+        if LocalPlayer.Character then
+            for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+-- 4. หายตัว (Invisibility)
+local InvisibilityEnabled = false
+createToggle("หายตัว (Invisibility)", CharacterTab, false, function(state)
+    InvisibilityEnabled = state
+    if LocalPlayer.Character then
+        for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+                part.Transparency = state and 1 or (part.Name == "HumanoidRootPart" and 1 or 0)
+            end
+        end
+    end
+    if state then
+        showNotification("เปิดใช้งานหายตัวแล้ว", true)
+    else
+        showNotification("ปิดใช้งานหายตัวแล้ว", false)
+    end
+end)
+
+-- 5. กระโดดไม่จำกัด (Infinite Jump)
+local InfJumpEnabled = false
+createToggle("กระโดดไม่จำกัด (Inf Jump)", CharacterTab, false, function(state)
+    InfJumpEnabled = state
+    if state then
+        showNotification("เปิดใช้งานกระโดดไม่จำกัดแล้ว", true)
+    else
+        showNotification("ปิดใช้งานกระโดดไม่จำกัดแล้ว", false)
+    end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if InfJumpEnabled then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
     end
 end)
 
@@ -465,6 +570,7 @@ end
 
 local btnHome = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
 local btnAutoFarm = createCategoryButton("ฟามออโต้", AutoFarmTab)
+local btnChar = createCategoryButton("ตัวละคร", CharacterTab)
 
 btnHome.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
 btnHome.BackgroundTransparency = 0
