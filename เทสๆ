@@ -9,7 +9,6 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- ใช้ PlayerGui แทน CoreGui ป้องกันปัญหา Executor บางตัวมองไม่เห็น
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 if PlayerGui:FindFirstChild("DeltaFlingGui") then
     PlayerGui.DeltaFlingGui:Destroy()
@@ -28,7 +27,7 @@ ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 ToggleButton.Position = UDim2.new(0.05, 0, 0.1, 0)
 ToggleButton.Size = UDim2.new(0, 120, 0, 40)
 ToggleButton.Font = Enum.Font.SourceSansBold
-ToggleButton.Text = "Fling Menu"
+ToggleButton.Text = "Menu"
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.TextSize = 18
 ToggleButton.Active = true
@@ -50,7 +49,7 @@ Label.BackgroundTransparency = 1
 Label.Position = UDim2.new(0.1, 0, 0.05, 0)
 Label.Size = UDim2.new(0.8, 0, 0, 20)
 Label.Font = Enum.Font.SourceSansBold
-Label.Text = "พิมพ์ชื่อเป้าหมาย (บางส่วนก็ได้):"
+Label.Text = "พิมพ์ชื่อเป้าหมาย:"
 Label.TextColor3 = Color3.fromRGB(200, 200, 200)
 Label.TextSize = 13
 
@@ -67,7 +66,7 @@ TextBox.Text = ""
 TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 TextBox.TextSize = 14
 
--- ปุ่มกด Fling
+-- ปุ่มกดทำงาน
 local FlingButton = Instance.new("TextButton")
 FlingButton.Name = "FlingButton"
 FlingButton.Parent = MainFrame
@@ -84,7 +83,7 @@ ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
-local isFlinging = false
+local isTracking = false
 local originalPosition = nil
 local connection = nil
 
@@ -106,7 +105,7 @@ end
 
 -- กดปุ่มทำงาน
 FlingButton.MouseButton1Click:Connect(function()
-    if not isFlinging then
+    if not isTracking then
         local targetPlayer = getTarget(TextBox.Text)
         if not targetPlayer then
             FlingButton.Text = "ไม่พบผู้เล่นนี้!"
@@ -129,10 +128,11 @@ FlingButton.MouseButton1Click:Connect(function()
             return
         end
         
-        isFlinging = true
+        isTracking = true
         FlingButton.Text = "Target: " .. targetPlayer.Name
         FlingButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
         
+        -- ลูปคอยดึงตัวเราไปทับตำแหน่งเป้าหมายตลอดเวลาแบบนิ่งๆ (ไม่เร่ง Velocity)
         connection = RunService.Stepped:Connect(function()
             if not _G.DeltaFlingRunning or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then 
                 return 
@@ -145,13 +145,12 @@ FlingButton.MouseButton1Click:Connect(function()
                 local myRoot = myChar.HumanoidRootPart
                 local tRoot = tChar.HumanoidRootPart
                 
-                myRoot.Velocity = Vector3.new(30000, 30000, 30000)
-                myRoot.RotVelocity = Vector3.new(50000, 50000, 50000)
+                -- ล็อคพิกัดและทิศทางให้จมอยู่กับตัวเป้าหมายพอดีเป๊ะ
                 myRoot.CFrame = tRoot.CFrame
             end
         end)
     else
-        isFlinging = false
+        isTracking = false
         if connection then
             connection:Disconnect()
             connection = nil
@@ -163,8 +162,6 @@ FlingButton.MouseButton1Click:Connect(function()
         task.wait(0.05)
         local myChar = LocalPlayer.Character
         if myChar and myChar:FindFirstChild("HumanoidRootPart") and originalPosition then
-            myChar.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-            myChar.HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0)
             myChar.HumanoidRootPart.CFrame = originalPosition
         end
     end
