@@ -1,4 +1,4 @@
--- [[ GKHub v1.5.2: Smooth Loading & Fade-in UI ]] --
+-- [[ GKHub v1.5.3: Smooth Loading & Fade-in UI (Added GodMode) ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -537,6 +537,41 @@ end)
 
 -- [ ระบบตัวละคร (Character Cheats) ] --
 createSectionHeader("ตั้งค่าตัวละคร (Character)", CharacterTab)
+
+-- 0. ระบบอมตะ (GodMode - เลือด 999,999 เด้งทุก 0.3 วิ)
+local GodModeEnabled = false
+
+task.spawn(function()
+    while true do
+        if GodModeEnabled then
+            pcall(function()
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("Humanoid") then
+                    local hum = char.Humanoid
+                    hum.MaxHealth = 999999
+                    hum.Health = 999999
+                end
+            end)
+        end
+        task.wait(0.3)
+    end
+end)
+
+createToggle("อมตะ (GodMode)", CharacterTab, false, function(state)
+    GodModeEnabled = state
+    if state then
+        showNotification("เปิดใช้งานอมตะแล้ว (เลือด 999,999)", true)
+    else
+        showNotification("ปิดใช้งานอมตะแล้ว", false)
+        pcall(function()
+            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+            if hum then
+                hum.MaxHealth = 100
+                hum.Health = 100
+            end
+        end)
+    end
+end)
 
 -- 1. วิ่งเร็ว (WalkSpeed)
 local WalkSpeedEnabled = false
