@@ -496,6 +496,7 @@ end
 -- [ สร้าง Tabs ] --
 local MainFuncTab = createContainer("หน้าแรก")
 local AutoFarmTab = createContainer("ฟามออโต้")
+local ESPTab = createContainer("ESP")
 local CharacterTab = createContainer("ตัวละคร")
 local SettingsTab = createContainer("ตั้งค่า")
 
@@ -532,6 +533,102 @@ createToggle("เปิดใช้งานออโต้ฟาม", AutoFarmT
         showNotification("เปิดใช้งานระบบฟามออโต้แล้ว", true)
     else
         showNotification("ปิดใช้งานระบบฟามออโต้แล้ว", false)
+    end
+end)
+
+-- [ ระบบ ESP แร่ (ESP Tab) ] --
+createSectionHeader("ระบบ ESP แร่และไอเทม", ESPTab)
+
+local EspLowEnabled = false  -- ระดับต่ำ (สีเขียว)
+local EspMidEnabled = false  -- ระดับกลาง (สีเหลือง)
+local EspHighEnabled = false -- ดีที่สุด (สีแดง)
+
+createToggle("ESP แร้าระดับต่ำ (เขียว)", ESPTab, false, function(state)
+    EspLowEnabled = state
+    showNotification(state and "เปิด ESP ระดับต่ำแล้ว" or "ปิด ESP ระดับต่ำแล้ว", state)
+end)
+
+createToggle("ESP แร้าระดับกลาง (เหลือง)", ESPTab, false, function(state)
+    EspMidEnabled = state
+    showNotification(state and "เปิด ESP ระดับกลางแล้ว" or "ปิด ESP ระดับกลางแล้ว", state)
+end)
+
+createToggle("ESP แร้าระดับดีที่สุด (แดง)", ESPTab, false, function(state)
+    EspHighEnabled = state
+    showNotification(state and "เปิด ESP ระดับดีที่สุดแล้ว" or "ปิด ESP ระดับดีที่สุดแล้ว", state)
+end)
+
+-- ฟังก์ชันหลักจัดการ ESP แสดงชื่อและระยะทาง [ เช่น หายาก[600m] ]
+local activeEspHighlights = {}
+
+RunService.RenderStepped:Connect(function()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    
+    -- ล้าง ESP เก่า
+    for _, obj in pairs(activeEspHighlights) do
+        if obj and obj.Parent then
+            obj:Destroy()
+        end
+    end
+    activeEspHighlights = {}
+
+    if not hrp then return end
+
+    -- ตัวอย่างการตรวจจับวัตถุแร่ใน Workspace (ปรับชื่อ Folder หรือ Model ตามแมพจริงได้)
+    for _, item in ipairs(Workspace:GetDescendants()) do
+        -- ตรวจสอบเงื่อนไขตัวแร่ (ตัวอย่างเช็คจากชื่อหรือ Attribute)
+        local itemName = item.Name:lower()
+        local isLow = item:GetAttribute("Tier") == "Low" or itemName:find("common") or itemName:find("ธรรมดา")
+        local isMid = item:GetAttribute("Tier") == "Mid" or itemName:find("rare") or itemName:find("ปานกลาง")
+        local isHigh = item:GetAttribute("Tier") == "High" or itemName:find("epic") or itemName:find("legendary") or itemName:find("ดีที่สุด") or itemName:find("หายาก")
+
+        local targetColor = nil
+        local tierText = ""
+
+        if isLow and EspLowEnabled then
+            targetColor = Color3.fromRGB(40, 200, 100) -- สีเขียว
+            tierText = "ระดับต่ำ"
+        elseif isMid and EspMidEnabled then
+            targetColor = Color3.fromRGB(240, 200, 40) -- สีเหลือง
+            tierText = "ระดับกลาง"
+        elseif isHigh and EspHighEnabled then
+            targetColor = Color3.fromRGB(220, 60, 60)  -- สีแดง
+            tierText = "ดีที่สุด"
+        end
+
+        if targetColor and (item:IsA("BasePart") or (item:IsA("Model") and item.PrimaryPart)) then
+            local part = item:IsA("BasePart") and item or item.PrimaryPart
+            local distance = math.floor((hrp.Position - part.Position).Magnitude)
+
+            -- สร้าง Highlight ครอบตัวแร่
+            local highlight = Instance.new("Highlight")
+            highlight.Adornee = item
+            highlight.FillColor = targetColor
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            highlight.FillTransparency = 0.5
+            highlight.Parent = CoreGui
+            table.insert(activeEspHighlights, highlight)
+
+            -- สร้าง BillboardGui แสดงระยะทาง [ เช่น หายาก[600m] ]
+            local bill = Instance.new("BillboardGui")
+            bill.Size = UDim2.new(0, 100, 0, 40)
+            bill.StudsOffset = Vector3.new(0, 2, 0)
+            bill.AlwaysOnTop = true
+            bill.Adornee = part
+            bill.Parent = CoreGui
+            table.insert(activeEspHighlights, bill)
+
+            local txt = Instance.new("TextLabel")
+            txt.Size = UDim2.new(1, 0, 1, 0)
+            txt.BackgroundTransparency = 1
+            txt.Font = Enum.Font.GothamBold
+            txt.TextSize = 11
+            txt.TextColor3 = targetColor
+            txt.TextStrokeTransparency = 0
+            txt.Text = tierText .. "[" .. distance .. "m]"
+            txt.Parent = bill
+        end
     end
 end)
 
@@ -650,14 +747,14 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- [ ระบบตั้งค่า (Settings Tab) ] --
+-- [ ระบบตั้งค่า (Settings Tab) - อัปเดตขีดจำกัดความเร็ว 10,000 และกระโดด 1,000 ] --
 createSectionHeader("ปรับแต่งค่าตัวละคร", SettingsTab)
 
-createSlider("ตั้งค่าความเร็ว (WalkSpeed)", 16, 200, 50, SettingsTab, function(val)
+createSlider("ตั้งค่าความเร็ว (WalkSpeed)", 16, 10000, 50, SettingsTab, function(val)
     customWalkSpeed = val
 end)
 
-createSlider("ตั้งค่ากระโดดสูง (JumpPower)", 50, 300, 100, SettingsTab, function(val)
+createSlider("ตั้งค่ากระโดดสูง (JumpPower)", 50, 1000, 100, SettingsTab, function(val)
     customJumpPower = val
 end)
 
@@ -698,6 +795,7 @@ end
 
 local btnHome = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
 local btnAutoFarm = createCategoryButton("ฟามออโต้", AutoFarmTab)
+local btnESP = createCategoryButton("ESP", ESPTab)
 local btnChar = createCategoryButton("ตัวละคร", CharacterTab)
 local btnSettings = createCategoryButton("ตั้งค่า", SettingsTab)
 
