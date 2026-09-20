@@ -10,11 +10,13 @@ local humanoid = character:WaitForChild("Humanoid")
 
 -- ตั้งค่าตัวแปร
 local dashEnabled = false
-local dashPower = 50 -- ความแรงในการพุ่ง (ปรับมาก/น้อยได้ตามชอบ)
-local cooldown = 0.3 -- ดีเลย์การพุ่ง (วินาที)
+local dashSpeed = 45 -- ความเร็วในการพุ่ง (ปรับเพิ่ม/ลดได้)
+local dashDuration = 0.15 -- ระยะเวลาที่พุ่งต่อครั้ง (วินาที)
+local cooldown = 0.25
 local lastDash = 0
+local isDashing = false
 
--- สร้าง GUI ปุ่มเปิด-ปิด
+-- สร้าง GUI ปุ่มเปิด-ปิด (รองรับการลากย้าย)
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DashGui"
 screenGui.ResetOnSpawn = false
@@ -22,11 +24,11 @@ screenGui.Parent = player:WaitForChild("PlayerGui")
 
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Name = "ToggleDash"
-toggleBtn.Size = UDim2.new(0, 160, 0, 50)
-toggleBtn.Position = UDim2.new(0.5, -80, 0.85, 0)
+toggleBtn.Size = UDim2.new(0, 150, 0, 45)
+toggleBtn.Position = UDim2.new(0.5, -75, 0.8, 0)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleBtn.TextSize = 16
+toggleBtn.TextSize = 15
 toggleBtn.Font = Enum.Font.SourceSansBold
 toggleBtn.Text = "Dash Mode: OFF"
 toggleBtn.Parent = screenGui
@@ -35,59 +37,99 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 8)
 corner.Parent = toggleBtn
 
--- ฟังก์ชันกดเปิด-ปิด
-toggleBtn.MouseButton1Click:Connect(function()
-    dashEnabled = not dashEnabled
-    if dashEnabled then
-        toggleBtn.Text = "Dash Mode: ON"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-        humanoid.WalkSpeed = 0 -- ล็อคความเร็วเดินปกติไม่ให้มันเดินแทรก
-    else
-        toggleBtn.Text = "Dash Mode: OFF"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        humanoid.WalkSpeed = 16 -- คืนค่าความเร็วเดิม
+-- ระบบลากย้าย UI บนมือถือ
+local dragging, dragInput, dragStart, startPos
+
+toggleBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = toggleBtn.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
     end
 end)
 
--- ระบบตรวจจับการเคลื่อนไหวและพุ่งตัว
-RunService.RenderStepped:Connect(function()
-    if not dashEnabled then return end
-    
-    local moveDir = humanoid.MoveDirection
-    local currentTime = tick()
-    
-    -- ถ้าผู้เล่นกดปุ่มเดิน (MoveDirection มีค่ามากกว่า 0) และหมดเวลาคูลดาวน์
-    if moveDir.Magnitude > 0 and (currentTime - lastDash) >= cooldown then
-        lastDash = currentTime
-        
-        -- ดึงทิศทางกล้องปัจจุบัน
-        local camera = workspace.CurrentCamera
-        local camLook = camera.CFrame.LookVector
-        local camRight = camera.CFrame.RightVector
-        
-        -- คำนวณทิศทางพุ่งตามมุมมองกล้องและปุ่มที่กด (W, A, S, D)
-        -- แปลง MoveDirection ของ Humanoid ให้เข้ากับมุมมองกล้อง 3D
-        local flatCamLook = Vector3.new(camLook.X, 0, camLook.Z).Unit
-        local flatCamRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
-        
-        -- เช็คปุ่มที่กดเทียบกับทิศทางกล้อง
-        local dashVector = (flatCamLook * moveDir.Z + flatCamRight * moveDir.X).Unit
-        
-        -- สั่งพุ่งตัว (Velocity)
-        humanoidRootPart.AssemblyLinearVelocity = Vector3.new(
-            dashVector.X * dashPower,
-            humanoidRootPart.AssemblyLinearVelocity.Y, -- รักษาระดับแรงโน้มถ่วงแนวตั้ง
-            dashVector.Z * dashPower
+toggleBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        toggleBtn.Position = UDim2.new(
+            startPos.X.Scale, 
+            startPos.X.Offset + delta.X, 
+            startPos.Y.Scale, 
+            startPos.Y.Offset + delta.Y
         )
     end
 end)
 
--- รองรับกรณีตัวละครตายแล้วเกิดใหม่
+-- ฟังก์ชันกดเปิด-ปิด
+local originalWalkSpeed = humanoid.WalkSpeed
+toggleBtn.MouseButton1Click:Connect(function()
+    -- เช็คว่าเป็นการลากหรือกด (ถ้าลากไกลจะไม่เปลี่ยนสถานะ)
+    dashEnabled = not dashEnabled
+    if dashEnabled then
+        toggleBtn.Text = "Dash Mode: ON"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        originalWalkSpeed = humanoid.WalkSpeed
+        humanoid.WalkSpeed = 6 -- ให้เหลือความเร็วเดินไว้นิดหน่อยเพื่อให้จอยสติ๊กไม่รวน
+    else
+        toggleBtn.Text = "Dash Mode: OFF"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        humanoid.WalkSpeed = originalWalkSpeed
+    end
+end)
+
+-- ระบบพุ่งที่สมูทขึ้น
+RunService.RenderStepped:Connect(function()
+    if not dashEnabled or isDashing then return end
+    
+    local moveDir = humanoid.MoveDirection
+    local currentTime = tick()
+    
+    if moveDir.Magnitude > 0.1 and (currentTime - lastDash) >= cooldown then
+        lastDash = currentTime
+        isDashing = true
+        
+        local camera = workspace.CurrentCamera
+        -- ใช้มุมมองกล้องคำนวณทิศทางที่ถูกต้องบนมือถือ
+        local cframe = camera.CFrame
+        local lookVector = cframe.LookVector
+        local rightVector = cframe.RightVector
+        
+        -- ปรับแกน Y เป็น 0 เพื่อให้พุ่งไปข้างหน้าแบบราบไม่พุ่งทะลุฟ้าหรือมุดดิน
+        lookVector = Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+        rightVector = Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+        
+        -- เทียบทิศทางจากปุ่มกดเคลื่อนที่กับมุมมองกล้อง
+        local targetDir = (lookVector * moveDir.Z + rightVector * moveDir.X).Unit
+        
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.MaxForce = Vector3.new(40000, 0, 40000)
+        bodyVelocity.Velocity = targetDir * dashSpeed
+        bodyVelocity.Parent = humanoidRootPart
+        
+        task.wait(dashDuration)
+        bodyVelocity:Destroy()
+        isDashing = false
+    end
+end)
+
+-- รีเซ็ตค่าเมื่อตัวละครเกิดใหม่
 player.CharacterAdded:Connect(function(newChar)
     character = newChar
     humanoidRootPart = character:WaitForChild("HumanoidRootPart")
     humanoid = character:WaitForChild("Humanoid")
     if dashEnabled then
-        humanoid.WalkSpeed = 0
+        humanoid.WalkSpeed = 6
     end
 end)
