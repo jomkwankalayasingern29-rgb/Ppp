@@ -1,189 +1,180 @@
--- Services
+-- ตรวจสอบและป้องกันการรันซ้ำ
+if _G.DeltaFlingRunning then
+    _G.DeltaFlingRunning = false
+    task.wait(0.2)
+end
+_G.DeltaFlingRunning = true
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local humanoid = character:WaitForChild("Humanoid")
+-- สร้าง ScreenGui สำหรับ UI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DeltaFlingGui"
+ScreenGui.Parent = game:CoreGui
 
--- ตั้งค่าตัวแปร
-local dashEnabled = false
-local dashSpeed = 45 -- ความเร็วเริ่มต้นในการพุ่ง
-local dashDuration = 0.12 -- ระยะเวลาการพุ่งต่อครั้ง
-local cooldown = 0.2 -- คูลดาวน์
-local lastDash = 0
-local isDashing = false
+-- ปุ่มเปิด/ปิดเมนูหลัก
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = ScreenGui
+ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.1, 0)
+ToggleButton.Size = UDim2.new(0, 120, 0, 40)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "Fling Menu"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 18
+ToggleButton.Active = true
+ToggleButton.Draggable = true
 
--- สร้าง GUI หลัก
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "DashGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+-- กรอบเมนู
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.05, 0, 0.18, 0)
+MainFrame.Size = UDim2.new(0, 220, 0, 160)
+MainFrame.Visible = false
 
--- 1. ปุ่มเปิด-ปิด (หลัก)
-local toggleBtn = Instance.new("TextButton")
-toggleBtn.Name = "ToggleDash"
-toggleBtn.Size = UDim2.new(0, 150, 0, 45)
-toggleBtn.Position = UDim2.new(0.5, -75, 0.75, 0)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleBtn.TextSize = 15
-toggleBtn.Font = Enum.Font.SourceSansBold
-toggleBtn.Text = "Dash Mode: OFF"
-toggleBtn.Parent = screenGui
+-- ป้ายข้อความบอกวิธีใช้
+local Label = Instance.new("TextLabel")
+Label.Parent = MainFrame
+Label.BackgroundTransparency = 1
+Label.Position = UDim2.new(0.1, 0, 0.05, 0)
+Label.Size = UDim2.new(0.8, 0, 0, 20)
+Label.Font = Enum.Font.SourceSansBold
+Label.Text = "พิมพ์ชื่อเป้าหมาย (บางส่วนก็ได้):"
+Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+Label.TextSize = 13
 
-local corner1 = Instance.new("UICorner")
-corner1.CornerRadius = UDim.new(0, 8)
-corner1.Parent = toggleBtn
+-- ช่องใส่ชื่อเป้าหมาย
+local TextBox = Instance.new("TextBox")
+TextBox.Name = "TargetBox"
+TextBox.Parent = MainFrame
+TextBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+TextBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+TextBox.Size = UDim2.new(0.8, 0, 0, 35)
+TextBox.Font = Enum.Font.SourceSans
+TextBox.PlaceholderText = "เช่น Player123"
+TextBox.Text = ""
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.TextSize = 14
 
--- 2. กรอบปรับความเร็ว (Speed Control Panel)
-local speedFrame = Instance.new("Frame")
-speedFrame.Size = UDim2.new(0, 150, 0, 70)
-speedFrame.Position = UDim2.new(0.5, -75, 0.85, 5)
-speedFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-speedFrame.BackgroundTransparency = 0.2
-speedFrame.Visible = false -- ซ่อนไว้ก่อนจนกว่าจะเปิดโหมด Dash
-speedFrame.Parent = screenGui
+-- ปุ่มเปิด/ปิดการทำงาน Fling
+local FlingButton = Instance.new("TextButton")
+FlingButton.Name = "FlingButton"
+FlingButton.Parent = MainFrame
+FlingButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+FlingButton.Position = UDim2.new(0.1, 0, 0.62, 0)
+FlingButton.Size = UDim2.new(0.8, 0, 0, 40)
+FlingButton.Font = Enum.Font.SourceSansBold
+FlingButton.Text = "Status: OFF"
+FlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlingButton.TextSize = 16
 
-local corner2 = Instance.new("UICorner")
-corner2.CornerRadius = UDim.new(0, 8)
-corner2.Parent = speedFrame
-
-local speedLabel = Instance.new("TextLabel")
-speedLabel.Size = UDim2.new(1, 0, 0, 25)
-speedLabel.BackgroundTransparency = 1
-speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedLabel.TextSize = 14
-speedLabel.Font = Enum.Font.SourceSansBold
-speedLabel.Text = "Dash Speed: " .. dashSpeed
-speedLabel.Parent = speedFrame
-
--- ปุ่มลดความเร็ว (-)
-local decBtn = Instance.new("TextButton")
-decBtn.Size = UDim2.new(0, 60, 0, 35)
-decBtn.Position = UDim2.new(0.1, 0, 0.45, 0)
-decBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-decBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-decBtn.TextSize = 18
-decBtn.Font = Enum.Font.SourceSansBold
-decBtn.Text = "-"
-decBtn.Parent = speedFrame
-local cornerDec = Instance.new("UICorner") cornerDec.CornerRadius = UDim.new(0, 6) cornerDec.Parent = decBtn
-
--- ปุ่มเพิ่มความเร็ว (+)
-local incBtn = Instance.new("TextButton")
-incBtn.Size = UDim2.new(0, 60, 0, 35)
-incBtn.Position = UDim2.new(0.55, 0, 0.45, 0)
-incBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-incBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-incBtn.TextSize = 18
-incBtn.Font = Enum.Font.SourceSansBold
-incBtn.Text = "+"
-incBtn.Parent = speedFrame
-local cornerInc = Instance.new("UICorner") cornerInc.CornerRadius = UDim.new(0, 6) cornerInc.Parent = incBtn
-
--- ระบบปรับค่าความเร็ว
-decBtn.MouseButton1Click:Connect(function()
-    dashSpeed = math.clamp(dashSpeed - 10, 10, 150)
-    speedLabel.Text = "Dash Speed: " .. dashSpeed
+-- ฟังก์ชันเปิด/ปิดเมนู
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
 end)
 
-incBtn.MouseButton1Click:Connect(function()
-    dashSpeed = math.clamp(dashSpeed + 10, 10, 150)
-    speedLabel.Text = "Dash Speed: " .. dashSpeed
-end)
+local isFlinging = false
+local originalPosition = nil
+local connection = nil
 
--- ระบบลากย้าย UI ทั้งชุด (ให้ขยับปุ่มหลักแล้วขยับตาม หรือลากแยกอิสระ)
-local dragging, dragInput, dragStart, startPos
-toggleBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = toggleBtn.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+-- ค้นหาผู้เล่นจากชื่อที่พิมพ์ (รองรับทั้งชื่อจริงและ Display Name)
+local function getTarget(nameInput)
+    if nameInput == "" then return nil end
+    local lowerInput = string.lower(nameInput)
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local playerName = string.lower(player.Name)
+            local displayName = string.lower(player.DisplayName)
+            if string.find(playerName, lowerInput) or string.find(displayName, lowerInput) then
+                return player
+            end
+        end
+    end
+    return nil
+end
+
+-- ปุ่มกดเริ่ม/หยุด Fling
+FlingButton.MouseButton1Click:Connect(function()
+    if not isFlinging then
+        -- กำลังจะเปิดการทำงาน ให้เช็คชื่อเป้าหมายก่อน
+        local targetPlayer = getTarget(TextBox.Text)
+        if not targetPlayer then
+            FlingButton.Text = "ไม่พบผู้เล่นนี้!"
+            task.wait(1)
+            FlingButton.Text = "Status: OFF"
+            return
+        end
+        
+        if not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            FlingButton.Text = "เป้าหมายยังไม่เกิด!"
+            task.wait(1)
+            FlingButton.Text = "Status: OFF"
+            return
+        end
+        
+        -- บันทึกตำแหน่งเดิมก่อนวาร์ปไป
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            originalPosition = char.HumanoidRootPart.CFrame
+        else
+            return
+        end
+        
+        isFlinging = true
+        FlingButton.Text = "Target: " .. targetPlayer.Name
+        FlingButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+        
+        -- เริ่มทำงานลูปหมุนตัวและวาร์ปจุ่ม
+        connection = RunService.Stepped:Connect(function()
+            if not _G.DeltaFlingRunning or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then 
+                return 
+            end
+            
+            local myChar = LocalPlayer.Character
+            local tChar = targetPlayer.Character
+            
+            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                local myRoot = myChar.HumanoidRootPart
+                local tRoot = tChar.HumanoidRootPart
+                
+                -- อัดความเร็วเพื่อให้เกิดแรงกระเด็น (Fling) และทับตำแหน่งเป้าหมาย
+                myRoot.Velocity = Vector3.new(30000, 30000, 30000)
+                myRoot.RotVelocity = Vector3.new(50000, 50000, 50000)
+                myRoot.CFrame = tRoot.CFrame
+            end
         end)
-    end
-end)
-
-toggleBtn.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        local newX = startPos.X.Offset + delta.X
-        local newY = startPos.Y.Offset + delta.Y
-        toggleBtn.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
-        -- ให้กล่องปรับความเร็วขยับตามปุ่มหลักอัตโนมัติ
-        speedFrame.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY + 52)
-    end
-end)
-
--- ฟังก์ชันเปิด-ปิดโหมด Dash
-local originalWalkSpeed = humanoid.WalkSpeed
-toggleBtn.MouseButton1Click:Connect(function()
-    dashEnabled = not dashEnabled
-    if dashEnabled then
-        toggleBtn.Text = "Dash Mode: ON"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-        speedFrame.Visible = true
-        originalWalkSpeed = humanoid.WalkSpeed
-        humanoid.WalkSpeed = 6 -- ล็อคความเร็วเดินปกติไม่ให้รอนจอยสติ๊ก
     else
-        toggleBtn.Text = "Dash Mode: OFF"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        speedFrame.Visible = false
-        humanoid.WalkSpeed = originalWalkSpeed
+        -- ปิดการทำงาน และวาร์ปกลับตำแหน่งเดิม
+        isFlinging = false
+        if connection then
+            connection:Disconnect()
+            connection = nil
+        end
+        
+        FlingButton.Text = "Status: OFF"
+        FlingButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        
+        task.wait(0.05)
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") and originalPosition then
+            myChar.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            myChar.HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0)
+            myChar.HumanoidRootPart.CFrame = originalPosition
+        end
     end
 end)
 
--- ระบบพุ่งที่คำนวณทิศทางจากจอยสติ๊กมือถือเทียบกับมุมมองกล้องอย่างอิสระทุกทิศทาง
-RunService.RenderStepped:Connect(function()
-    if not dashEnabled or isDashing then return end
-    
-    local moveDir = humanoid.MoveDirection
-    local currentTime = tick()
-    
-    if moveDir.Magnitude > 0.1 and (currentTime - lastDash) >= cooldown then
-        lastDash = currentTime
-        isDashing = true
-        
-        local camera = workspace.CurrentCamera
-        local camLook = camera.CFrame.LookVector
-        local camRight = camera.CFrame.RightVector
-        
-        -- ตัดแกน Y ทิ้งเพื่อให้วิ่งราบไปกับพื้น ไม่พุ่งขึ้นฟ้าหรือลงดิน
-        camLook = Vector3.new(camLook.X, 0, camLook.Z).Unit
-        camRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
-        
-        -- แปลงค่าทิศทางที่ผู้เล่นโยกจอย (moveDir) ให้เข้ากับมุมมองกล้องแบบ 360 องศา
-        -- รองรับทั้ง เดินหน้า (W), ถอยหลัง (S), ซ้าย (A), ขวา (D) และทุกมุมเฉียง
-        local dashDir = (camLook * moveDir.Z + camRight * moveDir.X).Unit
-        
-        -- ใช้ BodyVelocity ส่งแรงพุ่ง
-        local bv = Instance.new("BodyVelocity")
-        bv.MaxForce = Vector3.new(50000, 0, 50000)
-        bv.Velocity = dashDir * dashSpeed
-        bv.Parent = humanoidRootPart
-        
-        task.wait(dashDuration)
-        bv:Destroy()
-        isDashing = false
-    end
-end)
-
--- รีเซ็ตค่าเมื่อตัวละครเกิดใหม่
-player.CharacterAdded:Connect(function(newChar)
-    character = newChar
-    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    humanoid = character:WaitForChild("Humanoid")
-    if dashEnabled then
-        humanoid.WalkSpeed = 6
+-- เคลียร์ระบบเมื่อรีเซ็ตตัวละคร
+LocalPlayer.CharacterAdded:Connect(function()
+    if isFlinging then
+        isFlinging = false
+        if connection then connection:Disconnect() end
+        FlingButton.Text = "Status: OFF"
+        FlingButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
     end
 end)
