@@ -1,4 +1,3 @@
-
 -- [[ GKHub v1.5.2: Smooth Loading & Fade-in UI ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -9,6 +8,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
@@ -121,7 +121,7 @@ local function showNotification(text, isEnabled)
     end)
 end
 
--- [ หน้าจอโหลด (Loading Screen) พร้อมอนิเมชันจุดวิ่ง ] --
+-- [ หน้าจอโหลด (Loading Screen) ] --
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
 LoadFrame.Size = UDim2.new(0, 240, 0, 55)
@@ -149,7 +149,7 @@ LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 12
 LoadText.Parent = LoadFrame
 
--- [ UI หลัก (ขนาดกะทัดรัดสำหรับมือถือ) ] --
+-- [ UI หลัก ] --
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 380, 0, 240)
@@ -400,8 +400,27 @@ end)
 
 createSectionHeader("ระบบฟามออโต้ (Auto Farm)", AutoFarmTab)
 
--- ตัวอย่างปุ่มเปิด/ปิด สำหรับฟังก์ชันฟามออโต้ (คุณสามารถเปลี่ยนข้อความหรือเพิ่มฟังก์ชันจริงตรงนี้ได้)
+-- [ ระบบ Auto Farm (0.3 วินาที) ] --
+local AutoFarmEnabled = false
+
+task.spawn(function()
+    while true do
+        if AutoFarmEnabled then
+            pcall(function()
+                local args = {
+                    {
+                        "Activate_Punch"
+                    }
+                }
+                ReplicatedStorage:WaitForChild("RemoteEvent"):FireServer(unpack(args))
+            end)
+        end
+        task.wait(0.3)
+    end
+end)
+
 createToggle("เปิดใช้งานออโต้ฟาม", AutoFarmTab, false, function(state)
+    AutoFarmEnabled = state
     if state then
         showNotification("เปิดใช้งานระบบฟามออโต้แล้ว", true)
     else
