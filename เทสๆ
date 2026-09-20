@@ -10,22 +10,23 @@ local humanoid = character:WaitForChild("Humanoid")
 
 -- ตั้งค่าตัวแปร
 local dashEnabled = false
-local dashSpeed = 45 -- ความเร็วในการพุ่ง (ปรับเพิ่ม/ลดได้)
-local dashDuration = 0.15 -- ระยะเวลาที่พุ่งต่อครั้ง (วินาที)
-local cooldown = 0.25
+local dashSpeed = 45 -- ความเร็วเริ่มต้นในการพุ่ง
+local dashDuration = 0.12 -- ระยะเวลาการพุ่งต่อครั้ง
+local cooldown = 0.2 -- คูลดาวน์
 local lastDash = 0
 local isDashing = false
 
--- สร้าง GUI ปุ่มเปิด-ปิด (รองรับการลากย้าย)
+-- สร้าง GUI หลัก
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DashGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
+-- 1. ปุ่มเปิด-ปิด (หลัก)
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Name = "ToggleDash"
 toggleBtn.Size = UDim2.new(0, 150, 0, 45)
-toggleBtn.Position = UDim2.new(0.5, -75, 0.8, 0)
+toggleBtn.Position = UDim2.new(0.5, -75, 0.75, 0)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleBtn.TextSize = 15
@@ -33,23 +34,76 @@ toggleBtn.Font = Enum.Font.SourceSansBold
 toggleBtn.Text = "Dash Mode: OFF"
 toggleBtn.Parent = screenGui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 8)
-corner.Parent = toggleBtn
+local corner1 = Instance.new("UICorner")
+corner1.CornerRadius = UDim.new(0, 8)
+corner1.Parent = toggleBtn
 
--- ระบบลากย้าย UI บนมือถือ
+-- 2. กรอบปรับความเร็ว (Speed Control Panel)
+local speedFrame = Instance.new("Frame")
+speedFrame.Size = UDim2.new(0, 150, 0, 70)
+speedFrame.Position = UDim2.new(0.5, -75, 0.85, 5)
+speedFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+speedFrame.BackgroundTransparency = 0.2
+speedFrame.Visible = false -- ซ่อนไว้ก่อนจนกว่าจะเปิดโหมด Dash
+speedFrame.Parent = screenGui
+
+local corner2 = Instance.new("UICorner")
+corner2.CornerRadius = UDim.new(0, 8)
+corner2.Parent = speedFrame
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(1, 0, 0, 25)
+speedLabel.BackgroundTransparency = 1
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.TextSize = 14
+speedLabel.Font = Enum.Font.SourceSansBold
+speedLabel.Text = "Dash Speed: " .. dashSpeed
+speedLabel.Parent = speedFrame
+
+-- ปุ่มลดความเร็ว (-)
+local decBtn = Instance.new("TextButton")
+decBtn.Size = UDim2.new(0, 60, 0, 35)
+decBtn.Position = UDim2.new(0.1, 0, 0.45, 0)
+decBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+decBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+decBtn.TextSize = 18
+decBtn.Font = Enum.Font.SourceSansBold
+decBtn.Text = "-"
+decBtn.Parent = speedFrame
+local cornerDec = Instance.new("UICorner") cornerDec.CornerRadius = UDim.new(0, 6) cornerDec.Parent = decBtn
+
+-- ปุ่มเพิ่มความเร็ว (+)
+local incBtn = Instance.new("TextButton")
+incBtn.Size = UDim2.new(0, 60, 0, 35)
+incBtn.Position = UDim2.new(0.55, 0, 0.45, 0)
+incBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+incBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+incBtn.TextSize = 18
+incBtn.Font = Enum.Font.SourceSansBold
+incBtn.Text = "+"
+incBtn.Parent = speedFrame
+local cornerInc = Instance.new("UICorner") cornerInc.CornerRadius = UDim.new(0, 6) cornerInc.Parent = incBtn
+
+-- ระบบปรับค่าความเร็ว
+decBtn.MouseButton1Click:Connect(function()
+    dashSpeed = math.clamp(dashSpeed - 10, 10, 150)
+    speedLabel.Text = "Dash Speed: " .. dashSpeed
+end)
+
+incBtn.MouseButton1Click:Connect(function()
+    dashSpeed = math.clamp(dashSpeed + 10, 10, 150)
+    speedLabel.Text = "Dash Speed: " .. dashSpeed
+end)
+
+-- ระบบลากย้าย UI ทั้งชุด (ให้ขยับปุ่มหลักแล้วขยับตาม หรือลากแยกอิสระ)
 local dragging, dragInput, dragStart, startPos
-
 toggleBtn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = toggleBtn.Position
-        
         input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
         end)
     end
 end)
@@ -63,33 +117,33 @@ end)
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         local delta = input.Position - dragStart
-        toggleBtn.Position = UDim2.new(
-            startPos.X.Scale, 
-            startPos.X.Offset + delta.X, 
-            startPos.Y.Scale, 
-            startPos.Y.Offset + delta.Y
-        )
+        local newX = startPos.X.Offset + delta.X
+        local newY = startPos.Y.Offset + delta.Y
+        toggleBtn.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
+        -- ให้กล่องปรับความเร็วขยับตามปุ่มหลักอัตโนมัติ
+        speedFrame.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY + 52)
     end
 end)
 
--- ฟังก์ชันกดเปิด-ปิด
+-- ฟังก์ชันเปิด-ปิดโหมด Dash
 local originalWalkSpeed = humanoid.WalkSpeed
 toggleBtn.MouseButton1Click:Connect(function()
-    -- เช็คว่าเป็นการลากหรือกด (ถ้าลากไกลจะไม่เปลี่ยนสถานะ)
     dashEnabled = not dashEnabled
     if dashEnabled then
         toggleBtn.Text = "Dash Mode: ON"
         toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        speedFrame.Visible = true
         originalWalkSpeed = humanoid.WalkSpeed
-        humanoid.WalkSpeed = 6 -- ให้เหลือความเร็วเดินไว้นิดหน่อยเพื่อให้จอยสติ๊กไม่รวน
+        humanoid.WalkSpeed = 6 -- ล็อคความเร็วเดินปกติไม่ให้รอนจอยสติ๊ก
     else
         toggleBtn.Text = "Dash Mode: OFF"
         toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        speedFrame.Visible = false
         humanoid.WalkSpeed = originalWalkSpeed
     end
 end)
 
--- ระบบพุ่งที่สมูทขึ้น
+-- ระบบพุ่งที่คำนวณทิศทางจากจอยสติ๊กมือถือเทียบกับมุมมองกล้องอย่างอิสระทุกทิศทาง
 RunService.RenderStepped:Connect(function()
     if not dashEnabled or isDashing then return end
     
@@ -101,25 +155,25 @@ RunService.RenderStepped:Connect(function()
         isDashing = true
         
         local camera = workspace.CurrentCamera
-        -- ใช้มุมมองกล้องคำนวณทิศทางที่ถูกต้องบนมือถือ
-        local cframe = camera.CFrame
-        local lookVector = cframe.LookVector
-        local rightVector = cframe.RightVector
+        local camLook = camera.CFrame.LookVector
+        local camRight = camera.CFrame.RightVector
         
-        -- ปรับแกน Y เป็น 0 เพื่อให้พุ่งไปข้างหน้าแบบราบไม่พุ่งทะลุฟ้าหรือมุดดิน
-        lookVector = Vector3.new(lookVector.X, 0, lookVector.Z).Unit
-        rightVector = Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+        -- ตัดแกน Y ทิ้งเพื่อให้วิ่งราบไปกับพื้น ไม่พุ่งขึ้นฟ้าหรือลงดิน
+        camLook = Vector3.new(camLook.X, 0, camLook.Z).Unit
+        camRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
         
-        -- เทียบทิศทางจากปุ่มกดเคลื่อนที่กับมุมมองกล้อง
-        local targetDir = (lookVector * moveDir.Z + rightVector * moveDir.X).Unit
+        -- แปลงค่าทิศทางที่ผู้เล่นโยกจอย (moveDir) ให้เข้ากับมุมมองกล้องแบบ 360 องศา
+        -- รองรับทั้ง เดินหน้า (W), ถอยหลัง (S), ซ้าย (A), ขวา (D) และทุกมุมเฉียง
+        local dashDir = (camLook * moveDir.Z + camRight * moveDir.X).Unit
         
-        local bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.MaxForce = Vector3.new(40000, 0, 40000)
-        bodyVelocity.Velocity = targetDir * dashSpeed
-        bodyVelocity.Parent = humanoidRootPart
+        -- ใช้ BodyVelocity ส่งแรงพุ่ง
+        local bv = Instance.new("BodyVelocity")
+        bv.MaxForce = Vector3.new(50000, 0, 50000)
+        bv.Velocity = dashDir * dashSpeed
+        bv.Parent = humanoidRootPart
         
         task.wait(dashDuration)
-        bodyVelocity:Destroy()
+        bv:Destroy()
         isDashing = false
     end
 end)
