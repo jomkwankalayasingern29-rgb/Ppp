@@ -1,430 +1,93 @@
--- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
-local CoreGui = game:GetService("CoreGui")
-if CoreGui:FindFirstChild("CustomScriptUI") then
-    CoreGui.CustomScriptUI:Destroy()
-end
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
--- สร้าง ScreenGui หลัก
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CustomScriptUI"
-ScreenGui.Parent = CoreGui
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
 
--- หน้าต่างแจ้งเตือนสถานะตอนเริ่ม (Loading Screen)
-local LoadFrame = Instance.new("Frame")
-LoadFrame.Name = "LoadFrame"
-LoadFrame.Size = UDim2.new(0, 300, 0, 65)
-LoadFrame.Position = UDim2.new(0.5, -150, 0.5, -32)
-LoadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-LoadFrame.BorderSizePixel = 0
-LoadFrame.Parent = ScreenGui
+-- ตั้งค่าตัวแปร
+local dashEnabled = false
+local dashPower = 50 -- ความแรงในการพุ่ง (ปรับมาก/น้อยได้ตามชอบ)
+local cooldown = 0.3 -- ดีเลย์การพุ่ง (วินาที)
+local lastDash = 0
 
-local LoadCorner = Instance.new("UICorner")
-LoadCorner.CornerRadius = UDim.new(0, 8)
-LoadCorner.Parent = LoadFrame
+-- สร้าง GUI ปุ่มเปิด-ปิด
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DashGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
-local LoadStroke = Instance.new("UIStroke")
-LoadStroke.Color = Color3.fromRGB(0, 162, 255)
-LoadStroke.Thickness = 1.5
-LoadStroke.Parent = LoadFrame
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "ToggleDash"
+toggleBtn.Size = UDim2.new(0, 160, 0, 50)
+toggleBtn.Position = UDim2.new(0.5, -80, 0.85, 0)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.TextSize = 16
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.Text = "Dash Mode: OFF"
+toggleBtn.Parent = screenGui
 
-local LoadText = Instance.new("TextLabel")
-LoadText.Name = "LoadText"
-LoadText.Size = UDim2.new(1, 0, 1, 0)
-LoadText.BackgroundTransparency = 1
-LoadText.Font = Enum.Font.GothamBold
-LoadText.Text = "กำลังโหลด"
-LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
-LoadText.TextSize = 16
-LoadText.Parent = LoadFrame
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = toggleBtn
 
--- ==================== หน้าต่าง UI หลัก ====================
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 380, 0, 210)
-MainFrame.Position = UDim2.new(0.5, -190, 0.5, -105)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Visible = false
-MainFrame.BackgroundTransparency = 1
-MainFrame.Parent = ScreenGui
-
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 8)
-MainCorner.Parent = MainFrame
-
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(0, 162, 255)
-MainStroke.Thickness = 1.5
-MainStroke.Parent = MainFrame
-
--- แถบหัวข้อด้านบน (TopBar)
-local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 28)
-TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-TopBar.BorderSizePixel = 0
-TopBar.Parent = MainFrame
-
-local TopBarCorner = Instance.new("UICorner")
-TopBarCorner.CornerRadius = UDim.new(0, 8)
-TopBarCorner.Parent = TopBar
-
-local FixTopBar = Instance.new("Frame")
-FixTopBar.Size = UDim2.new(1, 0, 0, 5)
-FixTopBar.Position = UDim2.new(0, 0, 1, -5)
-FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-FixTopBar.BorderSizePixel = 0
-FixTopBar.Parent = TopBar
-
--- โลโก้ตัว "G"
-local LogoG = Instance.new("TextLabel")
-LogoG.Size = UDim2.new(0, 20, 0, 20)
-LogoG.Position = UDim2.new(0, 8, 0, 4)
-LogoG.BackgroundTransparency = 1
-LogoG.Font = Enum.Font.GothamBold
-LogoG.Text = "G"
-LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
-LogoG.TextSize = 14
-LogoG.Parent = TopBar
-
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -80, 1, 0)
-TitleLabel.Position = UDim2.new(0, 32, 0, 0)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "Black & White UI | Blue Theme"
-TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
-TitleLabel.TextSize = 12
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Parent = TopBar
-
--- ปุ่มปิด UI (X)
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 24, 0, 24)
-CloseButton.Position = UDim2.new(1, -26, 0, 2)
-CloseButton.BackgroundTransparency = 1
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(220, 60, 60)
-CloseButton.TextSize = 13
-CloseButton.Parent = TopBar
-
-CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
--- ปุ่มย่อหน้าต่าง (-)
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
-MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
-MinimizeButton.BackgroundTransparency = 1
-MinimizeButton.Font = Enum.Font.GothamBold
-MinimizeButton.Text = "-"
-MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-MinimizeButton.TextSize = 14
-MinimizeButton.Parent = TopBar
-
-local isMinimized = false
-MinimizeButton.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    local TweenService = game:GetService("TweenService")
-    if isMinimized then
-        MinimizeButton.Text = "+"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
+-- ฟังก์ชันกดเปิด-ปิด
+toggleBtn.MouseButton1Click:Connect(function()
+    dashEnabled = not dashEnabled
+    if dashEnabled then
+        toggleBtn.Text = "Dash Mode: ON"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        humanoid.WalkSpeed = 0 -- ล็อคความเร็วเดินปกติไม่ให้มันเดินแทรก
     else
-        MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 210)}):Play()
+        toggleBtn.Text = "Dash Mode: OFF"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        humanoid.WalkSpeed = 16 -- คืนค่าความเร็วเดิม
     end
 end)
 
--- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
-local LeftSide = Instance.new("ScrollingFrame")
-LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
-LeftSide.Position = UDim2.new(0, 5, 0, 30)
-LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-LeftSide.ScrollBarThickness = 2
-LeftSide.Parent = MainFrame
-
-local LeftCorner = Instance.new("UICorner")
-LeftCorner.CornerRadius = UDim.new(0, 5)
-LeftCorner.Parent = LeftSide
-
-local LeftLayout = Instance.new("UIListLayout")
-LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-LeftLayout.Padding = UDim.new(0, 5)
-
--- ==================== ฝั่งขวา: ฟังก์ชัน ====================
-local RightSide = Instance.new("ScrollingFrame")
-RightSide.Size = UDim2.new(0.67, 0, 1, -34)
-RightSide.Position = UDim2.new(0.32, 0, 0, 30)
-RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-RightSide.BorderSizePixel = 0
-RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-RightSide.ScrollBarThickness = 2
-RightSide.Parent = MainFrame
-
-local RightCorner = Instance.new("UICorner")
-RightCorner.CornerRadius = UDim.new(0, 5)
-RightCorner.Parent = RightSide
-
-local FunctionContainers = {}
-
-local function createContainer(name)
-    local container = Instance.new("ScrollingFrame")
-    container.Name = name
-    container.Size = UDim2.new(1, 0, 1, 0)
-    container.BackgroundTransparency = 1
-    container.BorderSizePixel = 0
-    container.CanvasSize = UDim2.new(0, 0, 0, 0)
-    container.ScrollBarThickness = 2
-    container.Visible = false
-    container.Parent = RightSide
-
-    local layout = Instance.new("UIListLayout")
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 5)
-
-    FunctionContainers[name] = container
-    return container
-end
-
--- 1. หมวด "เมนูหลัก"
-local MainMenuContainer = createContainer("เมนูหลัก")
-
-local DiscordBtn = Instance.new("TextButton")
-DiscordBtn.Size = UDim2.new(0.92, 0, 0, 26)
-DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-DiscordBtn.BorderSizePixel = 0
-DiscordBtn.Font = Enum.Font.Gotham
-DiscordBtn.Text = "คัดลอกลิงก์ Discord"
-DiscordBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
-DiscordBtn.TextSize = 10
-DiscordBtn.Parent = MainMenuContainer
-
-local DiscordBtnCorner = Instance.new("UICorner")
-DiscordBtnCorner.CornerRadius = UDim.new(0, 4)
-DiscordBtnCorner.Parent = DiscordBtn
-
-DiscordBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard("https://discord.gg/Ugssja4wqQ")
+-- ระบบตรวจจับการเคลื่อนไหวและพุ่งตัว
+RunService.RenderStepped:Connect(function()
+    if not dashEnabled then return end
+    
+    local moveDir = humanoid.MoveDirection
+    local currentTime = tick()
+    
+    -- ถ้าผู้เล่นกดปุ่มเดิน (MoveDirection มีค่ามากกว่า 0) และหมดเวลาคูลดาวน์
+    if moveDir.Magnitude > 0 and (currentTime - lastDash) >= cooldown then
+        lastDash = currentTime
+        
+        -- ดึงทิศทางกล้องปัจจุบัน
+        local camera = workspace.CurrentCamera
+        local camLook = camera.CFrame.LookVector
+        local camRight = camera.CFrame.RightVector
+        
+        -- คำนวณทิศทางพุ่งตามมุมมองกล้องและปุ่มที่กด (W, A, S, D)
+        -- แปลง MoveDirection ของ Humanoid ให้เข้ากับมุมมองกล้อง 3D
+        local flatCamLook = Vector3.new(camLook.X, 0, camLook.Z).Unit
+        local flatCamRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
+        
+        -- เช็คปุ่มที่กดเทียบกับทิศทางกล้อง
+        local dashVector = (flatCamLook * moveDir.Z + flatCamRight * moveDir.X).Unit
+        
+        -- สั่งพุ่งตัว (Velocity)
+        humanoidRootPart.AssemblyLinearVelocity = Vector3.new(
+            dashVector.X * dashPower,
+            humanoidRootPart.AssemblyLinearVelocity.Y, -- รักษาระดับแรงโน้มถ่วงแนวตั้ง
+            dashVector.Z * dashPower
+        )
     end
 end)
 
--- 2. หมวด "หาเซิร์ฟคนน้อย"
-local HopServerContainer = createContainer("หาเซิร์ฟคนน้อย")
-
-local HopBtn = Instance.new("TextButton")
-HopBtn.Size = UDim2.new(0.92, 0, 0, 26)
-HopBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-HopBtn.BorderSizePixel = 0
-HopBtn.Font = Enum.Font.Gotham
-HopBtn.Text = "กดเพื่อหาเซิร์ฟคนน้อย"
-HopBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
-HopBtn.TextSize = 10
-HopBtn.Parent = HopServerContainer
-
-local HopBtnCorner = Instance.new("UICorner")
-HopBtnCorner.CornerRadius = UDim.new(0, 4)
-HopBtnCorner.Parent = HopBtn
-
--- ฟังก์ชันสร้าง UI แจ้งเตือนด้านบนจอเวลาหาเซิร์ฟ
-local function createNotificationUI()
-    local NotifFrame = Instance.new("Frame")
-    NotifFrame.Size = UDim2.new(0, 250, 0, 40)
-    NotifFrame.Position = UDim2.new(0.5, -125, 0, 15)
-    NotifFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    NotifFrame.BorderSizePixel = 0
-    NotifFrame.ZIndex = 999
-    NotifFrame.Parent = ScreenGui
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = NotifFrame
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(0, 162, 255)
-    stroke.Thickness = 1.5
-    stroke.Parent = NotifFrame
-
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, 0, 1, 0)
-    textLabel.BackgroundTransparency = 1
-    textLabel.Font = Enum.Font.GothamBold
-    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    textLabel.TextSize = 14
-    textLabel.ZIndex = 1000
-    textLabel.Parent = NotifFrame
-
-    return textLabel, NotifFrame
-end
-
--- ระบบหาเซิร์ฟเวอร์แบบกรองข้อมูลที่เสถียรและไม่ติดเซิร์ฟเต็ม
-HopBtn.MouseButton1Click:Connect(function()
-    local textLabel, notifFrame = createNotificationUI()
-    local HttpService = game:GetService("HttpService")
-    local TeleportService = game:GetService("TeleportService")
-    local Players = game:GetService("Players")
-    
-    textLabel.Text = "กำลังหา (1s)"
-    
-    task.spawn(function()
-        local seconds = 1
-        local searching = true
-        
-        -- ตัวนับเวลาแสดงผลบน UI
-        task.spawn(function()
-            while searching do
-                task.wait(1)
-                seconds = seconds + 1
-                if searching then
-                    textLabel.Text = "กำลังหา (" .. seconds .. "s)"
-                end
-            end
-        end)
-        
-        local targetServerId = nil
-        local cursor = ""
-        
-        -- วนลูปค้นหาเซิร์ฟเวอร์ที่ว่างจริง ๆ (กรองไม่ให้เอาเซิร์ฟที่คนเต็มหรือใกล้เต็ม)
-        for i = 1, 5 do -- ลองค้นหาดึงหน้าเว็บสูงสุด 5 หน้าเพื่อความเร็ว
-            local success, result = pcall(function()
-                local url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100", tostring(game.PlaceId))
-                if cursor ~= "" then
-                    url = url .. "&cursor=" .. cursor
-                end
-                return HttpService:JSONDecode(game:HttpGet(url))
-            end)
-            
-            if success and result and result.data then
-                for _, server in ipairs(result.data) do
-                    -- เช็คเงื่อนไข: ต้องไม่ใช่เซิร์ฟเดิม, มีคนเล่นน้อยกว่า maxPlayers และคนเล่นน้อย (เช่น ไม่เกิน 2-3 คน หรือว่าง)
-                    if server.id ~= game.JobId and type(server.playing) == "number" and type(server.maxPlayers) == "number" then
-                        if server.playing < server.maxPlayers - 1 and server.playing <= 2 then
-                            targetServerId = server.id
-                            break
-                        end
-                    end
-                end
-            end
-            
-            if targetServerId then break end
-            
-            if result and result.nextPageCursor then
-                cursor = result.nextPageCursor
-            else
-                break
-            end
-            task.wait(0.2)
-        end
-        
-        -- ถ้ายังหาแบบคนน้อยสุดๆ ไม่เจอ ให้เลือกเซิร์ฟไหนก็ได้ที่ไม่เต็มและไม่ใช่เซิร์ฟปัจจุบัน
-        if not targetServerId then
-            local success, result = pcall(function()
-                local url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=10", tostring(game.PlaceId))
-                return HttpService:JSONDecode(game:HttpGet(url))
-            end)
-            if success and result and result.data then
-                for _, server in ipairs(result.data) do
-                    if server.id ~= game.JobId and server.playing < server.maxPlayers then
-                        targetServerId = server.id
-                        break
-                    end
-                end
-            end
-        end
-        
-        if targetServerId then
-            searching = false
-            textLabel.Text = "เจอเซิร์ฟแล้วกำลังวาป"
-            task.wait(0.5)
-            notifFrame:Destroy()
-            TeleportService:TeleportToPlaceInstance(game.PlaceId, targetServerId, Players.LocalPlayer)
-            return
-        else
-            -- ถ้าไม่เจอจริงๆ ให้ใช้ระบบสุ่มวาปสำรองของ Roblox ทันที
-            searching = false
-            textLabel.Text = "กำลังสุ่มเข้าเซิร์ฟอื่น..."
-            task.wait(0.5)
-            notifFrame:Destroy()
-            TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
-        end
-    end)
-end)
-
--- ฟังก์ชันสลับหมวดหมู่
-local function switchTab(tabName)
-    for name, container in pairs(FunctionContainers) do
-        container.Visible = (name == tabName)
+-- รองรับกรณีตัวละครตายแล้วเกิดใหม่
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    humanoid = character:WaitForChild("Humanoid")
+    if dashEnabled then
+        humanoid.WalkSpeed = 0
     end
-end
-
--- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย
-local function createCategoryButton(name)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 26)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    btn.BorderSizePixel = 0
-    btn.Font = Enum.Font.Gotham
-    btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(240, 240, 240)
-    btn.TextSize = 10
-    btn.Parent = LeftSide
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = btn
-
-    btn.MouseButton1Click:Connect(function()
-        switchTab(name)
-    end)
-end
-
-createCategoryButton("เมนูหลัก")
-createCategoryButton("หาเซิร์ฟคนน้อย")
-
--- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก"
-switchTab("เมนูหลัก")
-
--- ==================== ลำดับการทำงาน (Loading & Animation) ====================
-task.spawn(function()
-    local dots = {"", ".", "..", "..."}
-    local startTime = tick()
-    
-    while tick() - startTime < 2 do
-        for _, d in ipairs(dots) do
-            LoadText.Text = "กำลังโหลด" .. d
-            task.wait(0.3)
-        end
-    end
-    
-    LoadText.Text = "ดาวโหลดเสร็จเเล้ว"
-    task.wait(1)
-    
-    LoadText.Text = "คัดลอกลิ้งดิสเสร็จเเล้ว"
-    if setclipboard then
-        setclipboard("https://discord.gg/Ugssja4wqQ")
-    end
-    task.wait(1)
-    
-    LoadFrame:Destroy()
-    
-    MainFrame.Visible = true
-    MainFrame.Size = UDim2.new(0, 320, 0, 180)
-    
-    local TweenService = game:GetService("TweenService")
-    local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-    
-    local expandTween = TweenService:Create(MainFrame, info, {
-        Size = UDim2.new(0, 380, 0, 210),
-        BackgroundTransparency = 0
-    })
-    
-    expandTween:Play()
 end)
