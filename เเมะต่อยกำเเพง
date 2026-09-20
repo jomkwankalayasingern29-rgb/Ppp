@@ -1,4 +1,4 @@
--- [[ GKHub v1.5.3: Smooth Loading & Fade-in UI (Added GodMode) ]] --
+-- [[ GK HUB v1.5.4: เเมพต่อยกำเเพง (Smooth UI & GodMode) ]] --
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local TweenService = game:GetService("TweenService")
@@ -207,7 +207,7 @@ TitleLabel.Size = UDim2.new(1, -70, 1, 0)
 TitleLabel.Position = UDim2.new(0, 28, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "GKHub | Main Script"
+TitleLabel.Text = "GK HUB | เเมพต่อยกำเเพง"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
