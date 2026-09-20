@@ -2100,3 +2100,127 @@ RunService.RenderStepped:Connect(function()
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
     end
 end)
+                data.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                data.Tracer.To = Vector2.new(hrpPos.X, legPos.Y)
+                data.Tracer.Visible = true
+            else
+                if data.Box then data.Box.Visible = false end
+                if data.Tracer then data.Tracer.Visible = false end
+            end
+        else
+            removeDrawingObject(model)
+        end
+    end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            drawESP(player.Character, false)
+        end
+    end
+
+    if LockConfig.NpcEsp2D then
+        for _, desc in ipairs(Workspace:GetDescendants()) do
+            if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalPlayer.Character then
+                drawESP(desc, true)
+            end
+        end
+    end
+end)
+
+local function getClosestTarget(isNpc, targetType)
+    local localChar = LocalPlayer.Character
+    if not localChar or not localChar:FindFirstChild("HumanoidRootPart") then return nil end
+    local localPosition = localChar.HumanoidRootPart.Position
+    local closestTarget = nil
+    local shortestDist = math.huge
+
+    if not isNpc then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+                local targetChar = player.Character
+                local targetPart = targetChar:FindFirstChild(targetType)
+                if targetPart then
+                    if not WallCheckEnabled or isVisible(targetPart, targetChar) then
+                        local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                        if onScreen then
+                            local distToCenter = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
+                            if distToCenter <= FOV_Radius and distToCenter < shortestDist then
+                                shortestDist = distToCenter
+                                closestTarget = targetPart
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    else
+        for _, desc in ipairs(Workspace:GetDescendants()) do
+            if desc:IsA("Model") and desc:FindFirstChild("Humanoid") and desc.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(desc) and desc ~= LocalChar then
+                local targetPart = desc:FindFirstChild(targetType)
+                if targetPart then
+                    if not WallCheckEnabled or isVisible(targetPart, desc) then
+                        local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                        if onScreen then
+                            local distToCenter = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
+                            if distToCenter <= FOV_Radius and distToCenter < shortestDist then
+                                shortestDist = distToCenter
+                                closestTarget = targetPart
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return closestTarget
+end
+
+local function getAbsoluteClosestTarget(targetType)
+    local localChar = LocalPlayer.Character
+    if not localChar or not localChar:FindFirstChild("HumanoidRootPart") then return nil end
+    local closestTarget = nil
+    local shortestDist = math.huge
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            local targetChar = player.Character
+            local targetPart = targetChar:FindFirstChild(targetType)
+            if targetPart then
+                if not LockConfig.FullLockTorsoWallCheck or isVisible(targetPart, targetChar) then
+                    local dist = (targetPart.Position - localChar.HumanoidRootPart.Position).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        closestTarget = targetPart
+                    end
+                end
+            end
+        end
+    end
+    return closestTarget
+end
+
+RunService.RenderStepped:Connect(function()
+    local targetPart = nil
+    
+    if LockConfig.FullLock then
+        targetPart = getAbsoluteClosestTarget("Head")
+    elseif LockConfig.FullLockTorso then
+        targetPart = getAbsoluteClosestTarget("HumanoidRootPart")
+    elseif LockConfig.PlayerHead then
+        targetPart = getClosestTarget(false, "Head")
+    elseif LockConfig.PlayerTorso then
+        targetPart = getClosestTarget(false, "HumanoidRootPart")
+    elseif LockConfig.NPCHead then
+        targetPart = getClosestTarget(true, "Head")
+    elseif LockConfig.NPCTorso then
+        targetPart = getClosestTarget(true, "HumanoidRootPart")
+    end
+
+    if targetPart then
+        local camCFrame = Camera.CFrame
+        local targetCFrame = CFrame.new(camCFrame.Position, targetPart.Position)
+        Camera.CFrame = camCFrame:Lerp(targetCFrame, LockSpeed / 100)
+    end
+end)
+
+print("GKHub v1.4.25 Loaded Successfully!")
