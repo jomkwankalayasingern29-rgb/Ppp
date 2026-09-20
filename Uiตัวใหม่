@@ -34,18 +34,29 @@ MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 MainFrame.Position = UDim2.new(0.05, 0, 0.18, 0)
-MainFrame.Size = UDim2.new(0, 200, 0, 140)
+MainFrame.Size = UDim2.new(0, 220, 0, 160)
 MainFrame.Visible = false
+
+-- ป้ายข้อความบอกวิธีใช้
+local Label = Instance.new("TextLabel")
+Label.Parent = MainFrame
+Label.BackgroundTransparency = 1
+Label.Position = UDim2.new(0.1, 0, 0.05, 0)
+Label.Size = UDim2.new(0.8, 0, 0, 20)
+Label.Font = Enum.Font.SourceSansBold
+Label.Text = "พิมพ์ชื่อเป้าหมาย (บางส่วนก็ได้):"
+Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+Label.TextSize = 13
 
 -- ช่องใส่ชื่อเป้าหมาย
 local TextBox = Instance.new("TextBox")
 TextBox.Name = "TargetBox"
 TextBox.Parent = MainFrame
 TextBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-TextBox.Position = UDim2.new(0.1, 0, 0.15, 0)
+TextBox.Position = UDim2.new(0.1, 0, 0.3, 0)
 TextBox.Size = UDim2.new(0.8, 0, 0, 35)
 TextBox.Font = Enum.Font.SourceSans
-TextBox.PlaceholderText = "พิมพ์ชื่อเป้าหมายที่นี่..."
+TextBox.PlaceholderText = "เช่น Player123"
 TextBox.Text = ""
 TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 TextBox.TextSize = 14
@@ -55,7 +66,7 @@ local FlingButton = Instance.new("TextButton")
 FlingButton.Name = "FlingButton"
 FlingButton.Parent = MainFrame
 FlingButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-FlingButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+FlingButton.Position = UDim2.new(0.1, 0, 0.62, 0)
 FlingButton.Size = UDim2.new(0.8, 0, 0, 40)
 FlingButton.Font = Enum.Font.SourceSansBold
 FlingButton.Text = "Status: OFF"
@@ -71,13 +82,15 @@ local isFlinging = false
 local originalPosition = nil
 local connection = nil
 
--- ค้นหาผู้เล่นจากชื่อที่พิมพ์
+-- ค้นหาผู้เล่นจากชื่อที่พิมพ์ (รองรับทั้งชื่อจริงและ Display Name)
 local function getTarget(nameInput)
     if nameInput == "" then return nil end
+    local lowerInput = string.lower(nameInput)
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            if string.lower(player.Name):sub(1, #nameInput) == string.lower(nameInput) or 
-               string.lower(player.DisplayName):sub(1, #nameInput) == string.lower(nameInput) then
+            local playerName = string.lower(player.Name)
+            local displayName = string.lower(player.DisplayName)
+            if string.find(playerName, lowerInput) or string.find(displayName, lowerInput) then
                 return player
             end
         end
@@ -87,13 +100,18 @@ end
 
 -- ปุ่มกดเริ่ม/หยุด Fling
 FlingButton.MouseButton1Click:Connect(function()
-    isFlinging = not isFlinging
-    
-    if isFlinging then
+    if not isFlinging then
+        -- กำลังจะเปิดการทำงาน ให้เช็คชื่อเป้าหมายก่อน
         local targetPlayer = getTarget(TextBox.Text)
-        if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            isFlinging = false
-            FlingButton.Text = "ไม่พบผู้เล่น!"
+        if not targetPlayer then
+            FlingButton.Text = "ไม่พบผู้เล่นนี้!"
+            task.wait(1)
+            FlingButton.Text = "Status: OFF"
+            return
+        end
+        
+        if not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            FlingButton.Text = "เป้าหมายยังไม่เกิด!"
             task.wait(1)
             FlingButton.Text = "Status: OFF"
             return
@@ -104,28 +122,27 @@ FlingButton.MouseButton1Click:Connect(function()
         if char and char:FindFirstChild("HumanoidRootPart") then
             originalPosition = char.HumanoidRootPart.CFrame
         else
-            isFlinging = false
             return
         end
         
-        FlingButton.Text = "Status: ON"
+        isFlinging = true
+        FlingButton.Text = "Target: " .. targetPlayer.Name
         FlingButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
         
         -- เริ่มทำงานลูปหมุนตัวและวาร์ปจุ่ม
         connection = RunService.Stepped:Connect(function()
-            if not _G.DeltaFlingRunning then 
-                if connection then connection:Disconnect() end
+            if not _G.DeltaFlingRunning or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then 
                 return 
             end
             
             local myChar = LocalPlayer.Character
             local tChar = targetPlayer.Character
             
-            if myChar and tChar and myChar:FindFirstChild("HumanoidRootPart") and tChar:FindFirstChild("HumanoidRootPart") then
+            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
                 local myRoot = myChar.HumanoidRootPart
                 local tRoot = tChar.HumanoidRootPart
                 
-                -- ปิดการชนกับเพื่อนร่วมทีมชั่วคราวเพื่อให้แทรกตัวง่ายขึ้น (ถ้าทำได้) หรือใช้วิธีอัดความเร็วรอบหมุน
+                -- อัดความเร็วเพื่อให้เกิดแรงกระเด็น (Fling) และทับตำแหน่งเป้าหมาย
                 myRoot.Velocity = Vector3.new(30000, 30000, 30000)
                 myRoot.RotVelocity = Vector3.new(50000, 50000, 50000)
                 myRoot.CFrame = tRoot.CFrame
@@ -133,6 +150,7 @@ FlingButton.MouseButton1Click:Connect(function()
         end)
     else
         -- ปิดการทำงาน และวาร์ปกลับตำแหน่งเดิม
+        isFlinging = false
         if connection then
             connection:Disconnect()
             connection = nil
@@ -141,7 +159,7 @@ FlingButton.MouseButton1Click:Connect(function()
         FlingButton.Text = "Status: OFF"
         FlingButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
         
-        task.wait(0.1)
+        task.wait(0.05)
         local myChar = LocalPlayer.Character
         if myChar and myChar:FindFirstChild("HumanoidRootPart") and originalPosition then
             myChar.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
@@ -151,7 +169,7 @@ FlingButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- เคลียร์ GUI เมื่อตัวละครรีเซ็ตหรือออกเกม
+-- เคลียร์ระบบเมื่อรีเซ็ตตัวละคร
 LocalPlayer.CharacterAdded:Connect(function()
     if isFlinging then
         isFlinging = false
