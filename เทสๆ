@@ -9,10 +9,16 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- สร้าง ScreenGui สำหรับ UI
+-- ใช้ PlayerGui แทน CoreGui ป้องกันปัญหา Executor บางตัวมองไม่เห็น
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+if PlayerGui:FindFirstChild("DeltaFlingGui") then
+    PlayerGui.DeltaFlingGui:Destroy()
+end
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaFlingGui"
-ScreenGui.Parent = game:CoreGui
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
 
 -- ปุ่มเปิด/ปิดเมนูหลัก
 local ToggleButton = Instance.new("TextButton")
@@ -37,7 +43,7 @@ MainFrame.Position = UDim2.new(0.05, 0, 0.18, 0)
 MainFrame.Size = UDim2.new(0, 220, 0, 160)
 MainFrame.Visible = false
 
--- ป้ายข้อความบอกวิธีใช้
+-- ป้ายข้อความ
 local Label = Instance.new("TextLabel")
 Label.Parent = MainFrame
 Label.BackgroundTransparency = 1
@@ -61,7 +67,7 @@ TextBox.Text = ""
 TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 TextBox.TextSize = 14
 
--- ปุ่มเปิด/ปิดการทำงาน Fling
+-- ปุ่มกด Fling
 local FlingButton = Instance.new("TextButton")
 FlingButton.Name = "FlingButton"
 FlingButton.Parent = MainFrame
@@ -82,7 +88,7 @@ local isFlinging = false
 local originalPosition = nil
 local connection = nil
 
--- ค้นหาผู้เล่นจากชื่อที่พิมพ์ (รองรับทั้งชื่อจริงและ Display Name)
+-- ค้นหาผู้เล่น
 local function getTarget(nameInput)
     if nameInput == "" then return nil end
     local lowerInput = string.lower(nameInput)
@@ -98,10 +104,9 @@ local function getTarget(nameInput)
     return nil
 end
 
--- ปุ่มกดเริ่ม/หยุด Fling
+-- กดปุ่มทำงาน
 FlingButton.MouseButton1Click:Connect(function()
     if not isFlinging then
-        -- กำลังจะเปิดการทำงาน ให้เช็คชื่อเป้าหมายก่อน
         local targetPlayer = getTarget(TextBox.Text)
         if not targetPlayer then
             FlingButton.Text = "ไม่พบผู้เล่นนี้!"
@@ -117,7 +122,6 @@ FlingButton.MouseButton1Click:Connect(function()
             return
         end
         
-        -- บันทึกตำแหน่งเดิมก่อนวาร์ปไป
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
             originalPosition = char.HumanoidRootPart.CFrame
@@ -129,7 +133,6 @@ FlingButton.MouseButton1Click:Connect(function()
         FlingButton.Text = "Target: " .. targetPlayer.Name
         FlingButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
         
-        -- เริ่มทำงานลูปหมุนตัวและวาร์ปจุ่ม
         connection = RunService.Stepped:Connect(function()
             if not _G.DeltaFlingRunning or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then 
                 return 
@@ -142,14 +145,12 @@ FlingButton.MouseButton1Click:Connect(function()
                 local myRoot = myChar.HumanoidRootPart
                 local tRoot = tChar.HumanoidRootPart
                 
-                -- อัดความเร็วเพื่อให้เกิดแรงกระเด็น (Fling) และทับตำแหน่งเป้าหมาย
                 myRoot.Velocity = Vector3.new(30000, 30000, 30000)
                 myRoot.RotVelocity = Vector3.new(50000, 50000, 50000)
                 myRoot.CFrame = tRoot.CFrame
             end
         end)
     else
-        -- ปิดการทำงาน และวาร์ปกลับตำแหน่งเดิม
         isFlinging = false
         if connection then
             connection:Disconnect()
@@ -166,15 +167,5 @@ FlingButton.MouseButton1Click:Connect(function()
             myChar.HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0)
             myChar.HumanoidRootPart.CFrame = originalPosition
         end
-    end
-end)
-
--- เคลียร์ระบบเมื่อรีเซ็ตตัวละคร
-LocalPlayer.CharacterAdded:Connect(function()
-    if isFlinging then
-        isFlinging = false
-        if connection then connection:Disconnect() end
-        FlingButton.Text = "Status: OFF"
-        FlingButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
     end
 end)
