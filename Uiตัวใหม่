@@ -1,161 +1,162 @@
--- [[ GKHub v1.4.25: UI ONLY ]] --
-local CoreGui = game:GetService("CoreGui")
+-- ตรวจสอบและป้องกันการรันซ้ำ
+if _G.DeltaFlingRunning then
+    _G.DeltaFlingRunning = false
+    task.wait(0.2)
+end
+_G.DeltaFlingRunning = true
 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- สร้าง ScreenGui สำหรับ UI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CustomScriptUI"
-ScreenGui.Parent = CoreGui
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Name = "DeltaFlingGui"
+ScreenGui.Parent = game:CoreGui
 
-local NotifContainer = Instance.new("Frame")
-NotifContainer.Name = "NotifContainer"
-NotifContainer.Size = UDim2.new(0, 250, 1, 0)
-NotifContainer.Position = UDim2.new(1, -260, 0, 0)
-NotifContainer.BackgroundTransparency = 1
-NotifContainer.Parent = ScreenGui
+-- ปุ่มเปิด/ปิดเมนูหลัก
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = ScreenGui
+ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.1, 0)
+ToggleButton.Size = UDim2.new(0, 120, 0, 40)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "Fling Menu"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 18
+ToggleButton.Active = true
+ToggleButton.Draggable = true
 
-local NotifLayout = Instance.new("UIListLayout")
-NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
-NotifLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-NotifLayout.Padding = UDim.new(0, 8)
-NotifLayout.Parent = NotifContainer
-
-local NotifPadding = Instance.new("UIPadding")
-NotifPadding.PaddingBottom = UDim.new(0, 15)
-NotifPadding.Parent = NotifContainer
-
--- หน้าจอโหลด
-local LoadFrame = Instance.new("Frame")
-LoadFrame.Name = "LoadFrame"
-LoadFrame.Size = UDim2.new(0, 300, 0, 65)
-LoadFrame.Position = UDim2.new(0.5, -150, 0.5, -32)
-LoadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-LoadFrame.BorderSizePixel = 0
-LoadFrame.Parent = ScreenGui
-
-local LoadCorner = Instance.new("UICorner")
-LoadCorner.CornerRadius = UDim.new(0, 8)
-LoadCorner.Parent = LoadFrame
-
-local LoadStroke = Instance.new("UIStroke")
-LoadStroke.Color = Color3.fromRGB(0, 162, 255)
-LoadStroke.Thickness = 1.5
-LoadStroke.Parent = LoadFrame
-
-local LoadText = Instance.new("TextLabel")
-LoadText.Name = "LoadText"
-LoadText.Size = UDim2.new(1, 0, 1, 0)
-LoadText.BackgroundTransparency = 1
-LoadText.Font = Enum.Font.GothamBold
-LoadText.Text = "กำลังโหลด..."
-LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
-LoadText.TextSize = 14
-LoadText.Parent = LoadFrame
-
--- เมนูหลัก
+-- กรอบเมนู
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 440, 0, 310)
-MainFrame.Position = UDim2.new(0.5, -220, 0.5, -155)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Visible = false
-MainFrame.BackgroundTransparency = 0
 MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.05, 0, 0.18, 0)
+MainFrame.Size = UDim2.new(0, 200, 0, 140)
+MainFrame.Visible = false
 
-local BgImage = Instance.new("ImageLabel")
-BgImage.Name = "BgImage"
-BgImage.Size = UDim2.new(1, 0, 1, 0)
-BgImage.BackgroundTransparency = 1
-BgImage.Image = "rbxassetid://111206357236860"
-BgImage.ScaleType = Enum.ScaleType.Slice
-BgImage.SliceCenter = Rect.new(100, 100, 100, 100)
-BgImage.Parent = MainFrame
+-- ช่องใส่ชื่อเป้าหมาย
+local TextBox = Instance.new("TextBox")
+TextBox.Name = "TargetBox"
+TextBox.Parent = MainFrame
+TextBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+TextBox.Position = UDim2.new(0.1, 0, 0.15, 0)
+TextBox.Size = UDim2.new(0.8, 0, 0, 35)
+TextBox.Font = Enum.Font.SourceSans
+TextBox.PlaceholderText = "พิมพ์ชื่อเป้าหมายที่นี่..."
+TextBox.Text = ""
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.TextSize = 14
 
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 8)
-MainCorner.Parent = MainFrame
+-- ปุ่มเปิด/ปิดการทำงาน Fling
+local FlingButton = Instance.new("TextButton")
+FlingButton.Name = "FlingButton"
+FlingButton.Parent = MainFrame
+FlingButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+FlingButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+FlingButton.Size = UDim2.new(0.8, 0, 0, 40)
+FlingButton.Font = Enum.Font.SourceSansBold
+FlingButton.Text = "Status: OFF"
+FlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlingButton.TextSize = 16
 
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(0, 162, 255)
-MainStroke.Thickness = 1.5
-MainStroke.Parent = MainFrame
+-- ฟังก์ชันเปิด/ปิดเมนู
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
 
--- แถบด้านบน (TopBar)
-local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 28)
-TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-TopBar.BackgroundTransparency = 0.6
-TopBar.BorderSizePixel = 0
-TopBar.Parent = MainFrame
+local isFlinging = false
+local originalPosition = nil
+local connection = nil
 
-local TopBarCorner = Instance.new("UICorner")
-TopBarCorner.CornerRadius = UDim.new(0, 8)
-TopBarCorner.Parent = TopBar
+-- ค้นหาผู้เล่นจากชื่อที่พิมพ์
+local function getTarget(nameInput)
+    if nameInput == "" then return nil end
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if string.lower(player.Name):sub(1, #nameInput) == string.lower(nameInput) or 
+               string.lower(player.DisplayName):sub(1, #nameInput) == string.lower(nameInput) then
+                return player
+            end
+        end
+    end
+    return nil
+end
 
-local LogoG = Instance.new("TextLabel")
-LogoG.Size = UDim2.new(0, 20, 0, 20)
-LogoG.Position = UDim2.new(0, 8, 0, 4)
-LogoG.BackgroundTransparency = 1
-LogoG.Font = Enum.Font.GothamBold
-LogoG.Text = "G"
-LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
-LogoG.TextSize = 14
-LogoG.Parent = TopBar
+-- ปุ่มกดเริ่ม/หยุด Fling
+FlingButton.MouseButton1Click:Connect(function()
+    isFlinging = not isFlinging
+    
+    if isFlinging then
+        local targetPlayer = getTarget(TextBox.Text)
+        if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            isFlinging = false
+            FlingButton.Text = "ไม่พบผู้เล่น!"
+            task.wait(1)
+            FlingButton.Text = "Status: OFF"
+            return
+        end
+        
+        -- บันทึกตำแหน่งเดิมก่อนวาร์ปไป
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            originalPosition = char.HumanoidRootPart.CFrame
+        else
+            isFlinging = false
+            return
+        end
+        
+        FlingButton.Text = "Status: ON"
+        FlingButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+        
+        -- เริ่มทำงานลูปหมุนตัวและวาร์ปจุ่ม
+        connection = RunService.Stepped:Connect(function()
+            if not _G.DeltaFlingRunning then 
+                if connection then connection:Disconnect() end
+                return 
+            end
+            
+            local myChar = LocalPlayer.Character
+            local tChar = targetPlayer.Character
+            
+            if myChar and tChar and myChar:FindFirstChild("HumanoidRootPart") and tChar:FindFirstChild("HumanoidRootPart") then
+                local myRoot = myChar.HumanoidRootPart
+                local tRoot = tChar.HumanoidRootPart
+                
+                -- ปิดการชนกับเพื่อนร่วมทีมชั่วคราวเพื่อให้แทรกตัวง่ายขึ้น (ถ้าทำได้) หรือใช้วิธีอัดความเร็วรอบหมุน
+                myRoot.Velocity = Vector3.new(30000, 30000, 30000)
+                myRoot.RotVelocity = Vector3.new(50000, 50000, 50000)
+                myRoot.CFrame = tRoot.CFrame
+            end
+        end)
+    else
+        -- ปิดการทำงาน และวาร์ปกลับตำแหน่งเดิม
+        if connection then
+            connection:Disconnect()
+            connection = nil
+        end
+        
+        FlingButton.Text = "Status: OFF"
+        FlingButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        
+        task.wait(0.1)
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") and originalPosition then
+            myChar.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            myChar.HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0)
+            myChar.HumanoidRootPart.CFrame = originalPosition
+        end
+    end
+end)
 
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -80, 1, 0)
-TitleLabel.Position = UDim2.new(0, 32, 0, 0)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "GKHub | UI Only"
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 12
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Parent = TopBar
-
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 24, 0, 24)
-CloseButton.Position = UDim2.new(1, -26, 0, 2)
-CloseButton.BackgroundTransparency = 1
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(255, 80, 80)
-CloseButton.TextSize = 13
-CloseButton.Parent = TopBar
-
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
-MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
-MinimizeButton.BackgroundTransparency = 1
-MinimizeButton.Font = Enum.Font.GothamBold
-MinimizeButton.Text = "-"
-MinimizeButton.TextColor3 = Color3.fromRGB(240, 240, 240)
-MinimizeButton.TextSize = 14
-MinimizeButton.Parent = TopBar
-
--- พื้นที่เมนูด้านซ้ายและขวา
-local LeftSide = Instance.new("ScrollingFrame")
-LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
-LeftSide.Position = UDim2.new(0, 5, 0, 30)
-LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-LeftSide.BackgroundTransparency = 0.6
-LeftSide.BorderSizePixel = 0
-LeftSide.ScrollBarThickness = 2
-LeftSide.Parent = MainFrame
-Instance.new("UICorner", LeftSide).CornerRadius = UDim.new(0, 5)
-local LeftLayout = Instance.new("UIListLayout", LeftSide)
-LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-LeftLayout.Padding = UDim.new(0, 5)
-
-local RightSide = Instance.new("ScrollingFrame")
-RightSide.Size = UDim2.new(0.66, 0, 1, -34)
-RightSide.Position = UDim2.new(0.33, 0, 0, 30)
-RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-RightSide.BackgroundTransparency = 0.6
-RightSide.BorderSizePixel = 0
-RightSide.ScrollBarThickness = 2
-RightSide.Parent = MainFrame
-Instance.new("UICorner", RightSide).CornerRadius = UDim.new(0, 5)
+-- เคลียร์ GUI เมื่อตัวละครรีเซ็ตหรือออกเกม
+LocalPlayer.CharacterAdded:Connect(function()
+    if isFlinging then
+        isFlinging = false
+        if connection then connection:Disconnect() end
+        FlingButton.Text = "Status: OFF"
+        FlingButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    end
+end)
