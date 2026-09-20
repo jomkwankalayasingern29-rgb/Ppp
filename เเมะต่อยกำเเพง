@@ -388,10 +388,116 @@ local function createToggle(title, parentTab, defaultState, callback)
     end)
 end
 
+-- [ ฟังก์ชันสร้าง Slider แบบเลื่อนและใส่ตัวเลขได้ ] --
+local function createSlider(title, min, max, defaultVal, parentTab, callback)
+    local value = defaultVal
+    
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0.92, 0, 0, 48)
+    container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    container.BackgroundTransparency = 0.5
+    container.BorderSizePixel = 0
+    container.Parent = parentTab
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 5)
+    corner.Parent = container
+
+    local titleLbl = Instance.new("TextLabel")
+    titleLbl.Size = UDim2.new(0.6, 0, 0, 20)
+    titleLbl.Position = UDim2.new(0, 8, 0, 4)
+    titleLbl.BackgroundTransparency = 1
+    titleLbl.Text = title
+    titleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLbl.TextSize = 10
+    titleLbl.Font = Enum.Font.GothamBold
+    titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+    titleLbl.Parent = container
+
+    local valueBox = Instance.new("TextBox")
+    valueBox.Size = UDim2.new(0, 45, 0, 20)
+    valueBox.Position = UDim2.new(1, -53, 0, 4)
+    valueBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    valueBox.BackgroundTransparency = 0.3
+    valueBox.BorderSizePixel = 0
+    valueBox.Text = tostring(value)
+    valueBox.TextColor3 = Color3.fromRGB(0, 162, 255)
+    valueBox.TextSize = 10
+    valueBox.Font = Enum.Font.GothamBold
+    valueBox.Parent = container
+
+    local boxCorner = Instance.new("UICorner")
+    boxCorner.CornerRadius = UDim.new(0, 4)
+    boxCorner.Parent = valueBox
+
+    local sliderBar = Instance.new("Frame")
+    sliderBar.Size = UDim2.new(1, -16, 0, 6)
+    sliderBar.Position = UDim2.new(0, 8, 0, 32)
+    sliderBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    sliderBar.BorderSizePixel = 0
+    sliderBar.Parent = container
+
+    local barCorner = Instance.new("UICorner")
+    barCorner.CornerRadius = UDim.new(1, 0)
+    barCorner.Parent = sliderBar
+
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+    sliderFill.BorderSizePixel = 0
+    sliderFill.Parent = sliderBar
+
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(1, 0)
+    fillCorner.Parent = sliderFill
+
+    local dragging = false
+
+    local function updateValue(inputPos)
+        local sizeX = math.clamp((inputPos - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
+        value = math.floor(min + ((max - min) * sizeX))
+        sliderFill.Size = UDim2.new(sizeX, 0, 1, 0)
+        valueBox.Text = tostring(value)
+        if callback then callback(value) end
+    end
+
+    sliderBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            updateValue(input.Position.X)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateValue(input.Position.X)
+        end
+    end)
+
+    valueBox.FocusLost:Connect(function()
+        local num = tonumber(valueBox.Text)
+        if num then
+            value = math.clamp(num, min, max)
+            valueBox.Text = tostring(value)
+            sliderFill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+            if callback then callback(value) end
+        else
+            valueBox.Text = tostring(value)
+        end
+    end)
+end
+
 -- [ สร้าง Tabs ] --
 local MainFuncTab = createContainer("หน้าแรก")
 local AutoFarmTab = createContainer("ฟามออโต้")
 local CharacterTab = createContainer("ตัวละคร")
+local SettingsTab = createContainer("ตั้งค่า")
 
 createSectionHeader("คอมมูนิตี้ (Community)", MainFuncTab)
 createSimpleButton("คัดลอกลิงก์ Discord", MainFuncTab, function()
@@ -434,6 +540,7 @@ createSectionHeader("ตั้งค่าตัวละคร (Character)", Ch
 
 -- 1. วิ่งเร็ว (WalkSpeed)
 local WalkSpeedEnabled = false
+local customWalkSpeed = 50
 createToggle("วิ่งเร็ว (Speed)", CharacterTab, false, function(state)
     WalkSpeedEnabled = state
     if state then
@@ -449,26 +556,36 @@ end)
 RunService.RenderStepped:Connect(function()
     if WalkSpeedEnabled then
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = 50
+            LocalPlayer.Character.Humanoid.WalkSpeed = customWalkSpeed
         end
     end
 end)
 
 -- 2. กระโดดสูง (JumpPower)
 local JumpPowerEnabled = false
+local customJumpPower = 100
 createToggle("กระโดดสูง (Jump)", CharacterTab, false, function(state)
     JumpPowerEnabled = state
     if state then
         showNotification("เปิดใช้งานกระโดดสูงแล้ว", true)
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
             LocalPlayer.Character.Humanoid.UseJumpPower = true
-            LocalPlayer.Character.Humanoid.JumpPower = 100
+            LocalPlayer.Character.Humanoid.JumpPower = customJumpPower
         end
     else
         showNotification("ปิดใช้งานกระโดดสูงแล้ว", false)
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
             LocalPlayer.Character.Humanoid.UseJumpPower = true
             LocalPlayer.Character.Humanoid.JumpPower = 50
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if JumpPowerEnabled then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.UseJumpPower = true
+            LocalPlayer.Character.Humanoid.JumpPower = customJumpPower
         end
     end
 end)
@@ -533,6 +650,17 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
+-- [ ระบบตั้งค่า (Settings Tab) ] --
+createSectionHeader("ปรับแต่งค่าตัวละคร", SettingsTab)
+
+createSlider("ตั้งค่าความเร็ว (WalkSpeed)", 16, 200, 50, SettingsTab, function(val)
+    customWalkSpeed = val
+end)
+
+createSlider("ตั้งค่ากระโดดสูง (JumpPower)", 50, 300, 100, SettingsTab, function(val)
+    customJumpPower = val
+end)
+
 -- [ เมนูด้านซ้าย ] --
 local categoryButtons = {}
 local function createCategoryButton(name, targetTab)
@@ -571,6 +699,7 @@ end
 local btnHome = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
 local btnAutoFarm = createCategoryButton("ฟามออโต้", AutoFarmTab)
 local btnChar = createCategoryButton("ตัวละคร", CharacterTab)
+local btnSettings = createCategoryButton("ตั้งค่า", SettingsTab)
 
 btnHome.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
 btnHome.BackgroundTransparency = 0
