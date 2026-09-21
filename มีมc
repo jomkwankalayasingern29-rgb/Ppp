@@ -1,4 +1,4 @@
--- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
+-- ==================== เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ ====================
 local CoreGui = game:GetService("CoreGui")
 if CoreGui:FindFirstChild("CustomScriptUI") then
     CoreGui.CustomScriptUI:Destroy()
@@ -158,12 +158,19 @@ local LeftCorner = Instance.new("UICorner")
 LeftCorner.CornerRadius = UDim.new(0, 5)
 LeftCorner.Parent = LeftSide
 
+local LeftPadding = Instance.new("UIPadding")
+LeftPadding.PaddingTop = UDim.new(0, 6)
+LeftPadding.PaddingBottom = UDim.new(0, 6)
+LeftPadding.PaddingLeft = UDim.new(0, 4)
+LeftPadding.PaddingRight = UDim.new(0, 4)
+LeftPadding.Parent = LeftSide
+
 local LeftLayout = Instance.new("UIListLayout")
 LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 6)
 
--- ==================== ฝั่งขวา: ฟังก์ชัน ====================
+-- ==================== ฝั่งขวา: ฟังก์ชัน (แก้ไขปัญหาการซ้อนทับ) ====================
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.65, 0, 1, -38)
 RightSide.Position = UDim2.new(0.34, 0, 0, 34)
@@ -171,23 +178,35 @@ RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 RightSide.BorderSizePixel = 0
 RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 RightSide.ScrollBarThickness = 2
+RightSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
 RightSide.Parent = MainFrame
 
 local RightCorner = Instance.new("UICorner")
 RightCorner.CornerRadius = UDim.new(0, 5)
 RightCorner.Parent = RightSide
 
+local RightPadding = Instance.new("UIPadding")
+RightPadding.PaddingTop = UDim.new(0, 6)
+RightPadding.PaddingBottom = UDim.new(0, 6)
+RightPadding.PaddingLeft = UDim.new(0, 6)
+RightPadding.PaddingRight = UDim.new(0, 6)
+RightPadding.Parent = RightSide
+
+-- ใช้ UIListLayout จัดระเบียบ Container ด้านในตัวแม่ (RightSide) ป้องกันการซ้อนทับกันเด็ดขาด
+local RightSideLayout = Instance.new("UIListLayout")
+RightSideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+RightSideLayout.SortOrder = Enum.SortOrder.LayoutOrder
+RightSideLayout.Padding = UDim.new(0, 0)
+
 local FunctionContainers = {}
 
 local function createContainer(name, order)
-    local container = Instance.new("ScrollingFrame")
+    -- ใช้ Frame ธรรมดาเป็น Container ย่อย เพื่อไม่ให้เกิด ScrollingFrame ซ้อนกันจนคำนวณตำแหน่งผิดพลาด
+    local container = Instance.new("Frame")
     container.Name = name
-    container.Size = UDim2.new(1, 0, 1, 0)
+    container.Size = UDim2.new(1, 0, 0, 0)
     container.BackgroundTransparency = 1
     container.BorderSizePixel = 0
-    container.CanvasSize = UDim2.new(0, 0, 0, 0)
-    container.ScrollBarThickness = 2
-    container.AutomaticCanvasSize = Enum.AutomaticSize.Y
     container.Visible = false
     container.LayoutOrder = order
     container.Parent = RightSide
@@ -197,8 +216,22 @@ local function createContainer(name, order)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Padding = UDim.new(0, 6)
 
+    -- อัปเดตความสูงของ Container ตามขนาดเนื้อหาข้างในอัตโนมัติ
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        container.Size = UDim2.new(1, 0, 0, layout.AbsoluteContentSize.Y)
+    end)
+
     FunctionContainers[name] = container
     return container
+end
+
+-- ฟังก์ชันสลับหมวดหมู่
+local function switchTab(tabName)
+    for name, container in pairs(FunctionContainers) do
+        container.Visible = (name == tabName)
+    end
+    -- รีเซ็ตตำแหน่งเลื่อนของ ScrollingFrame กลับด้านบนสุดเมื่อเปลี่ยนหน้า
+    RightSide.CanvasPosition = Vector2.new(0, 0)
 end
 
 -- 1. หมวด "เมนูหลัก" (Order = 1)
@@ -600,17 +633,10 @@ task.spawn(function()
     end
 end)
 
--- ฟังก์ชันสลับหมวดหมู่
-local function switchTab(tabName)
-    for name, container in pairs(FunctionContainers) do
-        container.Visible = (name == tabName)
-    end
-end
-
 -- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย
 local function createCategoryButton(name, order)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 28)
+    btn.Size = UDim2.new(1, 0, 0, 28)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.Gotham
