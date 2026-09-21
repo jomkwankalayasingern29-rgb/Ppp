@@ -170,7 +170,7 @@ LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 6)
 
--- ==================== ฝั่งขวา: ฟังก์ชัน (แก้ไขปัญหาการซ้อนทับ) ====================
+-- ==================== ฝั่งขวา: ฟังก์ชัน (แก้ไขการทับซ้อน 100%) ====================
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.65, 0, 1, -38)
 RightSide.Position = UDim2.new(0.34, 0, 0, 34)
@@ -192,50 +192,30 @@ RightPadding.PaddingLeft = UDim.new(0, 6)
 RightPadding.PaddingRight = UDim.new(0, 6)
 RightPadding.Parent = RightSide
 
--- ใช้ UIListLayout จัดระเบียบ Container ด้านในตัวแม่ (RightSide) ป้องกันการซ้อนทับกันเด็ดขาด
+-- ใช้ UIListLayout อันเดียวจัดเรียงทุก element ในฝั่งขวาตรงๆ ป้องกันการเหลื่อมล้ำของ Container
 local RightSideLayout = Instance.new("UIListLayout")
 RightSideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 RightSideLayout.SortOrder = Enum.SortOrder.LayoutOrder
-RightSideLayout.Padding = UDim.new(0, 0)
+RightSideLayout.Padding = UDim.new(0, 6)
 
-local FunctionContainers = {}
-
-local function createContainer(name, order)
-    -- ใช้ Frame ธรรมดาเป็น Container ย่อย เพื่อไม่ให้เกิด ScrollingFrame ซ้อนกันจนคำนวณตำแหน่งผิดพลาด
-    local container = Instance.new("Frame")
-    container.Name = name
-    container.Size = UDim2.new(1, 0, 0, 0)
-    container.BackgroundTransparency = 1
-    container.BorderSizePixel = 0
-    container.Visible = false
-    container.LayoutOrder = order
-    container.Parent = RightSide
-
-    local layout = Instance.new("UIListLayout")
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 6)
-
-    -- อัปเดตความสูงของ Container ตามขนาดเนื้อหาข้างในอัตโนมัติ
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        container.Size = UDim2.new(1, 0, 0, layout.AbsoluteContentSize.Y)
-    end)
-
-    FunctionContainers[name] = container
-    return container
-end
+-- เก็บรายการ elements แยกตามหมวดหมู่เพื่อใช้เปิด/ปิด
+local TabElements = {
+    ["เมนูหลัก"] = {},
+    ["ฟามเวล"] = {}
+}
 
 -- ฟังก์ชันสลับหมวดหมู่
 local function switchTab(tabName)
-    for name, container in pairs(FunctionContainers) do
-        container.Visible = (name == tabName)
+    for name, elements in pairs(TabElements) do
+        local isActive = (name == tabName)
+        for _, obj in ipairs(elements) do
+            obj.Visible = isActive
+        end
     end
-    -- รีเซ็ตตำแหน่งเลื่อนของ ScrollingFrame กลับด้านบนสุดเมื่อเปลี่ยนหน้า
     RightSide.CanvasPosition = Vector2.new(0, 0)
 end
 
--- 1. หมวด "เมนูหลัก" (Order = 1)
-local MainMenuContainer = createContainer("เมนูหลัก", 1)
+-- 1. หมวด "เมนูหลัก"
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.92, 0, 0, 28)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -244,7 +224,10 @@ DiscordBtn.Font = Enum.Font.Gotham
 DiscordBtn.Text = "คัดลอกลิงก์ Discord"
 DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 DiscordBtn.TextSize = 10
-DiscordBtn.Parent = MainMenuContainer
+DiscordBtn.LayoutOrder = 1
+DiscordBtn.Visible = false
+DiscordBtn.Parent = RightSide
+table.insert(TabElements["เมนูหลัก"], DiscordBtn)
 
 local DiscordBtnCorner = Instance.new("UICorner")
 DiscordBtnCorner.CornerRadius = UDim.new(0, 4)
@@ -256,15 +239,16 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 2. หมวด "ฟามเวล" (Order = 2)
-local FarmLevelContainer = createContainer("ฟามเวล", 2)
-
+-- 2. หมวด "ฟามเวล"
 -- แถวที่ 1: ฟามเวล 1-25
 local FarmRowFrame = Instance.new("Frame")
 FarmRowFrame.Size = UDim2.new(0.92, 0, 0, 34)
 FarmRowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 FarmRowFrame.BorderSizePixel = 0
-FarmRowFrame.Parent = FarmLevelContainer
+FarmRowFrame.LayoutOrder = 1
+FarmRowFrame.Visible = false
+FarmRowFrame.Parent = RightSide
+table.insert(TabElements["ฟามเวล"], FarmRowFrame)
 
 local FarmRowCorner = Instance.new("UICorner")
 FarmRowCorner.CornerRadius = UDim.new(0, 4)
@@ -306,12 +290,15 @@ FarmToggleStroke.Color = Color3.fromRGB(255, 255, 255)
 FarmToggleStroke.Thickness = 1
 FarmToggleStroke.Parent = FarmToggleBtn
 
--- แถวที่ 2: ฟามเวล 50-100 (Floppa Quest 2 และ Golden Floppa)
+-- แถวที่ 2: ฟามเวล 50-100
 local FarmRowFrame2 = Instance.new("Frame")
 FarmRowFrame2.Size = UDim2.new(0.92, 0, 0, 34)
 FarmRowFrame2.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 FarmRowFrame2.BorderSizePixel = 0
-FarmRowFrame2.Parent = FarmLevelContainer
+FarmRowFrame2.LayoutOrder = 2
+FarmRowFrame2.Visible = false
+FarmRowFrame2.Parent = RightSide
+table.insert(TabElements["ฟามเวล"], FarmRowFrame2)
 
 local FarmRowCorner2 = Instance.new("UICorner")
 FarmRowCorner2.CornerRadius = UDim.new(0, 4)
@@ -563,7 +550,7 @@ task.spawn(function()
     end
 end)
 
--- ลูปการทำงานฟาร์ม 50-100 (ใช้ Floppa Quest 2 และ Golden Floppa)
+-- ลูปการทำงานฟาร์ม 50-100
 task.spawn(function()
     while true do
         task.wait(0.2)
