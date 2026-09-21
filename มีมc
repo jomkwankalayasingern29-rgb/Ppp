@@ -382,27 +382,23 @@ local function FindNearestMonster(monsterName, isEnabledCheck)
     return nearest
 end
 
-local function SetupGodMode(char, isEnabledCheck)
+local function SetupGodMode(char)
     local hum = char:WaitForChild("Humanoid")
     hum.MaxHealth = math.huge
     hum.Health = math.huge
     hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
     hum.HealthChanged:Connect(function()
-        if isEnabledCheck() then
-            if hum.Health < hum.MaxHealth then
-                hum.Health = hum.MaxHealth
-            end
+        if hum.Health < hum.MaxHealth then
+            hum.Health = hum.MaxHealth
         end
     end)
 end
 
 LocalPlayer.CharacterAdded:Connect(function(char)
     task.wait(1)
-    if masterFarmLevelEnabled1 then
-        SetupGodMode(char, function() return masterFarmLevelEnabled1 end)
-    elseif masterFarmLevelEnabled2 then
-        SetupGodMode(char, function() return masterFarmLevelEnabled2 end)
+    if masterFarmLevelEnabled1 or masterFarmLevelEnabled2 then
+        SetupGodMode(char)
     end
 end)
 
@@ -450,7 +446,7 @@ FarmToggleBtn1.MouseButton1Click:Connect(function()
         UpdateFarmStates(1)
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("Humanoid") then
-            SetupGodMode(char, function() return masterFarmLevelEnabled1 end)
+            SetupGodMode(char)
         end
     end
 end)
@@ -462,7 +458,7 @@ FarmToggleBtn2.MouseButton1Click:Connect(function()
         UpdateFarmStates(2)
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("Humanoid") then
-            SetupGodMode(char, function() return masterFarmLevelEnabled2 end)
+            SetupGodMode(char)
         end
     end
 end)
