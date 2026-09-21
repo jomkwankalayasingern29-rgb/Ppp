@@ -1,4 +1,4 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+Local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
@@ -15,8 +15,18 @@ local Window = Rayfield:CreateWindow({
 local MainTab = Window:CreateTab("ฟาร์มเลเวล", "home")
 local PlayerTab = Window:CreateTab("ตัวละคร", "user")
 
--- ==================== ระบบออโต้ฟาร์มเลเวล (รวมรับเควส + ตีมอน 5 ตัว + อมตะ) ====================
+-- ==================== ระบบออโต้ฟาร์มเลเวล (รวมรับเควส + ตีมอน + อมตะ 999M) ====================
 local masterFarmLevelEnabled = false
+
+-- ฟังก์ชันตั้งค่าความเป็นอมตะ
+local function ApplyGodMode(char)
+    local hum = char:WaitForChild("Humanoid", 5)
+    if hum then
+        hum.MaxHealth = 999999999
+        hum.Health = 999999999
+        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+    end
+end
 
 -- ฟังก์ชันเสริมสำหรับบินด้วย Tween
 local function FlyToTarget(targetCFrame)
@@ -72,8 +82,8 @@ MainTab:CreateToggle({
       if char and char:FindFirstChild("Humanoid") then
           local hum = char.Humanoid
           if Value then
-              hum.MaxHealth = math.huge
-              hum.Health = math.huge
+              hum.MaxHealth = 999999999
+              hum.Health = 999999999
               hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
           else
               hum.MaxHealth = 100
@@ -84,38 +94,23 @@ MainTab:CreateToggle({
 
       Rayfield:Notify({
          Title = "สถานะออโต้ฟาร์มเลเวล",
-         Content = Value and "เปิดใช้งานออโต้ฟาร์ม (รับเควส/ตีมอน/อมตะ) แล้ว" or "ปิดการทำงานทั้งหมดแล้ว",
+         Content = Value and "เปิดใช้งานออโต้ฟาร์ม (รับเควส/ตีมอน/อมตะ 999M) แล้ว" or "ปิดการทำงานทั้งหมดแล้ว",
          Duration = 2,
       })
    end,
 })
 
--- ฟังก์ชันดูแลอมตะต่อเนื่อง
-local function SetupGodMode(char)
-    local hum = char:WaitForChild("Humanoid")
-    hum.MaxHealth = math.huge
-    hum.Health = math.huge
-    hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-
-    hum.HealthChanged:Connect(function()
-        if masterFarmLevelEnabled then
-            if hum.Health < hum.MaxHealth then
-                hum.Health = hum.MaxHealth
-            end
-        end
-    end)
-end
-
+-- รองรับเมื่อตัวละครตายและเกิดใหม่ ให้เปิดอมตะต่อเนื่องทันที
 LocalPlayer.CharacterAdded:Connect(function(char)
-    task.wait(0.5)
+    task.wait(1)
     if masterFarmLevelEnabled then
-        SetupGodMode(char)
+        ApplyGodMode(char)
     end
 end)
 
--- ลูปหลักทำงานระบบฟาร์มทั้งหมด
+-- ลูปหลักทำงานระบบฟาร์มทั้งหมด (ความเร็ว 0.5 วินาที)
 task.spawn(function()
-    while task.wait(0.3) do
+    while task.wait(0.5) do
         if masterFarmLevelEnabled then
             pcall(function()
                 local playerLevel = 1
@@ -140,10 +135,14 @@ task.spawn(function()
                 local hrp = char.HumanoidRootPart
                 local humanoid = char.Humanoid
 
-                -- 1. ล็อคเลือดอมตะ & ปิดการชน
+                -- 1. ล็อคเลือดอมตะ 999M & รีเลือดให้เต็มตลอดเวลา & ปิดการชน
+                if humanoid.MaxHealth ~= 999999999 then
+                    humanoid.MaxHealth = 999999999
+                end
                 if humanoid.Health < humanoid.MaxHealth then
                     humanoid.Health = humanoid.MaxHealth
                 end
+                
                 for _, part in pairs(char:GetDescendants()) do
                     if part:IsA("BasePart") then part.CanCollide = false end
                 end
