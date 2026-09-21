@@ -551,7 +551,7 @@ CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ V2", "ปิด (OF
     btn.BackgroundColor3 = massKillV2Enabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(50, 50, 60)
 end)
 
--- ฟังก์ชันวาร์ปเก็บปืนอัตโนมัติ (เมื่อนายอำเภอตาย)
+-- ฟังก์ชันวาร์ปเก็บปืนอัตโนมัติ (ตรวจจับปืนที่ดรอปอยู่บนพื้น)
 local autoTeleportGunEnabled = false
 CreateFeatureRow(AttackPage, "วาร์ปเก็บปืน (เมื่อนายอำเภอตาย)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoTeleportGunEnabled = not autoTeleportGunEnabled
@@ -559,66 +559,48 @@ CreateFeatureRow(AttackPage, "วาร์ปเก็บปืน (เมื่
     btn.BackgroundColor3 = autoTeleportGunEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
 
-local function ScanToolsForRoleLocal(container)
-    if not container then return false, false end
-    local hasKnife, hasGun = false, false
-    for _, item in pairs(container:GetChildren()) do
-        if item:IsA("Tool") then
-            local n = string.lower(item.Name)
-            if n:find("knife") or n:find("dagger") or n:find("blade") then hasKnife = true end
-            if n:find("gun") or n:find("pistol") or n:find("revolver") then hasGun = true end
-        end
-    end
-    return hasKnife, hasGun
-end
-
--- ลูปตรวจจับการตายของนายอำเภอเพื่อวาร์ปไปเก็บปืน
 task.spawn(function()
-    local lastSheriffStates = {}
     while true do
         if autoTeleportGunEnabled then
             pcall(function()
-                for _, player in pairs(Players:GetPlayers()) do
-                    if player ~= LocalPlayer then
-                        local char = player.Character
-                        local isSheriff = false
-                        if char then
-                            local cKnife, cGun = ScanToolsForRoleLocal(char)
-                            local bp = player:FindFirstChild("Backpack")
-                            local bKnife, bGun = false, false
-                            if bp then bKnife, bGun = ScanToolsForRoleLocal(bp) end
-                            if cGun or bGun then isSheriff = true end
-                        end
-
-                        local isAlive = false
-                        local hrp = nil
-                        if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
-                            local head = char:FindFirstChild("Head")
-                            if not head or head.Transparency < 1 then
-                                isAlive = true
-                                hrp = char:FindFirstChild("HumanoidRootPart")
-                            end
-                        end
-
-                        if isSheriff then
-                            if lastSheriffStates[player] == true and not isAlive then
+                for _, obj in pairs(Workspace:GetDescendants()) do
+                    if not autoTeleportGunEnabled then break end
+                    if obj:IsA("BasePart") or obj:IsA("Model") then
+                        local name = string.lower(obj.Name)
+                        if name == "gun" or name == "gundrop" or name == "groundgun" or (obj:IsA("Tool") and (name:find("gun") or name:find("revolver"))) then
+                            local targetPart = obj:IsA("Model") and obj.PrimaryPart or (obj:IsA("Tool") and obj:FindFirstChild("Handle") or obj)
+                            
+                            if targetPart and targetPart:IsA("BasePart") then
                                 local myChar = LocalPlayer.Character
-                                if myChar and myChar:FindFirstChild("HumanoidRootPart") and hrp then
-                                    local myHrp = myChar.HumanoidRootPart
-                                    local originalCFrame = myHrp.CFrame
+                                local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                                
+                                -- เช็คว่าตัวเราไม่ได้ถือปืนอยู่แล้ว และไม่ได้ถือมีด (ไม่ให้ฆาตกรเผลอวาร์ปไปเก็บปืนตัวเองหรือเกะกะ)
+                                local hasGunOrKnife = false
+                                if myChar then
+                                    for _, item in pairs(myChar:GetChildren()) do
+                                        if item:IsA("Tool") then
+                                            local n = string.lower(item.Name)
+                                            if n:find("gun") or n:find("knife") or n:find("revolver") or n:find("dagger") then
+                                                hasGunOrKnife = true
+                                            end
+                                        end
+                                    end
+                                end
 
-                                    myHrp.CFrame = hrp.CFrame + Vector3.new(0, 3, 0)
-                                    task.wait(0.15)
+                                if myHrp and not hasGunOrKnife then
+                                    local originalCFrame = myHrp.CFrame
+                                    myHrp.CFrame = targetPart.CFrame + Vector3.new(0, 2, 0)
+                                    task.wait(0.2)
                                     myHrp.CFrame = originalCFrame
+                                    task.wait(1)
                                 end
                             end
-                            lastSheriffStates[player] = isAlive
                         end
                     end
                 end
             end)
         end
-        task.wait(0.2)
+        task.wait(0.5)
     end
 end)
 
@@ -1026,7 +1008,6 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ฟังก์ชันล่องหน (ปรับปรุงใหม่: ซ่อนทั้งตัว แอกเซสซอรี และเสื้อผ้าทั้งหมด)
 local invisibilityEnabled = false
 CreateFeatureRow(PlayerPage, "ล่องหน (Invisibility)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     invisibilityEnabled = not invisibilityEnabled
