@@ -553,7 +553,7 @@ end)
 
 -- ฟังก์ชันวาร์ปเก็บปืนอัตโนมัติ (เมื่อนายอำเภอตาย)
 local autoTeleportGunEnabled = false
-CreateFeatureRow(AttackPage, "วาร์ปเก็บปืน (เมื่อนายอำเภอาย)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+CreateFeatureRow(AttackPage, "วาร์ปเก็บปืน (เมื่อนายอำเภอตาย)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoTeleportGunEnabled = not autoTeleportGunEnabled
     btn.Text = autoTeleportGunEnabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = autoTeleportGunEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
@@ -602,16 +602,13 @@ task.spawn(function()
 
                         if isSheriff then
                             if lastSheriffStates[player] == true and not isAlive then
-                                -- นายอำเภอเสียชีวิตแล้ว! ทำการวาร์ปไปเก็บปืนอย่างรวดเร็ว
                                 local myChar = LocalPlayer.Character
                                 if myChar and myChar:FindFirstChild("HumanoidRootPart") and hrp then
                                     local myHrp = myChar.HumanoidRootPart
                                     local originalCFrame = myHrp.CFrame
 
-                                    -- วาร์ปไปที่ตำแหน่งศพ/จุดปืนตก
                                     myHrp.CFrame = hrp.CFrame + Vector3.new(0, 3, 0)
-                                    task.wait(0.15) -- รอรับไอเทมปืน
-                                    -- วาร์ปกลับตำแหน่งเดิมทันที
+                                    task.wait(0.15)
                                     myHrp.CFrame = originalCFrame
                                 end
                             end
@@ -1029,6 +1026,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
+-- ฟังก์ชันล่องหน (ปรับปรุงใหม่: ซ่อนทั้งตัว แอกเซสซอรี และเสื้อผ้าทั้งหมด)
 local invisibilityEnabled = false
 CreateFeatureRow(PlayerPage, "ล่องหน (Invisibility)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     invisibilityEnabled = not invisibilityEnabled
@@ -1039,9 +1037,21 @@ CreateFeatureRow(PlayerPage, "ล่องหน (Invisibility)", "ปิด (OF
     if char then
         for _, part in pairs(char:GetDescendants()) do
             if part:IsA("BasePart") or part:IsA("Decal") then
-                part.Transparency = invisibilityEnabled and 1 or (part.Name == "HumanoidRootPart" and 1 or 0)
-            elseif part:IsA("Accessory") or part:IsA("Clothing") then
-                part.Handle.Transparency = invisibilityEnabled and 1 or 0
+                if part.Name ~= "HumanoidRootPart" then
+                    part.Transparency = invisibilityEnabled and 1 or 0
+                end
+            elseif part:IsA("Accessory") then
+                local handle = part:FindFirstChild("Handle")
+                if handle then
+                    handle.Transparency = invisibilityEnabled and 1 or 0
+                    for _, subPart in pairs(handle:GetDescendants()) do
+                        if subPart:IsA("BasePart") or subPart:IsA("Decal") then
+                            subPart.Transparency = invisibilityEnabled and 1 or 0
+                        end
+                    end
+                end
+            elseif part:IsA("Clothing") or part:IsA("ShirtGraphic") then
+                part.Transparency = invisibilityEnabled and 1 or 0
             end
         end
     end
@@ -1052,9 +1062,21 @@ LocalPlayer.CharacterAdded:Connect(function(newChar)
     if invisibilityEnabled then
         for _, part in pairs(newChar:GetDescendants()) do
             if part:IsA("BasePart") or part:IsA("Decal") then
-                part.Transparency = invisibilityEnabled and 1 or (part.Name == "HumanoidRootPart" and 1 or 0)
-            elseif part:IsA("Accessory") or part:IsA("Clothing") then
-                part.Handle.Transparency = invisibilityEnabled and 1 or 0
+                if part.Name ~= "HumanoidRootPart" then
+                    part.Transparency = invisibilityEnabled and 1 or 0
+                end
+            elseif part:IsA("Accessory") then
+                local handle = part:FindFirstChild("Handle")
+                if handle then
+                    handle.Transparency = invisibilityEnabled and 1 or 0
+                    for _, subPart in pairs(handle:GetDescendants()) do
+                        if subPart:IsA("BasePart") or subPart:IsA("Decal") then
+                            subPart.Transparency = invisibilityEnabled and 1 or 0
+                        end
+                    end
+                end
+            elseif part:IsA("Clothing") or part:IsA("ShirtGraphic") then
+                part.Transparency = invisibilityEnabled and 1 or 0
             end
         end
     end
