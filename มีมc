@@ -1,4 +1,3 @@
--- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
 local CoreGui = game:GetService("CoreGui")
 if CoreGui:FindFirstChild("CustomScriptUI") then
     CoreGui.CustomScriptUI:Destroy()
@@ -9,13 +8,11 @@ local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
--- สร้าง ScreenGui หลัก
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- หน้าต่างแจ้งเตือนสถานะตอนเริ่ม (Loading Screen)
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
 LoadFrame.Size = UDim2.new(0, 300, 0, 65)
@@ -43,7 +40,6 @@ LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
--- ==================== หน้าต่าง UI หลัก ====================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 380, 0, 210)
@@ -65,7 +61,6 @@ MainStroke.Color = Color3.fromRGB(0, 162, 255)
 MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
--- แถบหัวข้อด้านบน (TopBar)
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 28)
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
@@ -83,7 +78,6 @@ FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 FixTopBar.BorderSizePixel = 0
 FixTopBar.Parent = TopBar
 
--- โลโก้ตัว "G"
 local LogoG = Instance.new("TextLabel")
 LogoG.Size = UDim2.new(0, 20, 0, 20)
 LogoG.Position = UDim2.new(0, 8, 0, 4)
@@ -105,7 +99,6 @@ TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- ปุ่มปิด UI (X)
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
 CloseButton.Position = UDim2.new(1, -26, 0, 2)
@@ -120,7 +113,6 @@ CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- ปุ่มย่อหน้าต่าง (-)
 local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
 MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
@@ -143,7 +135,6 @@ MinimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
@@ -167,7 +158,6 @@ LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     LeftSide.CanvasSize = UDim2.new(0, 0, 0, LeftLayout.AbsoluteContentSize.Y + 10)
 end)
 
--- ==================== ฝั่งขวา: ฟังก์ชัน ====================
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.67, 0, 1, -34)
 RightSide.Position = UDim2.new(0.32, 0, 0, 30)
@@ -209,7 +199,6 @@ local function createContainer(name, order)
     return container
 end
 
--- 1. หมวด "เมนูหลัก" (Order = 1)
 local MainMenuContainer = createContainer("เมนูหลัก", 1)
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.92, 0, 0, 26)
@@ -231,10 +220,8 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 2. หมวด "ฟามเวล" (Order = 2)
 local FarmLevelContainer = createContainer("ฟามเวล", 2)
 
--- --- แถวที่ 1: ฟามเวล 1-25 ---
 local FarmRowFrame1 = Instance.new("Frame")
 FarmRowFrame1.Size = UDim2.new(0.92, 0, 0, 32)
 FarmRowFrame1.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -281,7 +268,6 @@ FarmToggleStroke1.Color = Color3.fromRGB(255, 255, 255)
 FarmToggleStroke1.Thickness = 1
 FarmToggleStroke1.Parent = FarmToggleBtn1
 
--- --- แถวที่ 2: ฟามเวล 50-100 ---
 local FarmRowFrame2 = Instance.new("Frame")
 FarmRowFrame2.Size = UDim2.new(0.92, 0, 0, 32)
 FarmRowFrame2.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -328,7 +314,6 @@ FarmToggleStroke2.Color = Color3.fromRGB(255, 255, 255)
 FarmToggleStroke2.Thickness = 1
 FarmToggleStroke2.Parent = FarmToggleBtn2
 
--- ==================== ระบบเบื้องหลังออโต้ฟาร์ม ====================
 local masterFarmLevelEnabled1 = false
 local masterFarmLevelEnabled2 = false
 
@@ -421,7 +406,6 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
--- ฟังก์ชันจัดการปุ่มเปิด/ปิดแบบเลือกได้อย่างเดียว (Radio Button)
 local function UpdateFarmStates(activeID)
     if activeID == 1 then
         masterFarmLevelEnabled1 = true
@@ -483,7 +467,6 @@ FarmToggleBtn2.MouseButton1Click:Connect(function()
     end
 end)
 
--- ลูปออโต้ฟาร์ม: ฟามเวล 1-25
 task.spawn(function()
     while true do
         task.wait(0.2)
@@ -567,7 +550,6 @@ task.spawn(function()
     end
 end)
 
--- ลูปออโต้ฟาร์ม: ฟามเวล 50-100 (ใช้ชื่อ Floppa Quest 2 และ Golden Floppa)
 task.spawn(function()
     while true do
         task.wait(0.2)
@@ -638,14 +620,12 @@ task.spawn(function()
     end
 end)
 
--- ฟังก์ชันสลับหมวดหมู่
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
         container.Visible = (name == tabName)
     end
 end
 
--- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย
 local function createCategoryButton(name, order)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 26)
@@ -670,10 +650,8 @@ end
 createCategoryButton("เมนูหลัก", 1)
 createCategoryButton("ฟามเวล", 2)
 
--- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก"
 switchTab("เมนูหลัก")
 
--- ==================== ลำดับการทำงาน (Loading & Animation) ====================
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
