@@ -358,52 +358,42 @@ FarmToggleCorner3.Parent = FarmToggleBtn3
 local FarmToggleStroke3 = Instance.new("UIStroke")
 FarmToggleStroke3.Color = Color3.fromRGB(255, 255, 255)
 FarmToggleStroke3.Thickness = 1
-FarmToggleStroke3.Parent = FarmToggleBtn3
+FarmToggleStroke3.Parent = FarmRowFrame3
 
 local masterFarmLevelEnabled1 = false
 local masterFarmLevelEnabled2 = false
 local masterFarmLevelEnabled3 = false
-
-local currentTween = nil
 
 local function FlyTo(targetCFrame, isEnabledCheck)
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = LocalPlayer.Character.HumanoidRootPart
     local distance = (hrp.Position - targetCFrame.Position).Magnitude
     if distance < 5 then return end
-    
-    if currentTween then
-        currentTween:Cancel()
-        currentTween = nil
-    end
-    
     local speed = 350
     local timeTake = distance / speed
     
     local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
-    currentTween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
-    currentTween:Play()
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
     
     local completed = false
     local connection
-    connection = currentTween.Completed:Connect(function()
+    connection = tween.Completed:Connect(function()
         completed = true
-        if connection then connection:Disconnect() end
+        connection:Disconnect()
     end)
     
     while not completed and isEnabledCheck() do
-        task.wait(0.1)
+        task.wait()
     end
-    
-    if not isEnabledCheck() and currentTween then
-        currentTween:Cancel()
-        currentTween = nil
+    if not isEnabledCheck() then
+        tween:Cancel()
     end
 end
 
 local function FindObject(parent, name)
     if not parent then return nil end
-    for _, v in pairs(parent:GetChildren()) do
+    for _, v in pairs(parent:GetDescendants()) do
         if v.Name == name then
             if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") then
                 return v.HumanoidRootPart
@@ -423,7 +413,7 @@ local function FindNearestMonster(monsterName, isEnabledCheck)
     local nearest = nil
     local shortestDistance = math.huge
     
-    for _, v in pairs(Workspace:GetChildren()) do
+    for _, v in pairs(Workspace:GetDescendants()) do
         if isEnabledCheck() and v:IsA("Model") and v.Name == monsterName then
             local hum = v:FindFirstChildOfClass("Humanoid")
             local root = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Head")
@@ -453,6 +443,7 @@ local function SetupGodMode(char)
     end)
 end
 
+-- แก้ไขจุดนี้เพื่อให้รองรับการเกิดใหม่และรันต่อเนื่องได้ทันที
 LocalPlayer.CharacterAdded:Connect(function(char)
     task.wait(0.5)
     if masterFarmLevelEnabled1 or masterFarmLevelEnabled2 or masterFarmLevelEnabled3 then
@@ -564,26 +555,25 @@ FarmToggleBtn3.MouseButton1Click:Connect(function()
     end
 end)
 
--- ฟังก์ชันหลักสำหรับรันระบบฟาร์มแบบป้องกันการติดค้างสะสมระยะยาว
-local function RunFarmRoutine(getEnabled, getQuestName, getMonsterName)
+task.spawn(function()
     while true do
-        task.wait(0.4)
-        if getEnabled() then
+        task.wait(0.1) -- ปรับเวลาสู้ให้ไวขึ้นเล็กน้อยเพื่อลดอาการหน่วง
+        if masterFarmLevelEnabled1 then
             pcall(function()
                 local playerLevel = 1
                 if LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level") then
                     playerLevel = LocalPlayer.Data.Level.Value
                 end
 
-                local questName = getQuestName
-                local monsterName = getMonsterName
+                local questName = "Floppa Quest 1"
+                local monsterName = "Floppa"
 
-                if questName == "Floppa Quest 1" then
-                    if playerLevel >= 15 and playerLevel < 30 then
-                        questName = "Floppa Quest 2"
-                    elseif playerLevel >= 30 then
-                        questName = "Floppa Quest 3"
-                    end
+                if playerLevel >= 15 and playerLevel < 30 then
+                    questName = "Floppa Quest 2"
+                    monsterName = "Floppa"
+                elseif playerLevel >= 30 then
+                    questName = "Floppa Quest 3"
+                    monsterName = "Floppa"
                 end
 
                 local char = LocalPlayer.Character
@@ -616,26 +606,21 @@ local function RunFarmRoutine(getEnabled, getQuestName, getMonsterName)
                 local questPart = FindObject(Workspace, questName) or FindObject(Workspace, "Main Quest")
                 if questPart then
                     if (hrp.Position - questPart.Position).Magnitude > 25 then
-                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), getEnabled)
-                        task.wait(0.3)
+                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevelEnabled1 end)
+                        task.wait(0.2)
                     end
-                    for _, v in pairs(Workspace:GetChildren()) do
-                        if v:IsA("Model") and v.Name:find("Quest") then
-                            for _, p in pairs(v:GetDescendants()) do
-                                if p:IsA("ProximityPrompt") and (p.Parent.Position - hrp.Position).Magnitude < 25 then
-                                    fireproximityprompt(p)
-                                end
-                            end
+                    for _, v in pairs(Workspace:GetDescendants()) do
+                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
+                            fireproximityprompt(v)
                         end
                     end
                 end
 
-                local monsterPart = FindNearestMonster(monsterName, getEnabled)
+                local monsterPart = FindNearestMonster(monsterName, function() return masterFarmLevelEnabled1 end)
                 if monsterPart then
-                    FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), getEnabled)
+                    FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevelEnabled1 end)
 
-                    local monsterHum = monsterPart.Parent:FindFirstChildOfClass("Humanoid")
-                    while getEnabled() and monsterPart and monsterPart.Parent and monsterHum and monsterHum.Health > 0 do
+                    while masterFarmLevelEnabled1 and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
                         if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
                         hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
                         hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
@@ -645,24 +630,152 @@ local function RunFarmRoutine(getEnabled, getQuestName, getMonsterName)
                         if tool then
                             tool:Activate()
                         end
-                        task.wait(0.25)
+                        task.wait(0.1)
                     end
                 end
             end)
         end
     end
-end
-
-task.spawn(function()
-    RunFarmRoutine(function() return masterFarmLevelEnabled1 end, "Floppa Quest 1", "Floppa")
 end)
 
 task.spawn(function()
-    RunFarmRoutine(function() return masterFarmLevelEnabled2 end, "Floppa Quest 2", "Golden Floppa")
+    while true do
+        task.wait(0.1)
+        if masterFarmLevelEnabled2 then
+            pcall(function()
+                local questName = "Floppa Quest 2"    
+                local monsterName = "Golden Floppa" 
+
+                local char = LocalPlayer.Character
+                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end
+                local hrp = char.HumanoidRootPart
+                local humanoid = char.Humanoid
+
+                if humanoid.Health < humanoid.MaxHealth then
+                    humanoid.Health = humanoid.MaxHealth
+                end
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    local slot1Item = nil
+                    for _, item in ipairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            slot1Item = item
+                            break
+                        end
+                    end
+                    local currentTool = char:FindFirstChildOfClass("Tool")
+                    if slot1Item and currentTool ~= slot1Item then
+                        humanoid:EquipTool(slot1Item)
+                    end
+                end
+
+                local questPart = FindObject(Workspace, questName)
+                if questPart then
+                    if (hrp.Position - questPart.Position).Magnitude > 25 then
+                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevelEnabled2 end)
+                        task.wait(0.2)
+                    end
+                    for _, v in pairs(Workspace:GetDescendants()) do
+                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
+                            fireproximityprompt(v)
+                        end
+                    end
+                end
+
+                local monsterPart = FindNearestMonster(monsterName, function() return masterFarmLevelEnabled2 end)
+                if monsterPart then
+                    FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevelEnabled2 end)
+
+                    while masterFarmLevelEnabled2 and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
+                        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
+                        hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
+                        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+                        local tool = char:FindFirstChildOfClass("Tool")
+                        if tool then
+                            tool:Activate()
+                        end
+                        task.wait(0.1)
+                    end
+                end
+            end)
+        end
+    end
 end)
 
 task.spawn(function()
-    RunFarmRoutine(function() return masterFarmLevelEnabled3 end, "Floppa Quest 3", "Big Floppa")
+    while true do
+        task.wait(0.1)
+        if masterFarmLevelEnabled3 then
+            pcall(function()
+                local questName = "Floppa Quest 3"
+                local monsterName = "Big Floppa"
+
+                local char = LocalPlayer.Character
+                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end
+                local hrp = char.HumanoidRootPart
+                local humanoid = char.Humanoid
+
+                if humanoid.Health < humanoid.MaxHealth then
+                    humanoid.Health = humanoid.MaxHealth
+                end
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    local slot1Item = nil
+                    for _, item in ipairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            slot1Item = item
+                            break
+                        end
+                    end
+                    local currentTool = char:FindFirstChildOfClass("Tool")
+                    if slot1Item and currentTool ~= slot1Item then
+                        humanoid:EquipTool(slot1Item)
+                    end
+                end
+
+                local questPart = FindObject(Workspace, questName)
+                if questPart then
+                    if (hrp.Position - questPart.Position).Magnitude > 25 then
+                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevelEnabled3 end)
+                        task.wait(0.2)
+                    end
+                    for _, v in pairs(Workspace:GetDescendants()) do
+                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
+                            fireproximityprompt(v)
+                        end
+                    end
+                end
+
+                local monsterPart = FindNearestMonster(monsterName, function() return masterFarmLevelEnabled3 end)
+                if monsterPart then
+                    FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevelEnabled3 end)
+
+                    while masterFarmLevelEnabled3 and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
+                        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
+                        hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
+                        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+                        local tool = char:FindFirstChildOfClass("Tool")
+                        if tool then
+                            tool:Activate()
+                        end
+                        task.wait(0.1)
+                    end
+                end
+            end)
+        end
+    end
 end)
 
 local function switchTab(tabName)
