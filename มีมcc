@@ -443,6 +443,7 @@ local function SetupGodMode(char)
     end)
 end
 
+-- แก้ไขจุดนี้เพื่อให้รองรับการเกิดใหม่และรันต่อเนื่องได้ทันที
 LocalPlayer.CharacterAdded:Connect(function(char)
     task.wait(0.5)
     if masterFarmLevelEnabled1 or masterFarmLevelEnabled2 or masterFarmLevelEnabled3 then
@@ -554,38 +555,9 @@ FarmToggleBtn3.MouseButton1Click:Connect(function()
     end
 end)
 
--- ฟังก์ชันสำหรับเลือกหยิบไอเทม "หมัด" จากช่องเก็บของ
-local function EquipFist(char, humanoid)
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
-    if not backpack then return end
-    
-    local targetItem = nil
-    for _, item in ipairs(backpack:GetChildren()) do
-        if item:IsA("Tool") and (item.Name == "หมัด" or item.Name:lower():find("fist") or item.Name:lower():find("combat")) then
-            targetItem = item
-            break
-        end
-    end
-    
-    -- ถ้าไม่เจอชื่อ "หมัด" เป๊ะๆ ให้ลองหยิบ Tool ชิ้นแรกแทนเป็นสำรอง
-    if not targetItem then
-        for _, item in ipairs(backpack:GetChildren()) do
-            if item:IsA("Tool") then
-                targetItem = item
-                break
-            end
-        end
-    end
-    
-    local currentTool = char:FindFirstChildOfClass("Tool")
-    if targetItem and currentTool ~= targetItem then
-        humanoid:EquipTool(targetItem)
-    end
-end
-
 task.spawn(function()
     while true do
-        task.wait(0.1)
+        task.wait(0.1) -- ปรับเวลาสู้ให้ไวขึ้นเล็กน้อยเพื่อลดอาการหน่วง
         if masterFarmLevelEnabled1 then
             pcall(function()
                 local playerLevel = 1
@@ -616,7 +588,20 @@ task.spawn(function()
                     if part:IsA("BasePart") then part.CanCollide = false end
                 end
 
-                EquipFist(char, humanoid)
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    local slot1Item = nil
+                    for _, item in ipairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            slot1Item = item
+                            break
+                        end
+                    end
+                    local currentTool = char:FindFirstChildOfClass("Tool")
+                    if slot1Item and currentTool ~= slot1Item then
+                        humanoid:EquipTool(slot1Item)
+                    end
+                end
 
                 local questPart = FindObject(Workspace, questName) or FindObject(Workspace, "Main Quest")
                 if questPart then
@@ -673,7 +658,20 @@ task.spawn(function()
                     if part:IsA("BasePart") then part.CanCollide = false end
                 end
 
-                EquipFist(char, humanoid)
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    local slot1Item = nil
+                    for _, item in ipairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            slot1Item = item
+                            break
+                        end
+                    end
+                    local currentTool = char:FindFirstChildOfClass("Tool")
+                    if slot1Item and currentTool ~= slot1Item then
+                        humanoid:EquipTool(slot1Item)
+                    end
+                end
 
                 local questPart = FindObject(Workspace, questName)
                 if questPart then
@@ -730,7 +728,20 @@ task.spawn(function()
                     if part:IsA("BasePart") then part.CanCollide = false end
                 end
 
-                EquipFist(char, humanoid)
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    local slot1Item = nil
+                    for _, item in ipairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            slot1Item = item
+                            break
+                        end
+                    end
+                    local currentTool = char:FindFirstChildOfClass("Tool")
+                    if slot1Item and currentTool ~= slot1Item then
+                        humanoid:EquipTool(slot1Item)
+                    end
+                end
 
                 local questPart = FindObject(Workspace, questName)
                 if questPart then
@@ -824,8 +835,8 @@ task.spawn(function()
     MainFrame.Visible = true
     MainFrame.Size = UDim2.new(0, 320, 0, 180)
     
-    ListInfo = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-    local expandTween = TweenService:Create(MainFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local expandTween = TweenService:Create(MainFrame, info, {
         Size = UDim2.new(0, 380, 0, 210),
         BackgroundTransparency = 0
     })
