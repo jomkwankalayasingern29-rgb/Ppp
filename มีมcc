@@ -554,7 +554,6 @@ FarmToggleBtn3.MouseButton1Click:Connect(function()
     end
 end)
 
--- ฟังก์ชันสำหรับเลือกหยิบไอเทม "หมัด" จากช่องเก็บของ
 local function EquipFist(char, humanoid)
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if not backpack then return end
@@ -567,7 +566,6 @@ local function EquipFist(char, humanoid)
         end
     end
     
-    -- ถ้าไม่เจอชื่อ "หมัด" เป๊ะๆ ให้ลองหยิบ Tool ชิ้นแรกแทนเป็นสำรอง
     if not targetItem then
         for _, item in ipairs(backpack:GetChildren()) do
             if item:IsA("Tool") then
@@ -605,7 +603,11 @@ task.spawn(function()
                 end
 
                 local char = LocalPlayer.Character
-                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end
+                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then 
+                    task.wait(1)
+                    return 
+                end
+                
                 local hrp = char.HumanoidRootPart
                 local humanoid = char.Humanoid
 
@@ -636,7 +638,9 @@ task.spawn(function()
                     FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevelEnabled1 end)
 
                     while masterFarmLevelEnabled1 and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
-                        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
+                        local activeChar = LocalPlayer.Character
+                        if not activeChar or not activeChar:FindFirstChild("HumanoidRootPart") or activeChar ~= char then break end
+                        
                         hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
                         hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                         hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
@@ -644,6 +648,8 @@ task.spawn(function()
                         local tool = char:FindFirstChildOfClass("Tool")
                         if tool then
                             tool:Activate()
+                        else
+                            EquipFist(char, humanoid)
                         end
                         task.wait(0.1)
                     end
@@ -662,7 +668,11 @@ task.spawn(function()
                 local monsterName = "Golden Floppa" 
 
                 local char = LocalPlayer.Character
-                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end
+                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then 
+                    task.wait(1)
+                    return 
+                end
+                
                 local hrp = char.HumanoidRootPart
                 local humanoid = char.Humanoid
 
@@ -693,7 +703,9 @@ task.spawn(function()
                     FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevelEnabled2 end)
 
                     while masterFarmLevelEnabled2 and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
-                        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
+                        local activeChar = LocalPlayer.Character
+                        if not activeChar or not activeChar:FindFirstChild("HumanoidRootPart") or activeChar ~= char then break end
+                        
                         hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
                         hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                         hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
@@ -701,6 +713,8 @@ task.spawn(function()
                         local tool = char:FindFirstChildOfClass("Tool")
                         if tool then
                             tool:Activate()
+                        else
+                            EquipFist(char, humanoid)
                         end
                         task.wait(0.1)
                     end
@@ -719,7 +733,11 @@ task.spawn(function()
                 local monsterName = "Big Floppa"
 
                 local char = LocalPlayer.Character
-                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end
+                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then 
+                    task.wait(1)
+                    return 
+                end
+                
                 local hrp = char.HumanoidRootPart
                 local humanoid = char.Humanoid
 
@@ -750,7 +768,9 @@ task.spawn(function()
                     FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevelEnabled3 end)
 
                     while masterFarmLevelEnabled3 and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
-                        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
+                        local activeChar = LocalPlayer.Character
+                        if not activeChar or not activeChar:FindFirstChild("HumanoidRootPart") or activeChar ~= char then break end
+                        
                         hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
                         hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                         hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
@@ -758,6 +778,8 @@ task.spawn(function()
                         local tool = char:FindFirstChildOfClass("Tool")
                         if tool then
                             tool:Activate()
+                        else
+                            EquipFist(char, humanoid)
                         end
                         task.wait(0.1)
                     end
@@ -824,7 +846,6 @@ task.spawn(function()
     MainFrame.Visible = true
     MainFrame.Size = UDim2.new(0, 320, 0, 180)
     
-    ListInfo = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     local expandTween = TweenService:Create(MainFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 380, 0, 210),
         BackgroundTransparency = 0
