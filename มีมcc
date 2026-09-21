@@ -1,4 +1,4 @@
-Local CoreGui = game:GetService("CoreGui")
+local CoreGui = game:GetService("CoreGui")
 if CoreGui:FindFirstChild("CustomScriptUI") then
     CoreGui.CustomScriptUI:Destroy()
 end
@@ -358,42 +358,52 @@ FarmToggleCorner3.Parent = FarmToggleBtn3
 local FarmToggleStroke3 = Instance.new("UIStroke")
 FarmToggleStroke3.Color = Color3.fromRGB(255, 255, 255)
 FarmToggleStroke3.Thickness = 1
-FarmToggleStroke3.Parent = FarmRowFrame3
+FarmToggleStroke3.Parent = FarmToggleBtn3
 
 local masterFarmLevelEnabled1 = false
 local masterFarmLevelEnabled2 = false
 local masterFarmLevelEnabled3 = false
+
+local currentTween = nil
 
 local function FlyTo(targetCFrame, isEnabledCheck)
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = LocalPlayer.Character.HumanoidRootPart
     local distance = (hrp.Position - targetCFrame.Position).Magnitude
     if distance < 5 then return end
+    
+    if currentTween then
+        currentTween:Cancel()
+        currentTween = nil
+    end
+    
     local speed = 350
     local timeTake = distance / speed
     
     local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
-    tween:Play()
+    currentTween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    currentTween:Play()
     
     local completed = false
     local connection
-    connection = tween.Completed:Connect(function()
+    connection = currentTween.Completed:Connect(function()
         completed = true
-        connection:Disconnect()
+        if connection then connection:Disconnect() end
     end)
     
     while not completed and isEnabledCheck() do
-        task.wait()
+        task.wait(0.1)
     end
-    if not isEnabledCheck() then
-        tween:Cancel()
+    
+    if not isEnabledCheck() and currentTween then
+        currentTween:Cancel()
+        currentTween = nil
     end
 end
 
 local function FindObject(parent, name)
     if not parent then return nil end
-    for _, v in pairs(parent:GetDescendants()) do
+    for _, v in pairs(parent:GetChildren()) do
         if v.Name == name then
             if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") then
                 return v.HumanoidRootPart
@@ -413,7 +423,7 @@ local function FindNearestMonster(monsterName, isEnabledCheck)
     local nearest = nil
     local shortestDistance = math.huge
     
-    for _, v in pairs(Workspace:GetDescendants()) do
+    for _, v in pairs(Workspace:GetChildren()) do
         if isEnabledCheck() and v:IsA("Model") and v.Name == monsterName then
             local hum = v:FindFirstChildOfClass("Humanoid")
             local root = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Head")
@@ -443,7 +453,6 @@ local function SetupGodMode(char)
     end)
 end
 
--- แก้ไขจุดนี้เพื่อให้รองรับการเกิดใหม่และรันต่อเนื่องได้ทันที
 LocalPlayer.CharacterAdded:Connect(function(char)
     task.wait(0.5)
     if masterFarmLevelEnabled1 or masterFarmLevelEnabled2 or masterFarmLevelEnabled3 then
@@ -557,7 +566,7 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait(0.1) -- ปรับเวลาสู้ให้ไวขึ้นเล็กน้อยเพื่อลดอาการหน่วง
+        task.wait(0.5)
         if masterFarmLevelEnabled1 then
             pcall(function()
                 local playerLevel = 1
@@ -607,11 +616,15 @@ task.spawn(function()
                 if questPart then
                     if (hrp.Position - questPart.Position).Magnitude > 25 then
                         FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevelEnabled1 end)
-                        task.wait(0.2)
+                        task.wait(0.3)
                     end
-                    for _, v in pairs(Workspace:GetDescendants()) do
-                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
-                            fireproximityprompt(v)
+                    for _, v in pairs(Workspace:GetChildren()) do
+                        if v:IsA("Model") and v.Name:find("Quest") then
+                            for _, p in pairs(v:GetDescendants()) do
+                                if p:IsA("ProximityPrompt") and (p.Parent.Position - hrp.Position).Magnitude < 25 then
+                                    fireproximityprompt(p)
+                                end
+                            end
                         end
                     end
                 end
@@ -630,7 +643,7 @@ task.spawn(function()
                         if tool then
                             tool:Activate()
                         end
-                        task.wait(0.1)
+                        task.wait(0.2)
                     end
                 end
             end)
@@ -640,7 +653,7 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait(0.1)
+        task.wait(0.5)
         if masterFarmLevelEnabled2 then
             pcall(function()
                 local questName = "Floppa Quest 2"    
@@ -677,11 +690,15 @@ task.spawn(function()
                 if questPart then
                     if (hrp.Position - questPart.Position).Magnitude > 25 then
                         FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevelEnabled2 end)
-                        task.wait(0.2)
+                        task.wait(0.3)
                     end
-                    for _, v in pairs(Workspace:GetDescendants()) do
-                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
-                            fireproximityprompt(v)
+                    for _, v in pairs(Workspace:GetChildren()) do
+                        if v:IsA("Model") and v.Name:find("Quest") then
+                            for _, p in pairs(v:GetDescendants()) do
+                                if p:IsA("ProximityPrompt") and (p.Parent.Position - hrp.Position).Magnitude < 25 then
+                                    fireproximityprompt(p)
+                                end
+                            end
                         end
                     end
                 end
@@ -700,7 +717,7 @@ task.spawn(function()
                         if tool then
                             tool:Activate()
                         end
-                        task.wait(0.1)
+                        task.wait(0.2)
                     end
                 end
             end)
@@ -710,7 +727,7 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait(0.1)
+        task.wait(0.5)
         if masterFarmLevelEnabled3 then
             pcall(function()
                 local questName = "Floppa Quest 3"
@@ -747,11 +764,15 @@ task.spawn(function()
                 if questPart then
                     if (hrp.Position - questPart.Position).Magnitude > 25 then
                         FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevelEnabled3 end)
-                        task.wait(0.2)
+                        task.wait(0.3)
                     end
-                    for _, v in pairs(Workspace:GetDescendants()) do
-                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
-                            fireproximityprompt(v)
+                    for _, v in pairs(Workspace:GetChildren()) do
+                        if v:IsA("Model") and v.Name:find("Quest") then
+                            for _, p in pairs(v:GetDescendants()) do
+                                if p:IsA("ProximityPrompt") and (p.Parent.Position - hrp.Position).Magnitude < 25 then
+                                    fireproximityprompt(p)
+                                end
+                            end
                         end
                     end
                 end
@@ -770,7 +791,7 @@ task.spawn(function()
                         if tool then
                             tool:Activate()
                         end
-                        task.wait(0.1)
+                        task.wait(0.2)
                     end
                 end
             end)
