@@ -170,7 +170,7 @@ LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 6)
 
--- ==================== ฝั่งขวา: ฟังก์ชัน (แก้ไขการทับซ้อน 100%) ====================
+-- ==================== ฝั่งขวา: ฟังก์ชัน ====================
 local RightSide = Instance.new("ScrollingFrame")
 RightSide.Size = UDim2.new(0.65, 0, 1, -38)
 RightSide.Position = UDim2.new(0.34, 0, 0, 34)
@@ -192,19 +192,16 @@ RightPadding.PaddingLeft = UDim.new(0, 6)
 RightPadding.PaddingRight = UDim.new(0, 6)
 RightPadding.Parent = RightSide
 
--- ใช้ UIListLayout อันเดียวจัดเรียงทุก element ในฝั่งขวาตรงๆ ป้องกันการเหลื่อมล้ำของ Container
 local RightSideLayout = Instance.new("UIListLayout")
 RightSideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 RightSideLayout.SortOrder = Enum.SortOrder.LayoutOrder
 RightSideLayout.Padding = UDim.new(0, 6)
 
--- เก็บรายการ elements แยกตามหมวดหมู่เพื่อใช้เปิด/ปิด
 local TabElements = {
     ["เมนูหลัก"] = {},
     ["ฟามเวล"] = {}
 }
 
--- ฟังก์ชันสลับหมวดหมู่
 local function switchTab(tabName)
     for name, elements in pairs(TabElements) do
         local isActive = (name == tabName)
@@ -280,15 +277,11 @@ FarmToggleBtn.Text = "OFF"
 FarmToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 FarmToggleBtn.TextSize = 10
 FarmToggleBtn.Parent = FarmRowFrame
+-- (เอา UIStroke ออกจากปุ่ม OFF เพื่อไม่ให้มีขอบ)
 
 local FarmToggleCorner = Instance.new("UICorner")
 FarmToggleCorner.CornerRadius = UDim.new(0, 3)
 FarmToggleCorner.Parent = FarmToggleBtn
-
-local FarmToggleStroke = Instance.new("UIStroke")
-FarmToggleStroke.Color = Color3.fromRGB(255, 255, 255)
-FarmToggleStroke.Thickness = 1
-FarmToggleStroke.Parent = FarmToggleBtn
 
 -- แถวที่ 2: ฟามเวล 50-100
 local FarmRowFrame2 = Instance.new("Frame")
@@ -330,23 +323,20 @@ FarmToggleBtn2.Text = "OFF"
 FarmToggleBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
 FarmToggleBtn2.TextSize = 10
 FarmToggleBtn2.Parent = FarmRowFrame2
+-- (เอา UIStroke ออกจากปุ่ม OFF ตัวที่ 2 เช่นกัน)
 
 local FarmToggleCorner2 = Instance.new("UICorner")
 FarmToggleCorner2.CornerRadius = UDim.new(0, 3)
 FarmToggleCorner2.Parent = FarmToggleBtn2
-
-local FarmToggleStroke2 = Instance.new("UIStroke")
-FarmToggleStroke2.Color = Color3.fromRGB(255, 255, 255)
-FarmToggleStroke2.Thickness = 1
-FarmToggleStroke2.Parent = FarmToggleBtn2
 
 -- ==================== ระบบเบื้องหลังออโต้ฟาร์ม ====================
 local masterFarmLevelEnabled = false
 local masterFarmLevel50Enabled = false
 
 local function FlyTo(targetCFrame, isEnabledCheck)
-    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
-    local hrp = LocalPlayer.Character.HumanoidRootPart
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
     local distance = (hrp.Position - targetCFrame.Position).Magnitude
     if distance < 5 then return end
     local speed = 350
@@ -364,6 +354,11 @@ local function FlyTo(targetCFrame, isEnabledCheck)
     end)
     
     while not completed and isEnabledCheck() do
+        -- เช็คเผื่อตัวละครตายกลางคันระหว่างบิน
+        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            tween:Cancel()
+            break
+        end
         task.wait()
     end
     if not isEnabledCheck() then
@@ -409,20 +404,26 @@ local function FindNearestMonster(monsterName)
     return nearest
 end
 
-local function SetupGodMode(char, isEnabledCheck)
+local function SetupGodMode(char)
     local hum = char:WaitForChild("Humanoid")
     hum.MaxHealth = math.huge
     hum.Health = math.huge
     hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
     hum.HealthChanged:Connect(function()
-        if isEnabledCheck() then
-            if hum.Health < hum.MaxHealth then
-                hum.Health = hum.MaxHealth
-            end
+        if hum.Health < hum.MaxHealth then
+            hum.Health = hum.MaxHealth
         end
     end)
 end
+
+-- รองรับการเกิดใหม่ (CharacterAdded) เพื่อให้ฟังก์ชันไม่หลุดเมื่อตัวละครตาย
+LocalPlayer.CharacterAdded:Connect(function(char)
+    task.wait(1) -- รอให้โหลดตัวละครเสร็จสมบูรณ์
+    if masterFarmLevelEnabled or masterFarmLevel50Enabled then
+        SetupGodMode(char)
+    end
+end)
 
 -- Toggle 1-25
 FarmToggleBtn.MouseButton1Click:Connect(function()
@@ -432,22 +433,17 @@ FarmToggleBtn.MouseButton1Click:Connect(function()
     if char and char:FindFirstChild("Humanoid") then
         local hum = char.Humanoid
         if masterFarmLevelEnabled then
-            hum.MaxHealth = math.huge
-            hum.Health = math.huge
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-            SetupGodMode(char, function() return masterFarmLevelEnabled end)
-            
+            SetupGodMode(char)
             FarmToggleBtn.Text = "ON"
             FarmToggleBtn.TextColor3 = Color3.fromRGB(0, 162, 255)
-            FarmToggleStroke.Color = Color3.fromRGB(0, 162, 255)
+            FarmToggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         else
             hum.MaxHealth = 100
             hum.Health = 100
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-            
             FarmToggleBtn.Text = "OFF"
             FarmToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            FarmToggleStroke.Color = Color3.fromRGB(255, 255, 255)
+            FarmToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         end
     end
 end)
@@ -460,22 +456,17 @@ FarmToggleBtn2.MouseButton1Click:Connect(function()
     if char and char:FindFirstChild("Humanoid") then
         local hum = char.Humanoid
         if masterFarmLevel50Enabled then
-            hum.MaxHealth = math.huge
-            hum.Health = math.huge
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-            SetupGodMode(char, function() return masterFarmLevel50Enabled end)
-            
+            SetupGodMode(char)
             FarmToggleBtn2.Text = "ON"
             FarmToggleBtn2.TextColor3 = Color3.fromRGB(0, 162, 255)
-            FarmToggleStroke2.Color = Color3.fromRGB(0, 162, 255)
+            FarmToggleBtn2.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         else
             hum.MaxHealth = 100
             hum.Health = 100
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-            
             FarmToggleBtn2.Text = "OFF"
             FarmToggleBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
-            FarmToggleStroke2.Color = Color3.fromRGB(255, 255, 255)
+            FarmToggleBtn2.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         end
     end
 end)
@@ -534,11 +525,14 @@ task.spawn(function()
                     FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevelEnabled end)
 
                     while masterFarmLevelEnabled and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
-                        hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
-                        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                        local curChar = LocalPlayer.Character
+                        if not curChar or not curChar:FindFirstChild("HumanoidRootPart") then break end
+                        
+                        curChar.HumanoidRootPart.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
+                        curChar.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        curChar.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 
-                        local tool = char:FindFirstChildOfClass("Tool")
+                        local tool = curChar:FindFirstChildOfClass("Tool")
                         if tool then
                             tool:Activate()
                         end
@@ -604,11 +598,14 @@ task.spawn(function()
                     FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevel50Enabled end)
 
                     while masterFarmLevel50Enabled and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
-                        hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
-                        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                        local curChar = LocalPlayer.Character
+                        if not curChar or not curChar:FindFirstChild("HumanoidRootPart") then break end
+                        
+                        curChar.HumanoidRootPart.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
+                        curChar.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        curChar.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 
-                        local tool = char:FindFirstChildOfClass("Tool")
+                        local tool = curChar:FindFirstChildOfClass("Tool")
                         if tool then
                             tool:Activate()
                         end
