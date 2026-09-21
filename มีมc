@@ -46,8 +46,8 @@ LoadText.Parent = LoadFrame
 -- ==================== หน้าต่าง UI หลัก ====================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 380, 0, 210)
-MainFrame.Position = UDim2.new(0.5, -190, 0.5, -105)
+MainFrame.Size = UDim2.new(0, 420, 0, 240)
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -120)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -67,7 +67,7 @@ MainStroke.Parent = MainFrame
 
 -- แถบหัวข้อด้านบน (TopBar)
 local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 28)
+TopBar.Size = UDim2.new(1, 0, 0, 30)
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
@@ -86,7 +86,7 @@ FixTopBar.Parent = TopBar
 -- โลโก้ตัว "G"
 local LogoG = Instance.new("TextLabel")
 LogoG.Size = UDim2.new(0, 20, 0, 20)
-LogoG.Position = UDim2.new(0, 8, 0, 4)
+LogoG.Position = UDim2.new(0, 10, 0, 5)
 LogoG.BackgroundTransparency = 1
 LogoG.Font = Enum.Font.GothamBold
 LogoG.Text = "G"
@@ -96,7 +96,7 @@ LogoG.Parent = TopBar
 
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -80, 1, 0)
-TitleLabel.Position = UDim2.new(0, 32, 0, 0)
+TitleLabel.Position = UDim2.new(0, 35, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Text = "Meme Sea | Auto Farm UI"
@@ -107,8 +107,8 @@ TitleLabel.Parent = TopBar
 
 -- ปุ่มปิด UI (X)
 local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 24, 0, 24)
-CloseButton.Position = UDim2.new(1, -26, 0, 2)
+CloseButton.Size = UDim2.new(0, 28, 0, 28)
+CloseButton.Position = UDim2.new(1, -30, 0, 1)
 CloseButton.BackgroundTransparency = 1
 CloseButton.Font = Enum.Font.GothamBold
 CloseButton.Text = "X"
@@ -122,8 +122,8 @@ end)
 
 -- ปุ่มย่อหน้าต่าง (-)
 local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
-MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
+MinimizeButton.Size = UDim2.new(0, 28, 0, 28)
+MinimizeButton.Position = UDim2.new(1, -58, 0, 1)
 MinimizeButton.BackgroundTransparency = 1
 MinimizeButton.Font = Enum.Font.GothamBold
 MinimizeButton.Text = "-"
@@ -136,21 +136,22 @@ MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
         MinimizeButton.Text = "+"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 420, 0, 30)}):Play()
     else
         MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 210)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 420, 0, 240)}):Play()
     end
 end)
 
 -- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
 local LeftSide = Instance.new("ScrollingFrame")
-LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
-LeftSide.Position = UDim2.new(0, 5, 0, 30)
+LeftSide.Size = UDim2.new(0.32, 0, 1, -38)
+LeftSide.Position = UDim2.new(0, 6, 0, 34)
 LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 LeftSide.BorderSizePixel = 0
 LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 LeftSide.ScrollBarThickness = 2
+LeftSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
 LeftSide.Parent = MainFrame
 
 local LeftCorner = Instance.new("UICorner")
@@ -160,12 +161,12 @@ LeftCorner.Parent = LeftSide
 local LeftLayout = Instance.new("UIListLayout")
 LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-LeftLayout.Padding = UDim.new(0, 5)
+LeftLayout.Padding = UDim.new(0, 6)
 
 -- ==================== ฝั่งขวา: ฟังก์ชัน ====================
 local RightSide = Instance.new("ScrollingFrame")
-RightSide.Size = UDim2.new(0.67, 0, 1, -34)
-RightSide.Position = UDim2.new(0.32, 0, 0, 30)
+RightSide.Size = UDim2.new(0.65, 0, 1, -38)
+RightSide.Position = UDim2.new(0.34, 0, 0, 34)
 RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 RightSide.BorderSizePixel = 0
 RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -186,6 +187,7 @@ local function createContainer(name, order)
     container.BorderSizePixel = 0
     container.CanvasSize = UDim2.new(0, 0, 0, 0)
     container.ScrollBarThickness = 2
+    container.AutomaticCanvasSize = Enum.AutomaticSize.Y
     container.Visible = false
     container.LayoutOrder = order
     container.Parent = RightSide
@@ -193,7 +195,7 @@ local function createContainer(name, order)
     local layout = Instance.new("UIListLayout")
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 5)
+    layout.Padding = UDim.new(0, 6)
 
     FunctionContainers[name] = container
     return container
@@ -202,7 +204,7 @@ end
 -- 1. หมวด "เมนูหลัก" (Order = 1)
 local MainMenuContainer = createContainer("เมนูหลัก", 1)
 local DiscordBtn = Instance.new("TextButton")
-DiscordBtn.Size = UDim2.new(0.92, 0, 0, 26)
+DiscordBtn.Size = UDim2.new(0.92, 0, 0, 28)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 DiscordBtn.BorderSizePixel = 0
 DiscordBtn.Font = Enum.Font.Gotham
@@ -226,7 +228,7 @@ local FarmLevelContainer = createContainer("ฟามเวล", 2)
 
 -- แถวที่ 1: ฟามเวล 1-25
 local FarmRowFrame = Instance.new("Frame")
-FarmRowFrame.Size = UDim2.new(0.92, 0, 0, 32)
+FarmRowFrame.Size = UDim2.new(0.92, 0, 0, 34)
 FarmRowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 FarmRowFrame.BorderSizePixel = 0
 FarmRowFrame.Parent = FarmLevelContainer
@@ -252,8 +254,8 @@ FarmRowLabel.TextXAlignment = Enum.TextXAlignment.Left
 FarmRowLabel.Parent = FarmRowFrame
 
 local FarmToggleBtn = Instance.new("TextButton")
-FarmToggleBtn.Size = UDim2.new(0, 55, 0, 20)
-FarmToggleBtn.Position = UDim2.new(1, -60, 0.5, -10)
+FarmToggleBtn.Size = UDim2.new(0, 55, 0, 22)
+FarmToggleBtn.Position = UDim2.new(1, -60, 0.5, -11)
 FarmToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 FarmToggleBtn.BorderSizePixel = 0
 FarmToggleBtn.Font = Enum.Font.GothamBold
@@ -271,9 +273,9 @@ FarmToggleStroke.Color = Color3.fromRGB(255, 255, 255)
 FarmToggleStroke.Thickness = 1
 FarmToggleStroke.Parent = FarmToggleBtn
 
--- แถวที่ 2: ฟามเวล 50-100 (อัปเดตชื่อตามรูปภาพ: Floppa Quest 2 และ Golden Floppa)
+-- แถวที่ 2: ฟามเวล 50-100 (Floppa Quest 2 และ Golden Floppa)
 local FarmRowFrame2 = Instance.new("Frame")
-FarmRowFrame2.Size = UDim2.new(0.92, 0, 0, 32)
+FarmRowFrame2.Size = UDim2.new(0.92, 0, 0, 34)
 FarmRowFrame2.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 FarmRowFrame2.BorderSizePixel = 0
 FarmRowFrame2.Parent = FarmLevelContainer
@@ -299,8 +301,8 @@ FarmRowLabel2.TextXAlignment = Enum.TextXAlignment.Left
 FarmRowLabel2.Parent = FarmRowFrame2
 
 local FarmToggleBtn2 = Instance.new("TextButton")
-FarmToggleBtn2.Size = UDim2.new(0, 55, 0, 20)
-FarmToggleBtn2.Position = UDim2.new(1, -60, 0.5, -10)
+FarmToggleBtn2.Size = UDim2.new(0, 55, 0, 22)
+FarmToggleBtn2.Position = UDim2.new(1, -60, 0.5, -11)
 FarmToggleBtn2.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 FarmToggleBtn2.BorderSizePixel = 0
 FarmToggleBtn2.Font = Enum.Font.GothamBold
@@ -464,11 +466,6 @@ task.spawn(function()
         task.wait(0.2)
         if masterFarmLevelEnabled then
             pcall(function()
-                local playerLevel = 1
-                if LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level") then
-                    playerLevel = LocalPlayer.Data.Level.Value
-                end
-
                 local questName = "Floppa Quest 1"
                 local monsterName = "Floppa"
 
@@ -533,7 +530,7 @@ task.spawn(function()
     end
 end)
 
--- ลูปการทำงานฟาร์ม 50-100 (ใช้ Floppa Quest 2 และ Golden Floppa ตามรูปภาพ)
+-- ลูปการทำงานฟาร์ม 50-100 (ใช้ Floppa Quest 2 และ Golden Floppa)
 task.spawn(function()
     while true do
         task.wait(0.2)
@@ -613,7 +610,7 @@ end
 -- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย
 local function createCategoryButton(name, order)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 26)
+    btn.Size = UDim2.new(0.9, 0, 0, 28)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.Gotham
@@ -662,11 +659,11 @@ task.spawn(function()
     LoadFrame:Destroy()
     
     MainFrame.Visible = true
-    MainFrame.Size = UDim2.new(0, 320, 0, 180)
+    MainFrame.Size = UDim2.new(0, 350, 0, 200)
     
     local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     local expandTween = TweenService:Create(MainFrame, info, {
-        Size = UDim2.new(0, 380, 0, 210),
+        Size = UDim2.new(0, 420, 0, 240),
         BackgroundTransparency = 0
     })
     
