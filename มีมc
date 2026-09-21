@@ -197,6 +197,7 @@ RightSideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 RightSideLayout.SortOrder = Enum.SortOrder.LayoutOrder
 RightSideLayout.Padding = UDim.new(0, 6)
 
+-- ตารางเก็บแยกหมวดหมู่ชัดเจน ป้องกันการทับซ้อน
 local TabElements = {
     ["เมนูหลัก"] = {},
     ["ฟามเวล"] = {}
@@ -236,8 +237,7 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 2. หมวด "ฟามเวล"
--- แถวที่ 1: ฟามเวล 1-25
+-- 2. หมวด "ฟามเวล" (แถวที่ 1: ฟามเวล 1-25)
 local FarmRowFrame = Instance.new("Frame")
 FarmRowFrame.Size = UDim2.new(0.92, 0, 0, 34)
 FarmRowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -282,7 +282,7 @@ local FarmToggleCorner = Instance.new("UICorner")
 FarmToggleCorner.CornerRadius = UDim.new(0, 3)
 FarmToggleCorner.Parent = FarmToggleBtn
 
--- แถวที่ 2: ฟามเวล 50-100
+-- หมวด "ฟามเวล" (แถวที่ 2: ฟามเวล 50-100)
 local FarmRowFrame2 = Instance.new("Frame")
 FarmRowFrame2.Size = UDim2.new(0.92, 0, 0, 34)
 FarmRowFrame2.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
