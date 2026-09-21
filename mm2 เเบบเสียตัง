@@ -536,6 +536,7 @@ CreateFeatureRow(UIPage, "แสดงแถบ สาเหตุการต�
     btn.BackgroundColor3 = killFeedDisplayEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
 end)
 
+-- ==================== ฟังก์ชันในหมวดโจมตี (Attack) ====================
 local expandHitboxEnabled = false
 CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ (Hitbox 250)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     expandHitboxEnabled = not expandHitboxEnabled
@@ -548,6 +549,80 @@ CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ V2", "ปิด (OF
     massKillV2Enabled = not massKillV2Enabled
     btn.Text = massKillV2Enabled and "เปิด (ON)" or "ปิด (OFF)"
     btn.BackgroundColor3 = massKillV2Enabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(50, 50, 60)
+end)
+
+-- ฟังก์ชันวาร์ปเก็บปืนอัตโนมัติ (เมื่อนายอำเภอตาย)
+local autoTeleportGunEnabled = false
+CreateFeatureRow(AttackPage, "วาร์ปเก็บปืน (เมื่อนายอำเภอาย)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+    autoTeleportGunEnabled = not autoTeleportGunEnabled
+    btn.Text = autoTeleportGunEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    btn.BackgroundColor3 = autoTeleportGunEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
+end)
+
+local function ScanToolsForRoleLocal(container)
+    if not container then return false, false end
+    local hasKnife, hasGun = false, false
+    for _, item in pairs(container:GetChildren()) do
+        if item:IsA("Tool") then
+            local n = string.lower(item.Name)
+            if n:find("knife") or n:find("dagger") or n:find("blade") then hasKnife = true end
+            if n:find("gun") or n:find("pistol") or n:find("revolver") then hasGun = true end
+        end
+    end
+    return hasKnife, hasGun
+end
+
+-- ลูปตรวจจับการตายของนายอำเภอเพื่อวาร์ปไปเก็บปืน
+task.spawn(function()
+    local lastSheriffStates = {}
+    while true do
+        if autoTeleportGunEnabled then
+            pcall(function()
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer then
+                        local char = player.Character
+                        local isSheriff = false
+                        if char then
+                            local cKnife, cGun = ScanToolsForRoleLocal(char)
+                            local bp = player:FindFirstChild("Backpack")
+                            local bKnife, bGun = false, false
+                            if bp then bKnife, bGun = ScanToolsForRoleLocal(bp) end
+                            if cGun or bGun then isSheriff = true end
+                        end
+
+                        local isAlive = false
+                        local hrp = nil
+                        if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                            local head = char:FindFirstChild("Head")
+                            if not head or head.Transparency < 1 then
+                                isAlive = true
+                                hrp = char:FindFirstChild("HumanoidRootPart")
+                            end
+                        end
+
+                        if isSheriff then
+                            if lastSheriffStates[player] == true and not isAlive then
+                                -- นายอำเภอเสียชีวิตแล้ว! ทำการวาร์ปไปเก็บปืนอย่างรวดเร็ว
+                                local myChar = LocalPlayer.Character
+                                if myChar and myChar:FindFirstChild("HumanoidRootPart") and hrp then
+                                    local myHrp = myChar.HumanoidRootPart
+                                    local originalCFrame = myHrp.CFrame
+
+                                    -- วาร์ปไปที่ตำแหน่งศพ/จุดปืนตก
+                                    myHrp.CFrame = hrp.CFrame + Vector3.new(0, 3, 0)
+                                    task.wait(0.15) -- รอรับไอเทมปืน
+                                    -- วาร์ปกลับตำแหน่งเดิมทันที
+                                    myHrp.CFrame = originalCFrame
+                                end
+                            end
+                            lastSheriffStates[player] = isAlive
+                        end
+                    end
+                end
+            end)
+        end
+        task.wait(0.2)
+    end
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -683,7 +758,7 @@ StatusLayout.SortOrder = Enum.SortOrder.LayoutOrder
 StatusLayout.Padding = UDim.new(0, 4)
 StatusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-local function ScanToolsForRole(container)
+local function ScanTools(container)
     if not container then return false, false end
     local hasKnife, hasGun = false, false
     for _, item in pairs(container:GetChildren()) do
@@ -722,11 +797,11 @@ task.spawn(function()
                     deadCount = deadCount + 1
                 end
 
-                local cKnife, cGun = ScanToolsForRole(char)
+                local cKnife, cGun = ScanTools(char)
                 local bKnife, bGun = false, false
                 local bp = player:FindFirstChild("Backpack")
                 if bp then
-                    bKnife, bGun = ScanToolsForRole(bp)
+                    bKnife, bGun = ScanTools(bp)
                 end
                 
                 local roleType = 3
@@ -755,10 +830,10 @@ task.spawn(function()
                     else
                         for _, p in pairs(Players:GetPlayers()) do
                             if p ~= player and p.Character then
-                                local pk, pg = ScanToolsForRole(p.Character)
+                                local pk, pg = ScanTools(p.Character)
                                 local pbp = p:FindFirstChild("Backpack")
                                 if pbp then
-                                    local pbpk, pbpg = ScanToolsForRole(pbp)
+                                    local pbpk, pbpg = ScanTools(pbp)
                                     pk = pk or pbpk
                                 end
                                 if pk then
@@ -954,6 +1029,37 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
+local invisibilityEnabled = false
+CreateFeatureRow(PlayerPage, "ล่องหน (Invisibility)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
+    invisibilityEnabled = not invisibilityEnabled
+    btn.Text = invisibilityEnabled and "เปิด (ON)" or "ปิด (OFF)"
+    btn.BackgroundColor3 = invisibilityEnabled and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(50, 50, 60)
+    
+    local char = LocalPlayer.Character
+    if char then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+                part.Transparency = invisibilityEnabled and 1 or (part.Name == "HumanoidRootPart" and 1 or 0)
+            elseif part:IsA("Accessory") or part:IsA("Clothing") then
+                part.Handle.Transparency = invisibilityEnabled and 1 or 0
+            end
+        end
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    task.wait(0.5)
+    if invisibilityEnabled then
+        for _, part in pairs(newChar:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+                part.Transparency = invisibilityEnabled and 1 or (part.Name == "HumanoidRootPart" and 1 or 0)
+            elseif part:IsA("Accessory") or part:IsA("Clothing") then
+                part.Handle.Transparency = invisibilityEnabled and 1 or 0
+            end
+        end
+    end
+end)
+
 CreateFeatureRow(ToolPage, "รับไอเทมคลิกวาร์ป (Click TP)", "รับไอเทม", Color3.fromRGB(0, 162, 255), function()
     local mouse = LocalPlayer:GetMouse()
     local tool = Instance.new("Tool")
@@ -1006,23 +1112,6 @@ InfoText.TextXAlignment = Enum.TextXAlignment.Left
 InfoText.BackgroundTransparency = 1
 InfoText.ZIndex = 6
 table.insert(textLabelData, {Obj = InfoText, BaseSize = 10})
-
-local function ScanTools(container)
-    local foundKnife, foundGun = false, false
-    if container then
-        for _, item in pairs(container:GetChildren()) do
-            if item:IsA("Tool") then
-                local name = string.lower(item.Name)
-                if string.find(name, "knife") or string.find(name, "dagger") or string.find(name, "blade") then
-                    foundKnife = true
-                elseif string.find(name, "gun") or string.find(name, "pistol") or string.find(name, "revolver") then
-                    foundGun = true
-                end
-            end
-        end
-    end
-    return foundKnife, foundGun
-end
 
 RunService.RenderStepped:Connect(function()
     if espEnabled then
@@ -1148,7 +1237,6 @@ end
 
 SkipBtn.MouseButton1Click:Connect(FinishLoading)
 
--- ระบบตรวจสอบคีย์และการจำกัดจำนวนผู้ใช้งานต่อคีย์ (2 คนต่อคีย์)
 SubmitKeyBtn.MouseButton1Click:Connect(function()
     local enteredKey = KeyBox.Text
     if VALID_KEYS[enteredKey] ~= nil then
