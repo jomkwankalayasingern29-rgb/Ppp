@@ -1,352 +1,261 @@
--- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
-local CoreGui = game:GetService("CoreGui")
-if CoreGui:FindFirstChild("CustomScriptUI") then
-    CoreGui.CustomScriptUI:Destroy()
-end
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
 
--- สร้าง ScreenGui หลัก
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CustomScriptUI"
-ScreenGui.Parent = CoreGui
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+local Window = Rayfield:CreateWindow({
+   Name = "Meme Sea | Auto Farm Level",
+   LoadingTitle = "กำลังโหลดระบบออโต้ฟาร์ม...",
+   LoadingSubtitle = "by Developer",
+   ConfigurationSaving = { Enabled = false },
+   KeySystem = false,
+})
 
--- หน้าต่างแจ้งเตือนสถานะตอนเริ่ม (Loading Screen)
-local LoadFrame = Instance.new("Frame")
-LoadFrame.Name = "LoadFrame"
-LoadFrame.Size = UDim2.new(0, 300, 0, 65)
-LoadFrame.Position = UDim2.new(0.5, -150, 0.5, -32)
-LoadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-LoadFrame.BorderSizePixel = 0
-LoadFrame.Parent = ScreenGui
+local MainTab = Window:CreateTab("ฟาร์มเลเวล", "home")
+local PlayerTab = Window:CreateTab("ตัวละคร", "user")
 
-local LoadCorner = Instance.new("UICorner")
-LoadCorner.CornerRadius = UDim.new(0, 8)
-LoadCorner.Parent = LoadFrame
+-- ==================== ระบบออโต้ฟาร์มเลเวล (รวมเควส + ตีมอน + อมตะ) ====================
+local masterFarmLevelEnabled = false
 
-local LoadStroke = Instance.new("UIStroke")
-LoadStroke.Color = Color3.fromRGB(0, 162, 255)
-LoadStroke.Thickness = 1.5
-LoadStroke.Parent = LoadFrame
-
-local LoadText = Instance.new("TextLabel")
-LoadText.Name = "LoadText"
-LoadText.Size = UDim2.new(1, 0, 1, 0)
-LoadText.BackgroundTransparency = 1
-LoadText.Font = Enum.Font.GothamBold
-LoadText.Text = "กำลังโหลด"
-LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
-LoadText.TextSize = 16
-LoadText.Parent = LoadFrame
-
--- ==================== หน้าต่าง UI หลัก ====================
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 380, 0, 210)
-MainFrame.Position = UDim2.new(0.5, -190, 0.5, -105)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Visible = false
-MainFrame.BackgroundTransparency = 1
-MainFrame.Parent = ScreenGui
-
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 8)
-MainCorner.Parent = MainFrame
-
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(0, 162, 255)
-MainStroke.Thickness = 1.5
-MainStroke.Parent = MainFrame
-
--- แถบหัวข้อด้านบน (TopBar)
-local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 28)
-TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-TopBar.BorderSizePixel = 0
-TopBar.Parent = MainFrame
-
-local TopBarCorner = Instance.new("UICorner")
-TopBarCorner.CornerRadius = UDim.new(0, 8)
-TopBarCorner.Parent = TopBar
-
-local FixTopBar = Instance.new("Frame")
-FixTopBar.Size = UDim2.new(1, 0, 0, 5)
-FixTopBar.Position = UDim2.new(0, 0, 1, -5)
-FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-FixTopBar.BorderSizePixel = 0
-FixTopBar.Parent = TopBar
-
--- โลโก้ตัว "G"
-local LogoG = Instance.new("TextLabel")
-LogoG.Size = UDim2.new(0, 20, 0, 20)
-LogoG.Position = UDim2.new(0, 8, 0, 4)
-LogoG.BackgroundTransparency = 1
-LogoG.Font = Enum.Font.GothamBold
-LogoG.Text = "G"
-LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
-LogoG.TextSize = 14
-LogoG.Parent = TopBar
-
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -80, 1, 0)
-TitleLabel.Position = UDim2.new(0, 32, 0, 0)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "Black & White UI | Blue Theme"
-TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
-TitleLabel.TextSize = 12
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Parent = TopBar
-
--- ปุ่มปิด UI (X)
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 24, 0, 24)
-CloseButton.Position = UDim2.new(1, -26, 0, 2)
-CloseButton.BackgroundTransparency = 1
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(220, 60, 60)
-CloseButton.TextSize = 13
-CloseButton.Parent = TopBar
-
-CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
--- ปุ่มย่อหน้าต่าง (-)
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
-MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
-MinimizeButton.BackgroundTransparency = 1
-MinimizeButton.Font = Enum.Font.GothamBold
-MinimizeButton.Text = "-"
-MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-MinimizeButton.TextSize = 14
-MinimizeButton.Parent = TopBar
-
-local isMinimized = false
-MinimizeButton.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    local TweenService = game:GetService("TweenService")
-    if isMinimized then
-        MinimizeButton.Text = "+"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
-    else
-        MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 210)}):Play()
-    end
-end)
-
--- ==================== ฝั่งซ้าย: หมวดหมู่ (แคบลง) ====================
-local LeftSide = Instance.new("ScrollingFrame")
-LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
-LeftSide.Position = UDim2.new(0, 5, 0, 30)
-LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-LeftSide.ScrollBarThickness = 2
-LeftSide.Parent = MainFrame
-
-local LeftCorner = Instance.new("UICorner")
-LeftCorner.CornerRadius = UDim.new(0, 5)
-LeftCorner.Parent = LeftSide
-
-local LeftLayout = Instance.new("UIListLayout")
-LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-LeftLayout.Padding = UDim.new(0, 5)
-
--- ==================== ฝั่งขวา: ฟังก์ชัน (กว้างกว่า) ====================
-local RightSide = Instance.new("ScrollingFrame")
-RightSide.Size = UDim2.new(0.67, 0, 1, -34)
-RightSide.Position = UDim2.new(0.32, 0, 0, 30)
-RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-RightSide.BorderSizePixel = 0
-RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-RightSide.ScrollBarThickness = 2
-RightSide.Parent = MainFrame
-
-local RightCorner = Instance.new("UICorner")
-RightCorner.CornerRadius = UDim.new(0, 5)
-RightCorner.Parent = RightSide
-
-local FunctionContainers = {}
-
-local function createContainer(name)
-    local container = Instance.new("ScrollingFrame")
-    container.Name = name
-    container.Size = UDim2.new(1, 0, 1, 0)
-    container.BackgroundTransparency = 1
-    container.BorderSizePixel = 0
-    container.CanvasSize = UDim2.new(0, 0, 0, 0)
-    container.ScrollBarThickness = 2
-    container.Visible = false
-    container.Parent = RightSide
-
-    local layout = Instance.new("UIListLayout")
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 5)
-
-    FunctionContainers[name] = container
-    return container
-end
-
--- 1. หมวด "เมนูหลัก"
-local MainMenuContainer = createContainer("เมนูหลัก")
-local DiscordBtn = Instance.new("TextButton")
-DiscordBtn.Size = UDim2.new(0.92, 0, 0, 26)
-DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-DiscordBtn.BorderSizePixel = 0
-DiscordBtn.Font = Enum.Font.Gotham
-DiscordBtn.Text = "คัดลอกลิงก์ Discord"
-DiscordBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
-DiscordBtn.TextSize = 10
-DiscordBtn.Parent = MainMenuContainer
-
-local DiscordBtnCorner = Instance.new("UICorner")
-DiscordBtnCorner.CornerRadius = UDim.new(0, 4)
-DiscordBtnCorner.Parent = DiscordBtn
-
-DiscordBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard("https://discord.gg/Ugssja4wqQ")
-    end
-end)
-
--- 2. หมวด "ช่วยเล่น" (ฟังก์ชัน ขายทั้งหมด | ขาย)
-local HelpPlayContainer = createContainer("ช่วยเล่น")
-
-local RowFrame = Instance.new("Frame")
-RowFrame.Size = UDim2.new(0.92, 0, 0, 26)
-RowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-RowFrame.BorderSizePixel = 0
-RowFrame.Parent = HelpPlayContainer
-
-local RowCorner = Instance.new("UICorner")
-RowCorner.CornerRadius = UDim.new(0, 4)
-RowCorner.Parent = RowFrame
-
-local RowStroke = Instance.new("UIStroke")
-RowStroke.Color = Color3.fromRGB(0, 162, 255)
-RowStroke.Thickness = 1
-RowStroke.Parent = RowFrame
-
-local RowLabel = Instance.new("TextLabel")
-RowLabel.Size = UDim2.new(0.6, 0, 1, 0)
-RowLabel.Position = UDim2.new(0, 8, 0, 0)
-RowLabel.BackgroundTransparency = 1
-RowLabel.Font = Enum.Font.GothamBold
-RowLabel.Text = "ขายทั้งหมด"
-RowLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
-RowLabel.TextSize = 10
-RowLabel.TextXAlignment = Enum.TextXAlignment.Left
-RowLabel.Parent = RowFrame
-
-local SellBtn = Instance.new("TextButton")
-SellBtn.Size = UDim2.new(0, 42, 0, 18)
-SellBtn.Position = UDim2.new(1, -46, 0.5, -9)
-SellBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-SellBtn.BorderSizePixel = 0
-SellBtn.Font = Enum.Font.GothamBold
-SellBtn.Text = "ขาย"
-SellBtn.TextColor3 = Color3.fromRGB(0, 162, 255)
-SellBtn.TextSize = 10
-SellBtn.Parent = RowFrame
-
-local SellBtnCorner = Instance.new("UICorner")
-SellBtnCorner.CornerRadius = UDim.new(0, 3)
-SellBtnCorner.Parent = SellBtn
-
-local SellBtnStroke = Instance.new("UIStroke")
-SellBtnStroke.Color = Color3.fromRGB(0, 162, 255)
-SellBtnStroke.Thickness = 1
-SellBtnStroke.Parent = SellBtn
-
-SellBtn.MouseButton1Click:Connect(function()
-    local args = {
-        "sellAll"
-    }
-    pcall(function()
-        game:GetService("ReplicatedStorage"):WaitForChild("RequestSell"):InvokeServer(unpack(args))
-    end)
-end)
-
--- ฟังก์ชันสลับหมวดหมู่
-local function switchTab(tabName)
-    for name, container in pairs(FunctionContainers) do
-        container.Visible = (name == tabName)
-    end
-end
-
--- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย
-local function createCategoryButton(name)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 26)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    btn.BorderSizePixel = 0
-    btn.Font = Enum.Font.Gotham
-    btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(240, 240, 240)
-    btn.TextSize = 10
-    btn.Parent = LeftSide
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = btn
-
-    btn.MouseButton1Click:Connect(function()
-        switchTab(name)
-    end)
-end
-
-createCategoryButton("เมนูหลัก")
-createCategoryButton("ช่วยเล่น")
-
--- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก"
-switchTab("เมนูหลัก")
-
-
--- ==================== ลำดับการทำงาน (Loading & Animation) ====================
-task.spawn(function()
-    -- 1. กำลังโหลด... 2 วินาที
-    local dots = {"", ".", "..", "..."}
-    local startTime = tick()
+-- ฟังก์ชันเคลื่อนที่แบบ Tween (บินไปรับเควส/หาฟลอปป้า)
+local function FlyTo(targetCFrame)
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = LocalPlayer.Character.HumanoidRootPart
+    local distance = (hrp.Position - targetCFrame.Position).Magnitude
+    local speed = 300
+    local timeTake = distance / speed
     
-    while tick() - startTime < 2 do
-        for _, d in ipairs(dots) do
-            LoadText.Text = "กำลังโหลด" .. d
-            task.wait(0.3)
+    local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    
+    local completed = false
+    local connection
+    connection = tween.Completed:Connect(function()
+        completed = true
+        connection:Disconnect()
+    end)
+    
+    while not completed and masterFarmLevelEnabled do
+        task.wait()
+    end
+    if not masterFarmLevelEnabled then
+        tween:Cancel()
+    end
+end
+
+-- ฟังก์ชันค้นหา Object ใน Workspace
+local function FindObject(parent, name)
+    if not parent then return nil end
+    for _, v in pairs(parent:GetDescendants()) do
+        if v.Name == name then
+            if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") then
+                return v.HumanoidRootPart
+            elseif v:IsA("BasePart") then
+                return v
+            end
         end
     end
-    
-    -- 2. ดาวโหลดเสร็จเเล้ว 1 วินาที
-    LoadText.Text = "ดาวโหลดเสร็จเเล้ว"
-    task.wait(1)
-    
-    -- 3. คัดลอกลิ้งดิสเสร็จเเล้ว + คัดลอกอัตโนมัติ
-    LoadText.Text = "คัดลอกลิ้งดิสเสร็จเเล้ว"
-    if setclipboard then
-        setclipboard("https://discord.gg/Ugssja4wqQ")
+    return nil
+end
+
+MainTab:CreateToggle({
+   Name = "ออโต้ฟาร์มเลเวล",
+   CurrentValue = false,
+   Flag = "AutoFarmLevelMaster",
+   Callback = function(Value)
+      masterFarmLevelEnabled = Value
+      
+      -- จัดการตั้งค่าเริ่มต้นของอมตะทันทีเมื่อกดเปิด
+      local char = LocalPlayer.Character
+      if char and char:FindFirstChild("Humanoid") then
+          local hum = char.Humanoid
+          if Value then
+              hum.MaxHealth = math.huge
+              hum.Health = math.huge
+              hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+          else
+              hum.MaxHealth = 100
+              hum.Health = 100
+              hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+          end
+      end
+
+      Rayfield:Notify({
+         Title = "สถานะออโต้ฟาร์มเลเวล",
+         Content = Value and "เปิดใช้งานออโต้ฟาร์มเลเวล (รับเควส + อมตะ + ตีออโต้) แล้ว" or "ปิดการทำงานทั้งหมดแล้ว",
+         Duration = 2,
+      })
+   end,
+})
+
+-- ฟังก์ชันดูแลอมตะต่อเนื่อง (ป้องกันเลือดลดและป้องกันตาย)
+local function SetupGodMode(char)
+    local hum = char:WaitForChild("Humanoid")
+    hum.MaxHealth = math.huge
+    hum.Health = math.huge
+    hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+
+    hum.HealthChanged:Connect(function()
+        if masterFarmLevelEnabled then
+            if hum.Health < hum.MaxHealth then
+                hum.Health = hum.MaxHealth
+            end
+        end
+    end)
+end
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    task.wait(0.5)
+    if masterFarmLevelEnabled then
+        SetupGodMode(char)
     end
-    task.wait(1)
-    
-    -- 4. ลบหน้าจอโหลดทิ้ง
-    LoadFrame:Destroy()
-    
-    -- 5. ค่อยๆ ขยายหน้าต่าง UI หลักขึ้นมาแบบช้าๆ
-    MainFrame.Visible = true
-    MainFrame.Size = UDim2.new(0, 320, 0, 180)
-    
-    local TweenService = game:GetService("TweenService")
-    local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-    
-    local expandTween = TweenService:Create(MainFrame, info, {
-        Size = UDim2.new(0, 380, 0, 210),
-        BackgroundTransparency = 0
-    })
-    
-    expandTween:Play()
 end)
+
+-- ลูปหลักทำงานทุกฟังก์ชันพร้อมกัน (อมตะ, ล็อคช่องไอเท็ม, ขยาย Hitbox, รับเควส และบินไปตีมอนสเตอร์)
+task.spawn(function()
+    while task.wait(0.03) do
+        if masterFarmLevelEnabled then
+            pcall(function()
+                local char = LocalPlayer.Character
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                
+                if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
+                    local hrp = char.HumanoidRootPart
+                    local humanoid = char.Humanoid
+
+                    -- 1. ล็อคเลือดให้อมตะตลอดเวลา
+                    if humanoid.Health < humanoid.MaxHealth then
+                        humanoid.Health = humanoid.MaxHealth
+                    end
+
+                    -- 2. ปิดการชนเพื่อไม่ให้ติดสิ่งกีดขวาง
+                    for _, part in pairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") then part.CanCollide = false end
+                    end
+
+                    -- 3. บังคับถือเฉพาะไอเท็มช่องที่ 1 ตลอดเวลา
+                    if backpack then
+                        local slot1Item = nil
+                        for _, item in ipairs(backpack:GetChildren()) do
+                            if item:IsA("Tool") then
+                                slot1Item = item
+                                break
+                            end
+                        end
+                        local currentTool = char:FindFirstChildOfClass("Tool")
+                        if slot1Item and currentTool ~= slot1Item then
+                            humanoid:EquipTool(slot1Item)
+                        end
+                    end
+
+                    -- 4. เคลียร์ค่า Debounce และขยาย Hitbox ตีรอบทิศทาง
+                    local dog = char:FindFirstChild("Hisense170's Dog")
+                    if dog then
+                        local debounceFolder = dog:FindFirstChild("Attacks_Debounce")
+                        if debounceFolder then
+                            for _, v in pairs(debounceFolder:GetChildren()) do
+                                if v:IsA("NumberValue") or v:IsA("IntValue") then
+                                    v.Value = 0
+                                elseif v:IsA("BoolValue") then
+                                    v.Value = false
+                                end
+                            end
+                        end
+                    end
+
+                    for _, tool in pairs(char:GetChildren()) do
+                        if tool:IsA("Tool") then
+                            for _, part in pairs(tool:GetDescendants()) do
+                                if part:IsA("BasePart") then
+                                    part.Size = Vector3.new(35, 35, 35)
+                                    part.Transparency = 0.9
+                                    part.CanCollide = false
+                                end
+                            end
+                        end
+                    end
+
+                    -- 5. ตรวจสอบเลเวลและจัดการรับเควสตามช่วงเลเวล
+                    local playerLevel = 1
+                    if LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level") then
+                        playerLevel = LocalPlayer.Data.Level.Value
+                    end
+
+                    local questName = "Floppa Quest 1"
+                    local monsterName = "Floppa"
+
+                    if playerLevel >= 15 and playerLevel < 30 then
+                        questName = "Floppa Quest 2"
+                        monsterName = "Floppa"
+                    elseif playerLevel >= 30 then
+                        questName = "Floppa Quest 3"
+                        monsterName = "Floppa"
+                    end
+
+                    -- เช็คว่ามีเควสอยู่หรือไม่ (ถ้ายังไม่มีหรือต้องรับ ให้บินไปรับ)
+                    local questPart = FindObject(Workspace, questName) or FindObject(Workspace, "Main Quest")
+                    if questPart then
+                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0))
+                        task.wait(0.5)
+                        for _, v in pairs(Workspace:GetDescendants()) do
+                            if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 15 then
+                                fireproximityprompt(v)
+                            end
+                        end
+                    end
+
+                    -- 6. ค้นหามอนสเตอร์และบินไปจัดการตีจนกว่าจะตายวนไปเรื่อยๆ
+                    local monsterPart = FindObject(Workspace, monsterName)
+                    if monsterPart then
+                        local behindMonsterCFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
+                        FlyTo(behindMonsterCFrame)
+
+                        while masterFarmLevelEnabled and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
+                            hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
+                            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                            hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+                            local tool = char:FindFirstChildOfClass("Tool")
+                            if tool then
+                                tool:Activate()
+                            end
+                            task.wait(0.2)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- ==================== แท็บตัวละคร ====================
+PlayerTab:CreateSection("ตั้งค่าตัวละคร")
+
+PlayerTab:CreateSlider({
+   Name = "ความเร็วในการวิ่ง (WalkSpeed)",
+   Range = {16, 250},
+   Increment = 1,
+   CurrentValue = 16,
+   Callback = function(Value)
+      local char = LocalPlayer.Character
+      if char and char:FindFirstChild("Humanoid") then
+          char.Humanoid.WalkSpeed = Value
+      end
+   end,
+})
+
+PlayerTab:CreateSlider({
+   Name = "พลังกระโดด (JumpPower)",
+   Range = {50, 300},
+   Increment = 1,
+   CurrentValue = 50,
+   Callback = function(Value)
+      local char = LocalPlayer.Character
+      if char and char:FindFirstChild("Humanoid") then
+          char.Humanoid.UseJumpPower = true
+          char.Humanoid.JumpPower = Value
+      end
+   end,
+})
