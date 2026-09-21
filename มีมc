@@ -1,4 +1,4 @@
--- ==================== เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ ====================
+-- ==================== เคลียร์ UI เก่าทิ้งทันที ====================
 local CoreGui = game:GetService("CoreGui")
 if CoreGui:FindFirstChild("CustomScriptUI") then
     CoreGui.CustomScriptUI:Destroy()
@@ -9,13 +9,13 @@ local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
--- สร้าง ScreenGui หลัก
+-- ==================== สร้าง ScreenGui หลัก ====================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CustomScriptUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- หน้าต่างแจ้งเตือนสถานะตอนเริ่ม (Loading Screen)
+-- ==================== หน้าต่าง Loading Screen ====================
 local LoadFrame = Instance.new("Frame")
 LoadFrame.Name = "LoadFrame"
 LoadFrame.Size = UDim2.new(0, 300, 0, 65)
@@ -38,12 +38,12 @@ LoadText.Name = "LoadText"
 LoadText.Size = UDim2.new(1, 0, 1, 0)
 LoadText.BackgroundTransparency = 1
 LoadText.Font = Enum.Font.GothamBold
-LoadText.Text = "กำลังโหลด"
+LoadText.Text = "กำลังโหลด..."
 LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoadText.TextSize = 16
 LoadText.Parent = LoadFrame
 
--- ==================== หน้าต่าง UI หลัก ====================
+-- ==================== หน้าต่าง UI หลัก (MainFrame) ====================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 420, 0, 240)
@@ -65,7 +65,7 @@ MainStroke.Color = Color3.fromRGB(0, 162, 255)
 MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
--- แถบหัวข้อด้านบน (TopBar)
+-- ==================== แถบหัวข้อด้านบน (TopBar) ====================
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 30)
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
@@ -83,7 +83,6 @@ FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 FixTopBar.BorderSizePixel = 0
 FixTopBar.Parent = TopBar
 
--- โลโก้ตัว "G"
 local LogoG = Instance.new("TextLabel")
 LogoG.Size = UDim2.new(0, 20, 0, 20)
 LogoG.Position = UDim2.new(0, 10, 0, 5)
@@ -105,7 +104,7 @@ TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- ปุ่มปิด UI (X)
+-- ปุ่มปิด (X)
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 28, 0, 28)
 CloseButton.Position = UDim2.new(1, -30, 0, 1)
@@ -120,7 +119,7 @@ CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- ปุ่มย่อหน้าต่าง (-)
+-- ปุ่มย่อ/ขยาย (-)
 local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Size = UDim2.new(0, 28, 0, 28)
 MinimizeButton.Position = UDim2.new(1, -58, 0, 1)
@@ -143,7 +142,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
+-- ==================== พื้นที่แสดงผลซ้าย/ขวา ====================
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.32, 0, 1, -38)
 LeftSide.Position = UDim2.new(0, 6, 0, 34)
@@ -152,68 +151,71 @@ LeftSide.BorderSizePixel = 0
 LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 LeftSide.ScrollBarThickness = 2
 LeftSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
-LeftSide.Parent = MainFrame
+LeftSide.Parent = MainMainFrame or MainFrame
 
 local LeftCorner = Instance.new("UICorner")
 LeftCorner.CornerRadius = UDim.new(0, 5)
 LeftCorner.Parent = LeftSide
-
-local LeftPadding = Instance.new("UIPadding")
-LeftPadding.PaddingTop = UDim.new(0, 6)
-LeftPadding.PaddingBottom = UDim.new(0, 6)
-LeftPadding.PaddingLeft = UDim.new(0, 4)
-LeftPadding.PaddingRight = UDim.new(0, 4)
-LeftPadding.Parent = LeftSide
 
 local LeftLayout = Instance.new("UIListLayout")
 LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 6)
 
--- ==================== ฝั่งขวา: ฟังก์ชัน ====================
-local RightSide = Instance.new("ScrollingFrame")
+local LeftPadding = Instance.new("UIPadding")
+LeftPadding.PaddingTop = UDim.new(0, 6)
+LeftPadding.PaddingBottom = UDim.new(0, 6)
+LeftSide.Parent = MainFrame
+
+-- ฝั่งขวา (หน้าต่างบรรจุคอนเทนต์ฟังก์ชัน)
+local RightSide = Instance.new("Frame")
 RightSide.Size = UDim2.new(0.65, 0, 1, -38)
 RightSide.Position = UDim2.new(0.34, 0, 0, 34)
 RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 RightSide.BorderSizePixel = 0
-RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-RightSide.ScrollBarThickness = 2
-RightSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
 RightSide.Parent = MainFrame
 
 local RightCorner = Instance.new("UICorner")
 RightCorner.CornerRadius = UDim.new(0, 5)
 RightCorner.Parent = RightSide
 
-local RightPadding = Instance.new("UIPadding")
-RightPadding.PaddingTop = UDim.new(0, 6)
-RightPadding.PaddingBottom = UDim.new(0, 6)
-RightPadding.PaddingLeft = UDim.new(0, 6)
-RightPadding.PaddingRight = UDim.new(0, 6)
-RightPadding.Parent = RightSide
+-- ==================== สร้าง Container สำหรับแต่ละ Tab ====================
+local Tabs = {}
 
-local RightSideLayout = Instance.new("UIListLayout")
-RightSideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-RightSideLayout.SortOrder = Enum.SortOrder.LayoutOrder
-RightSideLayout.Padding = UDim.new(0, 6)
+local function CreateTabContainer()
+    local container = Instance.new("ScrollingFrame")
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.BorderSizePixel = 0
+    container.CanvasSize = UDim2.new(0, 0, 0, 0)
+    container.ScrollBarThickness = 2
+    container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    container.Visible = false
+    container.Parent = RightSide
 
--- ตารางเก็บแยกหมวดหมู่ชัดเจน
-local TabElements = {
-    ["เมนูหลัก"] = {},
-    ["ฟามเวล"] = {}
-}
+    local layout = Instance.new("UIListLayout")
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 6)
 
-local function switchTab(tabName)
-    for name, elements in pairs(TabElements) do
-        local isActive = (name == tabName)
-        for _, obj in ipairs(elements) do
-            obj.Visible = isActive
-        end
-    end
-    RightSide.CanvasPosition = Vector2.new(0, 0)
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 6)
+    padding.PaddingBottom = UDim.new(0, 6)
+    padding.Parent = container
+
+    return container
 end
 
--- 1. หมวด "เมนูหลัก"
+Tabs["เมนูหลัก"] = CreateTabContainer()
+Tabs["ฟามเวล"] = CreateTabContainer()
+
+local function SwitchTab(tabName)
+    for name, container in pairs(Tabs) do
+        container.Visible = (name == tabName)
+    end
+end
+
+-- ==================== เติมข้อมูลใน "เมนูหลัก" ====================
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.92, 0, 0, 28)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -223,13 +225,11 @@ DiscordBtn.Text = "คัดลอกลิงก์ Discord"
 DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 DiscordBtn.TextSize = 10
 DiscordBtn.LayoutOrder = 1
-DiscordBtn.Visible = false
-DiscordBtn.Parent = RightSide
-table.insert(TabElements["เมนูหลัก"], DiscordBtn)
+DiscordBtn.Parent = Tabs["เมนูหลัก"]
 
-local DiscordBtnCorner = Instance.new("UICorner")
-DiscordBtnCorner.CornerRadius = UDim.new(0, 4)
-DiscordBtnCorner.Parent = DiscordBtn
+local DiscordCorner = Instance.new("UICorner")
+DiscordCorner.CornerRadius = UDim.new(0, 4)
+DiscordCorner.Parent = DiscordBtn
 
 DiscordBtn.MouseButton1Click:Connect(function()
     if setclipboard then
@@ -237,37 +237,31 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 2. หมวด "ฟามเวล" (แถวที่ 1: ฟามเวล 1-25)
-local FarmRowFrame = Instance.new("Frame")
-FarmRowFrame.Size = UDim2.new(0.92, 0, 0, 34)
-FarmRowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-FarmRowFrame.BorderSizePixel = 0
-FarmRowFrame.LayoutOrder = 1
-FarmRowFrame.Visible = false
-FarmRowFrame.Parent = RightSide
-table.insert(TabElements["ฟามเวล"], FarmRowFrame)
+-- ==================== เติมข้อมูลใน "ฟามเวล" ====================
+-- แถวที่ 1 (1-25)
+local FarmRow1 = Instance.new("Frame")
+FarmRow1.Size = UDim2.new(0.92, 0, 0, 34)
+FarmRow1.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+FarmRow1.BorderSizePixel = 0
+FarmRow1.LayoutOrder = 1
+FarmRow1.Parent = Tabs["ฟามเวล"]
 
-local FarmRowCorner = Instance.new("UICorner")
-FarmRowCorner.CornerRadius = UDim.new(0, 4)
-FarmRowCorner.Parent = FarmRowFrame
+Instance.new("UICorner", FarmRow1).CornerRadius = UDim.new(0, 4)
+local Stroke1 = Instance.new("UIStroke", FarmRow1)
+Stroke1.Color = Color3.fromRGB(0, 162, 255)
+Stroke1.Thickness = 1
 
-local FarmRowStroke = Instance.new("UIStroke")
-FarmRowStroke.Color = Color3.fromRGB(0, 162, 255)
-FarmRowStroke.Thickness = 1
-FarmRowStroke.Parent = FarmRowFrame
+local Label1 = Instance.new("TextLabel", FarmRow1)
+Label1.Size = UDim2.new(0.6, 0, 1, 0)
+Label1.Position = UDim2.new(0, 8, 0, 0)
+Label1.BackgroundTransparency = 1
+Label1.Font = Enum.Font.GothamBold
+Label1.Text = "ฟามเวล 1-25"
+Label1.TextColor3 = Color3.fromRGB(255, 255, 255)
+Label1.TextSize = 10
+Label1.TextXAlignment = Enum.TextXAlignment.Left
 
-local FarmRowLabel = Instance.new("TextLabel")
-FarmRowLabel.Size = UDim2.new(0.6, 0, 1, 0)
-FarmRowLabel.Position = UDim2.new(0, 8, 0, 0)
-FarmRowLabel.BackgroundTransparency = 1
-FarmRowLabel.Font = Enum.Font.GothamBold
-FarmRowLabel.Text = "ฟามเวล 1-25"
-FarmRowLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-FarmRowLabel.TextSize = 10
-FarmRowLabel.TextXAlignment = Enum.TextXAlignment.Left
-FarmRowLabel.Parent = FarmRowFrame
-
-local FarmToggleBtn = Instance.new("TextButton")
+local FarmToggleBtn = Instance.new("TextButton", FarmRow1)
 FarmToggleBtn.Size = UDim2.new(0, 55, 0, 22)
 FarmToggleBtn.Position = UDim2.new(1, -60, 0.5, -11)
 FarmToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -276,43 +270,32 @@ FarmToggleBtn.Font = Enum.Font.GothamBold
 FarmToggleBtn.Text = "OFF"
 FarmToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 FarmToggleBtn.TextSize = 10
-FarmToggleBtn.Parent = FarmRowFrame
+Instance.new("UICorner", FarmToggleBtn).CornerRadius = UDim.new(0, 3)
 
-local FarmToggleCorner = Instance.new("UICorner")
-FarmToggleCorner.CornerRadius = UDim.new(0, 3)
-FarmToggleCorner.Parent = FarmToggleBtn
+-- แถวที่ 2 (50-100)
+local FarmRow2 = Instance.new("Frame")
+FarmRow2.Size = UDim2.new(0.92, 0, 0, 34)
+FarmRow2.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+FarmRow2.BorderSizePixel = 0
+FarmRow2.LayoutOrder = 2
+FarmRow2.Parent = Tabs["ฟามเวล"]
 
--- หมวด "ฟามเวล" (แถวที่ 2: ฟามเวล 50-100)
-local FarmRowFrame2 = Instance.new("Frame")
-FarmRowFrame2.Size = UDim2.new(0.92, 0, 0, 34)
-FarmRowFrame2.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-FarmRowFrame2.BorderSizePixel = 0
-FarmRowFrame2.LayoutOrder = 2
-FarmRowFrame2.Visible = false
-FarmRowFrame2.Parent = RightSide
-table.insert(TabElements["ฟามเวล"], FarmRowFrame2)
+Instance.new("UICorner", FarmRow2).CornerRadius = UDim.new(0, 4)
+local Stroke2 = Instance.new("UIStroke", FarmRow2)
+Stroke2.Color = Color3.fromRGB(0, 162, 255)
+Stroke2.Thickness = 1
 
-local FarmRowCorner2 = Instance.new("UICorner")
-FarmRowCorner2.CornerRadius = UDim.new(0, 4)
-FarmRowCorner2.Parent = FarmRowFrame2
+local Label2 = Instance.new("TextLabel", FarmRow2)
+Label2.Size = UDim2.new(0.6, 0, 1, 0)
+Label2.Position = UDim2.new(0, 8, 0, 0)
+Label2.BackgroundTransparency = 1
+Label2.Font = Enum.Font.GothamBold
+Label2.Text = "ฟามเวล 50-100"
+Label2.TextColor3 = Color3.fromRGB(255, 255, 255)
+Label2.TextSize = 10
+Label2.TextXAlignment = Enum.TextXAlignment.Left
 
-local FarmRowStroke2 = Instance.new("UIStroke")
-FarmRowStroke2.Color = Color3.fromRGB(0, 162, 255)
-FarmRowStroke2.Thickness = 1
-FarmRowStroke2.Parent = FarmRowFrame2
-
-local FarmRowLabel2 = Instance.new("TextLabel")
-FarmRowLabel2.Size = UDim2.new(0.6, 0, 1, 0)
-FarmRowLabel2.Position = UDim2.new(0, 8, 0, 0)
-FarmRowLabel2.BackgroundTransparency = 1
-FarmRowLabel2.Font = Enum.Font.GothamBold
-FarmRowLabel2.Text = "ฟามเวล 50-100"
-FarmRowLabel2.TextColor3 = Color3.fromRGB(255, 255, 255)
-FarmRowLabel2.TextSize = 10
-FarmRowLabel2.TextXAlignment = Enum.TextXAlignment.Left
-FarmRowLabel2.Parent = FarmRowFrame2
-
-local FarmToggleBtn2 = Instance.new("TextButton")
+local FarmToggleBtn2 = Instance.new("TextButton", FarmRow2)
 FarmToggleBtn2.Size = UDim2.new(0, 55, 0, 22)
 FarmToggleBtn2.Position = UDim2.new(1, -60, 0.5, -11)
 FarmToggleBtn2.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -321,11 +304,33 @@ FarmToggleBtn2.Font = Enum.Font.GothamBold
 FarmToggleBtn2.Text = "OFF"
 FarmToggleBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
 FarmToggleBtn2.TextSize = 10
-FarmToggleBtn2.Parent = FarmRowFrame2
+Instance.new("UICorner", FarmToggleBtn2).CornerRadius = UDim.new(0, 3)
 
-local FarmToggleCorner2 = Instance.new("UICorner")
-FarmToggleCorner2.CornerRadius = UDim.new(0, 3)
-FarmToggleCorner2.Parent = FarmToggleBtn2
+-- ==================== สร้างปุ่มเลือกหมวดหมู่ฝั่งซ้าย ====================
+local function CreateCategoryBtn(name, order)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 28)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.Gotham
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 10
+    btn.LayoutOrder = order
+    btn.Parent = LeftSide
+
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+
+    btn.MouseButton1Click:Connect(function()
+        SwitchTab(name)
+    end)
+end
+
+CreateCategoryBtn("เมนูหลัก", 1)
+CreateCategoryBtn("ฟามเวล", 2)
+
+-- เปิดหน้าแรกตั้งต้น
+SwitchTab("เมนูหลัก")
 
 -- ==================== ระบบเบื้องหลังออโต้ฟาร์ม ====================
 local masterFarmLevelEnabled = false
@@ -340,8 +345,7 @@ local function FlyTo(targetCFrame, isEnabledCheck)
     local speed = 350
     local timeTake = distance / speed
     
-    local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    local tween = TweenService:Create(hrp, TweenInfo.new(timeTake, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
     tween:Play()
     
     local completed = false
@@ -358,9 +362,7 @@ local function FlyTo(targetCFrame, isEnabledCheck)
         end
         task.wait()
     end
-    if not isEnabledCheck() then
-        tween:Cancel()
-    end
+    if not isEnabledCheck() then tween:Cancel() end
 end
 
 local function FindObject(parent, name)
@@ -408,35 +410,29 @@ local function SetupGodMode(char)
     hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
     hum.HealthChanged:Connect(function()
-        if hum.Health < hum.MaxHealth then
-            hum.Health = hum.MaxHealth
-        end
+        if hum.Health < hum.MaxHealth then hum.Health = hum.MaxHealth end
     end)
 end
 
 LocalPlayer.CharacterAdded:Connect(function(char)
     task.wait(1)
-    if masterFarmLevelEnabled or masterFarmLevel50Enabled then
-        SetupGodMode(char)
-    end
+    if masterFarmLevelEnabled or masterFarmLevel50Enabled then SetupGodMode(char) end
 end)
 
--- Toggle 1-25
+-- ปุ่มเปิด/ปิด 1-25
 FarmToggleBtn.MouseButton1Click:Connect(function()
     masterFarmLevelEnabled = not masterFarmLevelEnabled
-    
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
-        local hum = char.Humanoid
         if masterFarmLevelEnabled then
             SetupGodMode(char)
             FarmToggleBtn.Text = "ON"
             FarmToggleBtn.TextColor3 = Color3.fromRGB(0, 162, 255)
             FarmToggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         else
-            hum.MaxHealth = 100
-            hum.Health = 100
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            char.Humanoid.MaxHealth = 100
+            char.Humanoid.Health = 100
+            char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
             FarmToggleBtn.Text = "OFF"
             FarmToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
             FarmToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -444,22 +440,20 @@ FarmToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Toggle 50-100
+-- ปุ่มเปิด/ปิด 50-100
 FarmToggleBtn2.MouseButton1Click:Connect(function()
     masterFarmLevel50Enabled = not masterFarmLevel50Enabled
-    
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
-        local hum = char.Humanoid
         if masterFarmLevel50Enabled then
             SetupGodMode(char)
             FarmToggleBtn2.Text = "ON"
             FarmToggleBtn2.TextColor3 = Color3.fromRGB(0, 162, 255)
             FarmToggleBtn2.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         else
-            hum.MaxHealth = 100
-            hum.Health = 100
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            char.Humanoid.MaxHealth = 100
+            char.Humanoid.Health = 100
+            char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
             FarmToggleBtn2.Text = "OFF"
             FarmToggleBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
             FarmToggleBtn2.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -467,71 +461,48 @@ FarmToggleBtn2.MouseButton1Click:Connect(function()
     end
 end)
 
--- ลูปการทำงานฟาร์ม 1-25
+-- ลูปฟาร์ม 1-25
 task.spawn(function()
     while true do
         task.wait(0.2)
         if masterFarmLevelEnabled then
             pcall(function()
-                local questName = "Floppa Quest 1"
-                local monsterName = "Floppa"
-
                 local char = LocalPlayer.Character
                 if not char or not char:FindFirstChild("HumanoidRootPart") or char.Humanoid.Health <= 0 then return end
                 local hrp = char.HumanoidRootPart
-                local humanoid = char.Humanoid
-
-                if humanoid.Health < humanoid.MaxHealth then
-                    humanoid.Health = humanoid.MaxHealth
-                end
+                
                 for _, part in pairs(char:GetDescendants()) do
                     if part:IsA("BasePart") then part.CanCollide = false end
                 end
 
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
                 if backpack then
-                    local slot1Item = nil
                     for _, item in ipairs(backpack:GetChildren()) do
-                        if item:IsA("Tool") then
-                            slot1Item = item
-                            break
-                        end
-                    end
-                    local currentTool = char:FindFirstChildOfClass("Tool")
-                    if slot1Item and currentTool ~= slot1Item then
-                        humanoid:EquipTool(slot1Item)
+                        if item:IsA("Tool") then char.Humanoid:EquipTool(item) break end
                     end
                 end
 
-                local questPart = FindObject(Workspace, questName) or FindObject(Workspace, "Main Quest")
-                if questPart then
-                    if (hrp.Position - questPart.Position).Magnitude > 25 then
-                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevelEnabled end)
-                        task.wait(0.3)
-                    end
-                    for _, v in pairs(Workspace:GetDescendants()) do
-                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
-                            fireproximityprompt(v)
-                        end
+                local questPart = FindObject(Workspace, "Floppa Quest 1") or FindObject(Workspace, "Main Quest")
+                if questPart and (hrp.Position - questPart.Position).Magnitude > 25 then
+                    FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevelEnabled end)
+                    task.wait(0.3)
+                end
+
+                for _, v in pairs(Workspace:GetDescendants()) do
+                    if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
+                        fireproximityprompt(v)
                     end
                 end
 
-                local monsterPart = FindNearestMonster(monsterName)
+                local monsterPart = FindNearestMonster("Floppa")
                 if monsterPart then
                     FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevelEnabled end)
-
                     while masterFarmLevelEnabled and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
                         local curChar = LocalPlayer.Character
                         if not curChar or not curChar:FindFirstChild("HumanoidRootPart") then break end
-                        
                         curChar.HumanoidRootPart.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
-                        curChar.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                        curChar.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-
                         local tool = curChar:FindFirstChildOfClass("Tool")
-                        if tool then
-                            tool:Activate()
-                        end
+                        if tool then tool:Activate() end
                         task.wait(0.15)
                     end
                 end
@@ -540,71 +511,48 @@ task.spawn(function()
     end
 end)
 
--- ลูปการทำงานฟาร์ม 50-100
+-- ลูปฟาร์ม 50-100
 task.spawn(function()
     while true do
         task.wait(0.2)
         if masterFarmLevel50Enabled then
             pcall(function()
-                local questName = "Floppa Quest 2"
-                local monsterName = "Golden Floppa"
-
                 local char = LocalPlayer.Character
                 if not char or not char:FindFirstChild("HumanoidRootPart") or char.Humanoid.Health <= 0 then return end
                 local hrp = char.HumanoidRootPart
-                local humanoid = char.Humanoid
-
-                if humanoid.Health < humanoid.MaxHealth then
-                    humanoid.Health = humanoid.MaxHealth
-                end
+                
                 for _, part in pairs(char:GetDescendants()) do
                     if part:IsA("BasePart") then part.CanCollide = false end
                 end
 
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
                 if backpack then
-                    local slot1Item = nil
                     for _, item in ipairs(backpack:GetChildren()) do
-                        if item:IsA("Tool") then
-                            slot1Item = item
-                            break
-                        end
-                    end
-                    local currentTool = char:FindFirstChildOfClass("Tool")
-                    if slot1Item and currentTool ~= slot1Item then
-                        humanoid:EquipTool(slot1Item)
+                        if item:IsA("Tool") then char.Humanoid:EquipTool(item) break end
                     end
                 end
 
-                local questPart = FindObject(Workspace, questName)
-                if questPart then
-                    if (hrp.Position - questPart.Position).Magnitude > 25 then
-                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevel50Enabled end)
-                        task.wait(0.3)
-                    end
-                    for _, v in pairs(Workspace:GetDescendants()) do
-                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
-                            fireproximityprompt(v)
-                        end
+                local questPart = FindObject(Workspace, "Floppa Quest 2")
+                if questPart and (hrp.Position - questPart.Position).Magnitude > 25 then
+                    FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevel50Enabled end)
+                    task.wait(0.3)
+                end
+
+                for _, v in pairs(Workspace:GetDescendants()) do
+                    if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
+                        fireproximityprompt(v)
                     end
                 end
 
-                local monsterPart = FindNearestMonster(monsterName)
+                local monsterPart = FindNearestMonster("Golden Floppa")
                 if monsterPart then
                     FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevel50Enabled end)
-
                     while masterFarmLevel50Enabled and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
                         local curChar = LocalPlayer.Character
                         if not curChar or not curChar:FindFirstChild("HumanoidRootPart") then break end
-                        
                         curChar.HumanoidRootPart.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
-                        curChar.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                        curChar.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-
                         local tool = curChar:FindFirstChildOfClass("Tool")
-                        if tool then
-                            tool:Activate()
-                        end
+                        if tool then tool:Activate() end
                         task.wait(0.15)
                     end
                 end
@@ -613,65 +561,19 @@ task.spawn(function()
     end
 end)
 
--- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย
-local function createCategoryButton(name, order)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 28)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    btn.BorderSizePixel = 0
-    btn.Font = Enum.Font.Gotham
-    btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 10
-    btn.LayoutOrder = order
-    btn.Parent = LeftSide
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = btn
-
-    btn.MouseButton1Click:Connect(function()
-        switchTab(name)
-    end)
-end
-
-createCategoryButton("เมนูหลัก", 1)
-createCategoryButton("ฟามเวล", 2)
-
--- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก" และอัปเดตสถานะการมองเห็น
-switchTab("เมนูหลัก")
-
--- ==================== ลำดับการทำงาน (Loading & Animation) ====================
+-- ==================== แอนิเมชันเปิดหน้าจอ ====================
 task.spawn(function()
-    local dots = {"", ".", "..", "..."}
-    local startTime = tick()
-    
-    while tick() - startTime < 2 do
-        for _, d in ipairs(dots) do
-            LoadText.Text = "กำลังโหลด" .. d
-            task.wait(0.3)
-        end
-    end
-    
-    LoadText.Text = "ดาวโหลดเสร็จเเล้ว"
-    task.wait(1)
-    
-    LoadText.Text = "คัดลอกลิ้งดิสเสร็จเเล้ว"
-    if setclipboard then
-        setclipboard("https://discord.gg/Ugssja4wqQ")
-    end
-    task.wait(1)
-    
+    task.wait(2)
+    LoadText.Text = "ดาวน์โหลดสำเร็จแล้ว!"
+    task.wait(0.8)
     LoadFrame:Destroy()
     
     MainFrame.Visible = true
     MainFrame.Size = UDim2.new(0, 350, 0, 200)
     
-    local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-    local expandTween = TweenService:Create(MainFrame, info, {
+    local tween = TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 420, 0, 240),
         BackgroundTransparency = 0
     })
-    
-    expandTween:Play()
+    tween:Play()
 end)
