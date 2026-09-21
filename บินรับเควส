@@ -1,0 +1,76 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ฟังก์ชันสำหรับบิน (Tween) ไปยังตำแหน่งเป้าหมาย
+local function FlyTo(targetCFrame)
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+    
+    local distance = (hrp.Position - targetCFrame.Position).Magnitude
+    if distance < 5 then return end
+    
+    local speed = 350 -- ความเร็วในการบิน
+    local timeTake = distance / speed
+    
+    local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    
+    tween.Completed:Wait()
+end
+
+-- ฟังก์ชันค้นหา Object ใน Workspace
+local function FindObject(parent, name)
+    if not parent then return nil end
+    for _, v in pairs(parent:GetDescendants()) do
+        if v.Name == name then
+            if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") then
+                return v.HumanoidRootPart
+            elseif v:IsA("BasePart") then
+                return v
+            end
+        end
+    end
+    return nil
+end
+
+-- ลูปหลักสำหรับการบินไปกดรับเควส (ตัวอย่างใช้ "Floppa Quest 1")
+task.spawn(function()
+    local questName = "Floppa Quest 1" -- เปลี่ยนชื่อเควสตามต้องการ
+    
+    while true do
+        task.wait(1)
+        pcall(function()
+            local char = LocalPlayer.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end
+            local hrp = char.HumanoidRootPart
+
+            -- ปิดการชนของตัวละครขณะบิน (ไม่ให้ติดสิ่งกีดขวาง)
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then 
+                    part.CanCollide = false 
+                end
+            end
+
+            -- ค้นหาจุดรับเควส
+            local questPart = FindObject(Workspace, questName) or FindObject(Workspace, "Main Quest")
+            if questPart then
+                -- บินไปใกล้จุดรับเควส
+                if (hrp.Position - questPart.Position).Magnitude > 10 then
+                    FlyTo(questPart.CFrame + Vector3.new(0, 3, 0))
+                    task.wait(0.3)
+                end
+                
+                -- กด ProximityPrompt เพื่อรับเควส
+                for _, v in pairs(Workspace:GetDescendants()) do
+                    if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
+                        fireproximityprompt(v)
+                    end
+                end
+            end
+        end)
+    end
+end)
