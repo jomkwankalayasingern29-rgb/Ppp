@@ -15,16 +15,17 @@ local Window = Rayfield:CreateWindow({
 local MainTab = Window:CreateTab("ฟาร์มเลเวล", "home")
 local PlayerTab = Window:CreateTab("ตัวละคร", "user")
 
--- ==================== ระบบออโต้ฟาร์มเลเวล (รวมเควส + ตีมอน + อมตะ) ====================
+-- ==================== ระบบออโต้ฟาร์มเลเวล (รวมรับเควส + ตีมอน 5 ตัว + อมตะ) ====================
 local masterFarmLevelEnabled = false
 
--- ฟังก์ชันเคลื่อนที่แบบ Tween (บินไปรับเควส/หาฟลอปป้า)
-local function FlyTo(targetCFrame)
+-- ฟังก์ชันเสริมสำหรับบินด้วย Tween
+local function FlyToTarget(targetCFrame)
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = LocalPlayer.Character.HumanoidRootPart
     local distance = (hrp.Position - targetCFrame.Position).Magnitude
-    local speed = 300
+    local speed = 250
     local timeTake = distance / speed
+    if timeTake < 0.1 then timeTake = 0.1 end
     
     local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
     local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
@@ -45,7 +46,7 @@ local function FlyTo(targetCFrame)
     end
 end
 
--- ฟังก์ชันค้นหา Object ใน Workspace
+-- ฟังก์ชันค้นหาวัตถุใน Workspace
 local function FindObject(parent, name)
     if not parent then return nil end
     for _, v in pairs(parent:GetDescendants()) do
@@ -61,13 +62,12 @@ local function FindObject(parent, name)
 end
 
 MainTab:CreateToggle({
-   Name = "ออโต้ฟาร์มเลเวล",
+   Name = "ออโต้ฟาร์มเลเวล (เควส + ตีออโต้)",
    CurrentValue = false,
    Flag = "AutoFarmLevelMaster",
    Callback = function(Value)
       masterFarmLevelEnabled = Value
       
-      -- จัดการตั้งค่าเริ่มต้นของอมตะทันทีเมื่อกดเปิด
       local char = LocalPlayer.Character
       if char and char:FindFirstChild("Humanoid") then
           local hum = char.Humanoid
@@ -84,13 +84,13 @@ MainTab:CreateToggle({
 
       Rayfield:Notify({
          Title = "สถานะออโต้ฟาร์มเลเวล",
-         Content = Value and "เปิดใช้งานออโต้ฟาร์มเลเวล (รับเควส + อมตะ + ตีออโต้) แล้ว" or "ปิดการทำงานทั้งหมดแล้ว",
+         Content = Value and "เปิดใช้งานออโต้ฟาร์ม (รับเควส/ตีมอน/อมตะ) แล้ว" or "ปิดการทำงานทั้งหมดแล้ว",
          Duration = 2,
       })
    end,
 })
 
--- ฟังก์ชันดูแลอมตะต่อเนื่อง (ป้องกันเลือดลดและป้องกันตาย)
+-- ฟังก์ชันดูแลอมตะต่อเนื่อง
 local function SetupGodMode(char)
     local hum = char:WaitForChild("Humanoid")
     hum.MaxHealth = math.huge
@@ -113,116 +113,88 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
--- ลูปหลักทำงานทุกฟังก์ชันพร้อมกัน (อมตะ, ล็อคช่องไอเท็ม, ขยาย Hitbox, รับเควส และบินไปตีมอนสเตอร์)
+-- ลูปหลักทำงานระบบฟาร์มทั้งหมด
 task.spawn(function()
-    while task.wait(0.03) do
+    while task.wait(0.3) do
         if masterFarmLevelEnabled then
             pcall(function()
+                local playerLevel = 1
+                if LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level") then
+                    playerLevel = LocalPlayer.Data.Level.Value
+                end
+
+                -- กำหนดเควสและชื่อมอนสเตอร์ตามเลเวล
+                local questName = "Floppa Quest 1"
+                local monsterName = "Floppa"
+
+                if playerLevel >= 15 and playerLevel < 30 then
+                    questName = "Floppa Quest 2"
+                    monsterName = "Floppa"
+                elseif playerLevel >= 30 then
+                    questName = "Floppa Quest 3"
+                    monsterName = "Floppa"
+                end
+
                 local char = LocalPlayer.Character
-                local backpack = LocalPlayer:FindFirstChild("Backpack")
-                
-                if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
-                    local hrp = char.HumanoidRootPart
-                    local humanoid = char.Humanoid
+                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") then return end
+                local hrp = char.HumanoidRootPart
+                local humanoid = char.Humanoid
 
-                    -- 1. ล็อคเลือดให้อมตะตลอดเวลา
-                    if humanoid.Health < humanoid.MaxHealth then
-                        humanoid.Health = humanoid.MaxHealth
+                -- 1. ล็อคเลือดอมตะ & ปิดการชน
+                if humanoid.Health < humanoid.MaxHealth then
+                    humanoid.Health = humanoid.MaxHealth
+                end
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+
+                -- 2. ระบบรับเควส (ตรวจสอบว่ามีเควสอยู่ไหม ถ้ายังให้บินไปรับ)
+                local questPart = FindObject(Workspace, questName)
+                if questPart then
+                    FlyToTarget(questPart.CFrame + Vector3.new(0, 3, 0))
+                    task.wait(0.3)
+                    for _, v in pairs(Workspace:GetDescendants()) do
+                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 15 then
+                            fireproximityprompt(v)
+                        end
                     end
+                end
 
-                    -- 2. ปิดการชนเพื่อไม่ให้ติดสิ่งกีดขวาง
-                    for _, part in pairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") then part.CanCollide = false end
+                -- 3. ค้นหาและตีมอนสเตอร์วนไปจนกว่าจะตายครบ (หรือหาตัวใหม่)
+                local targetMonster = nil
+                for _, obj in pairs(Workspace:GetDescendants()) do
+                    if obj:IsA("Model") and obj ~= char.Parent and obj.Name == monsterName then
+                        local enemyHum = obj:FindFirstChildOfClass("Humanoid")
+                        local rootPart = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")
+                        if enemyHum and rootPart and enemyHum.Health > 0 then
+                            targetMonster = rootPart
+                            break
+                        end
                     end
+                end
 
-                    -- 3. บังคับถือเฉพาะไอเท็มช่องที่ 1 ตลอดเวลา
-                    if backpack then
-                        local slot1Item = nil
-                        for _, item in ipairs(backpack:GetChildren()) do
-                            if item:IsA("Tool") then
-                                slot1Item = item
-                                break
+                if targetMonster then
+                    FlyToTarget(targetMonster.CFrame * CFrame.new(0, 4, 3))
+                    
+                    while masterFarmLevelEnabled and targetMonster and targetMonster.Parent and targetMonster.Parent:FindFirstChild("Humanoid") and targetMonster.Parent.Humanoid.Health > 0 do
+                        hrp.CFrame = targetMonster.CFrame * CFrame.new(0, 4, 3)
+                        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        
+                        -- บังคับถือไอเท็มช่องที่ 1 และกดโจมตี
+                        local backpack = LocalPlayer:FindFirstChild("Backpack")
+                        if backpack then
+                            local slot1Item = backpack:FindFirstChildOfClass("Tool")
+                            local currentTool = char:FindFirstChildOfClass("Tool")
+                            if slot1Item and currentTool ~= slot1Item then
+                                humanoid:EquipTool(slot1Item)
                             end
                         end
-                        local currentTool = char:FindFirstChildOfClass("Tool")
-                        if slot1Item and currentTool ~= slot1Item then
-                            humanoid:EquipTool(slot1Item)
+
+                        local tool = char:FindFirstChildOfClass("Tool")
+                        if tool then
+                            tool:Activate()
                         end
-                    end
-
-                    -- 4. เคลียร์ค่า Debounce และขยาย Hitbox ตีรอบทิศทาง
-                    local dog = char:FindFirstChild("Hisense170's Dog")
-                    if dog then
-                        local debounceFolder = dog:FindFirstChild("Attacks_Debounce")
-                        if debounceFolder then
-                            for _, v in pairs(debounceFolder:GetChildren()) do
-                                if v:IsA("NumberValue") or v:IsA("IntValue") then
-                                    v.Value = 0
-                                elseif v:IsA("BoolValue") then
-                                    v.Value = false
-                                end
-                            end
-                        end
-                    end
-
-                    for _, tool in pairs(char:GetChildren()) do
-                        if tool:IsA("Tool") then
-                            for _, part in pairs(tool:GetDescendants()) do
-                                if part:IsA("BasePart") then
-                                    part.Size = Vector3.new(35, 35, 35)
-                                    part.Transparency = 0.9
-                                    part.CanCollide = false
-                                end
-                            end
-                        end
-                    end
-
-                    -- 5. ตรวจสอบเลเวลและจัดการรับเควสตามช่วงเลเวล
-                    local playerLevel = 1
-                    if LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level") then
-                        playerLevel = LocalPlayer.Data.Level.Value
-                    end
-
-                    local questName = "Floppa Quest 1"
-                    local monsterName = "Floppa"
-
-                    if playerLevel >= 15 and playerLevel < 30 then
-                        questName = "Floppa Quest 2"
-                        monsterName = "Floppa"
-                    elseif playerLevel >= 30 then
-                        questName = "Floppa Quest 3"
-                        monsterName = "Floppa"
-                    end
-
-                    -- เช็คว่ามีเควสอยู่หรือไม่ (ถ้ายังไม่มีหรือต้องรับ ให้บินไปรับ)
-                    local questPart = FindObject(Workspace, questName) or FindObject(Workspace, "Main Quest")
-                    if questPart then
-                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0))
-                        task.wait(0.5)
-                        for _, v in pairs(Workspace:GetDescendants()) do
-                            if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 15 then
-                                fireproximityprompt(v)
-                            end
-                        end
-                    end
-
-                    -- 6. ค้นหามอนสเตอร์และบินไปจัดการตีจนกว่าจะตายวนไปเรื่อยๆ
-                    local monsterPart = FindObject(Workspace, monsterName)
-                    if monsterPart then
-                        local behindMonsterCFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
-                        FlyTo(behindMonsterCFrame)
-
-                        while masterFarmLevelEnabled and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
-                            hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
-                            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                            hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-
-                            local tool = char:FindFirstChildOfClass("Tool")
-                            if tool then
-                                tool:Activate()
-                            end
-                            task.wait(0.2)
-                        end
+                        task.wait(0.2)
                     end
                 end
             end)
