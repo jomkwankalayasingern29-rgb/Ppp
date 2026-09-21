@@ -277,7 +277,6 @@ FarmToggleBtn.Text = "OFF"
 FarmToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 FarmToggleBtn.TextSize = 10
 FarmToggleBtn.Parent = FarmRowFrame
--- (เอา UIStroke ออกจากปุ่ม OFF เพื่อไม่ให้มีขอบ)
 
 local FarmToggleCorner = Instance.new("UICorner")
 FarmToggleCorner.CornerRadius = UDim.new(0, 3)
@@ -323,7 +322,6 @@ FarmToggleBtn2.Text = "OFF"
 FarmToggleBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
 FarmToggleBtn2.TextSize = 10
 FarmToggleBtn2.Parent = FarmRowFrame2
--- (เอา UIStroke ออกจากปุ่ม OFF ตัวที่ 2 เช่นกัน)
 
 local FarmToggleCorner2 = Instance.new("UICorner")
 FarmToggleCorner2.CornerRadius = UDim.new(0, 3)
@@ -354,7 +352,6 @@ local function FlyTo(targetCFrame, isEnabledCheck)
     end)
     
     while not completed and isEnabledCheck() do
-        -- เช็คเผื่อตัวละครตายกลางคันระหว่างบิน
         if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             tween:Cancel()
             break
@@ -417,9 +414,8 @@ local function SetupGodMode(char)
     end)
 end
 
--- รองรับการเกิดใหม่ (CharacterAdded) เพื่อให้ฟังก์ชันไม่หลุดเมื่อตัวละครตาย
 LocalPlayer.CharacterAdded:Connect(function(char)
-    task.wait(1) -- รอให้โหลดตัวละครเสร็จสมบูรณ์
+    task.wait(1)
     if masterFarmLevelEnabled or masterFarmLevel50Enabled then
         SetupGodMode(char)
     end
