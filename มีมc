@@ -197,7 +197,7 @@ RightSideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 RightSideLayout.SortOrder = Enum.SortOrder.LayoutOrder
 RightSideLayout.Padding = UDim.new(0, 6)
 
--- ตารางเก็บแยกหมวดหมู่ชัดเจน ป้องกันการทับซ้อน
+-- ตารางเก็บแยกหมวดหมู่ชัดเจน
 local TabElements = {
     ["เมนูหลัก"] = {},
     ["ฟามเวล"] = {}
@@ -638,7 +638,7 @@ end
 createCategoryButton("เมนูหลัก", 1)
 createCategoryButton("ฟามเวล", 2)
 
--- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก"
+-- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก" และอัปเดตสถานะการมองเห็น
 switchTab("เมนูหลัก")
 
 -- ==================== ลำดับการทำงาน (Loading & Animation) ====================
