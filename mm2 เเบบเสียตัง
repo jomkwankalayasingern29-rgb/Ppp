@@ -551,7 +551,7 @@ CreateFeatureRow(AttackPage, "ฆ่าทั้งแมพ V2", "ปิด (OF
     btn.BackgroundColor3 = massKillV2Enabled and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(50, 50, 60)
 end)
 
--- ฟังก์ชันวาร์ปเก็บปืนอัตโนมัติ (ตรวจจับปืนที่ดรอปอยู่บนพื้น)
+-- ==================== ฟังก์ชันวาร์ปเก็บปืน (ที่แก้ไขแล้ว ไม่จำของเก่า) ====================
 local autoTeleportGunEnabled = false
 CreateFeatureRow(AttackPage, "วาร์ปเก็บปืน (เมื่อนายอำเภอตาย)", "ปิด (OFF)", Color3.fromRGB(50, 50, 60), function(btn)
     autoTeleportGunEnabled = not autoTeleportGunEnabled
@@ -560,42 +560,64 @@ CreateFeatureRow(AttackPage, "วาร์ปเก็บปืน (เมื่
 end)
 
 task.spawn(function()
+    local lastTeleportedGun = nil
+    
     while true do
         if autoTeleportGunEnabled then
             pcall(function()
-                for _, obj in pairs(Workspace:GetDescendants()) do
+                local targetGunPart = nil
+                
+                for _, obj in pairs(Workspace:GetChildren()) do
                     if not autoTeleportGunEnabled then break end
-                    if obj:IsA("BasePart") or obj:IsA("Model") then
-                        local name = string.lower(obj.Name)
-                        if name == "gun" or name == "gundrop" or name == "groundgun" or (obj:IsA("Tool") and (name:find("gun") or name:find("revolver"))) then
-                            local targetPart = obj:IsA("Model") and obj.PrimaryPart or (obj:IsA("Tool") and obj:FindFirstChild("Handle") or obj)
-                            
-                            if targetPart and targetPart:IsA("BasePart") then
-                                local myChar = LocalPlayer.Character
-                                local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
-                                
-                                -- เช็คว่าตัวเราไม่ได้ถือปืนอยู่แล้ว และไม่ได้ถือมีด (ไม่ให้ฆาตกรเผลอวาร์ปไปเก็บปืนตัวเองหรือเกะกะ)
-                                local hasGunOrKnife = false
-                                if myChar then
-                                    for _, item in pairs(myChar:GetChildren()) do
-                                        if item:IsA("Tool") then
-                                            local n = string.lower(item.Name)
-                                            if n:find("gun") or n:find("knife") or n:find("revolver") or n:find("dagger") then
-                                                hasGunOrKnife = true
-                                            end
-                                        end
-                                    end
-                                end
-
-                                if myHrp and not hasGunOrKnife then
-                                    local originalCFrame = myHrp.CFrame
-                                    myHrp.CFrame = targetPart.CFrame + Vector3.new(0, 2, 0)
-                                    task.wait(0.2)
-                                    myHrp.CFrame = originalCFrame
-                                    task.wait(1)
+                    
+                    local name = string.lower(obj.Name)
+                    if name:find("gun") or name:find("revolver") or name:find("dropped") then
+                        local handle = nil
+                        if obj:IsA("Model") then
+                            handle = obj:FindFirstChild("Handle") or obj.PrimaryPart
+                        elseif obj:IsA("Tool") then
+                            handle = obj:FindFirstChild("Handle")
+                        elseif obj:IsA("BasePart") then
+                            handle = obj
+                        end
+                        
+                        if handle and handle:IsA("BasePart") then
+                            if handle ~= lastTeleportedGun then
+                                targetGunPart = handle
+                                break
+                            end
+                        end
+                    end
+                end
+                
+                if targetGunPart then
+                    local myChar = LocalPlayer.Character
+                    local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                    
+                    local hasGunOrKnife = false
+                    if myChar then
+                        for _, item in pairs(myChar:GetChildren()) do
+                            if item:IsA("Tool") then
+                                local n = string.lower(item.Name)
+                                if n:find("gun") or n:find("knife") or n:find("revolver") or n:find("dagger") then
+                                    hasGunOrKnife = true
                                 end
                             end
                         end
+                    end
+
+                    if myHrp and not hasGunOrKnife then
+                        lastTeleportedGun = targetGunPart
+                        local originalCFrame = myHrp.CFrame
+                        
+                        myHrp.CFrame = targetGunPart.CFrame + Vector3.new(0, 3, 0)
+                        task.wait(0.3)
+                        myHrp.CFrame = originalCFrame
+                        
+                        while targetGunPart and targetGunPart.Parent and autoTeleportGunEnabled do
+                            task.wait(0.5)
+                        end
+                        lastTeleportedGun = nil
                     end
                 end
             end)
