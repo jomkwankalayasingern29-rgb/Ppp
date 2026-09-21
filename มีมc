@@ -1,11 +1,11 @@
-Local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
 local Window = Rayfield:CreateWindow({
-   Name = "Meme Sea | Auto Farm Level",
+   Name = "Meme Sea | Auto Farm Level (Delta)",
    LoadingTitle = "กำลังโหลดระบบออโต้ฟาร์ม...",
    LoadingSubtitle = "by Developer",
    ConfigurationSaving = { Enabled = false },
@@ -15,60 +15,49 @@ local Window = Rayfield:CreateWindow({
 local MainTab = Window:CreateTab("ฟาร์มเลเวล", "home")
 local PlayerTab = Window:CreateTab("ตัวละคร", "user")
 
--- ==================== ระบบออโต้ฟาร์มเลเวล (รวมรับเควส + ตีมอน + อมตะ 999M) ====================
 local masterFarmLevelEnabled = false
 
--- ฟังก์ชันตั้งค่าความเป็นอมตะ
+-- ฟังก์ชันตั้งค่าความเป็นอมตะ (999M)
 local function ApplyGodMode(char)
-    local hum = char:WaitForChild("Humanoid", 5)
-    if hum then
-        hum.MaxHealth = 999999999
-        hum.Health = 999999999
-        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-    end
-end
-
--- ฟังก์ชันเสริมสำหรับบินด้วย Tween
-local function FlyToTarget(targetCFrame)
-    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
-    local hrp = LocalPlayer.Character.HumanoidRootPart
-    local distance = (hrp.Position - targetCFrame.Position).Magnitude
-    local speed = 250
-    local timeTake = distance / speed
-    if timeTake < 0.1 then timeTake = 0.1 end
-    
-    local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
-    tween:Play()
-    
-    local completed = false
-    local connection
-    connection = tween.Completed:Connect(function()
-        completed = true
-        connection:Disconnect()
-    end)
-    
-    while not completed and masterFarmLevelEnabled do
-        task.wait()
-    end
-    if not masterFarmLevelEnabled then
-        tween:Cancel()
-    end
-end
-
--- ฟังก์ชันค้นหาวัตถุใน Workspace
-local function FindObject(parent, name)
-    if not parent then return nil end
-    for _, v in pairs(parent:GetDescendants()) do
-        if v.Name == name then
-            if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") then
-                return v.HumanoidRootPart
-            elseif v:IsA("BasePart") then
-                return v
-            end
+    pcall(function()
+        local hum = char:WaitForChild("Humanoid", 3)
+        if hum then
+            hum.MaxHealth = 999999999
+            hum.Health = 999999999
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
         end
-    end
-    return nil
+    end)
+end
+
+-- ฟังก์ชันบินด้วย Tween แบบปลอดภัยสำหรับ Delta
+local function FlyToTarget(targetCFrame)
+    pcall(function()
+        local char = LocalPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        local hrp = char.HumanoidRootPart
+        local distance = (hrp.Position - targetCFrame.Position).Magnitude
+        local speed = 200
+        local timeTake = distance / speed
+        if timeTake < 0.1 then timeTake = 0.1 end
+        
+        local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
+        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+        tween:Play()
+        
+        local completed = false
+        local connection
+        connection = tween.Completed:Connect(function()
+            completed = true
+            if connection then connection:Disconnect() end
+        end)
+        
+        while not completed and masterFarmLevelEnabled do
+            task.wait(0.1)
+        end
+        if not masterFarmLevelEnabled then
+            tween:Cancel()
+        end
+    end)
 end
 
 MainTab:CreateToggle({
@@ -93,32 +82,47 @@ MainTab:CreateToggle({
       end
 
       Rayfield:Notify({
-         Title = "สถานะออโต้ฟาร์มเลเวล",
-         Content = Value and "เปิดใช้งานออโต้ฟาร์ม (รับเควส/ตีมอน/อมตะ 999M) แล้ว" or "ปิดการทำงานทั้งหมดแล้ว",
+         Title = "สถานะออโต้ฟาร์ม",
+         Content = Value and "เปิดใช้งานระบบออโต้ฟาร์มแล้ว" | "ปิดการทำงานแล้ว",
          Duration = 2,
       })
    end,
 })
 
--- รองรับเมื่อตัวละครตายและเกิดใหม่ ให้เปิดอมตะต่อเนื่องทันที
+-- รองรับตัวละครเกิดใหม่ (ให้อมตะทำงานต่ออัตโนมัติ)
 LocalPlayer.CharacterAdded:Connect(function(char)
-    task.wait(1)
+    task.wait(1.5)
     if masterFarmLevelEnabled then
         ApplyGodMode(char)
     end
 end)
 
--- ลูปหลักทำงานระบบฟาร์มทั้งหมด (ความเร็ว 0.5 วินาที)
+-- ลูปหลักออโต้ฟาร์ม (ความเร็ว 0.5 วินาที)
 task.spawn(function()
     while task.wait(0.5) do
         if masterFarmLevelEnabled then
             pcall(function()
-                local playerLevel = 1
-                if LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level") then
-                    playerLevel = LocalPlayer.Data.Level.Value
+                local char = LocalPlayer.Character
+                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") then return end
+                local hrp = char.HumanoidRootPart
+                local humanoid = char.Humanoid
+
+                -- ล็อคเลือด 999M ตลอดเวลา
+                if humanoid.MaxHealth ~= 999999999 then
+                    humanoid.MaxHealth = 999999999
+                end
+                if humanoid.Health < humanoid.MaxHealth then
+                    humanoid.Health = humanoid.MaxHealth
                 end
 
-                -- กำหนดเควสและชื่อมอนสเตอร์ตามเลเวล
+                -- ดึงเลเวลผู้เล่น
+                local playerLevel = 1
+                local dataFolder = LocalPlayer:FindFirstChild("Data")
+                if dataFolder and dataFolder:FindFirstChild("Level") then
+                    playerLevel = dataFolder.Level.Value
+                end
+
+                -- กำหนดเควสและมอนสเตอร์
                 local questName = "Floppa Quest 1"
                 local monsterName = "Floppa"
 
@@ -130,39 +134,24 @@ task.spawn(function()
                     monsterName = "Floppa"
                 end
 
-                local char = LocalPlayer.Character
-                if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") then return end
-                local hrp = char.HumanoidRootPart
-                local humanoid = char.Humanoid
-
-                -- 1. ล็อคเลือดอมตะ 999M & รีเลือดให้เต็มตลอดเวลา & ปิดการชน
-                if humanoid.MaxHealth ~= 999999999 then
-                    humanoid.MaxHealth = 999999999
-                end
-                if humanoid.Health < humanoid.MaxHealth then
-                    humanoid.Health = humanoid.MaxHealth
-                end
-                
-                for _, part in pairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then part.CanCollide = false end
-                end
-
-                -- 2. ระบบรับเควส (ตรวจสอบว่ามีเควสอยู่ไหม ถ้ายังให้บินไปรับ)
-                local questPart = FindObject(Workspace, questName)
-                if questPart then
+                -- ระบบรับเควส (ปลอดภัยต่อ Delta)
+                local questPart = Workspace:FindFirstChild(questName, true)
+                if questPart and questPart:IsA("BasePart") then
                     FlyToTarget(questPart.CFrame + Vector3.new(0, 3, 0))
                     task.wait(0.3)
                     for _, v in pairs(Workspace:GetDescendants()) do
-                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 15 then
-                            fireproximityprompt(v)
+                        if v:IsA("ProximityPrompt") and v.Parent and (v.Parent.Position - hrp.Position).Magnitude < 15 then
+                            if fireproximityprompt then
+                                fireproximityprompt(v)
+                            end
                         end
                     end
                 end
 
-                -- 3. ค้นหาและตีมอนสเตอร์วนไปจนกว่าจะตายครบ (หรือหาตัวใหม่)
+                -- ค้นหาและโจมตีมอนสเตอร์
                 local targetMonster = nil
                 for _, obj in pairs(Workspace:GetDescendants()) do
-                    if obj:IsA("Model") and obj ~= char.Parent and obj.Name == monsterName then
+                    if obj:IsA("Model") and obj.Name == monsterName then
                         local enemyHum = obj:FindFirstChildOfClass("Humanoid")
                         local rootPart = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")
                         if enemyHum and rootPart and enemyHum.Health > 0 then
@@ -179,7 +168,7 @@ task.spawn(function()
                         hrp.CFrame = targetMonster.CFrame * CFrame.new(0, 4, 3)
                         hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                         
-                        -- บังคับถือไอเท็มช่องที่ 1 และกดโจมตี
+                        -- ถืออาวุธช่องแรกและโจมตี
                         local backpack = LocalPlayer:FindFirstChild("Backpack")
                         if backpack then
                             local slot1Item = backpack:FindFirstChildOfClass("Tool")
@@ -191,7 +180,7 @@ task.spawn(function()
 
                         local tool = char:FindFirstChildOfClass("Tool")
                         if tool then
-                            tool:Activate()
+                            pcall(function() tool:Activate() end)
                         end
                         task.wait(0.2)
                     end
@@ -210,10 +199,12 @@ PlayerTab:CreateSlider({
    Increment = 1,
    CurrentValue = 16,
    Callback = function(Value)
-      local char = LocalPlayer.Character
-      if char and char:FindFirstChild("Humanoid") then
-          char.Humanoid.WalkSpeed = Value
-      end
+      pcall(function()
+          local char = LocalPlayer.Character
+          if char and char:FindFirstChild("Humanoid") then
+              char.Humanoid.WalkSpeed = Value
+          end
+      end)
    end,
 })
 
@@ -223,10 +214,12 @@ PlayerTab:CreateSlider({
    Increment = 1,
    CurrentValue = 50,
    Callback = function(Value)
-      local char = LocalPlayer.Character
-      if char and char:FindFirstChild("Humanoid") then
-          char.Humanoid.UseJumpPower = true
-          char.Humanoid.JumpPower = Value
-      end
+      pcall(function()
+          local char = LocalPlayer.Character
+          if char and char:FindFirstChild("Humanoid") then
+              char.Humanoid.UseJumpPower = true
+              char.Humanoid.JumpPower = Value
+          end
+      end)
    end,
 })
