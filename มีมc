@@ -100,7 +100,7 @@ TitleLabel.Position = UDim2.new(0, 32, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Text = "Meme Sea | Auto Farm UI"
-TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
@@ -127,7 +127,7 @@ MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
 MinimizeButton.BackgroundTransparency = 1
 MinimizeButton.Font = Enum.Font.GothamBold
 MinimizeButton.Text = "-"
-MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 MinimizeButton.TextSize = 14
 MinimizeButton.Parent = TopBar
 
@@ -206,7 +206,7 @@ DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 DiscordBtn.BorderSizePixel = 0
 DiscordBtn.Font = Enum.Font.Gotham
 DiscordBtn.Text = "คัดลอกลิงก์ Discord"
-DiscordBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
+DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 DiscordBtn.TextSize = 10
 DiscordBtn.Parent = MainMenuContainer
 
@@ -220,7 +220,7 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 2. หมวด "ฟามเวล" (เพิ่มฟังก์ชันออโต้ฟาร์มเวล 1-25)
+-- 2. หมวด "ฟามเวล"
 local FarmLevelContainer = createContainer("ฟามเวล")
 
 local FarmRowFrame = Instance.new("Frame")
@@ -244,7 +244,7 @@ FarmRowLabel.Position = UDim2.new(0, 8, 0, 0)
 FarmRowLabel.BackgroundTransparency = 1
 FarmRowLabel.Font = Enum.Font.GothamBold
 FarmRowLabel.Text = "ฟามเวล 1-25"
-FarmRowLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+FarmRowLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 FarmRowLabel.TextSize = 10
 FarmRowLabel.TextXAlignment = Enum.TextXAlignment.Left
 FarmRowLabel.Parent = FarmRowFrame
@@ -269,7 +269,7 @@ FarmToggleStroke.Color = Color3.fromRGB(220, 60, 60)
 FarmToggleStroke.Thickness = 1
 FarmToggleStroke.Parent = FarmToggleBtn
 
--- ==================== ระบบเบื้องหลังออโต้ฟาร์ม (เชื่อมโยงปุ่ม UI) ====================
+-- ==================== ระบบเบื้องหลังออโต้ฟาร์ม ====================
 local masterFarmLevelEnabled = false
 
 local function FlyTo(targetCFrame)
@@ -386,7 +386,6 @@ FarmToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ลูปหลักออโต้ฟาร์มทำงานตลอดเวลา ไม่ต้องรอสกิด
 task.spawn(function()
     while true do
         task.wait(0.2)
@@ -413,7 +412,6 @@ task.spawn(function()
                 local hrp = char.HumanoidRootPart
                 local humanoid = char.Humanoid
 
-                -- รักษาสถานะอมตะ & ปิดการชน
                 if humanoid.Health < humanoid.MaxHealth then
                     humanoid.Health = humanoid.MaxHealth
                 end
@@ -421,7 +419,6 @@ task.spawn(function()
                     if part:IsA("BasePart") then part.CanCollide = false end
                 end
 
-                -- บังคับถือไอเท็มช่องที่ 1 ตลอดเวลา
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
                 if backpack then
                     local slot1Item = nil
@@ -437,7 +434,6 @@ task.spawn(function()
                     end
                 end
 
-                -- 1. บินไปรับเควสต์อัตโนมัติ
                 local questPart = FindObject(Workspace, questName) or FindObject(Workspace, "Main Quest")
                 if questPart then
                     if (hrp.Position - questPart.Position).Magnitude > 25 then
@@ -451,7 +447,6 @@ task.spawn(function()
                     end
                 end
 
-                -- 2. ค้นหามอนสเตอร์และโจมตีต่อเนื่อง
                 local monsterPart = FindNearestMonster(monsterName)
                 if monsterPart then
                     FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4))
@@ -488,7 +483,7 @@ local function createCategoryButton(name)
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.Gotham
     btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(240, 240, 240)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextSize = 10
     btn.Parent = LeftSide
 
