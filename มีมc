@@ -112,7 +112,7 @@ CloseButton.Position = UDim2.new(1, -26, 0, 2)
 CloseButton.BackgroundTransparency = 1
 CloseButton.Font = Enum.Font.GothamBold
 CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(220, 60, 60)
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseButton.TextSize = 13
 CloseButton.Parent = TopBar
 
@@ -178,7 +178,7 @@ RightCorner.Parent = RightSide
 
 local FunctionContainers = {}
 
-local function createContainer(name)
+local function createContainer(name, order)
     local container = Instance.new("ScrollingFrame")
     container.Name = name
     container.Size = UDim2.new(1, 0, 1, 0)
@@ -187,6 +187,7 @@ local function createContainer(name)
     container.CanvasSize = UDim2.new(0, 0, 0, 0)
     container.ScrollBarThickness = 2
     container.Visible = false
+    container.LayoutOrder = order
     container.Parent = RightSide
 
     local layout = Instance.new("UIListLayout")
@@ -198,8 +199,8 @@ local function createContainer(name)
     return container
 end
 
--- 1. หมวด "เมนูหลัก"
-local MainMenuContainer = createContainer("เมนูหลัก")
+-- 1. หมวด "เมนูหลัก" (Order = 1)
+local MainMenuContainer = createContainer("เมนูหลัก", 1)
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.92, 0, 0, 26)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -220,9 +221,10 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 2. หมวด "ฟามเวล"
-local FarmLevelContainer = createContainer("ฟามเวล")
+-- 2. หมวด "ฟามเวล" (Order = 2)
+local FarmLevelContainer = createContainer("ฟามเวล", 2)
 
+-- แถวที่ 1: ฟามเวล 1-25
 local FarmRowFrame = Instance.new("Frame")
 FarmRowFrame.Size = UDim2.new(0.92, 0, 0, 32)
 FarmRowFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -256,7 +258,7 @@ FarmToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 FarmToggleBtn.BorderSizePixel = 0
 FarmToggleBtn.Font = Enum.Font.GothamBold
 FarmToggleBtn.Text = "OFF"
-FarmToggleBtn.TextColor3 = Color3.fromRGB(220, 60, 60)
+FarmToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 FarmToggleBtn.TextSize = 10
 FarmToggleBtn.Parent = FarmRowFrame
 
@@ -265,14 +267,62 @@ FarmToggleCorner.CornerRadius = UDim.new(0, 3)
 FarmToggleCorner.Parent = FarmToggleBtn
 
 local FarmToggleStroke = Instance.new("UIStroke")
-FarmToggleStroke.Color = Color3.fromRGB(220, 60, 60)
+FarmToggleStroke.Color = Color3.fromRGB(255, 255, 255)
 FarmToggleStroke.Thickness = 1
 FarmToggleStroke.Parent = FarmToggleBtn
 
+-- แถวที่ 2: ฟามเวล 50-100 (อัปเดตชื่อตามรูปภาพ: Floppa Quest 2 และ Golden Floppa)
+local FarmRowFrame2 = Instance.new("Frame")
+FarmRowFrame2.Size = UDim2.new(0.92, 0, 0, 32)
+FarmRowFrame2.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+FarmRowFrame2.BorderSizePixel = 0
+FarmRowFrame2.Parent = FarmLevelContainer
+
+local FarmRowCorner2 = Instance.new("UICorner")
+FarmRowCorner2.CornerRadius = UDim.new(0, 4)
+FarmRowCorner2.Parent = FarmRowFrame2
+
+local FarmRowStroke2 = Instance.new("UIStroke")
+FarmRowStroke2.Color = Color3.fromRGB(0, 162, 255)
+FarmRowStroke2.Thickness = 1
+FarmRowStroke2.Parent = FarmRowFrame2
+
+local FarmRowLabel2 = Instance.new("TextLabel")
+FarmRowLabel2.Size = UDim2.new(0.6, 0, 1, 0)
+FarmRowLabel2.Position = UDim2.new(0, 8, 0, 0)
+FarmRowLabel2.BackgroundTransparency = 1
+FarmRowLabel2.Font = Enum.Font.GothamBold
+FarmRowLabel2.Text = "ฟามเวล 50-100"
+FarmRowLabel2.TextColor3 = Color3.fromRGB(255, 255, 255)
+FarmRowLabel2.TextSize = 10
+FarmRowLabel2.TextXAlignment = Enum.TextXAlignment.Left
+FarmRowLabel2.Parent = FarmRowFrame2
+
+local FarmToggleBtn2 = Instance.new("TextButton")
+FarmToggleBtn2.Size = UDim2.new(0, 55, 0, 20)
+FarmToggleBtn2.Position = UDim2.new(1, -60, 0.5, -10)
+FarmToggleBtn2.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+FarmToggleBtn2.BorderSizePixel = 0
+FarmToggleBtn2.Font = Enum.Font.GothamBold
+FarmToggleBtn2.Text = "OFF"
+FarmToggleBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
+FarmToggleBtn2.TextSize = 10
+FarmToggleBtn2.Parent = FarmRowFrame2
+
+local FarmToggleCorner2 = Instance.new("UICorner")
+FarmToggleCorner2.CornerRadius = UDim.new(0, 3)
+FarmToggleCorner2.Parent = FarmToggleBtn2
+
+local FarmToggleStroke2 = Instance.new("UIStroke")
+FarmToggleStroke2.Color = Color3.fromRGB(255, 255, 255)
+FarmToggleStroke2.Thickness = 1
+FarmToggleStroke2.Parent = FarmToggleBtn2
+
 -- ==================== ระบบเบื้องหลังออโต้ฟาร์ม ====================
 local masterFarmLevelEnabled = false
+local masterFarmLevel50Enabled = false
 
-local function FlyTo(targetCFrame)
+local function FlyTo(targetCFrame, isEnabledCheck)
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = LocalPlayer.Character.HumanoidRootPart
     local distance = (hrp.Position - targetCFrame.Position).Magnitude
@@ -291,10 +341,10 @@ local function FlyTo(targetCFrame)
         connection:Disconnect()
     end)
     
-    while not completed and masterFarmLevelEnabled do
+    while not completed and isEnabledCheck() do
         task.wait()
     end
-    if not masterFarmLevelEnabled then
+    if not isEnabledCheck() then
         tween:Cancel()
     end
 end
@@ -337,14 +387,14 @@ local function FindNearestMonster(monsterName)
     return nearest
 end
 
-local function SetupGodMode(char)
+local function SetupGodMode(char, isEnabledCheck)
     local hum = char:WaitForChild("Humanoid")
     hum.MaxHealth = math.huge
     hum.Health = math.huge
     hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
     hum.HealthChanged:Connect(function()
-        if masterFarmLevelEnabled then
+        if isEnabledCheck() then
             if hum.Health < hum.MaxHealth then
                 hum.Health = hum.MaxHealth
             end
@@ -352,13 +402,7 @@ local function SetupGodMode(char)
     end)
 end
 
-LocalPlayer.CharacterAdded:Connect(function(char)
-    task.wait(0.5)
-    if masterFarmLevelEnabled then
-        SetupGodMode(char)
-    end
-end)
-
+-- Toggle 1-25
 FarmToggleBtn.MouseButton1Click:Connect(function()
     masterFarmLevelEnabled = not masterFarmLevelEnabled
     
@@ -369,7 +413,7 @@ FarmToggleBtn.MouseButton1Click:Connect(function()
             hum.MaxHealth = math.huge
             hum.Health = math.huge
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-            SetupGodMode(char)
+            SetupGodMode(char, function() return masterFarmLevelEnabled end)
             
             FarmToggleBtn.Text = "ON"
             FarmToggleBtn.TextColor3 = Color3.fromRGB(0, 162, 255)
@@ -380,12 +424,41 @@ FarmToggleBtn.MouseButton1Click:Connect(function()
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
             
             FarmToggleBtn.Text = "OFF"
-            FarmToggleBtn.TextColor3 = Color3.fromRGB(220, 60, 60)
-            FarmToggleStroke.Color = Color3.fromRGB(220, 60, 60)
+            FarmToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            FarmToggleStroke.Color = Color3.fromRGB(255, 255, 255)
         end
     end
 end)
 
+-- Toggle 50-100
+FarmToggleBtn2.MouseButton1Click:Connect(function()
+    masterFarmLevel50Enabled = not masterFarmLevel50Enabled
+    
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        local hum = char.Humanoid
+        if masterFarmLevel50Enabled then
+            hum.MaxHealth = math.huge
+            hum.Health = math.huge
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            SetupGodMode(char, function() return masterFarmLevel50Enabled end)
+            
+            FarmToggleBtn2.Text = "ON"
+            FarmToggleBtn2.TextColor3 = Color3.fromRGB(0, 162, 255)
+            FarmToggleStroke2.Color = Color3.fromRGB(0, 162, 255)
+        else
+            hum.MaxHealth = 100
+            hum.Health = 100
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            
+            FarmToggleBtn2.Text = "OFF"
+            FarmToggleBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
+            FarmToggleStroke2.Color = Color3.fromRGB(255, 255, 255)
+        end
+    end
+end)
+
+-- ลูปการทำงานฟาร์ม 1-25
 task.spawn(function()
     while true do
         task.wait(0.2)
@@ -398,14 +471,6 @@ task.spawn(function()
 
                 local questName = "Floppa Quest 1"
                 local monsterName = "Floppa"
-
-                if playerLevel >= 15 and playerLevel < 30 then
-                    questName = "Floppa Quest 2"
-                    monsterName = "Floppa"
-                elseif playerLevel >= 30 then
-                    questName = "Floppa Quest 3"
-                    monsterName = "Floppa"
-                end
 
                 local char = LocalPlayer.Character
                 if not char or not char:FindFirstChild("HumanoidRootPart") or char.Humanoid.Health <= 0 then return end
@@ -437,7 +502,7 @@ task.spawn(function()
                 local questPart = FindObject(Workspace, questName) or FindObject(Workspace, "Main Quest")
                 if questPart then
                     if (hrp.Position - questPart.Position).Magnitude > 25 then
-                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0))
+                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevelEnabled end)
                         task.wait(0.3)
                     end
                     for _, v in pairs(Workspace:GetDescendants()) do
@@ -449,9 +514,79 @@ task.spawn(function()
 
                 local monsterPart = FindNearestMonster(monsterName)
                 if monsterPart then
-                    FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4))
+                    FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevelEnabled end)
 
                     while masterFarmLevelEnabled and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
+                        hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
+                        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+                        local tool = char:FindFirstChildOfClass("Tool")
+                        if tool then
+                            tool:Activate()
+                        end
+                        task.wait(0.15)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- ลูปการทำงานฟาร์ม 50-100 (ใช้ Floppa Quest 2 และ Golden Floppa ตามรูปภาพ)
+task.spawn(function()
+    while true do
+        task.wait(0.2)
+        if masterFarmLevel50Enabled then
+            pcall(function()
+                local questName = "Floppa Quest 2"
+                local monsterName = "Golden Floppa"
+
+                local char = LocalPlayer.Character
+                if not char or not char:FindFirstChild("HumanoidRootPart") or char.Humanoid.Health <= 0 then return end
+                local hrp = char.HumanoidRootPart
+                local humanoid = char.Humanoid
+
+                if humanoid.Health < humanoid.MaxHealth then
+                    humanoid.Health = humanoid.MaxHealth
+                end
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    local slot1Item = nil
+                    for _, item in ipairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            slot1Item = item
+                            break
+                        end
+                    end
+                    local currentTool = char:FindFirstChildOfClass("Tool")
+                    if slot1Item and currentTool ~= slot1Item then
+                        humanoid:EquipTool(slot1Item)
+                    end
+                end
+
+                local questPart = FindObject(Workspace, questName)
+                if questPart then
+                    if (hrp.Position - questPart.Position).Magnitude > 25 then
+                        FlyTo(questPart.CFrame + Vector3.new(0, 3, 0), function() return masterFarmLevel50Enabled end)
+                        task.wait(0.3)
+                    end
+                    for _, v in pairs(Workspace:GetDescendants()) do
+                        if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 25 then
+                            fireproximityprompt(v)
+                        end
+                    end
+                end
+
+                local monsterPart = FindNearestMonster(monsterName)
+                if monsterPart then
+                    FlyTo(monsterPart.CFrame * CFrame.new(0, 3, 4), function() return masterFarmLevel50Enabled end)
+
+                    while masterFarmLevel50Enabled and monsterPart and monsterPart.Parent and monsterPart.Parent:FindFirstChild("Humanoid") and monsterPart.Parent.Humanoid.Health > 0 do
                         hrp.CFrame = monsterPart.CFrame * CFrame.new(0, 3, 4)
                         hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                         hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
@@ -476,7 +611,7 @@ local function switchTab(tabName)
 end
 
 -- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย
-local function createCategoryButton(name)
+local function createCategoryButton(name, order)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 26)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -485,6 +620,7 @@ local function createCategoryButton(name)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextSize = 10
+    btn.LayoutOrder = order
     btn.Parent = LeftSide
 
     local corner = Instance.new("UICorner")
@@ -496,8 +632,8 @@ local function createCategoryButton(name)
     end)
 end
 
-createCategoryButton("เมนูหลัก")
-createCategoryButton("ฟามเวล")
+createCategoryButton("เมนูหลัก", 1)
+createCategoryButton("ฟามเวล", 2)
 
 -- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก"
 switchTab("เมนูหลัก")
