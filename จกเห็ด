@@ -5,13 +5,8 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
 
-getgenv().AutoFarm = false
-getgenv().FastMove = false
 getgenv().SavedCFrame1 = nil
 getgenv().SavedCFrame2 = nil
-getgenv().FlySpeed = 300
-getgenv().MoveSpeed1 = 300
-getgenv().MoveSpeed2 = 300
 
 -- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
 local CoreGui = game:GetService("CoreGui")
@@ -172,7 +167,7 @@ local LeftLayout = Instance.new("UIListLayout")
 LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 5)
-LeftLayout.Parent = LeftSide -- **จุดที่แก้: ใส่ Parent ให้ LeftLayout**
+LeftLayout.Parent = LeftSide
 
 -- ==================== ฝั่งขวา: ฟังก์ชัน ====================
 local RightSide = Instance.new("ScrollingFrame")
@@ -207,7 +202,7 @@ local function createContainer(name)
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Padding = UDim.new(0, 6)
-    layout.Parent = container -- **จุดที่แก้: ใส่ Parent ให้ layout ของ Container**
+    layout.Parent = container
 
     FunctionContainers[name] = container
     return container
@@ -303,143 +298,31 @@ local function createButton(parent, text, callback)
     return btn
 end
 
-local function createTextBox(parent, placeholder, defaultText, callback)
-    local box = Instance.new("TextBox")
-    box.Size = UDim2.new(0.95, 0, 0, 30)
-    box.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    box.BorderSizePixel = 0
-    box.Font = Enum.Font.Gotham
-    box.PlaceholderText = placeholder
-    box.Text = defaultText
-    box.TextColor3 = Color3.fromRGB(255, 255, 255)
-    box.TextSize = 11
-    box.Parent = parent
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = box
-
-    box.FocusLost:Connect(function()
-        local num = tonumber(box.Text)
-        if num then
-            callback(num)
-        else
-            box.Text = tostring(defaultText)
-        end
-    end)
-    return box
-end
-
-local function MoveToTarget(targetCFrame, customSpeed)
-    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
-    local hrp = LocalPlayer.Character.HumanoidRootPart
-    local distance = (hrp.Position - targetCFrame.Position).Magnitude
-    local speed = customSpeed or 300
-    if speed <= 0 then speed = 300 end
-    local timeTake = distance / speed
-    
-    local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
-    tween:Play()
-    
-    local completed = false
-    local connection
-    connection = tween.Completed:Connect(function()
-        completed = true
-        connection:Disconnect()
-    end)
-    
-    while not completed and (getgenv().FastMove) do
-        task.wait()
-    end
-    if not getgenv().FastMove then
-        tween:Cancel()
-    end
-end
-
-createButton(TeleportContainer, "เซฟจุด - 1", function()
+-- ปุ่มเซฟจุด 1
+createButton(TeleportContainer, "เซฟจุด 1", function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         getgenv().SavedCFrame1 = LocalPlayer.Character.HumanoidRootPart.CFrame
     end
 end)
 
-createTextBox(TeleportContainer, "ตั้งค่าจุด 1", "300", function(val)
-    getgenv().MoveSpeed1 = val
-end)
-
-local GoBtn1 = Instance.new("TextButton")
-GoBtn1.Size = UDim2.new(0.95, 0, 0, 30)
-GoBtn1.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-GoBtn1.BorderSizePixel = 0
-GoBtn1.Font = Enum.Font.GothamBold
-GoBtn1.Text = "ไปหาจุด1: OFF"
-GoBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
-GoBtn1.TextSize = 11
-GoBtn1.Parent = TeleportContainer
-
-local GoBtn1Corner = Instance.new("UICorner")
-GoBtn1Corner.CornerRadius = UDim.new(0, 4)
-GoBtn1Corner.Parent = GoBtn1
-
-GoBtn1.MouseButton1Click:Connect(function()
-    getgenv().FastMove = not getgenv().FastMove
-    if getgenv().FastMove then
-        GoBtn1.Text = "ไปหาจุด1: ON"
-        GoBtn1.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-        task.spawn(function()
-            while getgenv().FastMove do
-                if getgenv().SavedCFrame1 then
-                    MoveToTarget(getgenv().SavedCFrame1, getgenv().MoveSpeed1)
-                end
-                task.wait(0.1)
-            end
-        end)
-    else
-        GoBtn1.Text = "ไปหาจุด1: OFF"
-        GoBtn1.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+-- ปุ่มไปหาจุด 1 [กด1ครั้ง]
+createButton(TeleportContainer, "ไปหาจุด 1 [กด1ครั้ง]", function()
+    if getgenv().SavedCFrame1 and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = getgenv().SavedCFrame1
     end
 end)
 
-createButton(TeleportContainer, "เซฟจุด - 2", function()
+-- ปุ่มเซฟจุด 2
+createButton(TeleportContainer, "เซฟจุด 2", function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         getgenv().SavedCFrame2 = LocalPlayer.Character.HumanoidRootPart.CFrame
     end
 end)
 
-createTextBox(TeleportContainer, "ตั้งค่าจุด 2", "300", function(val)
-    getgenv().MoveSpeed2 = val
-end)
-
-local GoBtn2 = Instance.new("TextButton")
-GoBtn2.Size = UDim2.new(0.95, 0, 0, 30)
-GoBtn2.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-GoBtn2.BorderSizePixel = 0
-GoBtn2.Font = Enum.Font.GothamBold
-GoBtn2.Text = "ไปหาจุด2: OFF"
-GoBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
-GoBtn2.TextSize = 11
-GoBtn2.Parent = TeleportContainer
-
-local GoBtn2Corner = Instance.new("UICorner")
-GoBtn2Corner.CornerRadius = UDim.new(0, 4)
-GoBtn2Corner.Parent = GoBtn2
-
-GoBtn2.MouseButton1Click:Connect(function()
-    getgenv().FastMove = not getgenv().FastMove
-    if getgenv().FastMove then
-        GoBtn2.Text = "ไปหาจุด2: ON"
-        GoBtn2.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-        task.spawn(function()
-            while getgenv().FastMove do
-                if getgenv().SavedCFrame2 then
-                    MoveToTarget(getgenv().SavedCFrame2, getgenv().MoveSpeed2)
-                end
-                task.wait(0.1)
-            end
-        end)
-    else
-        GoBtn2.Text = "ไปหาจุด2: OFF"
-        GoBtn2.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+-- ปุ่มไปหาจุด 2 [กด1ครั้ง]
+createButton(TeleportContainer, "ไปหาจุด 2 [กด1ครั้ง]", function()
+    if getgenv().SavedCFrame2 and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = getgenv().SavedCFrame2
     end
 end)
 
