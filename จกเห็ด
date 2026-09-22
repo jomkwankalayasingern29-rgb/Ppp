@@ -153,13 +153,13 @@ MinimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== ฝั่งซ้าย: หมวดหมู่ (แคบลง) ====================
+-- ==================== ฝั่งซ้าย: หมวดหมู่ (เพิ่ม CanvasSize ป้องกันปุ่มหาย) ====================
 local LeftSide = Instance.new("ScrollingFrame")
-LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
+LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
 LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
+LeftSide.CanvasSize = UDim2.new(0, 0, 0, 100) -- กำหนดให้เลื่อนดูหมวดหมู่ได้
 LeftSide.ScrollBarThickness = 2
 LeftSide.Parent = MainFrame
 
@@ -172,10 +172,10 @@ LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
 LeftLayout.Padding = UDim.new(0, 5)
 
--- ==================== ฝั่งขวา: ฟังก์ชัน (กว้างกว่า) ====================
+-- ==================== ฝั่งขวา: ฟังก์ชัน ====================
 local RightSide = Instance.new("ScrollingFrame")
-RightSide.Size = UDim2.new(0.67, 0, 1, -34)
-RightSide.Position = UDim2.new(0.32, 0, 0, 30)
+RightSide.Size = UDim2.new(0.65, 0, 1, -34)
+RightSide.Position = UDim2.new(0.34, 0, 0, 30)
 RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 RightSide.BorderSizePixel = 0
 RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -188,13 +188,13 @@ RightCorner.Parent = RightSide
 
 local FunctionContainers = {}
 
-local function createContainer(name)
+local function createContainer(name, canvasHeight)
     local container = Instance.new("ScrollingFrame")
     container.Name = name
     container.Size = UDim2.new(1, 0, 1, 0)
     container.BackgroundTransparency = 1
     container.BorderSizePixel = 0
-    container.CanvasSize = UDim2.new(0, 0, 0, 250) -- เพิ่มขนาดพื้นที่เลื่อนให้พอดีกับเนื้อหา
+    container.CanvasSize = UDim2.new(0, 0, 0, canvasHeight or 200)
     container.ScrollBarThickness = 2
     container.Visible = false
     container.Parent = RightSide
@@ -209,10 +209,10 @@ local function createContainer(name)
 end
 
 -- ==================== 1. หมวด "เมนูหลัก" ====================
-local MainMenuContainer = createContainer("เมนูหลัก")
+local MainMenuContainer = createContainer("เมนูหลัก", 100)
 
 local DiscordBtn = Instance.new("TextButton")
-DiscordBtn.Size = UDim2.new(0.92, 0, 0, 30)
+DiscordBtn.Size = UDim2.new(0.95, 0, 0, 30)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 DiscordBtn.BorderSizePixel = 0
 DiscordBtn.Font = Enum.Font.GothamBold
@@ -233,7 +233,7 @@ end)
 
 -- ช่องขายทั้งหมด
 local RowFrame = Instance.new("Frame")
-RowFrame.Size = UDim2.new(0.92, 0, 0, 30)
+RowFrame.Size = UDim2.new(0.95, 0, 0, 30)
 RowFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 RowFrame.BorderSizePixel = 0
 RowFrame.Parent = MainMenuContainer
@@ -277,12 +277,12 @@ end)
 
 
 -- ==================== 2. หมวด "ระบบวาร์ป" ====================
-local TeleportContainer = createContainer("ระบบวาร์ป")
+local TeleportContainer = createContainer("ระบบวาร์ป", 230)
 
 -- ฟังก์ชันสร้างปุ่ม
 local function createButton(parent, text, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.92, 0, 0, 30)
+    btn.Size = UDim2.new(0.95, 0, 0, 30)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.GothamBold
@@ -302,7 +302,7 @@ end
 -- ฟังก์ชันสร้างกล่องข้อความ (TextBox)
 local function createTextBox(parent, placeholder, defaultText, callback)
     local box = Instance.new("TextBox")
-    box.Size = UDim2.new(0.92, 0, 0, 30)
+    box.Size = UDim2.new(0.95, 0, 0, 30)
     box.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     box.BorderSizePixel = 0
     box.Font = Enum.Font.Gotham
@@ -369,7 +369,7 @@ end)
 
 -- 3. ไปหาจุด 1 (ปุ่มเปิด-ปิด)
 local GoBtn1 = Instance.new("TextButton")
-GoBtn1.Size = UDim2.new(0.92, 0, 0, 30)
+GoBtn1.Size = UDim2.new(0.95, 0, 0, 30)
 GoBtn1.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 GoBtn1.BorderSizePixel = 0
 GoBtn1.Font = Enum.Font.GothamBold
@@ -415,7 +415,7 @@ end)
 
 -- 6. ไปหาจุด 2 (ปุ่มเปิด-ปิด)
 local GoBtn2 = Instance.new("TextButton")
-GoBtn2.Size = UDim2.new(0.92, 0, 0, 30)
+GoBtn2.Size = UDim2.new(0.95, 0, 0, 30)
 GoBtn2.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 GoBtn2.BorderSizePixel = 0
 GoBtn2.Font = Enum.Font.GothamBold
