@@ -153,13 +153,14 @@ MinimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
+-- ==================== ฝั่งซ้าย: หมวดหมู่ (แก้ให้ปรับขนาดอัติโนมัติ ไม่ให้ปุ่มหาย) ====================
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
 LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 150) -- ขยาย CanvasSize เผื่อปุ่มเพิ่ม
+LeftSide.AutomaticCanvasSize = Enum.AutomaticSize.Y -- ป้องกันปุ่มหายและปรับขนาดตามเนื้อหาอัตโนมัติ
+LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 LeftSide.ScrollBarThickness = 2
 LeftSide.Parent = MainFrame
 
@@ -178,6 +179,7 @@ RightSide.Size = UDim2.new(0.65, 0, 1, -34)
 RightSide.Position = UDim2.new(0.34, 0, 0, 30)
 RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 RightSide.BorderSizePixel = 0
+RightSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
 RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 RightSide.ScrollBarThickness = 2
 RightSide.Parent = MainFrame
@@ -188,13 +190,14 @@ RightCorner.Parent = RightSide
 
 local FunctionContainers = {}
 
-local function createContainer(name, canvasHeight)
+local function createContainer(name)
     local container = Instance.new("ScrollingFrame")
     container.Name = name
     container.Size = UDim2.new(1, 0, 1, 0)
     container.BackgroundTransparency = 1
     container.BorderSizePixel = 0
-    container.CanvasSize = UDim2.new(0, 0, 0, canvasHeight or 200)
+    container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    container.CanvasSize = UDim2.new(0, 0, 0, 0)
     container.ScrollBarThickness = 2
     container.Visible = false
     container.Parent = RightSide
@@ -209,7 +212,7 @@ local function createContainer(name, canvasHeight)
 end
 
 -- ==================== 1. หมวด "เมนูหลัก" ====================
-local MainMenuContainer = createContainer("เมนูหลัก", 100)
+local MainMenuContainer = createContainer("เมนูหลัก")
 
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(0.95, 0, 0, 30)
@@ -277,7 +280,7 @@ end)
 
 
 -- ==================== 2. หมวด "ระบบวาร์ป" ====================
-local TeleportContainer = createContainer("ระบบวาร์ป", 230)
+local TeleportContainer = createContainer("ระบบวาร์ป")
 
 local function createButton(parent, text, callback)
     local btn = Instance.new("TextButton")
