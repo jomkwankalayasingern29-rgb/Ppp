@@ -2,9 +2,10 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
+local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
 
 getgenv().SavedCFrame1 = nil
 getgenv().SavedCFrame2 = nil
@@ -12,6 +13,8 @@ getgenv().Speed1 = 300
 getgenv().Speed2 = 300
 getgenv().ClickTpSpeed = 300
 getgenv().ClickTpEnabled = false
+getgenv().NameTp1 = "จุดที่ 1"
+getgenv().NameTp2 = "จุดที่ 2"
 
 -- เคลียร์ UI เก่าทิ้ง
 local CoreGui = game:GetService("CoreGui")
@@ -53,8 +56,8 @@ LoadText.Parent = LoadFrame
 
 -- หน้าต่าง UI หลัก
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 380, 0, 240)
-MainFrame.Position = UDim2.new(0.5, -190, 0.5, -120)
+MainFrame.Size = UDim2.new(0, 380, 0, 260)
+MainFrame.Position = UDim2.new(0.5, -190, 0.5, -130)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -127,7 +130,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
         TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
     else
         MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 240)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 260)}):Play()
     end
 end)
 
@@ -295,15 +298,24 @@ local function createInputRow(parent, labelText, defaultVal, callback)
     TextCorner.Parent = TextBox
 
     TextBox.FocusLost:Connect(function()
-        local num = tonumber(TextBox.Text)
-        if num then
-            callback(num)
-        else
-            TextBox.Text = tostring(defaultVal)
-        end
+        local numOrText = TextBox.Text
+        callback(numOrText)
     end)
 
     return RowFrame
+end
+
+-- ฟังก์ชันสร้างหัวข้อคั่นหมวดหมู่ย่อย
+local function createSectionHeader(parent, text)
+    local HeaderLabel = Instance.new("TextLabel")
+    HeaderLabel.Size = UDim2.new(0.95, 0, 0, 22)
+    HeaderLabel.BackgroundTransparency = 1
+    HeaderLabel.Font = Enum.Font.GothamBold
+    HeaderLabel.Text = text
+    HeaderLabel.TextColor3 = Color3.fromRGB(0, 162, 255)
+    HeaderLabel.TextSize = 11
+    HeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    HeaderLabel.Parent = parent
 end
 
 createActionRow(MainMenuContainer, "ขายทั้งหมด", "ขาย", Color3.fromRGB(50, 100, 200), function(btn)
@@ -332,8 +344,18 @@ local function smoothTeleport(targetCFrame, speed)
     task.wait(timeTake)
 end
 
--- จุดที่ 1
-createActionRow(TeleportContainer, "จุดที่ 1", "เซฟจุด", Color3.fromRGB(80, 80, 80), function(btn)
+-- >> วาร์ป 1 <<
+createSectionHeader(TeleportContainer, ">> วาร์ป 1 <<")
+
+local warp1Btn
+createInputRow(TeleportContainer, "ชื่อจุดที่ 1", getgenv().NameTp1, function(val)
+    getgenv().NameTp1 = val
+    if warp1Btn then
+        warp1Btn.Text = "วาร์ป: " .. val
+    end
+end)
+
+createActionRow(TeleportContainer, "เซฟตำแหน่งที่ 1", "เซฟจุด", Color3.fromRGB(80, 80, 80), function(btn)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         getgenv().SavedCFrame1 = LocalPlayer.Character.HumanoidRootPart.CFrame
         btn.Text = "เซฟแล้ว!"
@@ -343,20 +365,32 @@ createActionRow(TeleportContainer, "จุดที่ 1", "เซฟจุด",
 end)
 
 createInputRow(TeleportContainer, "ความเร็ว จุด 1", getgenv().Speed1, function(val)
-    getgenv().Speed1 = val
+    local num = tonumber(val)
+    if num then getgenv().Speed1 = num end
 end)
 
-createActionRow(TeleportContainer, "วาร์ปไปจุด 1", "วาร์ป", Color3.fromRGB(50, 150, 50), function(btn)
+local row1 = createActionRow(TeleportContainer, "ไปที่จุดที่ 1", "วาร์ป: " .. getgenv().NameTp1, Color3.fromRGB(50, 150, 50), function(btn)
     if getgenv().SavedCFrame1 then
         smoothTeleport(getgenv().SavedCFrame1, getgenv().Speed1)
         btn.Text = "ถึงแล้ว!"
         task.wait(1)
-        btn.Text = "วาร์ป"
+        btn.Text = "วาร์ป: " .. getgenv().NameTp1
+    end
+end)
+warp1Btn = row1:FindFirstChildOfClass("TextButton")
+
+-- >> วาร์ป 2 <<
+createSectionHeader(TeleportContainer, ">> วาร์ป 2 <<")
+
+local warp2Btn
+createInputRow(TeleportContainer, "ชื่อจุดที่ 2", getgenv().NameTp2, function(val)
+    getgenv().NameTp2 = val
+    if warp2Btn then
+        warp2Btn.Text = "วาร์ป: " .. val
     end
 end)
 
--- จุดที่ 2
-createActionRow(TeleportContainer, "จุดที่ 2", "เซฟจุด", Color3.fromRGB(80, 80, 80), function(btn)
+createActionRow(TeleportContainer, "เซฟตำแหน่งที่ 2", "เซฟจุด", Color3.fromRGB(80, 80, 80), function(btn)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         getgenv().SavedCFrame2 = LocalPlayer.Character.HumanoidRootPart.CFrame
         btn.Text = "เซฟแล้ว!"
@@ -366,19 +400,23 @@ createActionRow(TeleportContainer, "จุดที่ 2", "เซฟจุด",
 end)
 
 createInputRow(TeleportContainer, "ความเร็ว จุด 2", getgenv().Speed2, function(val)
-    getgenv().Speed2 = val
+    local num = tonumber(val)
+    if num then getgenv().Speed2 = num end
 end)
 
-createActionRow(TeleportContainer, "วาร์ปไปจุด 2", "วาร์ป", Color3.fromRGB(50, 150, 50), function(btn)
+local row2 = createActionRow(TeleportContainer, "ไปที่จุดที่ 2", "วาร์ป: " .. getgenv().NameTp2, Color3.fromRGB(50, 150, 50), function(btn)
     if getgenv().SavedCFrame2 then
         smoothTeleport(getgenv().SavedCFrame2, getgenv().Speed2)
         btn.Text = "ถึงแล้ว!"
         task.wait(1)
-        btn.Text = "วาร์ป"
+        btn.Text = "วาร์ป: " .. getgenv().NameTp2
     end
 end)
+warp2Btn = row2:FindFirstChildOfClass("TextButton")
 
--- ฟังก์ชันคลิกพื้นแล้ววาร์ปไปจุดที่คลิก (Click to Teleport)
+-- >> คลิกวาร์ป <<
+createSectionHeader(TeleportContainer, ">> คลิกวาร์ป <<")
+
 createActionRow(TeleportContainer, "คลิกพื้นวาร์ป", "OFF", Color3.fromRGB(200, 50, 50), function(btn)
     getgenv().ClickTpEnabled = not getgenv().ClickTpEnabled
     if getgenv().ClickTpEnabled then
@@ -391,13 +429,25 @@ createActionRow(TeleportContainer, "คลิกพื้นวาร์ป", "O
 end)
 
 createInputRow(TeleportContainer, "ความเร็วคลิกวาร์ป", getgenv().ClickTpSpeed, function(val)
-    getgenv().ClickTpSpeed = val
+    local num = tonumber(val)
+    if num then getgenv().ClickTpSpeed = num end
 end)
 
-Mouse.Button1Down:Connect(function()
-    if getgenv().ClickTpEnabled and Mouse.Target then
-        local targetPos = Mouse.Hit + Vector3.new(0, 3, 0) -- ยกตัวขึ้นนิดหน่อยกันจมพื้น
-        smoothTeleport(targetPos, getgenv().ClickTpSpeed)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and getgenv().ClickTpEnabled then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            local mousePos = UserInputService:GetMouseLocation()
+            local ray = Camera:ScreenPointToRay(mousePos.X, mousePos.Y)
+            local raycastParams = RaycastParams.new()
+            raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+            raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+            
+            local raycastResult = Workspace:Raycast(ray.Origin, ray.Direction * 1000, raycastParams)
+            if raycastResult then
+                local targetCFrame = CFrame.new(raycastResult.Position + Vector3.new(0, 3, 0))
+                smoothTeleport(targetCFrame, getgenv().ClickTpSpeed)
+            end
+        end
     end
 end)
 
@@ -448,7 +498,7 @@ task.spawn(function()
     
     local info = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     TweenService:Create(MainFrame, info, {
-        Size = UDim2.new(0, 380, 0, 240),
+        Size = UDim2.new(0, 380, 0, 260),
         BackgroundTransparency = 0
     }):Play()
 end)
