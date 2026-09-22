@@ -231,100 +231,106 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ช่องขายทั้งหมด
-local RowFrame = Instance.new("Frame")
-RowFrame.Size = UDim2.new(0.95, 0, 0, 30)
-RowFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-RowFrame.BorderSizePixel = 0
-RowFrame.Parent = MainMenuContainer
+-- ฟังก์ชันช่วยสร้างแถวแบบสไตล์ปุ่ม "ขาย" (มีป้ายชื่อซ้าย + ปุ่มกดขวา)
+local function createActionRow(parent, labelText, buttonText, buttonColor, callback)
+    local RowFrame = Instance.new("Frame")
+    RowFrame.Size = UDim2.new(0.95, 0, 0, 30)
+    RowFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    RowFrame.BorderSizePixel = 0
+    RowFrame.Parent = parent
 
-local RowCorner = Instance.new("UICorner")
-RowCorner.CornerRadius = UDim.new(0, 4)
-RowCorner.Parent = RowFrame
+    local RowCorner = Instance.new("UICorner")
+    RowCorner.CornerRadius = UDim.new(0, 4)
+    RowCorner.Parent = RowFrame
 
-local RowLabel = Instance.new("TextLabel")
-RowLabel.Size = UDim2.new(0.6, 0, 1, 0)
-RowLabel.Position = UDim2.new(0, 8, 0, 0)
-RowLabel.BackgroundTransparency = 1
-RowLabel.Font = Enum.Font.GothamBold
-RowLabel.Text = "ขายทั้งหมด"
-RowLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-RowLabel.TextSize = 11
-RowLabel.TextXAlignment = Enum.TextXAlignment.Left
-RowLabel.Parent = RowFrame
+    local RowLabel = Instance.new("TextLabel")
+    RowLabel.Size = UDim2.new(0.55, 0, 1, 0)
+    RowLabel.Position = UDim2.new(0, 8, 0, 0)
+    RowLabel.BackgroundTransparency = 1
+    RowLabel.Font = Enum.Font.GothamBold
+    RowLabel.Text = labelText
+    RowLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    RowLabel.TextSize = 11
+    RowLabel.TextXAlignment = Enum.TextXAlignment.Left
+    RowLabel.Parent = RowFrame
 
-local SellBtn = Instance.new("TextButton")
-SellBtn.Size = UDim2.new(0, 50, 0, 20)
-SellBtn.Position = UDim2.new(1, -55, 0.5, -10)
-SellBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 200)
-SellBtn.BorderSizePixel = 0
-SellBtn.Font = Enum.Font.GothamBold
-SellBtn.Text = "ขาย"
-SellBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SellBtn.TextSize = 11
-SellBtn.Parent = RowFrame
+    local ActionBtn = Instance.new("TextButton")
+    ActionBtn.Size = UDim2.new(0, 65, 0, 20)
+    ActionBtn.Position = UDim2.new(1, -70, 0.5, -10)
+    ActionBtn.BackgroundColor3 = buttonColor or Color3.fromRGB(50, 100, 200)
+    ActionBtn.BorderSizePixel = 0
+    ActionBtn.Font = Enum.Font.GothamBold
+    ActionBtn.Text = buttonText
+    ActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ActionBtn.TextSize = 10
+    ActionBtn.Parent = RowFrame
 
-local SellBtnCorner = Instance.new("UICorner")
-SellBtnCorner.CornerRadius = UDim.new(0, 3)
-SellBtnCorner.Parent = SellBtn
+    local ActionCorner = Instance.new("UICorner")
+    ActionCorner.CornerRadius = UDim.new(0, 3)
+    ActionCorner.Parent = ActionBtn
 
-SellBtn.MouseButton1Click:Connect(function()
+    ActionBtn.MouseButton1Click:Connect(function()
+        callback(ActionBtn)
+    end)
+
+    return RowFrame
+end
+
+-- สร้างปุ่มขายทั้งหมดในเมนูหลัก
+createActionRow(MainMenuContainer, "ขายทั้งหมด", "ขาย", Color3.fromRGB(50, 100, 200), function(btn)
     local args = { "sellAll" }
     pcall(function()
         game:GetService("ReplicatedStorage"):WaitForChild("RequestSell"):InvokeServer(unpack(args))
     end)
+    btn.Text = "สำเร็จ!"
+    task.wait(1)
+    btn.Text = "ขาย"
 end)
 
 
 -- ==================== 2. หมวด "ระบบวาร์ป" ====================
 local TeleportContainer = createContainer("ระบบวาร์ป")
 
-local function createButton(parent, text, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.95, 0, 0, 30)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    btn.BorderSizePixel = 0
-    btn.Font = Enum.Font.GothamBold
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 11
-    btn.Parent = parent
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = btn
-
-    btn.MouseButton1Click:Connect(callback)
-    return btn
-end
-
--- ปุ่มเซฟจุด 1
-createButton(TeleportContainer, "เซฟจุด 1", function()
+-- เซฟจุด 1
+createActionRow(TeleportContainer, "จุดที่ 1", "เซฟจุด", Color3.fromRGB(80, 80, 80), function(btn)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         getgenv().SavedCFrame1 = LocalPlayer.Character.HumanoidRootPart.CFrame
+        btn.Text = "เซฟแล้ว!"
+        task.wait(1)
+        btn.Text = "เซฟจุด"
     end
 end)
 
--- ปุ่มไปหาจุด 1 [กด1ครั้ง]
-createButton(TeleportContainer, "ไปหาจุด 1 [กด1ครั้ง]", function()
+-- ไปหาจุด 1
+createActionRow(TeleportContainer, "ไปหาจุดที่ 1", "วาร์ป", Color3.fromRGB(50, 150, 50), function(btn)
     if getgenv().SavedCFrame1 and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         LocalPlayer.Character.HumanoidRootPart.CFrame = getgenv().SavedCFrame1
+        btn.Text = "พุ่งแล้ว!"
+        task.wait(1)
+        btn.Text = "วาร์ป"
     end
 end)
 
--- ปุ่มเซฟจุด 2
-createButton(TeleportContainer, "เซฟจุด 2", function()
+-- เซฟจุด 2
+createActionRow(TeleportContainer, "จุดที่ 2", "เซฟจุด", Color3.fromRGB(80, 80, 80), function(btn)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         getgenv().SavedCFrame2 = LocalPlayer.Character.HumanoidRootPart.CFrame
+        btn.Text = "เซฟแล้ว!"
+        task.wait(1)
+        btn.Text = "เซฟจุด"
     end
 end)
 
--- ปุ่มไปหาจุด 2 [กด1ครั้ง]
-createButton(TeleportContainer, "ไปหาจุด 2 [กด1ครั้ง]", function()
+-- ไปหาจุด 2
+createActionRow(TeleportContainer, "ไปหาจุดที่ 2", "วาร์ป", Color3.fromRGB(50, 150, 50), function(btn)
     if getgenv().SavedCFrame2 and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         LocalPlayer.Character.HumanoidRootPart.CFrame = getgenv().SavedCFrame2
+        btn.Text = "พุ่งแล้ว!"
+        task.wait(1)
+        btn.Text = "วาร์ป"
     end
 end)
+
 
 -- ฟังก์ชันสลับหมวดหมู่
 local function switchTab(tabName)
