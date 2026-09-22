@@ -7,14 +7,15 @@ local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
-getgenv().SavedCFrame1 = nil
-getgenv().SavedCFrame2 = nil
-getgenv().Speed1 = 300
-getgenv().Speed2 = 300
-getgenv().ClickTpSpeed = 300
-getgenv().ClickTpEnabled = false
-getgenv().NameTp1 = "จุดที่ 1"
-getgenv().NameTp2 = "จุดที่ 2"
+-- กำหนดค่าและจดจำค่าเดิมแม้จะรันสคริปต์ใหม่
+getgenv().SavedCFrame1 = getgenv().SavedCFrame1 or nil
+getgenv().SavedCFrame2 = getgenv().SavedCFrame2 or nil
+getgenv().Speed1 = getgenv().Speed1 or 300
+getgenv().Speed2 = getgenv().Speed2 or 300
+getgenv().ClickTpSpeed = getgenv().ClickTpSpeed or 300
+getgenv().ClickTpEnabled = getgenv().ClickTpEnabled or false
+getgenv().NameTp1 = getgenv().NameTp1 or "จุดที่ 1"
+getgenv().NameTp2 = getgenv().NameTp2 or "จุดที่ 2"
 
 -- เคลียร์ UI เก่าทิ้ง
 local CoreGui = game:GetService("CoreGui")
