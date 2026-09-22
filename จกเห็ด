@@ -1,0 +1,453 @@
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+
+getgenv().AutoFarm = false
+getgenv().FastMove = false
+getgenv().SavedCFrame1 = nil
+getgenv().SavedCFrame2 = nil
+getgenv().FlySpeed = 300
+getgenv().MoveSpeed1 = 300
+getgenv().MoveSpeed2 = 300
+
+-- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
+local CoreGui = game:GetService("CoreGui")
+if CoreGui:FindFirstChild("CustomScriptUI") then
+    CoreGui.CustomScriptUI:Destroy()
+end
+
+-- สร้าง ScreenGui หลัก
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CustomScriptUI"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- หน้าต่างแจ้งเตือนสถานะตอนเริ่ม (Loading Screen)
+local LoadFrame = Instance.new("Frame")
+LoadFrame.Name = "LoadFrame"
+LoadFrame.Size = UDim2.new(0, 300, 0, 65)
+LoadFrame.Position = UDim2.new(0.5, -150, 0.5, -32)
+LoadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+LoadFrame.BorderSizePixel = 0
+LoadFrame.Parent = ScreenGui
+
+local LoadCorner = Instance.new("UICorner")
+LoadCorner.CornerRadius = UDim.new(0, 8)
+LoadCorner.Parent = LoadFrame
+
+local LoadStroke = Instance.new("UIStroke")
+LoadStroke.Color = Color3.fromRGB(0, 162, 255)
+LoadStroke.Thickness = 1.5
+LoadStroke.Parent = LoadFrame
+
+local LoadText = Instance.new("TextLabel")
+LoadText.Name = "LoadText"
+LoadText.Size = UDim2.new(1, 0, 1, 0)
+LoadText.BackgroundTransparency = 1
+LoadText.Font = Enum.Font.GothamBold
+LoadText.Text = "กำลังโหลด"
+LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoadText.TextSize = 16
+LoadText.Parent = LoadFrame
+
+-- ==================== หน้าต่าง UI หลัก ====================
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 380, 0, 240)
+MainFrame.Position = UDim2.new(0.5, -190, 0.5, -120)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = false
+MainFrame.BackgroundTransparency = 1
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(0, 162, 255)
+MainStroke.Thickness = 1.5
+MainStroke.Parent = MainFrame
+
+-- แถบหัวข้อด้านบน (TopBar)
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 28)
+TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopBarCorner = Instance.new("UICorner")
+TopBarCorner.CornerRadius = UDim.new(0, 8)
+TopBarCorner.Parent = TopBar
+
+local FixTopBar = Instance.new("Frame")
+FixTopBar.Size = UDim2.new(1, 0, 0, 5)
+FixTopBar.Position = UDim2.new(0, 0, 1, -5)
+FixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+FixTopBar.BorderSizePixel = 0
+FixTopBar.Parent = TopBar
+
+-- โลโก้ตัว "G"
+local LogoG = Instance.new("TextLabel")
+LogoG.Size = UDim2.new(0, 20, 0, 20)
+LogoG.Position = UDim2.new(0, 8, 0, 4)
+LogoG.BackgroundTransparency = 1
+LogoG.Font = Enum.Font.GothamBold
+LogoG.Text = "G"
+LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
+LogoG.TextSize = 14
+LogoG.Parent = TopBar
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -80, 1, 0)
+TitleLabel.Position = UDim2.new(0, 32, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "Meme Sea Mobile UI"
+TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+TitleLabel.TextSize = 12
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TopBar
+
+-- ปุ่มปิด UI (X)
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 24, 0, 24)
+CloseButton.Position = UDim2.new(1, -26, 0, 2)
+CloseButton.BackgroundTransparency = 1
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(220, 60, 60)
+CloseButton.TextSize = 13
+CloseButton.Parent = TopBar
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- ปุ่มย่อหน้าต่าง (-)
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
+MinimizeButton.Position = UDim2.new(1, -50, 0, 2)
+MinimizeButton.BackgroundTransparency = 1
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+MinimizeButton.TextSize = 14
+MinimizeButton.Parent = TopBar
+
+local isMinimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        MinimizeButton.Text = "+"
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
+    else
+        MinimizeButton.Text = "-"
+        TweenService:Create(MainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 240)}):Play()
+    end
+end)
+
+-- ==================== ฝั่งซ้าย: หมวดหมู่ (แคบลง) ====================
+local LeftSide = Instance.new("ScrollingFrame")
+LeftSide.Size = UDim2.new(0.30, 0, 1, -34)
+LeftSide.Position = UDim2.new(0, 5, 0, 30)
+LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+LeftSide.BorderSizePixel = 0
+LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
+LeftSide.ScrollBarThickness = 2
+LeftSide.Parent = MainFrame
+
+local LeftCorner = Instance.new("UICorner")
+LeftCorner.CornerRadius = UDim.new(0, 5)
+LeftCorner.Parent = LeftSide
+
+local LeftLayout = Instance.new("UIListLayout")
+LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+LeftLayout.Padding = UDim.new(0, 5)
+
+-- ==================== ฝั่งขวา: ฟังก์ชัน (กว้างกว่า) ====================
+local RightSide = Instance.new("ScrollingFrame")
+RightSide.Size = UDim2.new(0.67, 0, 1, -34)
+RightSide.Position = UDim2.new(0.32, 0, 0, 30)
+RightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+RightSide.BorderSizePixel = 0
+RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
+RightSide.ScrollBarThickness = 2
+RightSide.Parent = MainFrame
+
+local RightCorner = Instance.new("UICorner")
+RightCorner.CornerRadius = UDim.new(0, 5)
+RightCorner.Parent = RightSide
+
+local FunctionContainers = {}
+
+local function createContainer(name)
+    local container = Instance.new("ScrollingFrame")
+    container.Name = name
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.BorderSizePixel = 0
+    container.CanvasSize = UDim2.new(0, 0, 0, 200)
+    container.ScrollBarThickness = 2
+    container.Visible = false
+    container.Parent = RightSide
+
+    local layout = Instance.new("UIListLayout")
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 5)
+
+    FunctionContainers[name] = container
+    return container
+end
+
+-- สร้างหมวดหมู่หลัก (แทนที่หมวดเก่าทั้งหมดด้วยระบบวาร์ปเคลื่อนที่)
+local TeleportContainer = createContainer("ระบบวาร์ป")
+
+-- ฟังก์ชันสร้างปุ่มในหมวดหมู่
+local function createButton(parent, text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.92, 0, 0, 30)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 11
+    btn.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = btn
+
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+-- ฟังก์ชันสร้างกล่องข้อความ (TextBox) สำหรับใส่ความเร็ว
+local function createTextBox(parent, placeholder, defaultText, callback)
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(0.92, 0, 0, 30)
+    box.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    box.BorderSizePixel = 0
+    box.Font = Enum.Font.Gotham
+    box.PlaceholderText = placeholder
+    box.Text = defaultText
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.TextSize = 11
+    box.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = box
+
+    box.FocusLost:Connect(function()
+        local num = tonumber(box.Text)
+        if num then
+            callback(num)
+        else
+            box.Text = tostring(defaultText)
+        end
+    end)
+    return box
+end
+
+-- ฟังก์ชันเคลื่อนที่ด้วย Tween
+local function MoveToTarget(targetCFrame, customSpeed)
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = LocalPlayer.Character.HumanoidRootPart
+    local distance = (hrp.Position - targetCFrame.Position).Magnitude
+    local speed = customSpeed or 300
+    if speed <= 0 then speed = 300 end
+    local timeTake = distance / speed
+    
+    local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    
+    local completed = false
+    local connection
+    connection = tween.Completed:Connect(function()
+        completed = true
+        connection:Disconnect()
+    end)
+    
+    while not completed and (getgenv().FastMove) do
+        task.wait()
+    end
+    if not getgenv().FastMove then
+        tween:Cancel()
+    end
+end
+
+-- 1. เซฟจุด - 1
+createButton(TeleportContainer, "เซฟจุด - 1", function()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        getgenv().SavedCFrame1 = LocalPlayer.Character.HumanoidRootPart.CFrame
+    end
+end)
+
+-- 2. ตั้งค่าจุด 1 (TextBox)
+createTextBox(TeleportContainer, "ความเร็ว จุด 1", "300", function(val)
+    getgenv().MoveSpeed1 = val
+end)
+
+-- 3. ไปหาจุด 1 (ปุ่มเปิด-ปิดวิ่งไปจุด 1)
+local GoBtn1 = Instance.new("TextButton")
+GoBtn1.Size = UDim2.new(0.92, 0, 0, 30)
+GoBtn1.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+GoBtn1.BorderSizePixel = 0
+GoBtn1.Font = Enum.Font.GothamBold
+GoBtn1.Text = "ไปหาจุด1: OFF"
+GoBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
+GoBtn1.TextSize = 11
+GoBtn1.Parent = TeleportContainer
+
+local GoBtn1Corner = Instance.new("UICorner")
+GoBtn1Corner.CornerRadius = UDim.new(0, 4)
+GoBtn1Corner.Parent = GoBtn1
+
+GoBtn1.MouseButton1Click:Connect(function()
+    getgenv().FastMove = not getgenv().FastMove
+    if getgenv().FastMove then
+        GoBtn1.Text = "ไปหาจุด1: ON"
+        GoBtn1.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        task.spawn(function()
+            while getgenv().FastMove do
+                if getgenv().SavedCFrame1 then
+                    MoveToTarget(getgenv().SavedCFrame1, getgenv().MoveSpeed1)
+                end
+                task.wait(0.1)
+            end
+        end)
+    else
+        GoBtn1.Text = "ไปหาจุด1: OFF"
+        GoBtn1.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+-- 4. เซฟจุด - 2
+createButton(TeleportContainer, "เซฟจุด - 2", function()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        getgenv().SavedCFrame2 = LocalPlayer.Character.HumanoidRootPart.CFrame
+    end
+end)
+
+-- 5. ตั้งค่าจุด 2 (TextBox)
+createTextBox(TeleportContainer, "ความเร็ว จุด 2", "300", function(val)
+    getgenv().MoveSpeed2 = val
+end)
+
+-- 6. ไปหาจุด 2 (ปุ่มเปิด-ปิดวิ่งไปจุด 2)
+local GoBtn2 = Instance.new("TextButton")
+GoBtn2.Size = UDim2.new(0.92, 0, 0, 30)
+GoBtn2.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+GoBtn2.BorderSizePixel = 0
+GoBtn2.Font = Enum.Font.GothamBold
+GoBtn2.Text = "ไปหาจุด2: OFF"
+GoBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
+GoBtn2.TextSize = 11
+GoBtn2.Parent = TeleportContainer
+
+local GoBtn2Corner = Instance.new("UICorner")
+GoBtn2Corner.CornerRadius = UDim.new(0, 4)
+GoBtn2Corner.Parent = GoBtn2
+
+GoBtn2.MouseButton1Click:Connect(function()
+    getgenv().FastMove = not getgenv().FastMove
+    if getgenv().FastMove then
+        GoBtn2.Text = "ไปหาจุด2: ON"
+        GoBtn2.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        task.spawn(function()
+            while getgenv().FastMove do
+                if getgenv().SavedCFrame2 then
+                    MoveToTarget(getgenv().SavedCFrame2, getgenv().MoveSpeed2)
+                end
+                task.wait(0.1)
+            end
+        end)
+    else
+        GoBtn2.Text = "ไปหาจุด2: OFF"
+        GoBtn2.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+-- ฟังก์ชันสลับหมวดหมู่
+local function switchTab(tabName)
+    for name, container in pairs(FunctionContainers) do
+        container.Visible = (name == tabName)
+    end
+end
+
+-- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย
+local function createCategoryButton(name)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 30)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 11
+    btn.Parent = LeftSide
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        switchTab(name)
+    end)
+end
+
+createCategoryButton("ระบบวาร์ป")
+
+-- เปิดหน้าแรกตั้งต้นที่ "ระบบวาร์ป"
+switchTab("ระบบวาร์ป")
+
+-- ==================== ลำดับการทำงาน (Loading & Animation) ====================
+task.spawn(function()
+    -- 1. กำลังโหลด... 2 วินาที
+    local dots = {"", ".", "..", "..."}
+    local startTime = tick()
+    
+    while tick() - startTime < 2 do
+        for _, d in ipairs(dots) do
+            LoadText.Text = "กำลังโหลด" .. d
+            task.wait(0.3)
+        end
+    end
+    
+    -- 2. ดาวโหลดเสร็จเเล้ว 1 วินาที
+    LoadText.Text = "ดาวโหลดเสร็จเเล้ว"
+    task.wait(1)
+    
+    -- 3. คัดลอกลิ้งดิสเสร็จเเล้ว + คัดลอกอัตโนมัติ
+    LoadText.Text = "คัดลอกลิ้งดิสเสร็จเเล้ว"
+    if setclipboard then
+        setclipboard("https://discord.gg/Ugssja4wqQ")
+    end
+    task.wait(1)
+    
+    -- 4. ลบหน้าจอโหลดทิ้ง
+    LoadFrame:Destroy()
+    
+    -- 5. ค่อยๆ ขยายหน้าต่าง UI หลักขึ้นมาแบบช้าๆ
+    MainFrame.Visible = true
+    MainFrame.Size = UDim2.new(0, 320, 0, 180)
+    
+    local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local expandTween = TweenService:Create(MainFrame, info, {
+        Size = UDim2.new(0, 380, 0, 240),
+        BackgroundTransparency = 0
+    })
+    
+    expandTween:Play()
+end)
