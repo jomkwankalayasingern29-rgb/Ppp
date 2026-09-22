@@ -194,7 +194,7 @@ local function createContainer(name)
     container.Size = UDim2.new(1, 0, 1, 0)
     container.BackgroundTransparency = 1
     container.BorderSizePixel = 0
-    container.CanvasSize = UDim2.new(0, 0, 0, 200)
+    container.CanvasSize = UDim2.new(0, 0, 0, 250) -- เพิ่มขนาดพื้นที่เลื่อนให้พอดีกับเนื้อหา
     container.ScrollBarThickness = 2
     container.Visible = false
     container.Parent = RightSide
@@ -202,16 +202,84 @@ local function createContainer(name)
     local layout = Instance.new("UIListLayout")
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 5)
+    layout.Padding = UDim.new(0, 6)
 
     FunctionContainers[name] = container
     return container
 end
 
--- สร้างหมวดหมู่หลัก (แทนที่หมวดเก่าทั้งหมดด้วยระบบวาร์ปเคลื่อนที่)
+-- ==================== 1. หมวด "เมนูหลัก" ====================
+local MainMenuContainer = createContainer("เมนูหลัก")
+
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Size = UDim2.new(0.92, 0, 0, 30)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+DiscordBtn.BorderSizePixel = 0
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.Text = "คัดลอกลิงก์ Discord"
+DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordBtn.TextSize = 11
+DiscordBtn.Parent = MainMenuContainer
+
+local DiscordBtnCorner = Instance.new("UICorner")
+DiscordBtnCorner.CornerRadius = UDim.new(0, 4)
+DiscordBtnCorner.Parent = DiscordBtn
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard("https://discord.gg/Ugssja4wqQ")
+    end
+end)
+
+-- ช่องขายทั้งหมด
+local RowFrame = Instance.new("Frame")
+RowFrame.Size = UDim2.new(0.92, 0, 0, 30)
+RowFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+RowFrame.BorderSizePixel = 0
+RowFrame.Parent = MainMenuContainer
+
+local RowCorner = Instance.new("UICorner")
+RowCorner.CornerRadius = UDim.new(0, 4)
+RowCorner.Parent = RowFrame
+
+local RowLabel = Instance.new("TextLabel")
+RowLabel.Size = UDim2.new(0.6, 0, 1, 0)
+RowLabel.Position = UDim2.new(0, 8, 0, 0)
+RowLabel.BackgroundTransparency = 1
+RowLabel.Font = Enum.Font.GothamBold
+RowLabel.Text = "ขายทั้งหมด"
+RowLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+RowLabel.TextSize = 11
+RowLabel.TextXAlignment = Enum.TextXAlignment.Left
+RowLabel.Parent = RowFrame
+
+local SellBtn = Instance.new("TextButton")
+SellBtn.Size = UDim2.new(0, 50, 0, 20)
+SellBtn.Position = UDim2.new(1, -55, 0.5, -10)
+SellBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 200)
+SellBtn.BorderSizePixel = 0
+SellBtn.Font = Enum.Font.GothamBold
+SellBtn.Text = "ขาย"
+SellBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SellBtn.TextSize = 11
+SellBtn.Parent = RowFrame
+
+local SellBtnCorner = Instance.new("UICorner")
+SellBtnCorner.CornerRadius = UDim.new(0, 3)
+SellBtnCorner.Parent = SellBtn
+
+SellBtn.MouseButton1Click:Connect(function()
+    local args = { "sellAll" }
+    pcall(function()
+        game:GetService("ReplicatedStorage"):WaitForChild("RequestSell"):InvokeServer(unpack(args))
+    end)
+end)
+
+
+-- ==================== 2. หมวด "ระบบวาร์ป" ====================
 local TeleportContainer = createContainer("ระบบวาร์ป")
 
--- ฟังก์ชันสร้างปุ่มในหมวดหมู่
+-- ฟังก์ชันสร้างปุ่ม
 local function createButton(parent, text, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.92, 0, 0, 30)
@@ -231,7 +299,7 @@ local function createButton(parent, text, callback)
     return btn
 end
 
--- ฟังก์ชันสร้างกล่องข้อความ (TextBox) สำหรับใส่ความเร็ว
+-- ฟังก์ชันสร้างกล่องข้อความ (TextBox)
 local function createTextBox(parent, placeholder, defaultText, callback)
     local box = Instance.new("TextBox")
     box.Size = UDim2.new(0.92, 0, 0, 30)
@@ -294,12 +362,12 @@ createButton(TeleportContainer, "เซฟจุด - 1", function()
     end
 end)
 
--- 2. ตั้งค่าจุด 1 (TextBox)
-createTextBox(TeleportContainer, "ความเร็ว จุด 1", "300", function(val)
+-- 2. ตั้งค่าจุด 1
+createTextBox(TeleportContainer, "ตั้งค่าจุด 1", "300", function(val)
     getgenv().MoveSpeed1 = val
 end)
 
--- 3. ไปหาจุด 1 (ปุ่มเปิด-ปิดวิ่งไปจุด 1)
+-- 3. ไปหาจุด 1 (ปุ่มเปิด-ปิด)
 local GoBtn1 = Instance.new("TextButton")
 GoBtn1.Size = UDim2.new(0.92, 0, 0, 30)
 GoBtn1.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
@@ -340,12 +408,12 @@ createButton(TeleportContainer, "เซฟจุด - 2", function()
     end
 end)
 
--- 5. ตั้งค่าจุด 2 (TextBox)
-createTextBox(TeleportContainer, "ความเร็ว จุด 2", "300", function(val)
+-- 5. ตั้งค่าจุด 2
+createTextBox(TeleportContainer, "ตั้งค่าจุด 2", "300", function(val)
     getgenv().MoveSpeed2 = val
 end)
 
--- 6. ไปหาจุด 2 (ปุ่มเปิด-ปิดวิ่งไปจุด 2)
+-- 6. ไปหาจุด 2 (ปุ่มเปิด-ปิด)
 local GoBtn2 = Instance.new("TextButton")
 GoBtn2.Size = UDim2.new(0.92, 0, 0, 30)
 GoBtn2.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
@@ -379,6 +447,7 @@ GoBtn2.MouseButton1Click:Connect(function()
     end
 end)
 
+
 -- ฟังก์ชันสลับหมวดหมู่
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
@@ -407,14 +476,14 @@ local function createCategoryButton(name)
     end)
 end
 
+createCategoryButton("เมนูหลัก")
 createCategoryButton("ระบบวาร์ป")
 
--- เปิดหน้าแรกตั้งต้นที่ "ระบบวาร์ป"
-switchTab("ระบบวาร์ป")
+-- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก"
+switchTab("เมนูหลัก")
 
 -- ==================== ลำดับการทำงาน (Loading & Animation) ====================
 task.spawn(function()
-    -- 1. กำลังโหลด... 2 วินาที
     local dots = {"", ".", "..", "..."}
     local startTime = tick()
     
@@ -425,21 +494,17 @@ task.spawn(function()
         end
     end
     
-    -- 2. ดาวโหลดเสร็จเเล้ว 1 วินาที
     LoadText.Text = "ดาวโหลดเสร็จเเล้ว"
     task.wait(1)
     
-    -- 3. คัดลอกลิ้งดิสเสร็จเเล้ว + คัดลอกอัตโนมัติ
     LoadText.Text = "คัดลอกลิ้งดิสเสร็จเเล้ว"
     if setclipboard then
         setclipboard("https://discord.gg/Ugssja4wqQ")
     end
     task.wait(1)
     
-    -- 4. ลบหน้าจอโหลดทิ้ง
     LoadFrame:Destroy()
     
-    -- 5. ค่อยๆ ขยายหน้าต่าง UI หลักขึ้นมาแบบช้าๆ
     MainFrame.Visible = true
     MainFrame.Size = UDim2.new(0, 320, 0, 180)
     
