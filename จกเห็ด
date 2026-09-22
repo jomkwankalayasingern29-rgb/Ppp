@@ -7,6 +7,10 @@ local Workspace = game:GetService("Workspace")
 
 getgenv().SavedCFrame1 = nil
 getgenv().SavedCFrame2 = nil
+getgenv().Speed1 = 300
+getgenv().Speed2 = 300
+getgenv().LoopTeleport1 = false
+getgenv().LoopTeleport2 = false
 
 -- เคลียร์ UI เก่าทิ้งทันทีเพื่อป้องกันการซ้อนทับ
 local CoreGui = game:GetService("CoreGui")
@@ -231,7 +235,7 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ฟังก์ชันช่วยสร้างแถวแบบสไตล์ปุ่ม "ขาย" (มีป้ายชื่อซ้าย + ปุ่มกดขวา)
+-- ฟังก์ชันสร้างแถวสไตล์ปุ่ม "ขาย"
 local function createActionRow(parent, labelText, buttonText, buttonColor, callback)
     local RowFrame = Instance.new("Frame")
     RowFrame.Size = UDim2.new(0.95, 0, 0, 30)
@@ -276,6 +280,56 @@ local function createActionRow(parent, labelText, buttonText, buttonColor, callb
     return RowFrame
 end
 
+-- ฟังก์ชันสร้างแถวช่องกรอกความเร็ว (สไตล์เดียวกัน)
+local function createInputRow(parent, labelText, defaultVal, callback)
+    local RowFrame = Instance.new("Frame")
+    RowFrame.Size = UDim2.new(0.95, 0, 0, 30)
+    RowFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    RowFrame.BorderSizePixel = 0
+    RowFrame.Parent = parent
+
+    local RowCorner = Instance.new("UICorner")
+    RowCorner.CornerRadius = UDim.new(0, 4)
+    RowCorner.Parent = RowFrame
+
+    local RowLabel = Instance.new("TextLabel")
+    RowLabel.Size = UDim2.new(0.55, 0, 1, 0)
+    RowLabel.Position = UDim2.new(0, 8, 0, 0)
+    RowLabel.BackgroundTransparency = 1
+    RowLabel.Font = Enum.Font.GothamBold
+    RowLabel.Text = labelText
+    RowLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    RowLabel.TextSize = 11
+    RowLabel.TextXAlignment = Enum.TextXAlignment.Left
+    RowLabel.Parent = RowFrame
+
+    local TextBox = Instance.new("TextBox")
+    TextBox.Size = UDim2.new(0, 65, 0, 20)
+    TextBox.Position = UDim2.new(1, -70, 0.5, -10)
+    TextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    TextBox.BorderSizePixel = 0
+    TextBox.Font = Enum.Font.GothamBold
+    TextBox.Text = tostring(defaultVal)
+    TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextBox.TextSize = 10
+    TextBox.Parent = RowFrame
+
+    local TextCorner = Instance.new("UICorner")
+    TextCorner.CornerRadius = UDim.new(0, 3)
+    TextCorner.Parent = TextBox
+
+    TextBox.FocusLost:Connect(function()
+        local num = tonumber(TextBox.Text)
+        if num then
+            callback(num)
+        else
+            TextBox.Text = tostring(defaultVal)
+        end
+    end)
+
+    return RowFrame
+end
+
 -- สร้างปุ่มขายทั้งหมดในเมนูหลัก
 createActionRow(MainMenuContainer, "ขายทั้งหมด", "ขาย", Color3.fromRGB(50, 100, 200), function(btn)
     local args = { "sellAll" }
@@ -291,7 +345,22 @@ end)
 -- ==================== 2. หมวด "ระบบวาร์ป" ====================
 local TeleportContainer = createContainer("ระบบวาร์ป")
 
--- เซฟจุด 1
+-- ฟังก์ชันวาร์ปแบบ Smooth Tween ตามความเร็วที่กำหนด
+local function smoothTeleport(targetCFrame, speed)
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = LocalPlayer.Character.HumanoidRootPart
+    local distance = (hrp.Position - targetCFrame.Position).Magnitude
+    local s = speed or 300
+    if s <= 0 then s = 300 end
+    local timeTake = distance / s
+    
+    local tweenInfo = TweenInfo.new(timeTake, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    task.wait(timeTake)
+end
+
+-- จุดที่ 1
 createActionRow(TeleportContainer, "จุดที่ 1", "เซฟจุด", Color3.fromRGB(80, 80, 80), function(btn)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         getgenv().SavedCFrame1 = LocalPlayer.Character.HumanoidRootPart.CFrame
@@ -301,17 +370,40 @@ createActionRow(TeleportContainer, "จุดที่ 1", "เซฟจุด",
     end
 end)
 
--- ไปหาจุด 1
-createActionRow(TeleportContainer, "ไปหาจุดที่ 1", "วาร์ป", Color3.fromRGB(50, 150, 50), function(btn)
-    if getgenv().SavedCFrame1 and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = getgenv().SavedCFrame1
-        btn.Text = "พุ่งแล้ว!"
+createInputRow(TeleportContainer, "ความเร็ว จุด 1", getgenv().Speed1, function(val)
+    getgenv().Speed1 = val
+end)
+
+createActionRow(TeleportContainer, "ไปหาจุดที่ 1 [กด1ครั้ง]", "วาร์ป", Color3.fromRGB(50, 150, 50), function(btn)
+    if getgenv().SavedCFrame1 then
+        smoothTeleport(getgenv().SavedCFrame1, getgenv().Speed1)
+        btn.Text = "ถึงแล้ว!"
         task.wait(1)
         btn.Text = "วาร์ป"
     end
 end)
 
--- เซฟจุด 2
+createActionRow(TeleportContainer, "วาร์ปวนลูป จุด 1", "OFF", Color3.fromRGB(200, 50, 50), function(btn)
+    getgenv().LoopTeleport1 = not getgenv().LoopTeleport1
+    if getgenv().LoopTeleport1 then
+        btn.Text = "ON"
+        btn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        task.spawn(function()
+            while getgenv().LoopTeleport1 do
+                if getgenv().SavedCFrame1 then
+                    smoothTeleport(getgenv().SavedCFrame1, getgenv().Speed1)
+                end
+                task.wait(0.2)
+            end
+        end)
+    else
+        btn.Text = "OFF"
+        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+
+-- จุดที่ 2
 createActionRow(TeleportContainer, "จุดที่ 2", "เซฟจุด", Color3.fromRGB(80, 80, 80), function(btn)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         getgenv().SavedCFrame2 = LocalPlayer.Character.HumanoidRootPart.CFrame
@@ -321,13 +413,35 @@ createActionRow(TeleportContainer, "จุดที่ 2", "เซฟจุด",
     end
 end)
 
--- ไปหาจุด 2
-createActionRow(TeleportContainer, "ไปหาจุดที่ 2", "วาร์ป", Color3.fromRGB(50, 150, 50), function(btn)
-    if getgenv().SavedCFrame2 and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = getgenv().SavedCFrame2
-        btn.Text = "พุ่งแล้ว!"
+createInputRow(TeleportContainer, "ความเร็ว จุด 2", getgenv().Speed2, function(val)
+    getgenv().Speed2 = val
+end)
+
+createActionRow(TeleportContainer, "ไปหาจุดที่ 2 [กด1ครั้ง]", "วาร์ป", Color3.fromRGB(50, 150, 50), function(btn)
+    if getgenv().SavedCFrame2 then
+        smoothTeleport(getgenv().SavedCFrame2, getgenv().Speed2)
+        btn.Text = "ถึงแล้ว!"
         task.wait(1)
         btn.Text = "วาร์ป"
+    end
+end)
+
+createActionRow(TeleportContainer, "วาร์ปวนลูป จุด 2", "OFF", Color3.fromRGB(200, 50, 50), function(btn)
+    getgenv().LoopTeleport2 = not getgenv().LoopTeleport2
+    if getgenv().LoopTeleport2 then
+        btn.Text = "ON"
+        btn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        task.spawn(function()
+            while getgenv().LoopTeleport2 do
+                if getgenv().SavedCFrame2 then
+                    smoothTeleport(getgenv().SavedCFrame2, getgenv().Speed2)
+                end
+                task.wait(0.2)
+            end
+        end)
+    else
+        btn.Text = "OFF"
+        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
     end
 end)
 
