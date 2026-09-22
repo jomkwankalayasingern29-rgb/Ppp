@@ -448,7 +448,7 @@ local function createCategoryButton(name, targetTab)
     return btn
 end
 
-local btn1 = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
+local btn1 = createCategoryButton("หลัก", MainFuncTab)
 btn1.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
 btn1.BackgroundTransparency = 0
 btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
