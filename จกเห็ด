@@ -153,13 +153,13 @@ MinimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== ฝั่งซ้าย: หมวดหมู่ (เพิ่ม CanvasSize ป้องกันปุ่มหาย) ====================
+-- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
 LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 100) -- กำหนดให้เลื่อนดูหมวดหมู่ได้
+LeftSide.CanvasSize = UDim2.new(0, 0, 0, 150) -- ขยาย CanvasSize เผื่อปุ่มเพิ่ม
 LeftSide.ScrollBarThickness = 2
 LeftSide.Parent = MainFrame
 
@@ -279,7 +279,6 @@ end)
 -- ==================== 2. หมวด "ระบบวาร์ป" ====================
 local TeleportContainer = createContainer("ระบบวาร์ป", 230)
 
--- ฟังก์ชันสร้างปุ่ม
 local function createButton(parent, text, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.95, 0, 0, 30)
@@ -299,7 +298,6 @@ local function createButton(parent, text, callback)
     return btn
 end
 
--- ฟังก์ชันสร้างกล่องข้อความ (TextBox)
 local function createTextBox(parent, placeholder, defaultText, callback)
     local box = Instance.new("TextBox")
     box.Size = UDim2.new(0.95, 0, 0, 30)
@@ -327,7 +325,6 @@ local function createTextBox(parent, placeholder, defaultText, callback)
     return box
 end
 
--- ฟังก์ชันเคลื่อนที่ด้วย Tween
 local function MoveToTarget(targetCFrame, customSpeed)
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = LocalPlayer.Character.HumanoidRootPart
@@ -355,19 +352,16 @@ local function MoveToTarget(targetCFrame, customSpeed)
     end
 end
 
--- 1. เซฟจุด - 1
 createButton(TeleportContainer, "เซฟจุด - 1", function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         getgenv().SavedCFrame1 = LocalPlayer.Character.HumanoidRootPart.CFrame
     end
 end)
 
--- 2. ตั้งค่าจุด 1
 createTextBox(TeleportContainer, "ตั้งค่าจุด 1", "300", function(val)
     getgenv().MoveSpeed1 = val
 end)
 
--- 3. ไปหาจุด 1 (ปุ่มเปิด-ปิด)
 local GoBtn1 = Instance.new("TextButton")
 GoBtn1.Size = UDim2.new(0.95, 0, 0, 30)
 GoBtn1.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
@@ -401,19 +395,16 @@ GoBtn1.MouseButton1Click:Connect(function()
     end
 end)
 
--- 4. เซฟจุด - 2
 createButton(TeleportContainer, "เซฟจุด - 2", function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         getgenv().SavedCFrame2 = LocalPlayer.Character.HumanoidRootPart.CFrame
     end
 end)
 
--- 5. ตั้งค่าจุด 2
 createTextBox(TeleportContainer, "ตั้งค่าจุด 2", "300", function(val)
     getgenv().MoveSpeed2 = val
 end)
 
--- 6. ไปหาจุด 2 (ปุ่มเปิด-ปิด)
 local GoBtn2 = Instance.new("TextButton")
 GoBtn2.Size = UDim2.new(0.95, 0, 0, 30)
 GoBtn2.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
@@ -447,7 +438,6 @@ GoBtn2.MouseButton1Click:Connect(function()
     end
 end)
 
-
 -- ฟังก์ชันสลับหมวดหมู่
 local function switchTab(tabName)
     for name, container in pairs(FunctionContainers) do
@@ -476,6 +466,7 @@ local function createCategoryButton(name)
     end)
 end
 
+-- สร้างปุ่มหมวดหมู่ฝั่งซ้าย
 createCategoryButton("เมนูหลัก")
 createCategoryButton("ระบบวาร์ป")
 
