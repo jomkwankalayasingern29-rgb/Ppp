@@ -153,13 +153,13 @@ MinimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== ฝั่งซ้าย: หมวดหมู่ (แก้ให้ปรับขนาดอัติโนมัติ ไม่ให้ปุ่มหาย) ====================
+-- ==================== ฝั่งซ้าย: หมวดหมู่ ====================
 local LeftSide = Instance.new("ScrollingFrame")
 LeftSide.Size = UDim2.new(0.32, 0, 1, -34)
 LeftSide.Position = UDim2.new(0, 5, 0, 30)
 LeftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 LeftSide.BorderSizePixel = 0
-LeftSide.AutomaticCanvasSize = Enum.AutomaticSize.Y -- ป้องกันปุ่มหายและปรับขนาดตามเนื้อหาอัตโนมัติ
+LeftSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
 LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
 LeftSide.ScrollBarThickness = 2
 LeftSide.Parent = MainFrame
@@ -448,7 +448,7 @@ local function switchTab(tabName)
     end
 end
 
--- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย
+-- สร้างปุ่มเลือกหมวดหมู่ทางซ้าย (เรียงลำดับให้ถูก: เมนูหลัก ต้องมาก่อน)
 local function createCategoryButton(name)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 30)
@@ -469,12 +469,9 @@ local function createCategoryButton(name)
     end)
 end
 
--- สร้างปุ่มหมวดหมู่ฝั่งซ้าย
+-- สร้างปุ่มฝั่งซ้าย (ตัวแรกสุดจะเป็นปุ่ม "เมนูหลัก")
 createCategoryButton("เมนูหลัก")
 createCategoryButton("ระบบวาร์ป")
-
--- เปิดหน้าแรกตั้งต้นที่ "เมนูหลัก"
-switchTab("เมนูหลัก")
 
 -- ==================== ลำดับการทำงาน (Loading & Animation) ====================
 task.spawn(function()
@@ -501,6 +498,9 @@ task.spawn(function()
     
     MainFrame.Visible = true
     MainFrame.Size = UDim2.new(0, 320, 0, 180)
+    
+    -- ตั้งค่าให้เปิดหน้าแรกเป็น "เมนูหลัก" ชัวร์ๆ หลังเปิด UI
+    switchTab("เมนูหลัก")
     
     local info = TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     local expandTween = TweenService:Create(MainFrame, info, {
