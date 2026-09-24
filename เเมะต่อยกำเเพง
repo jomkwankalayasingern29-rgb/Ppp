@@ -1,796 +1,182 @@
--- [[ GK HUB v1.5.4: เเมพต่อยกำเเพง (Smooth UI & GodMode) ]] --
-if not game:IsLoaded() then game.Loaded:Wait() end
-
+-- Services
 local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
-local HttpService = game:GetService("HttpService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local LocalPlayer = Players.LocalPlayer
-local Camera = Workspace.CurrentCamera
-
-local DiscordLink = "https://discord.gg/Ugssja4wqQ"
-
-local function copyToClipboard(text)
-    pcall(function()
-        if setclipboard then setclipboard(text) elseif toclipboard then toclipboard(text) end
-    end)
+-- Destroy old UI if exists
+if CoreGui:FindFirstChild("GK_Hub_UI") then
+    CoreGui:FindFirstChild("GK_Hub_UI"):Destroy()
 end
 
+-- Create ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CustomScriptUI_" .. HttpService:GenerateGUID(false):sub(1, 8)
+ScreenGui.Name = "GK_Hub_UI"
+ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- [ ระบบแจ้งเตือน Notification ] --
-local NotifContainer = Instance.new("Frame")
-NotifContainer.Name = "NotifContainer"
-NotifContainer.Size = UDim2.new(0, 220, 1, 0)
-NotifContainer.Position = UDim2.new(1, -230, 0, 0)
-NotifContainer.BackgroundTransparency = 1
-NotifContainer.Parent = ScreenGui
-
-local NotifLayout = Instance.new("UIListLayout")
-NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
-NotifLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-NotifLayout.Padding = UDim.new(0, 6)
-NotifLayout.Parent = NotifContainer
-
-local NotifPadding = Instance.new("UIPadding")
-NotifPadding.PaddingBottom = UDim.new(0, 15)
-NotifPadding.Parent = NotifContainer
-
-local function showNotification(text, isEnabled)
-    if not ScreenGui.Parent then return end
-    
-    local card = Instance.new("Frame")
-    card.Size = UDim2.new(1, 0, 0, 42)
-    card.Position = UDim2.new(1, 50, 0, 20)
-    card.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    card.BackgroundTransparency = 0.2
-    card.BorderSizePixel = 0
-    card.ClipsDescendants = true
-    card.Parent = NotifContainer
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = card
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = isEnabled and Color3.fromRGB(40, 200, 100) or Color3.fromRGB(220, 60, 60)
-    stroke.Thickness = 1.2
-    stroke.Parent = card
-
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -12, 0, 26)
-    lbl.Position = UDim2.new(0, 6, 0, 3)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.TextSize = 10
-    lbl.Font = Enum.Font.GothamBold
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.TextWrapped = true
-    lbl.Parent = card
-
-    local barBack = Instance.new("Frame")
-    barBack.Size = UDim2.new(1, -12, 0, 3)
-    barBack.Position = UDim2.new(0, 6, 1, -6)
-    barBack.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    barBack.BorderSizePixel = 0
-    barBack.Parent = card
-
-    local barCorner = Instance.new("UICorner")
-    barCorner.CornerRadius = UDim.new(1, 0)
-    barCorner.Parent = barBack
-
-    local barFill = Instance.new("Frame")
-    barFill.Size = UDim2.new(1, 0, 1, 0)
-    barFill.BackgroundColor3 = isEnabled and Color3.fromRGB(40, 200, 100) or Color3.fromRGB(220, 60, 60)
-    barFill.BorderSizePixel = 0
-    barFill.Parent = barBack
-
-    local barFillCorner = Instance.new("UICorner")
-    barFillCorner.CornerRadius = UDim.new(1, 0)
-    barFillCorner.Parent = barFill
-
-    task.spawn(function()
-        local tweenIn = TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, 0, 0, 0)
-        })
-        tweenIn:Play()
-        tweenIn.Completed:Wait()
-
-        local tweenBar = TweenService:Create(barFill, TweenInfo.new(2.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 0, 1, 0)
-        })
-        tweenBar:Play()
-        tweenBar.Completed:Wait()
-
-        local tweenOut = TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Position = UDim2.new(1, 50, 0, 0),
-            BackgroundTransparency = 1
-        })
-        tweenOut:Play()
-        tweenOut.Completed:Wait()
-        card:Destroy()
-    end)
-end
-
--- [ หน้าจอโหลด (Loading Screen) ] --
-local LoadFrame = Instance.new("Frame")
-LoadFrame.Name = "LoadFrame"
-LoadFrame.Size = UDim2.new(0, 240, 0, 55)
-LoadFrame.Position = UDim2.new(0.5, -120, 0.5, -28)
-LoadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-LoadFrame.BorderSizePixel = 0
-LoadFrame.Parent = ScreenGui
-
-local LoadCorner = Instance.new("UICorner")
-LoadCorner.CornerRadius = UDim.new(0, 6)
-LoadCorner.Parent = LoadFrame
-
-local LoadStroke = Instance.new("UIStroke")
-LoadStroke.Color = Color3.fromRGB(0, 162, 255)
-LoadStroke.Thickness = 1.2
-LoadStroke.Parent = LoadFrame
-
-local LoadText = Instance.new("TextLabel")
-LoadText.Name = "LoadText"
-LoadText.Size = UDim2.new(1, 0, 1, 0)
-LoadText.BackgroundTransparency = 1
-LoadText.Font = Enum.Font.GothamBold
-LoadText.Text = "กำลังโหลด..."
-LoadText.TextColor3 = Color3.fromRGB(255, 255, 255)
-LoadText.TextSize = 12
-LoadText.Parent = LoadFrame
-
--- [ UI หลัก ] --
+-- Main Frame (UI Container)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 380, 0, 240)
-MainFrame.Position = UDim2.new(0.5, -190, 0.5, -120)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.Size = UDim2.new(0, 0, 0, 0) -- Scale animation start
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Visible = false
-MainFrame.BackgroundTransparency = 1
+MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 
-local BgImage = Instance.new("ImageLabel")
-BgImage.Name = "BgImage"
-BgImage.Size = UDim2.new(1, 0, 1, 0)
-BgImage.BackgroundTransparency = 1
-BgImage.Image = "rbxassetid://111206357236860"
-BgImage.ScaleType = Enum.ScaleType.Slice
-BgImage.SliceCenter = Rect.new(100, 100, 100, 100)
-BgImage.Parent = MainFrame
+-- Rounded Corners
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
 
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 6)
-MainCorner.Parent = MainFrame
+-- Cyan Border Frame
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(0, 170, 255)
+UIStroke.Thickness = 1.5
+UIStroke.Transparency = 1
+UIStroke.Parent = MainFrame
 
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(0, 162, 255)
-MainStroke.Thickness = 1.2
-MainStroke.Parent = MainFrame
+-- Top Image (Roblox Asset ID)
+local HeaderImage = Instance.new("ImageLabel")
+HeaderImage.Name = "HeaderImage"
+HeaderImage.Size = UDim2.new(1, -20, 0, 110)
+HeaderImage.Position = UDim2.new(0, 10, 0, 10)
+HeaderImage.BackgroundTransparency = 1
+HeaderImage.Image = "rbxassetid://89005639478352" -- Updated Asset ID
+HeaderImage.ScaleType = Enum.ScaleType.Fit
+HeaderImage.Parent = MainFrame
 
--- [ แถบบนสุด (TopBar) ] --
-local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 26)
-TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-TopBar.BackgroundTransparency = 0.5
-TopBar.BorderSizePixel = 0
-TopBar.Parent = MainFrame
+local ImageCorner = Instance.new("UICorner")
+ImageCorner.CornerRadius = UDim.new(0, 6)
+ImageCorner.Parent = HeaderImage
 
-local TopBarCorner = Instance.new("UICorner")
-TopBarCorner.CornerRadius = UDim.new(0, 6)
-TopBarCorner.Parent = TopBar
-
-local LogoG = Instance.new("TextLabel")
-LogoG.Size = UDim2.new(0, 16, 0, 16)
-LogoG.Position = UDim2.new(0, 8, 0, 5)
-LogoG.BackgroundTransparency = 1
-LogoG.Font = Enum.Font.GothamBold
-LogoG.Text = "G"
-LogoG.TextColor3 = Color3.fromRGB(0, 162, 255)
-LogoG.TextSize = 13
-LogoG.Parent = TopBar
-
+-- Title Text (Clean White Text)
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -70, 1, 0)
-TitleLabel.Position = UDim2.new(0, 28, 0, 0)
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(1, -20, 0, 25)
+TitleLabel.Position = UDim2.new(0, 10, 0, 125)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "GK HUB | เเมพต่อยกำเเพง"
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 11
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Parent = TopBar
+TitleLabel.Text = "ค่าย GK HUB แจ้งให้ทราบ"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Pure White
+TitleLabel.TextSize = 16
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Parent = MainFrame
 
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 20, 0, 20)
-CloseButton.Position = UDim2.new(1, -24, 0, 3)
-CloseButton.BackgroundTransparency = 1
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(255, 80, 80)
-CloseButton.TextSize = 12
-CloseButton.Parent = TopBar
+-- Description Text (Clean Soft Gray)
+local DescLabel = Instance.new("TextLabel")
+DescLabel.Name = "DescLabel"
+DescLabel.Size = UDim2.new(1, -20, 0, 35)
+DescLabel.Position = UDim2.new(0, 10, 0, 150)
+DescLabel.BackgroundTransparency = 1
+DescLabel.Text = "สคริปต์ที่รันอาจเป็นเวอร์ชันเก่า\nโปรดใช้เวอร์ชันใหม่"
+DescLabel.TextColor3 = Color3.fromRGB(200, 200, 200) -- Soft Gray
+DescLabel.TextSize = 13
+DescLabel.Font = Enum.Font.SourceSans
+DescLabel.TextWrapped = true
+DescLabel.Parent = MainFrame
 
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
-MinimizeButton.Position = UDim2.new(1, -46, 0, 3)
-MinimizeButton.BackgroundTransparency = 1
-MinimizeButton.Font = Enum.Font.GothamBold
-MinimizeButton.Text = "-"
-MinimizeButton.TextColor3 = Color3.fromRGB(240, 240, 240)
-MinimizeButton.TextSize = 14
-MinimizeButton.Parent = TopBar
+-- Discord Button
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Name = "DiscordBtn"
+DiscordBtn.Size = UDim2.new(1, -30, 0, 32)
+DiscordBtn.Position = UDim2.new(0, 15, 0, 195)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+DiscordBtn.Text = "ติดต่อ Discord"
+DiscordBtn.TextColor3 = Color3.fromRGB(0, 190, 255)
+DiscordBtn.TextSize = 14
+DiscordBtn.Font = Enum.Font.SourceSansBold
+DiscordBtn.AutoButtonColor = false
+DiscordBtn.Parent = MainFrame
 
--- [ พื้นที่จัดวางซ้าย-ขวา ] --
-local LeftSide = Instance.new("ScrollingFrame")
-LeftSide.Size = UDim2.new(0.32, 0, 1, -32)
-LeftSide.Position = UDim2.new(0, 6, 0, 28)
-LeftSide.BackgroundTransparency = 1
-LeftSide.BorderSizePixel = 0
-LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-LeftSide.ScrollBarThickness = 0
-LeftSide.Parent = MainFrame
+local BtnCorner1 = Instance.new("UICorner")
+BtnCorner1.CornerRadius = UDim.new(0, 6)
+BtnCorner1.Parent = DiscordBtn
 
-local LeftLayout = Instance.new("UIListLayout")
-LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-LeftLayout.Padding = UDim.new(0, 5)
-LeftLayout.Parent = LeftSide
+local BtnStroke1 = Instance.new("UIStroke")
+BtnStroke1.Color = Color3.fromRGB(0, 150, 220)
+BtnStroke1.Thickness = 1.2
+BtnStroke1.Parent = DiscordBtn
 
-local RightSide = Instance.new("Frame")
-RightSide.Size = UDim2.new(0.64, 0, 1, -32)
-RightSide.Position = UDim2.new(0.34, 0, 0, 28)
-RightSide.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-RightSide.BackgroundTransparency = 0.6
-RightSide.BorderSizePixel = 0
-RightSide.Parent = MainFrame
+-- Close Button
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Name = "CloseBtn"
+CloseBtn.Size = UDim2.new(1, -30, 0, 32)
+CloseBtn.Position = UDim2.new(0, 15, 0, 235)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
+CloseBtn.Text = "ปิดหน้าต่าง UI"
+CloseBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+CloseBtn.TextSize = 14
+CloseBtn.Font = Enum.Font.SourceSansBold
+CloseBtn.AutoButtonColor = false
+CloseBtn.Parent = MainFrame
 
-local RightCorner = Instance.new("UICorner")
-RightCorner.CornerRadius = UDim.new(0, 5)
-RightCorner.Parent = RightSide
+local BtnCorner2 = Instance.new("UICorner")
+BtnCorner2.CornerRadius = UDim.new(0, 6)
+BtnCorner2.Parent = CloseBtn
 
--- [ ฟังก์ชันสร้างส่วนประกอบ UI ] --
-local function createContainer(name)
-    local container = Instance.new("ScrollingFrame")
-    container.Name = name
-    container.Size = UDim2.new(1, 0, 1, 0)
-    container.BackgroundTransparency = 1
-    container.BorderSizePixel = 0
-    container.CanvasSize = UDim2.new(0, 0, 0, 0)
-    container.ScrollBarThickness = 2
-    container.Visible = false
-    container.Parent = RightSide
+local BtnStroke2 = Instance.new("UIStroke")
+BtnStroke2.Color = Color3.fromRGB(70, 70, 90)
+BtnStroke2.Thickness = 1
+BtnStroke2.Parent = CloseBtn
 
-    local layout = Instance.new("UIListLayout")
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 5)
-    layout.Parent = container
+-- Notification Label (Copied Popup)
+local Toast = Instance.new("TextLabel")
+Toast.Size = UDim2.new(1, -30, 0, 25)
+Toast.Position = UDim2.new(0, 15, 1, -30)
+Toast.BackgroundColor3 = Color3.fromRGB(0, 160, 100)
+Toast.Text = "คัดลอกลิ้งดิสเรียบร้อยแล้ว"
+Toast.TextColor3 = Color3.fromRGB(255, 255, 255)
+Toast.TextSize = 12
+Toast.Font = Enum.Font.SourceSansBold
+Toast.BackgroundTransparency = 1
+Toast.TextTransparency = 1
+Toast.Parent = MainFrame
 
-    local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 8)
-    padding.PaddingBottom = UDim.new(0, 8)
-    padding.Parent = container
+local ToastCorner = Instance.new("UICorner")
+ToastCorner.CornerRadius = UDim.new(0, 4)
+ToastCorner.Parent = Toast
 
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        container.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 15)
+----------------------------------------------------
+-- SMOOTH ANIMATIONS & LOGIC
+----------------------------------------------------
+
+local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local fastTween = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+-- Open UI Animation
+TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 280, 0, 280)}):Play()
+TweenService:Create(UIStroke, fastTween, {Transparency = 0}):Play()
+
+-- Button Hover Logic
+local function setupHover(button, stroke, hoverColor, defaultColor)
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, fastTween, {BackgroundColor3 = Color3.fromRGB(35, 35, 48)}):Play()
+        TweenService:Create(stroke, fastTween, {Color = hoverColor}):Play()
     end)
-
-    return container
-end
-
-local function createSectionHeader(title, parentTab)
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(0.92, 0, 0, 18)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = ">> " .. title .. " <<"
-    lbl.TextColor3 = Color3.fromRGB(100, 180, 255)
-    lbl.TextSize = 11
-    lbl.Font = Enum.Font.GothamBold
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Parent = parentTab
-    return lbl
-end
-
-local function createSimpleButton(title, parentTab, callback)
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(0.92, 0, 0, 30)
-    container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    container.BackgroundTransparency = 0.5
-    container.BorderSizePixel = 0
-    container.Parent = parentTab
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 5)
-    corner.Parent = container
-
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 1, 0)
-    btn.BackgroundTransparency = 1
-    btn.Font = Enum.Font.GothamBold
-    btn.Text = title
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 11
-    btn.Parent = container
-
-    btn.MouseButton1Click:Connect(function()
-        if callback then callback() end
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, fastTween, {BackgroundColor3 = Color3.fromRGB(20, 20, 28)}):Play()
+        TweenService:Create(stroke, fastTween, {Color = defaultColor}):Play()
     end)
 end
 
-local function createToggle(title, parentTab, defaultState, callback)
-    local state = defaultState or false
+setupHover(DiscordBtn, BtnStroke1, Color3.fromRGB(0, 220, 255), Color3.fromRGB(0, 150, 220))
+setupHover(CloseBtn, BtnStroke2, Color3.fromRGB(255, 70, 70), Color3.fromRGB(70, 70, 90))
 
-    local row = Instance.new("Frame")
-    row.Size = UDim2.new(0.92, 0, 0, 32)
-    row.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    row.BackgroundTransparency = 0.5
-    row.BorderSizePixel = 0
-    row.Parent = parentTab
+-- Copy Discord Logic
+DiscordBtn.MouseButton1Click:Connect(function()
+    setclipboard("https://discord.gg/Ugssja4wqQ")
     
-    local rowCorner = Instance.new("UICorner")
-    rowCorner.CornerRadius = UDim.new(0, 5)
-    rowCorner.Parent = row
+    TweenService:Create(Toast, fastTween, {BackgroundTransparency = 0.1, TextTransparency = 0}):Play()
+    task.wait(1.5)
+    TweenService:Create(Toast, fastTween, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+end)
 
-    local titleLbl = Instance.new("TextLabel")
-    titleLbl.Size = UDim2.new(0.65, 0, 1, 0)
-    titleLbl.Position = UDim2.new(0, 8, 0, 0)
-    titleLbl.BackgroundTransparency = 1
-    titleLbl.Text = title
-    titleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLbl.TextSize = 10
-    titleLbl.Font = Enum.Font.GothamBold
-    titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-    titleLbl.Parent = row
-
-    local toggleBtn = Instance.new("TextButton")
-    toggleBtn.Size = UDim2.new(0, 44, 0, 20)
-    toggleBtn.Position = UDim2.new(1, -50, 0.5, -10)
-    toggleBtn.BackgroundColor3 = state and Color3.fromRGB(40, 200, 100) or Color3.fromRGB(200, 50, 50)
-    toggleBtn.BackgroundTransparency = 0.3
-    toggleBtn.BorderSizePixel = 0
-    toggleBtn.Text = state and "เปิด" or "ปิด"
-    toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleBtn.TextSize = 10
-    toggleBtn.Font = Enum.Font.GothamBold
-    toggleBtn.Parent = row
-
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 4)
-    btnCorner.Parent = toggleBtn
-
-    toggleBtn.MouseButton1Click:Connect(function()
-        state = not state
-        if state then
-            toggleBtn.Text = "เปิด"
-            TweenService:Create(toggleBtn, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                BackgroundColor3 = Color3.fromRGB(40, 200, 100)
-            }):Play()
-        else
-            toggleBtn.Text = "ปิด"
-            TweenService:Create(toggleBtn, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-            }):Play()
-        end
-        if callback then callback(state) end
+-- Close UI Animation
+CloseBtn.MouseButton1Click:Connect(function()
+    local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
+    TweenService:Create(UIStroke, fastTween, {Transparency = 1}):Play()
+    closeTween:Play()
+    closeTween.Completed:Connect(function()
+        ScreenGui:Destroy()
     end)
-end
-
--- [ ฟังก์ชันสร้าง Slider แบบเลื่อนและใส่ตัวเลขได้ ] --
-local function createSlider(title, min, max, defaultVal, parentTab, callback)
-    local value = defaultVal
-    
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(0.92, 0, 0, 48)
-    container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    container.BackgroundTransparency = 0.5
-    container.BorderSizePixel = 0
-    container.Parent = parentTab
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 5)
-    corner.Parent = container
-
-    local titleLbl = Instance.new("TextLabel")
-    titleLbl.Size = UDim2.new(0.6, 0, 0, 20)
-    titleLbl.Position = UDim2.new(0, 8, 0, 4)
-    titleLbl.BackgroundTransparency = 1
-    titleLbl.Text = title
-    titleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLbl.TextSize = 10
-    titleLbl.Font = Enum.Font.GothamBold
-    titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-    titleLbl.Parent = container
-
-    local valueBox = Instance.new("TextBox")
-    valueBox.Size = UDim2.new(0, 45, 0, 20)
-    valueBox.Position = UDim2.new(1, -53, 0, 4)
-    valueBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    valueBox.BackgroundTransparency = 0.3
-    valueBox.BorderSizePixel = 0
-    valueBox.Text = tostring(value)
-    valueBox.TextColor3 = Color3.fromRGB(0, 162, 255)
-    valueBox.TextSize = 10
-    valueBox.Font = Enum.Font.GothamBold
-    valueBox.Parent = container
-
-    local boxCorner = Instance.new("UICorner")
-    boxCorner.CornerRadius = UDim.new(0, 4)
-    boxCorner.Parent = valueBox
-
-    local sliderBar = Instance.new("Frame")
-    sliderBar.Size = UDim2.new(1, -16, 0, 6)
-    sliderBar.Position = UDim2.new(0, 8, 0, 32)
-    sliderBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    sliderBar.BorderSizePixel = 0
-    sliderBar.Parent = container
-
-    local barCorner = Instance.new("UICorner")
-    barCorner.CornerRadius = UDim.new(1, 0)
-    barCorner.Parent = sliderBar
-
-    local sliderFill = Instance.new("Frame")
-    sliderFill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-    sliderFill.BorderSizePixel = 0
-    sliderFill.Parent = sliderBar
-
-    local fillCorner = Instance.new("UICorner")
-    fillCorner.CornerRadius = UDim.new(1, 0)
-    fillCorner.Parent = sliderFill
-
-    local dragging = false
-
-    local function updateValue(inputPos)
-        local sizeX = math.clamp((inputPos - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
-        value = math.floor(min + ((max - min) * sizeX))
-        sliderFill.Size = UDim2.new(sizeX, 0, 1, 0)
-        valueBox.Text = tostring(value)
-        if callback then callback(value) end
-    end
-
-    sliderBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            updateValue(input.Position.X)
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            updateValue(input.Position.X)
-        end
-    end)
-
-    valueBox.FocusLost:Connect(function()
-        local num = tonumber(valueBox.Text)
-        if num then
-            value = math.clamp(num, min, max)
-            valueBox.Text = tostring(value)
-            sliderFill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-            if callback then callback(value) end
-        else
-            valueBox.Text = tostring(value)
-        end
-    end)
-end
-
--- [ สร้าง Tabs ] --
-local MainFuncTab = createContainer("หน้าแรก")
-local AutoFarmTab = createContainer("ฟามออโต้")
-local CharacterTab = createContainer("ตัวละคร")
-local SettingsTab = createContainer("ตั้งค่า")
-
-createSectionHeader("คอมมูนิตี้ (Community)", MainFuncTab)
-createSimpleButton("คัดลอกลิงก์ Discord", MainFuncTab, function()
-    copyToClipboard(DiscordLink)
-    showNotification("คัดลอกลิงก์ Discord สำเร็จแล้ว!", true)
-end)
-
-createSectionHeader("ระบบฟามออโต้ (Auto Farm)", AutoFarmTab)
-
--- [ ระบบ Auto Farm (0.3 วินาที) ] --
-local AutoFarmEnabled = false
-
-task.spawn(function()
-    while true do
-        if AutoFarmEnabled then
-            pcall(function()
-                local args = {
-                    {
-                        "Activate_Punch"
-                    }
-                }
-                ReplicatedStorage:WaitForChild("RemoteEvent"):FireServer(unpack(args))
-            end)
-        end
-        task.wait(0.3)
-    end
-end)
-
-createToggle("เปิดใช้งานออโต้ฟาม", AutoFarmTab, false, function(state)
-    AutoFarmEnabled = state
-    if state then
-        showNotification("เปิดใช้งานระบบฟามออโต้แล้ว", true)
-    else
-        showNotification("ปิดใช้งานระบบฟามออโต้แล้ว", false)
-    end
-end)
-
--- [ ระบบตัวละคร (Character Cheats) ] --
-createSectionHeader("ตั้งค่าตัวละคร (Character)", CharacterTab)
-
--- 0. ระบบอมตะ (GodMode - เลือด 999,999 เด้งทุก 0.3 วิ)
-local GodModeEnabled = false
-
-task.spawn(function()
-    while true do
-        if GodModeEnabled then
-            pcall(function()
-                local char = LocalPlayer.Character
-                if char and char:FindFirstChild("Humanoid") then
-                    local hum = char.Humanoid
-                    hum.MaxHealth = 999999
-                    hum.Health = 999999
-                end
-            end)
-        end
-        task.wait(0.3)
-    end
-end)
-
-createToggle("อมตะ (GodMode)", CharacterTab, false, function(state)
-    GodModeEnabled = state
-    if state then
-        showNotification("เปิดใช้งานอมตะแล้ว (เลือด 999,999)", true)
-    else
-        showNotification("ปิดใช้งานอมตะแล้ว", false)
-        pcall(function()
-            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
-            if hum then
-                hum.MaxHealth = 100
-                hum.Health = 100
-            end
-        end)
-    end
-end)
-
--- 1. วิ่งเร็ว (WalkSpeed)
-local WalkSpeedEnabled = false
-local customWalkSpeed = 50
-createToggle("วิ่งเร็ว (Speed)", CharacterTab, false, function(state)
-    WalkSpeedEnabled = state
-    if state then
-        showNotification("เปิดใช้งานวิ่งเร็วแล้ว", true)
-    else
-        showNotification("ปิดใช้งานวิ่งเร็วแล้ว", false)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = 16
-        end
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if WalkSpeedEnabled then
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = customWalkSpeed
-        end
-    end
-end)
-
--- 2. กระโดดสูง (JumpPower)
-local JumpPowerEnabled = false
-local customJumpPower = 100
-createToggle("กระโดดสูง (Jump)", CharacterTab, false, function(state)
-    JumpPowerEnabled = state
-    if state then
-        showNotification("เปิดใช้งานกระโดดสูงแล้ว", true)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.UseJumpPower = true
-            LocalPlayer.Character.Humanoid.JumpPower = customJumpPower
-        end
-    else
-        showNotification("ปิดใช้งานกระโดดสูงแล้ว", false)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.UseJumpPower = true
-            LocalPlayer.Character.Humanoid.JumpPower = 50
-        end
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if JumpPowerEnabled then
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.UseJumpPower = true
-            LocalPlayer.Character.Humanoid.JumpPower = customJumpPower
-        end
-    end
-end)
-
--- 3. ทะลุกำแพง (Noclip)
-local NoclipEnabled = false
-createToggle("ทะลุกำแพง (Noclip)", CharacterTab, false, function(state)
-    NoclipEnabled = state
-    if state then
-        showNotification("เปิดใช้งานทะลุกำแพงแล้ว", true)
-    else
-        showNotification("ปิดใช้งานทะลุกำแพงแล้ว", false)
-    end
-end)
-
-RunService.Stepped:Connect(function()
-    if NoclipEnabled then
-        if LocalPlayer.Character then
-            for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        end
-    end
-end)
-
--- 4. หายตัว (Invisibility)
-local InvisibilityEnabled = false
-createToggle("หายตัว (Invisibility)", CharacterTab, false, function(state)
-    InvisibilityEnabled = state
-    if LocalPlayer.Character then
-        for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") or part:IsA("Decal") then
-                part.Transparency = state and 1 or (part.Name == "HumanoidRootPart" and 1 or 0)
-            end
-        end
-    end
-    if state then
-        showNotification("เปิดใช้งานหายตัวแล้ว", true)
-    else
-        showNotification("ปิดใช้งานหายตัวแล้ว", false)
-    end
-end)
-
--- 5. กระโดดไม่จำกัด (Infinite Jump)
-local InfJumpEnabled = false
-createToggle("กระโดดไม่จำกัด (Inf Jump)", CharacterTab, false, function(state)
-    InfJumpEnabled = state
-    if state then
-        showNotification("เปิดใช้งานกระโดดไม่จำกัดแล้ว", true)
-    else
-        showNotification("ปิดใช้งานกระโดดไม่จำกัดแล้ว", false)
-    end
-end)
-
-UserInputService.JumpRequest:Connect(function()
-    if InfJumpEnabled then
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end
-end)
-
--- [ ระบบตั้งค่า (Settings Tab) - ความเร็ว 10,000 / กระโดด 1,000 ] --
-createSectionHeader("ปรับแต่งค่าตัวละคร", SettingsTab)
-
-createSlider("ตั้งค่าความเร็ว (WalkSpeed)", 16, 10000, 50, SettingsTab, function(val)
-    customWalkSpeed = val
-end)
-
-createSlider("ตั้งค่ากระโดดสูง (JumpPower)", 50, 1000, 100, SettingsTab, function(val)
-    customJumpPower = val
-end)
-
--- [ เมนูด้านซ้าย ] --
-local categoryButtons = {}
-local function createCategoryButton(name, targetTab)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.95, 0, 0, 28)
-    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    btn.BackgroundTransparency = 0.3
-    btn.BorderSizePixel = 0
-    btn.Font = Enum.Font.GothamBold
-    btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 10
-    btn.Parent = LeftSide
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 5)
-    corner.Parent = btn
-
-    table.insert(categoryButtons, {Button = btn, Tab = targetTab})
-
-    btn.MouseButton1Click:Connect(function()
-        for _, cb in ipairs(categoryButtons) do
-            cb.Tab.Visible = (cb.Tab == targetTab)
-            if cb.Tab == targetTab then
-                cb.Button.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-                cb.Button.BackgroundTransparency = 0
-            else
-                cb.Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                cb.Button.BackgroundTransparency = 0.3
-            end
-        end
-    end)
-    return btn
-end
-
-local btnHome = createCategoryButton("ฟังก์ชั่นหลัก", MainFuncTab)
-local btnAutoFarm = createCategoryButton("ฟามออโต้", AutoFarmTab)
-local btnChar = createCategoryButton("ตัวละคร", CharacterTab)
-local btnSettings = createCategoryButton("ตั้งค่า", SettingsTab)
-
-btnHome.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
-btnHome.BackgroundTransparency = 0
-MainFuncTab.Visible = true
-
-LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    LeftSide.CanvasSize = UDim2.new(0, 0, 0, LeftLayout.AbsoluteContentSize.Y + 15)
-end)
-
--- [ ควบคุมลำดับขั้นตอนการโหลดและอนิเมชันเปิด UI แบบ Fade-in ] --
-task.spawn(function()
-    local dots = {"", ".", "..", "..."}
-    local startTime = tick()
-    while tick() - startTime < 2 do
-        for _, d in ipairs(dots) do
-            if not LoadText.Parent then return end
-            LoadText.Text = "กำลังโหลด" .. d
-            task.wait(0.3)
-        end
-    end
-    
-    LoadText.Text = "โหลดเสร็จแล้ว"
-    task.wait(1)
-    
-    LoadText.Text = "คัดลอกลิงก์ดิสเสร็จแล้ว"
-    copyToClipboard(DiscordLink)
-    task.wait(0.8)
-    
-    LoadFrame:Destroy()
-    
-    MainFrame.Visible = true
-    MainFrame.Size = UDim2.new(0, 280, 0, 180)
-    
-    TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 380, 0, 240),
-        BackgroundTransparency = 0
-    }):Play()
-end)
-
-local isMinimized = false
-MinimizeButton.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        MinimizeButton.Text = "+"
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 380, 0, 26)}):Play()
-        LeftSide.Visible = false
-        RightSide.Visible = false
-    else
-        MinimizeButton.Text = "-"
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 380, 0, 240)}):Play()
-        task.wait(0.05)
-        LeftSide.Visible = true
-        RightSide.Visible = true
-    end
-end)
-
-CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
 end)
