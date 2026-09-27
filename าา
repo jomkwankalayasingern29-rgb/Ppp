@@ -1,0 +1,801 @@
+local vu = game:GetService("VirtualUser")
+local players = game:GetService("Players")
+local lp = players.LocalPlayer
+
+lp.Idled:Connect(function()
+    vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    task.wait(1)
+    vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+end)
+
+local sg = Instance.new("ScreenGui")
+sg.Name = "GKHUB_BuildABoat"
+sg.Parent = game:GetService("CoreGui")
+sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local loadFrame = Instance.new("Frame")
+loadFrame.Name = "LoadFrame"
+loadFrame.Size = UDim2.new(0, 300, 0, 65)
+loadFrame.Position = UDim2.new(0.5, -150, 0.5, -32)
+loadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+loadFrame.BorderSizePixel = 0
+loadFrame.Parent = sg
+
+local loadCorner = Instance.new("UICorner")
+loadCorner.CornerRadius = UDim.new(0, 8)
+loadCorner.Parent = loadFrame
+
+local loadStroke = Instance.new("UIStroke")
+loadStroke.Color = Color3.fromRGB(0, 162, 255)
+loadStroke.Thickness = 1.5
+loadStroke.Parent = loadFrame
+
+local loadText = Instance.new("TextLabel")
+loadText.Name = "LoadText"
+loadText.Size = UDim2.new(1, 0, 1, 0)
+loadText.BackgroundTransparency = 1
+loadText.Font = Enum.Font.GothamBold
+loadText.Text = "กำลังโหลด"
+loadText.TextColor3 = Color3.fromRGB(255, 255, 255)
+loadText.TextSize = 16
+loadText.Parent = loadFrame
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 380, 0, 230)
+mainFrame.Position = UDim2.new(0.5, -190, 0.5, -115)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Visible = false
+mainFrame.BackgroundTransparency = 1
+mainFrame.Parent = sg
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 8)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(0, 162, 255)
+mainStroke.Thickness = 1.5
+mainStroke.Parent = mainFrame
+
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 28)
+topBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+topBar.BorderSizePixel = 0
+topBar.Parent = mainFrame
+
+local topBarCorner = Instance.new("UICorner")
+topBarCorner.CornerRadius = UDim.new(0, 8)
+topBarCorner.Parent = topBar
+
+local fixTopBar = Instance.new("Frame")
+fixTopBar.Size = UDim2.new(1, 0, 0, 5)
+fixTopBar.Position = UDim2.new(0, 0, 1, -5)
+fixTopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+fixTopBar.BorderSizePixel = 0
+fixTopBar.Parent = topBar
+
+local logoG = Instance.new("TextLabel")
+logoG.Size = UDim2.new(0, 20, 0, 20)
+logoG.Position = UDim2.new(0, 8, 0, 4)
+logoG.BackgroundTransparency = 1
+logoG.Font = Enum.Font.GothamBold
+logoG.Text = "G"
+logoG.TextColor3 = Color3.fromRGB(0, 162, 255)
+logoG.TextSize = 14
+logoG.Parent = topBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -80, 1, 0)
+titleLabel.Position = UDim2.new(0, 32, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Text = "GK HUB • Build A Boat"
+titleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+titleLabel.TextSize = 12
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = topBar
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 24, 0, 24)
+closeBtn.Position = UDim2.new(1, -26, 0, 2)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(220, 60, 60)
+closeBtn.TextSize = 13
+closeBtn.Parent = topBar
+
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 24, 0, 24)
+minimizeBtn.Position = UDim2.new(1, -50, 0, 2)
+minimizeBtn.BackgroundTransparency = 1
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.Text = "-"
+minimizeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+minimizeBtn.TextSize = 14
+minimizeBtn.Parent = topBar
+
+local isMinimized = false
+minimizeBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    local ts = game:GetService("TweenService")
+    if isMinimized then
+        minimizeBtn.Text = "+"
+        ts:Create(mainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 28)}):Play()
+    else
+        minimizeBtn.Text = "-"
+        ts:Create(mainFrame, TweenInfo.new(0.25), {Size = UDim2.new(0, 380, 0, 230)}):Play()
+    end
+end)
+
+local leftSide = Instance.new("ScrollingFrame")
+leftSide.Size = UDim2.new(0.30, 0, 1, -34)
+leftSide.Position = UDim2.new(0, 5, 0, 30)
+leftSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+leftSide.BorderSizePixel = 0
+leftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
+leftSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
+leftSide.ScrollBarThickness = 2
+leftSide.Parent = mainFrame
+
+local leftCorner = Instance.new("UICorner")
+leftCorner.CornerRadius = UDim.new(0, 5)
+leftCorner.Parent = leftSide
+
+local leftLayout = Instance.new("UIListLayout")
+leftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+leftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+leftLayout.Padding = UDim.new(0, 5)
+leftLayout.Parent = leftSide
+
+local rightSide = Instance.new("ScrollingFrame")
+rightSide.Size = UDim2.new(0.67, 0, 1, -34)
+rightSide.Position = UDim2.new(0.32, 0, 0, 30)
+rightSide.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+rightSide.BorderSizePixel = 0
+rightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
+rightSide.AutomaticCanvasSize = Enum.AutomaticSize.Y
+rightSide.ScrollBarThickness = 2
+rightSide.Parent = mainFrame
+
+local rightCorner = Instance.new("UICorner")
+rightCorner.CornerRadius = UDim.new(0, 5)
+rightCorner.Parent = rightSide
+
+local containers = {}
+
+local function createContainer(name)
+    local container = Instance.new("ScrollingFrame")
+    container.Name = name
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.BorderSizePixel = 0
+    container.CanvasSize = UDim2.new(0, 0, 0, 0)
+    container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    container.ScrollBarThickness = 2
+    container.Visible = false
+    container.Parent = rightSide
+
+    local layout = Instance.new("UIListLayout")
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 6)
+    layout.Parent = container
+
+    containers[name] = container
+    return container
+end
+
+local function switchTab(tabName)
+    for name, container in pairs(containers) do
+        container.Visible = (name == tabName)
+    end
+end
+
+local function createCategoryButton(name)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 26)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.Gotham
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(240, 240, 240)
+    btn.TextSize = 11
+    btn.Parent = leftSide
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        switchTab(name)
+    end)
+end
+
+local function createToggleRow(parent, labelText)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(0.92, 0, 0, 32)
+    row.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    row.BorderSizePixel = 0
+    row.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = row
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0, 110, 1, 0)
+    lbl.Position = UDim2.new(0, 8, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.Gotham
+    lbl.Text = labelText
+    lbl.TextColor3 = Color3.fromRGB(240, 240, 240)
+    lbl.TextSize = 11
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = row
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.3, -4, 0, 22)
+    btn.Position = UDim2.new(0.7, 0, 0.5, -11)
+    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = "OFF"
+    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    btn.TextSize = 11
+    btn.Parent = row
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 4)
+    btnCorner.Parent = btn
+
+    return btn
+end
+
+local function createInputRow(parent, labelText, defaultVal)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(0.92, 0, 0, 32)
+    row.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    row.BorderSizePixel = 0
+    row.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = row
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0, 110, 1, 0)
+    lbl.Position = UDim2.new(0, 8, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.Gotham
+    lbl.Text = labelText
+    lbl.TextColor3 = Color3.fromRGB(240, 240, 240)
+    lbl.TextSize = 11
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = row
+
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(0.3, -4, 0, 22)
+    box.Position = UDim2.new(0.7, 0, 0.5, -11)
+    box.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    box.BorderSizePixel = 0
+    box.Font = Enum.Font.GothamBold
+    box.Text = tostring(defaultVal)
+    box.TextColor3 = Color3.fromRGB(0, 162, 255)
+    box.TextSize = 11
+    box.Parent = row
+
+    local boxCorner = Instance.new("UICorner")
+    boxCorner.CornerRadius = UDim.new(0, 4)
+    boxCorner.Parent = box
+
+    return box
+end
+
+createCategoryButton("ฟาร์ม")
+local farmContainer = createContainer("ฟาร์ม")
+
+local farmToggleBtn = createToggleRow(farmContainer, "ฟาร์มกล่องสมบัติ")
+local speedInput = createInputRow(farmContainer, "ความเร็วการบิน", "230")
+local heightInput = createInputRow(farmContainer, "ความสูงการบิน", "45")
+
+createCategoryButton("บิน")
+local flyContainer = createContainer("บิน")
+
+local flyToggleBtn = createToggleRow(flyContainer, "ระบบบิน 360°")
+
+local flySpeedRow = Instance.new("Frame")
+flySpeedRow.Size = UDim2.new(0.92, 0, 0, 32)
+flySpeedRow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+flySpeedRow.BorderSizePixel = 0
+flySpeedRow.Parent = flyContainer
+
+local flySpeedRowCorner = Instance.new("UICorner")
+flySpeedRowCorner.CornerRadius = UDim.new(0, 4)
+flySpeedRowCorner.Parent = flySpeedRow
+
+local flySpeedLabel = Instance.new("TextLabel")
+flySpeedLabel.Size = UDim2.new(0, 90, 1, 0)
+flySpeedLabel.Position = UDim2.new(0, 8, 0, 0)
+flySpeedLabel.BackgroundTransparency = 1
+flySpeedLabel.Font = Enum.Font.Gotham
+flySpeedLabel.Text = "ตัวคูณความเร็ว"
+flySpeedLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+flySpeedLabel.TextSize = 11
+flySpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+flySpeedLabel.Parent = flySpeedRow
+
+local mineBtn = Instance.new("TextButton")
+mineBtn.Size = UDim2.new(0, 22, 0, 22)
+mineBtn.Position = UDim2.new(0.52, 0, 0.5, -11)
+mineBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+mineBtn.Font = Enum.Font.GothamBold
+mineBtn.Text = "-"
+mineBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+mineBtn.TextSize = 12
+mineBtn.Parent = flySpeedRow
+local mineCorner = Instance.new("UICorner")
+mineCorner.CornerRadius = UDim.new(0, 4)
+mineCorner.Parent = mineBtn
+
+local flySpeedBox = Instance.new("TextBox")
+flySpeedBox.Size = UDim2.new(0, 40, 0, 22)
+flySpeedBox.Position = UDim2.new(0.65, 0, 0.5, -11)
+flySpeedBox.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+flySpeedBox.Font = Enum.Font.GothamBold
+flySpeedBox.Text = "1"
+flySpeedBox.TextColor3 = Color3.fromRGB(0, 162, 255)
+flySpeedBox.TextSize = 11
+flySpeedBox.ClearTextOnFocus = false
+flySpeedBox.Parent = flySpeedRow
+local flySpeedBoxCorner = Instance.new("UICorner")
+flySpeedBoxCorner.CornerRadius = UDim.new(0, 4)
+flySpeedBoxCorner.Parent = flySpeedBox
+
+local plusBtn = Instance.new("TextButton")
+plusBtn.Size = UDim2.new(0, 22, 0, 22)
+plusBtn.Position = UDim2.new(0.86, 0, 0.5, -11)
+plusBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+plusBtn.Font = Enum.Font.GothamBold
+plusBtn.Text = "+"
+plusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+plusBtn.TextSize = 12
+plusBtn.Parent = flySpeedRow
+local plusCorner = Instance.new("UICorner")
+plusCorner.CornerRadius = UDim.new(0, 4)
+plusCorner.Parent = plusBtn
+
+local controlRow = Instance.new("Frame")
+controlRow.Size = UDim2.new(0.92, 0, 0, 32)
+controlRow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+controlRow.BorderSizePixel = 0
+controlRow.Parent = flyContainer
+
+local controlRowCorner = Instance.new("UICorner")
+controlRowCorner.CornerRadius = UDim.new(0, 4)
+controlRowCorner.Parent = controlRow
+
+local upBtn = Instance.new("TextButton")
+upBtn.Size = UDim2.new(0.46, -2, 0, 24)
+upBtn.Position = UDim2.new(0.02, 0, 0.5, -12)
+upBtn.BackgroundColor3 = Color3.fromRGB(40, 55, 75)
+upBtn.Font = Enum.Font.GothamBold
+upBtn.Text = "ลอยขึ้น (UP)"
+upBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+upBtn.TextSize = 10
+upBtn.Parent = controlRow
+local upCorner = Instance.new("UICorner")
+upCorner.CornerRadius = UDim.new(0, 4)
+upCorner.Parent = upBtn
+
+local downBtn = Instance.new("TextButton")
+downBtn.Size = UDim2.new(0.46, -2, 0, 24)
+downBtn.Position = UDim2.new(0.52, 0, 0.5, -12)
+downBtn.BackgroundColor3 = Color3.fromRGB(40, 55, 75)
+downBtn.Font = Enum.Font.GothamBold
+downBtn.Text = "ดิ่งลง (DOWN)"
+downBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+downBtn.TextSize = 10
+downBtn.Parent = controlRow
+local downCorner = Instance.new("UICorner")
+downCorner.CornerRadius = UDim.new(0, 4)
+downCorner.Parent = downBtn
+
+createCategoryButton("ตัวละคร")
+local charContainer = createContainer("ตัวละคร")
+
+local speedToggleBtn = createToggleRow(charContainer, "เปิด วิ่งเร็ว")
+local walkSpeedBox = createInputRow(charContainer, "ค่าความเร็ว", "50")
+
+local jumpToggleBtn = createToggleRow(charContainer, "เปิด กระโดดสูง")
+local jumpPowerBox = createInputRow(charContainer, "แรงกระโดด", "100")
+
+local infJumpToggleBtn = createToggleRow(charContainer, "กระโดดไม่จำกัด")
+local noclipToggleBtn = createToggleRow(charContainer, "ทะลุกำแพง")
+local instantPromptToggleBtn = createToggleRow(charContainer, "กด 0 วิ")
+
+switchTab("ฟาร์ม")
+
+local ts = game:GetService("TweenService")
+local rs = game:GetService("RunService")
+local ws = game:GetService("Workspace")
+local uis = game:GetService("UserInputService")
+local pps = game:GetService("ProximityPromptService")
+
+_G.AutoFarm = false
+_G.FarmSpeed = 230
+_G.FlyHeight = 45
+
+farmToggleBtn.MouseButton1Click:Connect(function()
+    _G.AutoFarm = not _G.AutoFarm
+    farmToggleBtn.Text = _G.AutoFarm and "ON" or "OFF"
+    farmToggleBtn.BackgroundColor3 = _G.AutoFarm and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(255, 255, 255)
+end)
+
+speedInput.FocusLost:Connect(function()
+    local num = tonumber(speedInput.Text)
+    if num and num > 0 then _G.FarmSpeed = num else speedInput.Text = tostring(_G.FarmSpeed) end
+end)
+
+heightInput.FocusLost:Connect(function()
+    local num = tonumber(heightInput.Text)
+    if num then _G.FlyHeight = num else heightInput.Text = tostring(_G.FlyHeight) end
+end)
+
+rs.Stepped:Connect(function()
+    if _G.AutoFarm and lp.Character then
+        for _, part in pairs(lp.Character:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = false end
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.AutoFarm then
+            pcall(function()
+                local char = lp.Character
+                if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChildOfClass("Humanoid") then
+                    local hrp = char.HumanoidRootPart
+                    local hum = char:FindFirstChildOfClass("Humanoid")
+
+                    if hum.Health > 0 then
+                        local bv = Instance.new("BodyVelocity")
+                        bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+                        bv.Velocity = Vector3.new(0, 0, 0)
+                        bv.Parent = hrp
+
+                        local stages = ws:WaitForChild("BoatStages"):WaitForChild("NormalStages")
+                        local height = _G.FlyHeight or 45
+                        local speed = _G.FarmSpeed or 230
+
+                        for i = 1, 10 do
+                            if not _G.AutoFarm or hum.Health <= 0 then break end
+                            local stage = stages:FindFirstChild("CaveStage" .. i)
+                            if stage and stage:FindFirstChild("DarknessPart") then
+                                local darknessPart = stage.DarknessPart
+                                local targetCFrame = darknessPart.CFrame * CFrame.new(0, height, 0)
+                                local dist = (hrp.Position - targetCFrame.Position).Magnitude
+                                
+                                local tween = ts:Create(hrp, TweenInfo.new(dist / speed, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+                                tween:Play()
+                                tween.Completed:Wait()
+
+                                firetouchinterest(hrp, darknessPart, 0)
+                                task.wait(0.05)
+                                firetouchinterest(hrp, darknessPart, 1)
+                            end
+                        end
+
+                        if _G.AutoFarm and hum.Health > 0 then
+                            local chest = ws.BoatStages.NormalStages.TheEnd.GoldenChest
+                            if chest and chest:FindFirstChild("Trigger") then
+                                local trigger = chest.Trigger
+                                
+                                local tween = ts:Create(hrp, TweenInfo.new((hrp.Position - trigger.Position).Magnitude / speed, Enum.EasingStyle.Linear), {CFrame = trigger.CFrame})
+                                tween:Play()
+                                tween.Completed:Wait()
+
+                                for i = 1, 8 do
+                                    firetouchinterest(hrp, trigger, 0)
+                                    task.wait(0.03)
+                                    firetouchinterest(hrp, trigger, 1)
+                                    task.wait(0.03)
+                                end
+
+                                local timeout = 0
+                                while hum and hum.Health > 0 and char.Parent and timeout < 5 do
+                                    hrp.CFrame = trigger.CFrame
+                                    firetouchinterest(hrp, trigger, 0)
+                                    task.wait(0.05)
+                                    firetouchinterest(hrp, trigger, 1)
+                                    
+                                    task.wait(0.2)
+                                    timeout = timeout + 0.25
+                                end
+
+                                if hum and hum.Health > 0 then
+                                    hum.Health = 0
+                                end
+                            end
+
+                            bv:Destroy()
+                            task.wait(2)
+
+                            repeat task.wait(0.5) until lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and lp.Character:FindFirstChildOfClass("Humanoid")
+                            task.wait(1)
+                        else
+                            bv:Destroy()
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+local baseFlySpeed = 50
+local speedMultiplier = 1
+local isFlying = false
+local upHolding = false
+local downHolding = false
+
+local flyConnection = nil
+local bg, bv = nil, nil
+
+local function stopFly()
+    isFlying = false
+    flyToggleBtn.Text = "OFF"
+    flyToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+
+    if flyConnection then flyConnection:Disconnect() flyConnection = nil end
+    if bg then bg:Destroy() bg = nil end
+    if bv then bv:Destroy() bv = nil end
+
+    local char = lp.Character
+    if char then
+        local hum = char:FindFirstChildWhichIsA("Humanoid")
+        if hum then
+            hum.PlatformStand = false
+            hum:ChangeState(Enum.HumanoidStateType.Running)
+        end
+        if char:FindFirstChild("Animate") then char.Animate.Disabled = false end
+    end
+end
+
+local function startFly()
+    local char = lp.Character
+    if not char then return end
+    local hum = char:FindFirstChildWhichIsA("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+    if not hum or not root then return end
+
+    isFlying = true
+    flyToggleBtn.Text = "ON"
+    flyToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+
+    if char:FindFirstChild("Animate") then char.Animate.Disabled = true end
+
+    for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
+        track:AdjustSpeed(0)
+    end
+
+    hum.PlatformStand = true
+
+    bg = Instance.new("BodyGyro")
+    bg.P = 9e4
+    bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+    bg.cframe = root.CFrame
+    bg.Parent = root
+
+    bv = Instance.new("BodyVelocity")
+    bv.velocity = Vector3.new(0, 0, 0)
+    bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+    bv.Parent = root
+
+    flyConnection = rs.RenderStepped:Connect(function()
+        if not isFlying or not char or not hum or hum.Health <= 0 then
+            stopFly()
+            return
+        end
+
+        local cam = ws.CurrentCamera
+        bg.cframe = cam.CFrame
+
+        local moveDir = hum.MoveDirection
+        local finalVelocity = Vector3.new(0, 0, 0)
+
+        if moveDir.Magnitude > 0 then
+            local camCFrame = cam.CFrame
+            local forwardAmount = moveDir:Dot(camCFrame.LookVector)
+            local rightAmount = moveDir:Dot(camCFrame.RightVector)
+
+            local flyVector = (camCFrame.LookVector * forwardAmount) + (camCFrame.RightVector * rightAmount)
+            if flyVector.Magnitude > 0 then
+                finalVelocity = flyVector.Unit * (baseFlySpeed * speedMultiplier)
+            end
+        end
+
+        if upHolding then
+            finalVelocity = finalVelocity + Vector3.new(0, baseFlySpeed * speedMultiplier, 0)
+        elseif downHolding then
+            finalVelocity = finalVelocity - Vector3.new(0, baseFlySpeed * speedMultiplier, 0)
+        end
+
+        bv.velocity = finalVelocity
+    end)
+end
+
+flyToggleBtn.MouseButton1Click:Connect(function()
+    if isFlying then stopFly() else startFly() end
+end)
+
+upBtn.MouseButton1Down:Connect(function() upHolding = true end)
+upBtn.MouseButton1Up:Connect(function() upHolding = false end)
+upBtn.MouseLeave:Connect(function() upHolding = false end)
+
+downBtn.MouseButton1Down:Connect(function() downHolding = true end)
+downBtn.MouseButton1Up:Connect(function() downHolding = false end)
+downBtn.MouseLeave:Connect(function() downHolding = false end)
+
+plusBtn.MouseButton1Click:Connect(function()
+    speedMultiplier = speedMultiplier + 0.5
+    flySpeedBox.Text = tostring(speedMultiplier)
+end)
+
+mineBtn.MouseButton1Click:Connect(function()
+    if speedMultiplier > 0.5 then
+        speedMultiplier = speedMultiplier - 0.5
+        flySpeedBox.Text = tostring(speedMultiplier)
+    else
+        speedMultiplier = 0.5
+        flySpeedBox.Text = "0.5"
+    end
+end)
+
+flySpeedBox.FocusLost:Connect(function()
+    local num = tonumber(flySpeedBox.Text)
+    if num and num > 0 then speedMultiplier = num flySpeedBox.Text = tostring(speedMultiplier) else flySpeedBox.Text = tostring(speedMultiplier) end
+end)
+
+_G.WalkSpeedToggle = false
+_G.WalkSpeedVal = 50
+
+_G.JumpPowerToggle = false
+_G.JumpPowerVal = 100
+
+_G.InfJumpToggle = false
+_G.NoclipToggle = false
+_G.InstantPromptToggle = false
+
+speedToggleBtn.MouseButton1Click:Connect(function()
+    _G.WalkSpeedToggle = not _G.WalkSpeedToggle
+    speedToggleBtn.Text = _G.WalkSpeedToggle and "ON" or "OFF"
+    speedToggleBtn.BackgroundColor3 = _G.WalkSpeedToggle and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(255, 255, 255)
+    
+    if not _G.WalkSpeedToggle and lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
+        lp.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
+    end
+end)
+
+walkSpeedBox.FocusLost:Connect(function()
+    local num = tonumber(walkSpeedBox.Text)
+    if num and num > 0 then _G.WalkSpeedVal = num else walkSpeedBox.Text = tostring(_G.WalkSpeedVal) end
+end)
+
+jumpToggleBtn.MouseButton1Click:Connect(function()
+    _G.JumpPowerToggle = not _G.JumpPowerToggle
+    jumpToggleBtn.Text = _G.JumpPowerToggle and "ON" or "OFF"
+    jumpToggleBtn.BackgroundColor3 = _G.JumpPowerToggle and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(255, 255, 255)
+    
+    if not _G.JumpPowerToggle and lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
+        local hum = lp.Character:FindFirstChildOfClass("Humanoid")
+        hum.UseJumpPower = true
+        hum.JumpPower = 50
+    end
+end)
+
+jumpPowerBox.FocusLost:Connect(function()
+    local num = tonumber(jumpPowerBox.Text)
+    if num and num > 0 then _G.JumpPowerVal = num else jumpPowerBox.Text = tostring(_G.JumpPowerVal) end
+end)
+
+infJumpToggleBtn.MouseButton1Click:Connect(function()
+    _G.InfJumpToggle = not _G.InfJumpToggle
+    infJumpToggleBtn.Text = _G.InfJumpToggle and "ON" or "OFF"
+    infJumpToggleBtn.BackgroundColor3 = _G.InfJumpToggle and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(255, 255, 255)
+end)
+
+uis.JumpRequest:Connect(function()
+    if _G.InfJumpToggle and lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
+        lp.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+noclipToggleBtn.MouseButton1Click:Connect(function()
+    _G.NoclipToggle = not _G.NoclipToggle
+    noclipToggleBtn.Text = _G.NoclipToggle and "ON" or "OFF"
+    noclipToggleBtn.BackgroundColor3 = _G.NoclipToggle and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(255, 255, 255)
+end)
+
+rs.Stepped:Connect(function()
+    if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
+        local hum = lp.Character:FindFirstChildOfClass("Humanoid")
+        if _G.WalkSpeedToggle then hum.WalkSpeed = _G.WalkSpeedVal end
+        if _G.JumpPowerToggle then 
+            hum.UseJumpPower = true
+            hum.JumpPower = _G.JumpPowerVal 
+        end
+    end
+
+    if _G.NoclipToggle and lp.Character then
+        for _, part in pairs(lp.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+instantPromptToggleBtn.MouseButton1Click:Connect(function()
+    _G.InstantPromptToggle = not _G.InstantPromptToggle
+    instantPromptToggleBtn.Text = _G.InstantPromptToggle and "ON" or "OFF"
+    instantPromptToggleBtn.BackgroundColor3 = _G.InstantPromptToggle and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(255, 255, 255)
+end)
+
+pps.PromptButtonHoldBegan:Connect(function(prompt)
+    if _G.InstantPromptToggle then
+        fireproximityprompt(prompt)
+    end
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    _G.AutoFarm = false
+    _G.WalkSpeedToggle = false
+    _G.JumpPowerToggle = false
+    _G.InfJumpToggle = false
+    _G.NoclipToggle = false
+    _G.InstantPromptToggle = false
+    stopFly()
+    sg:Destroy()
+end)
+
+task.spawn(function()
+    local dots = {"", ".", "..", "..."}
+    local startTime = tick()
+    
+    while tick() - startTime < 1.2 do
+        for _, d in ipairs(dots) do
+            loadText.Text = "กำลังโหลด" .. d
+            task.wait(0.25)
+        end
+    end
+    
+    pcall(function()
+        if setclipboard then
+            setclipboard("https://discord.gg/Ugssja4wqQ")
+        elseif toclipboard then
+            toclipboard("https://discord.gg/Ugssja4wqQ")
+        end
+    end)
+    
+    loadText.Text = "คัดลอกDiscordเสร็จเเล้ว"
+    task.wait(0.5)
+    
+    loadFrame:Destroy()
+    
+    mainFrame.Visible = true
+    mainFrame.Size = UDim2.new(0, 320, 0, 180)
+    
+    local info = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local expandTween = ts:Create(mainFrame, info, {
+        Size = UDim2.new(0, 380, 0, 230),
+        BackgroundTransparency = 0
+    })
+    
+    expandTween:Play()
+end)
